@@ -46,16 +46,9 @@ SLO_AVAILABILITY_TARGET = Gauge(
 #   3. The endpoint is automatically monitored and alerted
 #
 # Endpoint paths must match the FastAPI route templates exactly
-# (e.g., "/v1/checkouts/{id}" not "/v1/checkouts/123")
+# (e.g., "/v1/promotions/{promotion_id}" not "/v1/promotions/123")
 
-CRITICAL_ENDPOINTS: list[tuple[str, str, float, float]] = [
-    ("/v1/checkouts/client/{client_secret}/confirm", "POST", 5.5, 99.95),
-    ("/v1/checkout-links/{client_secret}/redirect", "GET", 2.5, 99.95),
-    ("/v1/checkouts/", "POST", 2.5, 99.95),
-    ("/v1/checkouts/client/{client_secret}", "PATCH", 2.5, 99.95),
-    ("/v1/checkouts/client/{client_secret}", "GET", 1.2, 99.95),
-    ("/v1/checkouts/{id}", "GET", 0.3, 99.95),
-]
+CRITICAL_ENDPOINTS: list[tuple[str, str, float, float]] = []
 
 _refresh_thread: threading.Thread | None = None
 _shutdown_event: threading.Event | None = None

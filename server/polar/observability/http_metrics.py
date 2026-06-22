@@ -49,7 +49,7 @@ def exclude_app_from_metrics(app: "ASGIApp") -> None:
 
 # HTTP request counter for availability SLI
 # Labels:
-# - endpoint: normalized path template (e.g., "/v1/checkouts/{id}")
+# - endpoint: normalized path template (e.g., "/v1/promotions/{promotion_id}")
 # - method: HTTP method (GET, POST, etc.)
 # - status_code: HTTP status code as string
 HTTP_REQUEST_TOTAL = Counter(

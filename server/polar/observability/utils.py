@@ -31,7 +31,7 @@ def get_path_template(scope: Scope) -> str | None:
     # call this in the finally block after the request
     route = scope.get("route")
     if route and hasattr(route, "path"):
-        return route.path  # e.g., "/v1/checkouts/{id}"
+        return route.path  # e.g., "/v1/promotions/{promotion_id}"
 
     # No route matched (404 on unknown path) - skip metrics
     # to prevent cardinality explosion from bots/attackers
