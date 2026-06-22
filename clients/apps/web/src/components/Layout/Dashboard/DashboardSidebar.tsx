@@ -1,4 +1,3 @@
-import { SupportButton } from '@/components/Feedback/SupportButton'
 import { NotificationsPopover } from '@/components/Notifications/NotificationsPopover'
 import { CONFIG } from '@/utils/config'
 import { isImpersonating } from '@/utils/impersonation'
@@ -101,9 +100,6 @@ export const DashboardSidebar = ({
         </motion.div>
       </SidebarContent>
       <SidebarFooter>
-        {type === 'organization' && organization && (
-          <SupportButton organization={organization} />
-        )}
         <Separator />
         {type === 'organization' && organization && (
           <SidebarMenu>

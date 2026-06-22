@@ -245,7 +245,6 @@ _SENSITIVE_PATHS: list[tuple[str, str]] = [
     ("/v1/customer-portal/license-keys/validate", "customer-license-key"),
     ("/v1/customer-seats/claim/abc-123/stream", "seat-claim-stream"),
     ("/v1/checkouts/xyz-789/confirm", "checkout-confirm"),
-    ("/v1/feedbacks/", "feedback-submit"),
 ]
 
 

@@ -869,23 +869,6 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/v1/feedbacks/': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Submit */
-    post: operations['feedbacks:submit']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
   '/v1/news/sources': {
     parameters: {
       query?: never
@@ -1851,68 +1834,6 @@ export interface components {
       | 'apple'
       | 'github'
       | 'google'
-    /** Feedback */
-    Feedback: {
-      /**
-       * Created At
-       * Format: date-time
-       * @description Creation timestamp of the object.
-       */
-      created_at: string
-      /**
-       * Modified At
-       * @description Last modification timestamp of the object.
-       */
-      modified_at: string | null
-      /**
-       * Id
-       * Format: uuid4
-       */
-      id: string
-      type: components['schemas']['FeedbackType']
-      status: components['schemas']['FeedbackStatus']
-      /** Message */
-      message: string
-      /** Client Context */
-      client_context: {
-        [key: string]: unknown
-      }
-      /**
-       * User Id
-       * Format: uuid4
-       */
-      user_id: string
-      /**
-       * Organization Id
-       * Format: uuid4
-       */
-      organization_id: string
-    }
-    /** FeedbackCreate */
-    FeedbackCreate: {
-      type: components['schemas']['FeedbackType']
-      /** Message */
-      message: string
-      /**
-       * Organization Id
-       * Format: uuid
-       */
-      organization_id: string
-      /** Client Context */
-      client_context?: {
-        [key: string]: unknown
-      }
-    }
-    /**
-     * FeedbackStatus
-     * @enum {string}
-     */
-    FeedbackStatus: 'new' | 'triaged'
-    /**
-     * FeedbackType
-     * @enum {string}
-     */
-    FeedbackType: 'bug' | 'feedback' | 'question'
     /** HTTPValidationError */
     HTTPValidationError: {
       /** Detail */
@@ -6652,39 +6573,6 @@ export interface operations {
       }
     }
   }
-  'feedbacks:submit': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['FeedbackCreate']
-      }
-    }
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['Feedback']
-        }
-      }
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['HTTPValidationError']
-        }
-      }
-    }
-  }
   'news:list_sources': {
     parameters: {
       query?: never
@@ -7514,12 +7402,6 @@ export const countryAlpha2InputValues: ReadonlyArray<
 export const factorValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Factor']
 > = ['email_otp', 'totp', 'backup_codes', 'apple', 'github', 'google']
-export const feedbackStatusValues: ReadonlyArray<
-  FlattenedDeepRequired<components>['schemas']['FeedbackStatus']
-> = ['new', 'triaged']
-export const feedbackTypeValues: ReadonlyArray<
-  FlattenedDeepRequired<components>['schemas']['FeedbackType']
-> = ['bug', 'feedback', 'question']
 export const identityVerificationStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['IdentityVerificationStatus']
 > = ['unverified', 'pending', 'verified', 'failed']

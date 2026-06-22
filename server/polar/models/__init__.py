@@ -5,7 +5,6 @@ from .backup_codes_enrollment import BackupCodesEnrollment
 from .email_log import EmailLog
 from .email_otp import EmailOTP
 from .email_verification import EmailVerification
-from .feedback import Feedback, FeedbackStatus, FeedbackType
 from .notification import Notification
 from .notification_recipient import NotificationRecipient
 from .oauth2_authorization_code import OAuth2AuthorizationCode
@@ -30,9 +29,6 @@ __all__ = [
     "EmailLog",
     "EmailOTP",
     "EmailVerification",
-    "Feedback",
-    "FeedbackStatus",
-    "FeedbackType",
     "Model",
     "Notification",
     "NotificationRecipient",

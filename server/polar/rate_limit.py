@@ -213,15 +213,6 @@ _BASE_RULES: dict[str, Sequence[Rule]] = {
             zone="checkout-confirm",
         ),
     ],
-    "^/v1/feedbacks/": [
-        Rule(hour=5, block_time=3600, zone="feedback-submit"),
-        Rule(
-            group=RateLimitGroup.pending_auth,
-            hour=5,
-            block_time=3600,
-            zone="feedback-submit",
-        ),
-    ],
 }
 
 _SANDBOX_RULES: dict[str, Sequence[Rule]] = {
