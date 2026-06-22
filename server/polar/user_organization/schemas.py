@@ -7,7 +7,6 @@ from pydantic import AliasPath, Field
 from polar.kit.email import EmailStrDNS
 from polar.kit.schemas import Schema
 from polar.models.user_organization import (
-    OrganizationNotificationSettings,
     OrganizationRole,
 )
 
@@ -40,13 +39,3 @@ class OrganizationMemberRoleUpdate(Schema):
     )
 
 
-class UserOrganizationNotificationSettings(Schema):
-    notification_settings: OrganizationNotificationSettings = Field(
-        description="The authenticated user's notification preferences for this organization.",
-    )
-
-
-class UserOrganizationNotificationSettingsUpdate(Schema):
-    notification_settings: OrganizationNotificationSettings = Field(
-        description="The notification settings to store for the current user on this organization.",
-    )
