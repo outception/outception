@@ -3,7 +3,6 @@ from polar.dummy import tasks as dummy
 from polar.email import tasks as email
 from polar.email_update import tasks as email_update
 from polar.eventstream import tasks as eventstream
-from polar.notifications import tasks as notifications
 from polar.oauth2 import tasks as oauth2
 from polar.organization import tasks as organization
 from polar.organization_access_token import tasks as organization_access_token
@@ -17,7 +16,6 @@ __all__ = [
     "email",
     "email_update",
     "eventstream",
-    "notifications",
     "oauth2",
     "organization",
     "organization_access_token",

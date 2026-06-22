@@ -253,96 +253,6 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/v1/notifications': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * Get
-     * @description **Scopes**: `notifications:read`
-     */
-    get: operations['notifications:get']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/notifications/read': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /**
-     * Mark Read
-     * @description **Scopes**: `notifications:write`
-     */
-    post: operations['notifications:mark_read']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/notifications/recipients': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * Lists all notification recipients subscribed to notifications
-     * @description List all devices subscribed to notifications.
-     *
-     *     **Scopes**: `notification_recipients:read` `notification_recipients:write`
-     */
-    get: operations['notifications:list']
-    put?: never
-    /**
-     * Subscribes a device to notifications
-     * @description Create a notification recipient.
-     *
-     *     **Scopes**: `notification_recipients:write`
-     */
-    post: operations['notifications:create']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/notifications/recipients/{id}': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    post?: never
-    /**
-     * Delete
-     * @description Delete a notification recipient.
-     *
-     *     **Scopes**: `notification_recipients:write`
-     */
-    delete: operations['notifications:delete']
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
   '/v1/personal_access_tokens/': {
     parameters: {
       query?: never
@@ -1138,10 +1048,6 @@ export interface components {
        *       "organizations:write": "Create or modify organizations",
        *       "members:read": "Read members",
        *       "members:write": "Create or modify members",
-       *       "notifications:read": "Read notifications",
-       *       "notifications:write": "Mark notifications as read",
-       *       "notification_recipients:read": "Read notification recipients",
-       *       "notification_recipients:write": "Create or modify notification recipients",
        *       "organization_access_tokens:read": "Read organization access tokens",
        *       "organization_access_tokens:write": "Create or modify organization access tokens"
        *     }
@@ -1175,10 +1081,6 @@ export interface components {
        *       "organizations:write": "Create or modify organizations",
        *       "members:read": "Read members",
        *       "members:write": "Create or modify members",
-       *       "notifications:read": "Read notifications",
-       *       "notifications:write": "Mark notifications as read",
-       *       "notification_recipients:read": "Read notification recipients",
-       *       "notification_recipients:write": "Create or modify notification recipients",
        *       "organization_access_tokens:read": "Read organization access tokens",
        *       "organization_access_tokens:write": "Create or modify organization access tokens"
        *     }
@@ -1216,10 +1118,6 @@ export interface components {
       | 'organizations:write'
       | 'members:read'
       | 'members:write'
-      | 'notifications:read'
-      | 'notifications:write'
-      | 'notification_recipients:read'
-      | 'notification_recipients:write'
       | 'organization_access_tokens:read'
       | 'organization_access_tokens:write'
     /** BackupCodesEnrollment */
@@ -1880,12 +1778,6 @@ export interface components {
       /** Detail */
       detail: string
     }
-    /** ListResource[NotificationRecipientSchema] */
-    ListResource_NotificationRecipientSchema_: {
-      /** Items */
-      items: components['schemas']['NotificationRecipientSchema'][]
-      pagination: components['schemas']['Pagination']
-    }
     /** ListResource[OAuth2Client] */
     ListResource_OAuth2Client_: {
       /** Items */
@@ -1909,158 +1801,6 @@ export interface components {
       /** Items */
       items: components['schemas']['PersonalAccessToken'][]
       pagination: components['schemas']['Pagination']
-    }
-    /** MaintainerAccountCreditsGrantedNotification */
-    MaintainerAccountCreditsGrantedNotification: {
-      /**
-       * Id
-       * Format: uuid4
-       */
-      id: string
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string
-      /**
-       * @description discriminator enum property added by openapi-typescript
-       * @enum {string}
-       */
-      type: 'MaintainerAccountCreditsGrantedNotification'
-      payload: components['schemas']['MaintainerAccountCreditsGrantedNotificationPayload']
-    }
-    /** MaintainerAccountCreditsGrantedNotificationPayload */
-    MaintainerAccountCreditsGrantedNotificationPayload: {
-      /** Organization Name */
-      organization_name: string
-      /** Amount */
-      amount: number
-      /**
-       * Currency
-       * @default usd
-       */
-      currency: string
-      /** Formatted Amount */
-      readonly formatted_amount: string
-    }
-    /** MaintainerNewPaidSubscriptionNotification */
-    MaintainerNewPaidSubscriptionNotification: {
-      /**
-       * Id
-       * Format: uuid4
-       */
-      id: string
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string
-      /**
-       * @description discriminator enum property added by openapi-typescript
-       * @enum {string}
-       */
-      type: 'MaintainerNewPaidSubscriptionNotification'
-      payload: components['schemas']['MaintainerNewPaidSubscriptionNotificationPayload']
-    }
-    /** MaintainerNewPaidSubscriptionNotificationPayload */
-    MaintainerNewPaidSubscriptionNotificationPayload: {
-      /** Subscriber Name */
-      subscriber_name: string
-      /** Subscriber Email */
-      subscriber_email?: string | null
-      /** Tier Name */
-      tier_name: string
-      /** Tier Price Amount */
-      tier_price_amount: number | null
-      /** Tier Price Recurring Interval */
-      tier_price_recurring_interval: string
-      /**
-       * Tier Price Recurring Interval Count
-       * @default 1
-       */
-      tier_price_recurring_interval_count: number
-      /** Tier Organization Name */
-      tier_organization_name: string
-      /** Tier Organization Slug */
-      tier_organization_slug?: string | null
-      /** Subscription Id */
-      subscription_id?: string | null
-      /**
-       * Currency
-       * @default usd
-       */
-      currency: string
-      /** Formatted Price Amount */
-      readonly formatted_price_amount: string
-      /** Formatted Price With Interval */
-      readonly formatted_price_with_interval: string
-    }
-    /** MaintainerNewProductSaleNotification */
-    MaintainerNewProductSaleNotification: {
-      /**
-       * Id
-       * Format: uuid4
-       */
-      id: string
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string
-      /**
-       * @description discriminator enum property added by openapi-typescript
-       * @enum {string}
-       */
-      type: 'MaintainerNewProductSaleNotification'
-      payload: components['schemas']['MaintainerNewProductSaleNotificationPayload']
-    }
-    /** MaintainerNewProductSaleNotificationPayload */
-    MaintainerNewProductSaleNotificationPayload: {
-      /** Product Name */
-      product_name: string
-      /** Product Price Amount */
-      product_price_amount: number
-      /**
-       * Customer Name
-       * @default
-       */
-      customer_name: string
-      /**
-       * Organization Name
-       * @default
-       */
-      organization_name: string
-      /** Customer Email */
-      customer_email?: string | null
-      /** Billing Address Country */
-      billing_address_country?: string | null
-      /** Billing Address City */
-      billing_address_city?: string | null
-      /** Billing Address Line1 */
-      billing_address_line1?: string | null
-      /** Product Image Url */
-      product_image_url?: string | null
-      /** Order Id */
-      order_id?: string | null
-      /** Order Date */
-      order_date?: string | null
-      /** Organization Slug */
-      organization_slug?: string | null
-      /** Billing Reason */
-      billing_reason?: string | null
-      /**
-       * Currency
-       * @default usd
-       */
-      currency: string
-      /** Formatted Price Amount */
-      readonly formatted_price_amount: string
-      /** Formatted Billing Reason */
-      readonly formatted_billing_reason: string | null
-      /** Formatted Address Country */
-      readonly formatted_address_country: string | null
-      /** Order Url */
-      readonly order_url: string | null
     }
     /** NewsExtra */
     NewsExtra: {
@@ -2098,72 +1838,6 @@ export interface components {
       /** Detail */
       detail: string
     }
-    /** NotificationRecipientCreate */
-    NotificationRecipientCreate: {
-      /** @description Platform of the notification recipient. */
-      platform: components['schemas']['NotificationRecipientPlatform']
-      /**
-       * Expo Push Token
-       * @description Expo push token for the notification recipient.
-       */
-      expo_push_token: string
-    }
-    /**
-     * NotificationRecipientPlatform
-     * @enum {string}
-     */
-    NotificationRecipientPlatform: 'ios' | 'android'
-    /** NotificationRecipientSchema */
-    NotificationRecipientSchema: {
-      /**
-       * Created At
-       * Format: date-time
-       * @description Creation timestamp of the object.
-       */
-      created_at: string
-      /**
-       * Modified At
-       * @description Last modification timestamp of the object.
-       */
-      modified_at: string | null
-      /**
-       * Id
-       * Format: uuid4
-       */
-      id: string
-      /**
-       * User Id
-       * Format: uuid4
-       * @description ID of the user the notification recipient belongs to.
-       */
-      user_id: string
-      /** @description Platform of the notification recipient. */
-      platform: components['schemas']['NotificationRecipientPlatform']
-      /**
-       * Expo Push Token
-       * @description Expo push token for the notification recipient.
-       */
-      expo_push_token: string
-    }
-    /** NotificationsList */
-    NotificationsList: {
-      /** Notifications */
-      notifications: (
-        | components['schemas']['MaintainerNewPaidSubscriptionNotification']
-        | components['schemas']['MaintainerNewProductSaleNotification']
-        | components['schemas']['MaintainerAccountCreditsGrantedNotification']
-      )[]
-      /** Last Read Notification Id */
-      last_read_notification_id: string | null
-    }
-    /** NotificationsMarkRead */
-    NotificationsMarkRead: {
-      /**
-       * Notification Id
-       * Format: uuid4
-       */
-      notification_id: string
-    }
     /** OAuth2Client */
     OAuth2Client: {
       /** Redirect Uris */
@@ -2194,7 +1868,7 @@ export interface components {
       response_types: 'code'[]
       /**
        * Scope
-       * @default openid profile email user:read user:write organizations:read organizations:write members:read members:write notifications:read notifications:write notification_recipients:read notification_recipients:write organization_access_tokens:read organization_access_tokens:write
+       * @default openid profile email user:read user:write organizations:read organizations:write members:read members:write organization_access_tokens:read organization_access_tokens:write
        */
       scope: string
       /** Client Name */
@@ -2259,7 +1933,7 @@ export interface components {
       response_types: 'code'[]
       /**
        * Scope
-       * @default openid profile email user:read user:write organizations:read organizations:write members:read members:write notifications:read notifications:write notification_recipients:read notification_recipients:write organization_access_tokens:read organization_access_tokens:write
+       * @default openid profile email user:read user:write organizations:read organizations:write members:read members:write organization_access_tokens:read organization_access_tokens:write
        */
       scope: string
       /** Client Name */
@@ -2305,7 +1979,7 @@ export interface components {
       response_types: 'code'[]
       /**
        * Scope
-       * @default openid profile email user:read user:write organizations:read organizations:write members:read members:write notifications:read notifications:write notification_recipients:read notification_recipients:write organization_access_tokens:read organization_access_tokens:write
+       * @default openid profile email user:read user:write organizations:read organizations:write members:read members:write organization_access_tokens:read organization_access_tokens:write
        */
       scope: string
       /** Client Name */
@@ -4048,10 +3722,6 @@ export interface components {
       | 'organizations:write'
       | 'members:read'
       | 'members:write'
-      | 'notifications:read'
-      | 'notifications:write'
-      | 'notification_recipients:read'
-      | 'notification_recipients:write'
       | 'organization_access_tokens:read'
       | 'organization_access_tokens:write'
     /** SlackIntegration */
@@ -5321,167 +4991,6 @@ export interface operations {
         content?: never
       }
       /** @description No Slack integration configured. */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['HTTPValidationError']
-        }
-      }
-    }
-  }
-  'notifications:get': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['NotificationsList']
-        }
-      }
-    }
-  }
-  'notifications:mark_read': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['NotificationsMarkRead']
-      }
-    }
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': unknown
-        }
-      }
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['HTTPValidationError']
-        }
-      }
-    }
-  }
-  'notifications:list': {
-    parameters: {
-      query?: {
-        /** @description Filter by Expo push token. */
-        expo_push_token?: string | null
-        /** @description Filter by platform. */
-        platform?: components['schemas']['NotificationRecipientPlatform'] | null
-        /** @description Page number, defaults to 1. */
-        page?: number
-        /** @description Size of a page, defaults to 10. Maximum is 100. */
-        limit?: number
-      }
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ListResource_NotificationRecipientSchema_']
-        }
-      }
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['HTTPValidationError']
-        }
-      }
-    }
-  }
-  'notifications:create': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['NotificationRecipientCreate']
-      }
-    }
-    responses: {
-      /** @description Device subscribed to notifications. */
-      201: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['NotificationRecipientSchema']
-        }
-      }
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['HTTPValidationError']
-        }
-      }
-    }
-  }
-  'notifications:delete': {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        /** @description The notification recipient ID. */
-        id: string
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Notification recipient unsubscribed from notifications. */
-      204: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-      /** @description Notification recipient not found. */
       404: {
         headers: {
           [name: string]: unknown
@@ -6888,10 +6397,6 @@ export const availableScopeValues: ReadonlyArray<
   'organizations:write',
   'members:read',
   'members:write',
-  'notifications:read',
-  'notifications:write',
-  'notification_recipients:read',
-  'notification_recipients:write',
   'organization_access_tokens:read',
   'organization_access_tokens:write',
 ]
@@ -7408,18 +6913,6 @@ export const identityVerificationStatusValues: ReadonlyArray<
 export const introspectTokenResponseToken_typeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['IntrospectTokenResponse']['token_type']
 > = ['access_token', 'refresh_token']
-export const maintainerAccountCreditsGrantedNotificationTypeValues: ReadonlyArray<
-  FlattenedDeepRequired<components>['schemas']['MaintainerAccountCreditsGrantedNotification']['type']
-> = ['MaintainerAccountCreditsGrantedNotification']
-export const maintainerNewPaidSubscriptionNotificationTypeValues: ReadonlyArray<
-  FlattenedDeepRequired<components>['schemas']['MaintainerNewPaidSubscriptionNotification']['type']
-> = ['MaintainerNewPaidSubscriptionNotification']
-export const maintainerNewProductSaleNotificationTypeValues: ReadonlyArray<
-  FlattenedDeepRequired<components>['schemas']['MaintainerNewProductSaleNotification']['type']
-> = ['MaintainerNewProductSaleNotification']
-export const notificationRecipientPlatformValues: ReadonlyArray<
-  FlattenedDeepRequired<components>['schemas']['NotificationRecipientPlatform']
-> = ['ios', 'android']
 export const oAuth2ClientToken_endpoint_auth_methodValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OAuth2Client']['token_endpoint_auth_method']
 > = ['client_secret_basic', 'client_secret_post', 'none']
@@ -8397,10 +7890,6 @@ export const scopeValues: ReadonlyArray<
   'organizations:write',
   'members:read',
   'members:write',
-  'notifications:read',
-  'notifications:write',
-  'notification_recipients:read',
-  'notification_recipients:write',
   'organization_access_tokens:read',
   'organization_access_tokens:write',
 ]

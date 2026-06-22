@@ -7,7 +7,6 @@ from typing import Any
 import pytest_asyncio
 
 from polar.models import (
-    NotificationRecipient,
     OAuthAccount,
     Organization,
     User,
@@ -140,19 +139,3 @@ async def user_organization_second(
     user_organization = UserOrganization(user=user_second, organization=organization)
     await save_fixture(user_organization)
     return user_organization
-
-
-async def create_notification_recipient(
-    save_fixture: SaveFixture,
-    *,
-    user: User,
-    expo_push_token: str,
-    platform: Any,
-) -> NotificationRecipient:
-    notification_recipient = NotificationRecipient(
-        user=user,
-        expo_push_token=expo_push_token,
-        platform=platform,
-    )
-    await save_fixture(notification_recipient)
-    return notification_recipient

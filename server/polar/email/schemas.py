@@ -5,12 +5,6 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Discriminator, TypeAdapter
 
-from polar.notifications.notification import (
-    MaintainerAccountCreditsGrantedNotificationPayload,
-    MaintainerNewPaidSubscriptionNotificationPayload,
-    MaintainerNewProductSaleNotificationPayload,
-)
-
 
 class EmailTemplate(StrEnum):
     login_code = "login_code"
@@ -20,9 +14,6 @@ class EmailTemplate(StrEnum):
     organization_access_token_leaked = "organization_access_token_leaked"
     organization_invite = "organization_invite"
     personal_access_token_leaked = "personal_access_token_leaked"
-    notification_new_sale = "notification_new_sale"
-    notification_new_subscription = "notification_new_subscription"
-    notification_credits_granted = "notification_credits_granted"
 
 
 class EmailProps(BaseModel):
@@ -116,27 +107,6 @@ class PersonalAccessTokenLeakedEmail(BaseModel):
     props: PersonalAccessTokenLeakedProps
 
 
-class NotificationNewSaleEmail(BaseModel):
-    template: Literal[EmailTemplate.notification_new_sale] = (
-        EmailTemplate.notification_new_sale
-    )
-    props: MaintainerNewProductSaleNotificationPayload
-
-
-class NotificationNewSubscriptionEmail(BaseModel):
-    template: Literal[EmailTemplate.notification_new_subscription] = (
-        EmailTemplate.notification_new_subscription
-    )
-    props: MaintainerNewPaidSubscriptionNotificationPayload
-
-
-class NotificationCreditsGrantedEmail(BaseModel):
-    template: Literal[EmailTemplate.notification_credits_granted] = (
-        EmailTemplate.notification_credits_granted
-    )
-    props: MaintainerAccountCreditsGrantedNotificationPayload
-
-
 Email = Annotated[
     LoginCodeEmail
     | EmailUpdateEmail
@@ -144,10 +114,7 @@ Email = Annotated[
     | OAuth2LeakedTokenEmail
     | OrganizationAccessTokenLeakedEmail
     | OrganizationInviteEmail
-    | PersonalAccessTokenLeakedEmail
-    | NotificationNewSaleEmail
-    | NotificationNewSubscriptionEmail
-    | NotificationCreditsGrantedEmail,
+    | PersonalAccessTokenLeakedEmail,
     Discriminator("template"),
 ]
 

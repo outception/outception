@@ -4,9 +4,6 @@ import { CustomerEmailUpdateVerification } from './customer_email_update_verific
 import { CustomerSessionCode } from './customer_session_code'
 import { EmailUpdate } from './email_update'
 import { LoginCode } from './login_code'
-import { NotificationCreditsGranted } from './notification_credits_granted'
-import { NotificationNewSale } from './notification_new_sale'
-import { NotificationNewSubscription } from './notification_new_subscription'
 import { OAuth2LeakedClient } from './oauth2_leaked_client'
 import { OAuth2LeakedToken } from './oauth2_leaked_token'
 import { OrderConfirmation } from './order_confirmation'
@@ -59,9 +56,6 @@ const TEMPLATES: Record<string, React.FC<never>> = {
   subscription_updated: SubscriptionUpdated,
   support_case_organization_new_message: SupportCaseOrganizationNewMessage,
   webhook_endpoint_disabled: WebhookEndpointDisabled,
-  notification_new_sale: NotificationNewSale,
-  notification_new_subscription: NotificationNewSubscription,
-  notification_credits_granted: NotificationCreditsGranted,
   chargeback_prevention_refund: ChargebackPreventionRefund,
   polar_self_subscription_confirmation: PolarSelfSubscriptionConfirmation,
   polar_self_subscription_cycled: PolarSelfSubscriptionCycled,

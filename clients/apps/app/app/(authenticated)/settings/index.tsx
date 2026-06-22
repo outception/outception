@@ -93,11 +93,6 @@ export default function Index() {
               {selectedOrganization?.name}
             </Text>
           </SettingsItem>
-          <SettingsItem
-            title="Notifications"
-            variant="navigate"
-            onPress={() => router.push('/settings/notifications')}
-          />
           <Box height={1} backgroundColor="border" marginVertical="spacing-8" />
           <SettingsItem
             title="Delete Account"

@@ -18,12 +18,6 @@ class Scope(StrEnum):
     members_read = "members:read"
     members_write = "members:write"
 
-    notifications_read = "notifications:read"
-    notifications_write = "notifications:write"
-
-    notification_recipients_read = "notification_recipients:read"
-    notification_recipients_write = "notification_recipients:write"
-
     organization_access_tokens_read = "organization_access_tokens:read"
     organization_access_tokens_write = "organization_access_tokens:write"
 
@@ -44,8 +38,6 @@ READ_ONLY_SCOPES: set[Scope] = {
     Scope.user_read,
     Scope.organizations_read,
     Scope.members_read,
-    Scope.notifications_read,
-    Scope.notification_recipients_read,
     Scope.organization_access_tokens_read,
 }
 
@@ -60,10 +52,6 @@ SCOPES_SUPPORTED_DISPLAY_NAMES: dict[Scope, str] = {
     Scope.organizations_write: "Create or modify organizations",
     Scope.members_read: "Read members",
     Scope.members_write: "Create or modify members",
-    Scope.notifications_read: "Read notifications",
-    Scope.notifications_write: "Mark notifications as read",
-    Scope.notification_recipients_read: "Read notification recipients",
-    Scope.notification_recipients_write: "Create or modify notification recipients",
     Scope.organization_access_tokens_read: "Read organization access tokens",
     Scope.organization_access_tokens_write: "Create or modify organization access tokens",
 }

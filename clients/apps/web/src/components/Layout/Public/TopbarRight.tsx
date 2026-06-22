@@ -5,7 +5,6 @@ import GetStartedButton from '@/components/Auth/GetStartedButton'
 import { Modal } from '@polar-sh/orbit'
 import { useModal } from '@/components/Modal/useModal'
 import PublicProfileDropdown from '@/components/Navigation/PublicProfileDropdown'
-import Popover from '@/components/Notifications/NotificationsPopover'
 import { usePostHog } from '@/hooks/posthog'
 import { schemas } from '@polar-sh/client'
 import { Button } from '@polar-sh/orbit'
@@ -29,7 +28,6 @@ const TopbarRight = ({
   return authenticatedUser ? (
     <div>
       <div className="relative flex w-max shrink-0 flex-row items-center justify-between gap-x-6">
-        <Popover />
         <PublicProfileDropdown
           authenticatedUser={authenticatedUser}
           className="shrink-0"

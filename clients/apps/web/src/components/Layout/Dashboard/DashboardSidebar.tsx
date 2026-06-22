@@ -1,4 +1,3 @@
-import { NotificationsPopover } from '@/components/Notifications/NotificationsPopover'
 import { CONFIG } from '@/utils/config'
 import { isImpersonating } from '@/utils/impersonation'
 import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown'
@@ -80,7 +79,6 @@ export const DashboardSidebar = ({
           animate={{ opacity: 1 }}
           transition={{ duration: 1 }}
         >
-          <NotificationsPopover />
           <SidebarTrigger />
         </motion.div>
       </SidebarHeader>

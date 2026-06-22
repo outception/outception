@@ -3,11 +3,10 @@ from typing import Any
 from uuid import UUID
 
 import structlog
-from sqlalchemy import func, update
 
 from polar.exceptions import PolarError
 from polar.kit.anonymization import anonymize_email_for_deletion
-from polar.models import NotificationRecipient, User
+from polar.models import User
 from polar.organization.repository import OrganizationRepository
 from polar.postgres import AsyncSession
 from polar.worker import enqueue_job
@@ -198,7 +197,6 @@ class UserService:
         await repository.soft_delete(user)
 
         await self._delete_oauth_accounts(session, user)
-        await self._delete_notification_recipients(session, user)
 
         log.info("user.deleted", user_id=user.id)
 
@@ -208,25 +206,6 @@ class UserService:
         """Delete all OAuth accounts for a user."""
         for account in user.oauth_accounts:
             await session.delete(account)
-
-    async def _delete_notification_recipients(
-        self,
-        session: AsyncSession,
-        user: User,
-    ) -> None:
-        """Soft-delete all notification recipients for a user."""
-        stmt = (
-            update(NotificationRecipient)
-            .where(NotificationRecipient.user_id == user.id)
-            .where(NotificationRecipient.is_deleted.is_(False))
-            .values(deleted_at=func.now())
-        )
-        await session.execute(stmt)
-
-        log.info(
-            "user.notification_recipients_deleted",
-            user_id=user.id,
-        )
 
 
 user = UserService()

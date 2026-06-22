@@ -1,6 +1,5 @@
 import AuthenticationSettings from '@/components/Settings/AuthenticationSettings'
 import GeneralSettings from '@/components/Settings/GeneralSettings'
-import { NotificationRecipientsSettings } from '@/components/Settings/NotificationRecipientsSettings'
 import PersonalInformationSettings from '@/components/Settings/PersonalInformationSettings'
 import { Section, SectionDescription } from '@/components/Settings/Section'
 import TwoFactorSettings from '@/components/Settings/TwoFactorSettings'
@@ -30,13 +29,6 @@ export default function Page() {
       <Section>
         <SectionDescription title="Two-Factor Authentication" />
         <TwoFactorSettings />
-      </Section>
-      <Section>
-        <SectionDescription
-          title="Notification Recipients"
-          description="Manage the devices which receive notifications"
-        />
-        <NotificationRecipientsSettings />
       </Section>
       <Section>
         <SectionDescription
