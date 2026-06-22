@@ -25,28 +25,6 @@ const PageNotFound = () => {
             Homepage
           </Link>
         </li>
-        <li className="dark:text-polar-500 user-select-none text-gray-400">
-          ·
-        </li>
-        <li>
-          <a
-            href="https://polar.sh/docs"
-            className="dark:hover:text-polar-300 block p-1 hover:text-gray-700 hover:underline"
-          >
-            Documentation
-          </a>
-        </li>
-        <li className="dark:text-polar-500 user-select-none text-gray-400">
-          ·
-        </li>
-        <li>
-          <a
-            href="mailto:support@polar.sh"
-            className="dark:hover:text-polar-300 block p-1 hover:text-gray-700 hover:underline"
-          >
-            Support
-          </a>
-        </li>
       </ul>
       <LogoType className="h-5 text-black dark:text-white" />
     </div>

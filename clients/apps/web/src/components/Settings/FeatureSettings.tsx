@@ -85,20 +85,7 @@ export default function FeatureSettings({
         <SettingsGroup>
           <SettingsGroupItem
             title="Localized Checkout"
-            description={
-              <>
-                Show{' '}
-                <a
-                  href="https://polar.sh/docs/features/checkout/localization"
-                  target="_blank"
-                  className="underline"
-                  rel="noreferrer noopener"
-                >
-                  translated checkouts
-                </a>{' '}
-                to your customers.
-              </>
-            }
+            description="Show translated checkouts to your customers."
           >
             <FormField
               control={control}
@@ -152,16 +139,7 @@ export default function FeatureSettings({
         description="This action cannot be undone. Once enabled, seat-based billing cannot be disabled."
         body={
           <p className="text-sm">
-            Please review the{' '}
-            <a
-              href="https://polar.sh/docs/guides/seat-based-pricing"
-              target="_blank"
-              className="underline"
-              rel="noreferrer noopener"
-            >
-              seat-based pricing guide
-            </a>{' '}
-            before proceeding.
+            Please review the seat-based pricing guide before proceeding.
           </p>
         }
         onConfirm={handleSeatBasedConfirm}

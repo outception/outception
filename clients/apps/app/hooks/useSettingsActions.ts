@@ -2,9 +2,7 @@ import { useLogout } from '@/hooks/auth'
 import { useDeleteUser } from '@/hooks/polar/users'
 import { schemas } from '@polar-sh/client'
 import { useCallback, useState } from 'react'
-import { Alert, Linking } from 'react-native'
-
-const SUPPORT_URL = 'https://polar.sh/docs/support'
+import { Alert } from 'react-native'
 
 interface UseSettingsActionsOptions {
   selectedOrganization: schemas['Organization'] | undefined
@@ -19,14 +17,8 @@ export const useSettingsActions = (_options: UseSettingsActionsOptions) => {
 
   const [isDeletingAccount, setIsDeletingAccount] = useState(false)
 
-  const showSupportAlert = useCallback((title: string, message: string) => {
-    Alert.alert(title, message, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Contact Support',
-        onPress: () => Linking.openURL(SUPPORT_URL),
-      },
-    ])
+  const showErrorAlert = useCallback((title: string, message: string) => {
+    Alert.alert(title, message)
   }, [])
 
   const performDeleteAccount = useCallback(async () => {
@@ -36,9 +28,9 @@ export const useSettingsActions = (_options: UseSettingsActionsOptions) => {
 
       if (error) {
         setIsDeletingAccount(false)
-        showSupportAlert(
+        showErrorAlert(
           'Unable to delete account',
-          'An unexpected error occurred. Please contact support for assistance.',
+          'An unexpected error occurred. Please try again.',
         )
         return
       }
@@ -47,20 +39,20 @@ export const useSettingsActions = (_options: UseSettingsActionsOptions) => {
         logout()
       } else {
         setIsDeletingAccount(false)
-        showSupportAlert(
+        showErrorAlert(
           'Unable to delete account',
-          'Your account could not be deleted. You may need to leave your organizations first. Please contact support for assistance.',
+          'Your account could not be deleted. You may need to leave your organizations first.',
         )
       }
     } catch (err) {
       console.error('[Delete Account] Unexpected error:', err)
       setIsDeletingAccount(false)
-      showSupportAlert(
+      showErrorAlert(
         'Unable to delete account',
-        'An unexpected error occurred. Please contact support for assistance.',
+        'An unexpected error occurred. Please try again.',
       )
     }
-  }, [deleteUser, logout, showSupportAlert])
+  }, [deleteUser, logout, showErrorAlert])
 
   return {
     performDeleteAccount,

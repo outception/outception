@@ -2,7 +2,6 @@ import { SupportButton } from '@/components/Feedback/SupportButton'
 import { NotificationsPopover } from '@/components/Notifications/NotificationsPopover'
 import { CONFIG } from '@/utils/config'
 import { isImpersonating } from '@/utils/impersonation'
-import ArrowOutwardOutlined from '@mui/icons-material/ArrowOutwardOutlined'
 import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown'
 import { schemas } from '@polar-sh/client'
 import { Avatar } from '@polar-sh/orbit'
@@ -26,7 +25,6 @@ import {
 } from '@polar-sh/ui/components/ui/dropdown-menu'
 import { Separator } from '@polar-sh/ui/components/ui/separator'
 import { motion } from 'motion/react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
@@ -106,20 +104,6 @@ export const DashboardSidebar = ({
         {type === 'organization' && organization && (
           <SupportButton organization={organization} />
         )}
-        <Link
-          className={twMerge(
-            'flex flex-row items-center rounded-lg border border-transparent text-sm transition-colors dark:border-transparent',
-            'dark:text-polar-500 dark:hover:text-polar-200 text-gray-500 hover:text-black',
-            isCollapsed && '!dark:text-polar-600',
-          )}
-          href="https://polar.sh/docs"
-          target="_blank"
-        >
-          <ArrowOutwardOutlined className="ml-2" fontSize="inherit" />
-          {!isCollapsed && (
-            <span className="ml-4 font-medium">Documentation</span>
-          )}
-        </Link>
         <Separator />
         {type === 'organization' && organization && (
           <SidebarMenu>
