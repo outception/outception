@@ -236,15 +236,6 @@ def _select_rule(
 
 _SENSITIVE_PATHS: list[tuple[str, str]] = [
     ("/v1/login-code/request", "login-code"),
-    ("/v1/customer-portal/customer-session/request", "customer-session-login"),
-    ("/v1/customer-portal/customer-session/authenticate", "customer-session-login"),
-    (
-        "/v1/customer-portal/customers/me/email-update/request",
-        "customer-email-update",
-    ),
-    ("/v1/customer-portal/license-keys/validate", "customer-license-key"),
-    ("/v1/customer-seats/claim/abc-123/stream", "seat-claim-stream"),
-    ("/v1/checkouts/xyz-789/confirm", "checkout-confirm"),
 ]
 
 
