@@ -1,3 +1,4 @@
+import { CONFIG } from '@/utils/config'
 import { PropsWithChildren } from 'react'
 import LandingLayout from '../../../../components/Landing/LandingLayout'
 
@@ -7,8 +8,8 @@ export const dynamicParams = false
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
-  name: 'Polar',
-  url: 'https://polar.sh/',
+  name: 'Outception',
+  url: CONFIG.FRONTEND_BASE_URL,
 }
 
 export default function Layout({ children }: PropsWithChildren) {

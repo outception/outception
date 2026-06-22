@@ -133,7 +133,7 @@ export default function Index() {
           gap="spacing-4"
         >
           <Text variant="body" color="subtext" textAlign="center">
-            {`Polar (${APP_VERSION})`}
+            {`Outception (${APP_VERSION})`}
           </Text>
           <UpdateId />
         </Box>
