@@ -168,10 +168,10 @@ async def create_resource(
 ## Authentication
 
 The backend uses a custom auth system built on FastAPI dependency injection. The core type
-is `AuthSubject[T]` — the authenticated entity, where `T` is `User`, `Organization`,
-`Customer`, or `Anonymous`. An endpoint **without** an `auth_subject` dependency is public.
+is `AuthSubject[T]` — the authenticated entity, where `T` is `User`, `Organization`, or
+`Anonymous`. An endpoint **without** an `auth_subject` dependency is public.
 
-Credentials resolve in order — customer session token, user session cookie, then API tokens
+Credentials resolve in order — user session cookie, then API tokens
 (OAuth2, Personal Access, Organization Access) — falling back to `Anonymous`. The endpoint's
 authenticator then validates the resolved subject type and its scopes. **Scopes** gate
 operations: an `Authenticator` declares `required_scopes`, and access is granted if the
@@ -206,8 +206,8 @@ ResourcesWrite = Annotated[
 ]
 ```
 
-For endpoints used only by the web dashboard or internal backoffice, use the predefined
-dependencies from `polar/auth/dependencies.py` instead of defining your own: `WebUser`
+For endpoints used only by the web dashboard, use the predefined dependencies from
+`polar/auth/dependencies.py` instead of defining your own: `WebUser`
 (logged-in `AuthSubject[User]`), `WebUserOrAnonymous`, and `AdminUser` (admin privileges).
 
 ## Pydantic Schemas

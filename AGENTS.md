@@ -1,7 +1,9 @@
-# Polar
+# Outception
 
-Open source payment infrastructure platform for developers. Monorepo with a Python/FastAPI
-backend and a Next.js frontend.
+A live news wall with pay-to-promote. Public news feed (250+ sources) plus login-gated paid
+promotions charged through polar.sh as an external merchant. Monorepo with a Python/FastAPI
+backend (package `polar`) and Next.js + Expo frontends. Forked from Polar; the Merchant-of-Record
+stack was removed and its auth/payments/analytics repurposed for promotions.
 
 This file is the entry point for AI agents working in this repo: start here, then read the
 per-area `AGENTS.md` linked from the Architecture and Conventions sections before writing code.
@@ -26,7 +28,9 @@ polar/
 │   │   │   ├── schemas.py       # Pydantic models
 │   │   │   └── tasks.py         # Dramatiq background jobs
 │   │   ├── models/             # SQLAlchemy models (global, not per-module)
-│   │   └── backoffice/         # Admin UI (HTMX + DaisyUI) — see server/polar/backoffice/AGENTS.md
+│   │   ├── news/               # Public news aggregation (sources, cache, fetch)
+│   │   ├── promotion/          # Pay-to-promote: queue, lifecycle, analytics, events
+│   │   └── billing/            # polar.sh hosted checkout + signed webhook
 │   └── migrations/             # Alembic database migrations
 ├── clients/                # Turborepo + pnpm frontend — see clients/AGENTS.md
 │   ├── apps/web/               # Next.js dashboard
@@ -66,11 +70,13 @@ uv run task worker            # background worker (separate terminal)
 pnpm install && pnpm dev
 ```
 
-**Stripe** — add to `server/.env`:
-- `POLAR_STRIPE_SECRET_KEY`
-- `POLAR_STRIPE_PUBLISHABLE_KEY`
-- `POLAR_STRIPE_WEBHOOK_SECRET`
-- `POLAR_STRIPE_CONNECT_WEBHOOK_SECRET`
+**Promotions (polar.sh)** — add to `server/.env` to enable promotion checkout:
+- `POLAR_PROMOTION_PRODUCT_ID` (pay-what-you-want product on your polar.sh org)
+- `POLAR_PAYMENT_GATEWAY_BASE_URL` (default `https://api.polar.sh`)
+- `POLAR_PAYMENT_GATEWAY_ACCESS_TOKEN`, `POLAR_PAYMENT_GATEWAY_WEBHOOK_SECRET`
+
+**Tinybird (optional analytics)** — `POLAR_TINYBIRD_API_URL`, `POLAR_TINYBIRD_API_TOKEN`. Without
+these, promotion analytics fall back to Postgres-only counters.
 
 **Fresh worktrees** (`.claude/worktrees/`) don't carry `.env` or built artifacts. Before running
 tests in a new worktree:
@@ -106,7 +112,6 @@ Detailed, review-enforced patterns live next to the code — read the relevant f
   authentication (`AuthSubject` + scopes).
 - **Frontend** → `clients/AGENTS.md`: Orbit `<Box />` design system (raw Tailwind is **deprecated**
   for layout/spacing/color/etc.), TanStack Query for data, Zustand for state, 250-line `max-lines` limit.
-- **Backoffice** → `server/polar/backoffice/AGENTS.md`: HTMX + DaisyUI patterns.
 
 **i18n:** add new translatable strings only to `clients/packages/i18n/src/locales/en.ts` — a CI
 job auto-translates the rest. Don't edit other locale files. (More in `clients/AGENTS.md`.)
@@ -124,9 +129,11 @@ job auto-translates the rest. Don't edit other locale files. (More in `clients/A
 
 ## Key Integrations
 
-- **Stripe**: payments and subscriptions. Needs API keys + webhook secret in `server/.env`.
-- **GitHub**: authentication and repository features. Needs a GitHub App configured for local dev.
+- **polar.sh**: external merchant for promotion payments (hosted checkout + signed webhook). Needs
+  product id + access token + webhook secret in `server/.env`.
+- **Tinybird** (optional): promotion event ingestion + analytics pipe. Falls back to Postgres.
+- **GitHub / Google / Apple**: OAuth2 authentication.
 - **Slack**: workspace integration for notifications. Configured via OAuth at runtime (no `.env` setup).
-- **S3 / Minio**: file storage.
+- **S3 / Minio**: object storage.
 - **Redis**: cache and job queue.
 - **PostgreSQL**: primary database.

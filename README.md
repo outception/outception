@@ -1,80 +1,109 @@
-<p align="center">
-
-  <a href="https://polar.sh">
-      <img src="https://github.com/user-attachments/assets/89a588e5-0c58-429a-8bbe-20f70af41372" />
-  </a>
-
-</p>
-
 <div align="center">
 
-<a href="https://www.producthunt.com/posts/polar-5?embed=true&utm_source=badge-top-post-badge&utm_medium=badge&utm_souce=badge-polar&#0045;5" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=484271&theme=dark&period=daily" alt="Polar - An&#0032;open&#0032;source&#0032;monetization&#0032;platform&#0032;for&#0032;developers | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a> <a href="https://www.producthunt.com/posts/polar-5?embed=true&utm_source=badge-top-post-topic-badge&utm_medium=badge&utm_souce=badge-polar&#0045;5" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/top-post-topic-badge.svg?post_id=484271&theme=dark&period=monthly&topic_id=267" alt="Polar - An&#0032;open&#0032;source&#0032;monetization&#0032;platform&#0032;for&#0032;developers | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
+# Outception
+
+**A live news wall with pay-to-promote.**
+
+Browse headlines from 250+ sources for free. Pay to feature a post in any
+topic — promotion payments are handled externally by [polar.sh](https://polar.sh).
 
 </div>
 
 <hr />
-<div align="center">
 
-<a href="https://polar.sh">Website</a>
-<span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-<a href="https://polar.sh/docs">Docs</a>
-<span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-<a href="https://polar.sh/docs/api-reference">API Reference</a>
+## What it is
 
-<p align="center">
-  <a href="https://twitter.com/intent/follow?screen_name=polar_sh">
-    <img src="https://img.shields.io/twitter/follow/polar_sh.svg?label=Follow%20@polar_sh" alt="Follow @polar_sh" />
-  </a>
-</p>
-</div>
-<hr />
+Outception is a two-part product:
 
-## Polar: Open Source payments infrastructure for the 21st century
+- **News wall** — a public, unauthenticated feed of headlines aggregated from
+  250+ sources (Hacker News, Reddit, mainstream news, tech, finance, sports,
+  science, gaming, …), organised into topic columns.
+- **Paid promotions** — signed-in users buy a category's featured slot for a
+  block of time (FIFO queue, one active promotion per category). Promotions
+  surface as "Promoted" cards on the wall. Payment runs through **polar.sh as
+  an external merchant**, confirmed via a signed webhook.
 
-Focus on building your passion, while we focus on the infrastructure to get you paid.
+It started as a fork of the [Polar](https://github.com/polarsource/polar)
+codebase; the Merchant-of-Record stack has been removed and the auth, payments,
+and analytics infrastructure repurposed for promotions.
 
-- Sell SaaS and digital products in minutes
-- All-in-one funding & monetization platform for developers.
-- Sell access to GitHub repositories, Discord Support channels, File Downloads, License Keys & much more with Digital Products & Subscriptions.
-- We're the merchant of record handling the...
-    - ...boilerplate (billing, receipts, customer accounts etc)
-    - ...headaches (sales tax, VAT)
+## Features
 
-## Pricing
+- Public news wall (web + mobile) with topic columns and per-topic promotions
+- Login-gated promotion compose → polar.sh hosted checkout → signed webhook
+- Promotion lifecycle queue (pending → queued → active → expired)
+- Analytics: spend, impressions, clicks and CTR — counters in Postgres, with an
+  optional **Tinybird** event pipeline for per-day time-series
+- Promoter dashboard (web) and analytics screen (mobile) charting the series
+- OAuth2 / web-session auth, organizations, API tokens
 
-- Starts at 5% + 50¢ (Starter plan, free)
-- Optional paid plans (Pro, Growth, Scale) with lower rates
-- Additional fees may apply. [Read more](https://polar.sh/docs/documentation/polar-as-merchant-of-record/fees)
+## Architecture
 
-## Roadmap, Issues & Feature Requests
+Monorepo:
 
-**💬 Feature requests & bugs** can be reported through the "Feedback" button found in the sidebar, bottom left of your Polar dashboard.
+| Path | Stack | What |
+| --- | --- | --- |
+| `server/` | Python 3.14 / FastAPI | API (`polar` package), SQLAlchemy, Alembic, Dramatiq workers, Redis |
+| `clients/apps/web/` | Next.js | News wall (public home) + promoter dashboard |
+| `clients/apps/app/` | Expo / React Native | News feed + promote + analytics (iOS/Android) |
+| `clients/packages/client/` | TypeScript | API client generated from the backend OpenAPI |
+| `clients/packages/orbit/` | — | Orbit design system (web) |
 
-**🔓 Found a security vulnerability?** We greatly appreciate responsible and private disclosures. See [Security](./SECURITY.md)
+See `AGENTS.md`, `server/AGENTS.md`, and `clients/AGENTS.md` for conventions.
 
-### Polar API & SDK
+## Quick start
 
-You can integrate Polar on your docs, sites or services using our [Public API](https://polar.sh/docs/api-reference) and [Webhook API](https://polar.sh/docs/integrate/webhooks/endpoints).
+```bash
+./dev/setup-environment        # generate .env files
 
-We also maintain SDKs for the following languages:
+# Backend (http://127.0.0.1:8000) — from server/
+docker compose up -d           # PostgreSQL, Redis, Minio
+uv sync
+uv run task generate_dev_jwks
+uv run task emails
+uv run alembic upgrade head
+uv run task api                # API server
+uv run task worker             # background worker (separate terminal)
 
-- JavaScript (Node.js and browsers): [polarsource/polar-js](https://github.com/polarsource/polar-js)
-- Python: [polarsource/polar-python](https://github.com/polarsource/polar-python)
+# Frontend (http://127.0.0.1:3000) — from clients/
+pnpm install && pnpm dev
+```
 
-## Contributions
+After changing the API, regenerate the client: `pnpm run generate` in
+`clients/packages/client`.
 
-Our [`DEVELOPMENT.md`](./DEVELOPMENT.md) file contains everything you need to know to configure your development environment.
+## Configuration
 
-### Contributors
+Promotion payments and analytics are configured via `server/.env` (secrets live
+there only — never committed):
 
-<a href="https://github.com/polarsource/polar/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=polarsource/polar" />
-</a>
+```bash
+# Promotions via polar.sh (external)
+POLAR_PROMOTION_PRODUCT_ID=""          # pay-what-you-want product on your polar.sh org
+POLAR_PAYMENT_GATEWAY_BASE_URL="https://api.polar.sh"
+POLAR_PAYMENT_GATEWAY_ACCESS_TOKEN=""
+POLAR_PAYMENT_GATEWAY_WEBHOOK_SECRET=""
 
-<sub>♥️🙏 To our `pyproject.toml` friends: [FastAPI](https://github.com/tiangolo/fastapi), [Pydantic](https://github.com/pydantic/pydantic), [Dramatiq](https://github.com/Bogdanp/dramatiq), [SQLAlchemy](https://github.com/sqlalchemy/sqlalchemy), [Githubkit](https://github.com/yanyongyu/githubkit), [sse-starlette](https://github.com/sysid/sse-starlette), [Uvicorn](https://github.com/encode/uvicorn), [httpx-oauth](https://github.com/frankie567/httpx-oauth), [jinja](https://github.com/pallets/jinja), [blinker](https://github.com/pallets-eco/blinker), [pyjwt](https://github.com/jpadilla/pyjwt), [Sentry](https://github.com/getsentry/sentry) + more</sub><br />
-<sub>♥️🙏 To our `package.json` friends: [Next.js](https://github.com/vercel/next.js/), [TanStack Query](https://github.com/TanStack/query), [tailwindcss](https://github.com/tailwindlabs/tailwindcss), [openapi-typescript-codegen](https://github.com/ferdikoomen/openapi-typescript-codegen), [axios](https://github.com/axios/axios), [radix-ui](https://github.com/radix-ui/primitives), [cmdk](https://github.com/pacocoursey/cmdk), [framer-motion](https://github.com/framer/motion) + more</sub><br />
-<sub>♥️🙏 To [IPinfo](https://ipinfo.io) that provides IP address data to help us geolocate customers during checkout.</sub>
+# Optional: Tinybird analytics pipeline
+POLAR_TINYBIRD_API_URL=""
+POLAR_TINYBIRD_API_TOKEN=""
+```
+
+Without these, the news wall still works and promotion checkout is disabled by
+design; analytics fall back to Postgres-only counters.
+
+## Development
+
+```bash
+cd server
+uv run task test                              # backend tests
+uv run task lint && uv run task lint_types    # ruff + mypy
+uv run alembic revision --autogenerate -m "…" # new migration
+
+cd clients/apps/web && pnpm typecheck         # web types
+cd clients/apps/app && pnpm typecheck         # mobile types
+```
 
 ## License
 
-Licensed under [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+Apache License 2.0.
