@@ -1,0 +1,325 @@
+export default {
+  checkout: {
+    footer: {
+      poweredBy: 'Desenvolvido por',
+      merchantOfRecord:
+        'Este pedido é processado pela Polar, nossa parceira de vendas online, responsável pela cobrança, suporte ao pedido e devoluções.',
+      mandateSubscriptionTrial:
+        'Ao clicar em "{buttonLabel}", você autoriza a Polar Software, Inc., nossa revendedora online e comerciante responsável, a cobrar o valor mostrado acima no seu método de pagamento selecionado no final do seu período de teste e em cada data de cobrança subsequente até que você cancele, e concorda com os {buyerTermsLink}. Você pode cancelar a qualquer momento antes do final do seu teste para evitar a cobrança.',
+      mandateSubscription:
+        'Ao clicar em "{buttonLabel}", você autoriza a Polar Software, Inc., nossa revendedora online e comerciante responsável, a cobrar imediatamente o valor mostrado acima no seu método de pagamento selecionado e a cobrar o mesmo valor em cada data de cobrança subsequente até que você cancele, e concorda com os {buyerTermsLink}.',
+      buyerTermsLink: 'Termos de Compra',
+      mandateOneTime:
+        'Ao clicar em "{buttonLabel}", você autoriza a Polar Software, Inc., nossa revendedora online e vendedora oficial, a cobrar o valor mostrado acima na sua forma de pagamento selecionada e concorda com os {buyerTermsLink}. Esta é uma cobrança única.',
+    },
+    form: {
+      email: 'E-mail',
+      cardholderName: 'Nome do titular',
+      purchasingAsBusiness: 'Estou comprando como uma empresa',
+      businessName: 'Nome da empresa',
+      billingAddress: {
+        label: 'Endereço de cobrança',
+        line1: 'Endereço',
+        line2: 'Complemento',
+        postalCode: 'CEP',
+        city: 'Cidade',
+        country: 'País',
+        state: 'Estado',
+        province: 'Província',
+        stateProvince: 'Estado / Província',
+      },
+      taxId: 'CNPJ',
+      discountCode: 'Código de desconto',
+      optional: 'Opcional',
+      apply: 'Aplicar',
+      fieldRequired: 'Este campo é obrigatório',
+      addBusinessDetails: 'Adicionar dados da empresa',
+      removeBusinessDetails: 'Remover dados da empresa',
+      billingDetails: 'Dados da empresa',
+      addDiscountCode: 'Adicionar código de desconto',
+    },
+    pricing: {
+      subtotal: 'Subtotal',
+      taxableAmount: 'Valor tributável',
+      taxes: 'Impostos',
+      free: 'Grátis',
+      payWhatYouWant: 'Pague quanto quiser',
+      total: 'Total',
+      additionalMeteredUsage: 'Uso adicional',
+      perUnit: '/ unidade',
+      discount: {
+        duration: {
+          months: {
+            '=1': 'no primeiro mês',
+            other: 'nos primeiros # meses',
+            _mode: 'plural',
+          },
+          years: {
+            '=1': 'no primeiro ano',
+            other: 'nos primeiros # anos',
+            _mode: 'plural',
+          },
+        },
+        until: 'Até {date}',
+      },
+      everyInterval: {
+        day: {
+          '=1': 'Diário',
+          '=2': 'A cada 2 dias',
+          other: 'A cada # dias',
+          _mode: 'plural',
+        },
+        week: {
+          '=1': 'Semanal',
+          '=2': 'A cada 2 semanas',
+          other: 'A cada # semanas',
+          _mode: 'plural',
+        },
+        month: {
+          '=1': 'Mensal',
+          '=2': 'A cada 2 meses',
+          other: 'A cada # meses',
+          _mode: 'plural',
+        },
+        year: {
+          '=1': 'Anual',
+          '=2': 'A cada 2 anos',
+          other: 'A cada # anos',
+          _mode: 'plural',
+        },
+      },
+      perSeat: 'por usuário',
+      seats: {
+        label: 'Usuários',
+        numberOfSeats: 'Número de usuários',
+        count: {
+          '=1': '# usuário',
+          other: '# usuários',
+          _mode: 'plural',
+        },
+        range: '{min} - {max} usuários',
+        minimum: 'Mínimo de {min} usuários',
+        maximum: 'Máximo de {max} usuários',
+        updateFailed: 'Falha ao atualizar os usuários',
+        included: {
+          '=1': '1 usuário incluído',
+          other: '# usuários incluídos',
+          _mode: 'plural',
+        },
+      },
+      inclTax: 'Impostos (inclusos)',
+      basePrice: 'Preço base',
+    },
+    trial: {
+      ends: 'Teste termina a {endDate}',
+      duration: {
+        days: {
+          '=1': 'Teste de # dia',
+          other: 'Teste de # dias',
+          _mode: 'plural',
+        },
+        weeks: {
+          '=1': 'Teste de # semana',
+          other: 'Teste de # semanas',
+          _mode: 'plural',
+        },
+        months: {
+          '=1': 'Teste de # mês',
+          other: 'Teste de # meses',
+          _mode: 'plural',
+        },
+        years: {
+          '=1': 'Teste de # ano',
+          other: 'Teste de # anos',
+          _mode: 'plural',
+        },
+      },
+      hero: {
+        free: {
+          day: {
+            '=1': '# dia grátis',
+            other: '# dias grátis',
+            _mode: 'plural',
+          },
+          month: {
+            '=1': '# mês grátis',
+            other: '# meses grátis',
+            _mode: 'plural',
+          },
+          year: {
+            '=1': '# ano grátis',
+            other: '# anos grátis',
+            _mode: 'plural',
+          },
+        },
+        intervalSuffix: {
+          day: '/dia',
+          week: '/semana',
+          month: '/mês',
+          year: '/ano',
+        },
+        then: 'Depois',
+        startingDate: 'a partir de {date}',
+      },
+      summary: {
+        totalWhenTrialEnds: 'Total ao final do teste',
+        totalWhenDiscountExpires: 'Total quando o desconto expirar',
+        totalDueToday: 'Total a pagar hoje',
+      },
+    },
+    pwywForm: {
+      label: 'Defina um preço justo',
+      minimum: 'Mínimo de {amount}',
+      amountMinimum: 'O valor deve ser de pelo menos {min}',
+      amountFreeOrMinimum: 'O valor deve ser {zero} ou pelo menos {min}',
+    },
+    productSwitcher: {
+      billedRecurring: 'Cobrado {frequency}',
+      oneTimePurchase: 'Pagamento único',
+      fromPrefix: 'A partir de',
+    },
+    card: {
+      included: 'Incluso',
+    },
+    benefits: {
+      moreBenefits: {
+        '=1': 'mais # benefício',
+        other: 'mais # benefícios',
+        _mode: 'plural',
+      },
+      showMoreBenefits: {
+        '=1': 'Mostrar mais # benefício',
+        other: 'Mostrar mais # benefícios',
+        _mode: 'plural',
+      },
+      showLess: 'Mostrar menos',
+      granting: 'Liberando benefícios...',
+      requestNewInvite: 'Solicitar novo convite',
+      retryIn: {
+        '=1': 'Tente novamente em # segundo',
+        other: 'Tente novamente em # segundos',
+        _mode: 'plural',
+      },
+      connectNewAccount: 'Conectar nova conta',
+      requestMyInvite: 'Solicitar meu convite',
+      github: {
+        connect: 'Conectar conta do GitHub',
+        goTo: 'Ir para {repository}',
+        selectAccount: 'Selecione uma conta do GitHub',
+      },
+      discord: {
+        connect: 'Conectar conta do Discord',
+        open: 'Abrir Discord',
+        selectAccount: 'Selecione uma conta do Discord',
+      },
+      licenseKey: {
+        copy: 'Copiar',
+        copiedToClipboard: 'Copiado para a área de transferência',
+        copiedToClipboardDescription:
+          'A chave de licença foi copiada para a área de transferência',
+        loading: 'Carregando...',
+        status: 'Status',
+        statusGranted: 'Concedida',
+        statusRevoked: 'Revogada',
+        statusDisabled: 'Desativada',
+        usage: 'Uso',
+        validations: 'Validações',
+        validatedAt: 'Validada em',
+        neverValidated: 'Nunca validada',
+        expiryDate: 'Data de expiração',
+        noExpiry: 'Sem expiração',
+        activations: 'Ativações',
+        activationDeleted: 'Ativação da chave de licença excluída',
+        activationDeletedDescription: 'Ativação excluída com sucesso',
+        activationDeactivationFailed: 'Falha na desativação',
+      },
+      slackSharedChannel: {
+        connected: 'Conectado ao seu workspace do Slack.',
+        connectedChannel:
+          'Conectado ao seu workspace do Slack no canal {channel}.',
+        inviteSent: 'Convite enviado para {email}.',
+        channel: 'Canal: {channel}.',
+        openLinkToAccept: 'Abra o link para aceitar no Slack.',
+        acceptFromEmail:
+          'Aceite pelo e-mail de convite ou nas suas solicitações do Slack Connect.',
+        openInvite: 'Abrir convite do Slack',
+        provisioning:
+          'Configurando seu canal do Slack para {email}... Você deve receber um convite na sua caixa de entrada em breve.',
+        setupFailed:
+          'Não foi possível configurar seu canal do Slack com {email}. Verifique o e-mail e tente novamente, ou entre em contato com o vendedor se o erro continuar.',
+        enterEmail:
+          'Digite o e-mail de um administrador do seu workspace do Slack. Ele receberá um convite do Slack Connect para um canal privado.',
+        emailPlaceholder: 'slack-admin@yourcompany.com',
+        tryAgain: 'Tentar novamente',
+        requestInvite: 'Solicitar convite do Slack',
+      },
+    },
+    confirmation: {
+      confirmPayment: 'Confirmar pagamento',
+      processingTitle: 'Estamos processando seu pedido',
+      failedTitle: 'Ocorreu um problema ao processar seu pedido',
+      processingDescription: 'Aguarde enquanto confirmamos seu pagamento.',
+      failedDescription: 'Tente novamente ou entre em contato com o suporte.',
+      successTitle: 'Obrigado pela sua compra!',
+      successDescription: 'Agora você tem acesso a {product}.',
+    },
+    loading: {
+      processingOrder: 'Processando pedido...',
+      processingPayment: 'Processando pagamento',
+      paymentSuccessful: 'Pagamento realizado! Preparando seus produtos...',
+      confirmationTokenFailed:
+        'Falha ao criar token de confirmação, tente novamente mais tarde.',
+    },
+    cta: {
+      startTrial: 'Começar teste',
+      subscribeNow: 'Assinar agora',
+      payNow: 'Pagar agora',
+      getFree: 'Obter grátis',
+      paymentsUnavailable: 'Pagamentos indisponíveis no momento',
+    },
+    productDescription: {
+      readMore: 'Ler mais',
+      readLess: 'Ler menos',
+    },
+  },
+  intervals: {
+    short: {
+      day: 'dia',
+      week: 'sem',
+      month: 'mês',
+      year: 'ano',
+    },
+  },
+  benefitTypes: {
+    custom: 'Personalizado',
+    license_keys: 'Chaves de licença',
+    github_repository: 'Acesso a repositório GitHub',
+    discord: 'Convite do Discord',
+    downloadables: 'Download de arquivos',
+    meter_credit: 'Créditos de uso',
+    feature_flag: 'Feature flag',
+    slack_shared_channel: 'Canal compartilhado do Slack',
+  },
+  ordinal: {
+    zero: 'º',
+    one: 'º',
+    two: 'º',
+    few: 'º',
+    many: 'º',
+    other: 'º',
+  },
+  embedPaymentMethod: {
+    title: 'Adicionar forma de pagamento',
+    close: 'Fechar',
+    submit: 'Adicionar forma de pagamento',
+    processing: 'Adicionando forma de pagamento…',
+    fallbackError: 'Algo deu errado. Tente novamente.',
+    errors: {
+      invalidRequest: 'Parâmetros obrigatórios ausentes.',
+      unauthorized: 'Sessão expirada.',
+      processingFailed:
+        'Não foi possível processar a forma de pagamento. Tente novamente.',
+      unknown: 'Algo deu errado.',
+    },
+  },
+} as const

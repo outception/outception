@@ -1,0 +1,8 @@
+export { ColorsSection } from './ColorsSection'
+export { CoverSection } from './CoverSection'
+export { EndSection } from './EndSection'
+export { ExperimentsSection } from './ExperimentsSection'
+export { LogoSection } from './LogoSection'
+export { MissionSection } from './MissionSection'
+export { TypographySection } from './TypographySection'
+export { VoiceSection } from './VoiceSection'

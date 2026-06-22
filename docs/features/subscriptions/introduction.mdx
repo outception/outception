@@ -1,0 +1,146 @@
+---
+title: "Subscriptions"
+sidebarTitle: "Introduction"
+description: "Recurring revenue on top of your products."
+---
+
+A **subscription** is the recurring relationship between a customer and one of your [products](/features/products). It's created automatically whenever a customer checks out a product that has a recurring price, and it keeps generating orders on each renewal until the customer or you decide to end it.
+
+## How subscriptions work
+
+1. **A customer subscribes.** When a customer completes a [checkout](/features/checkout/session) for a product that has a recurring price, Polar creates a `subscription` and the first [order](/features/orders).
+2. **Polar renews it automatically.** At the end of each billing period, Polar advances the subscription to the next cycle and creates a new order, then attempts to charge the customer's default payment method. If the payment fails, the subscription moves to `past_due` and Polar runs an automated [payment recovery flow](/features/subscriptions/failed-payments).
+3. **Benefits stay in sync.** As long as the subscription is active or trialing, the customer keeps access to all the [benefits](/features/benefits/introduction) attached to the product. When the subscription ends, those benefits are revoked.
+4. **Customers self-serve from the portal.** The [Customer Portal](/features/customer-portal/introduction) lets customers update their payment method, download invoices, cancel, and — if you allow it — change plans or manage seats.
+
+## Recurring pricing
+
+Subscriptions are driven entirely by the way you price the underlying product. Recurring pricing is configured when you [create a product](/features/products#pricing):
+
+- **Billing interval.** Daily, weekly, monthly or yearly.
+- **Interval count.** The number of units per cycle. Setting this to `2` with a `month` interval gives you "every 2 months".
+- **Pricing type.** Fixed, pay-what-you-want, or free. Free recurring products are still modeled as subscriptions — they just never generate a payment.
+- **Currency.** A product can have prices in multiple currencies; the subscription locks in the currency used at checkout.
+
+<Note>
+  The billing interval and pricing type are fixed once a product is created. If
+  you need a different interval (for example, a yearly plan next to a monthly
+  one), create a separate product and show both at checkout. See
+  [Products → Variants](/features/products#variants).
+</Note>
+
+## Renewal reminders
+
+For subscriptions on long billing cycles — six months or more — Polar emails the customer **7 days before the renewal date** to let them know an upcoming charge is coming. This helps with regulations (like the EU's Consumer Rights Directive) that require advance notice on long-interval renewals, and avoids surprise charges that often end in chargebacks.
+
+The threshold is six months, however it is expressed: yearly plans, monthly plans with an interval of 6 or more, weekly plans of 25 or more, and daily plans of 180 or more all get the reminder. Reminders are skipped for free subscriptions and for subscriptions already scheduled to cancel at period end.
+
+You can turn renewal reminders off under [**Settings → Customer notifications**](https://polar.sh/to/dashboard/settings) if you prefer to handle that communication yourself.
+
+## Cancellation
+
+A subscription can end in one of two ways, both available to you and your customers:
+
+- **Cancel at period end** — the subscription keeps working until `current_period_end`, then transitions to `canceled`. You can reverse this (uncancel) until the end date is reached.
+- **Revoke immediately** — the subscription moves to `canceled` right away and benefits are revoked. This is irreversible.
+
+See [Managing subscriptions](/features/subscriptions/manage) for how to perform these actions and everything else merchants can do from the dashboard or the API.
+
+## Creating subscriptions
+
+There are two ways a subscription can come into existence:
+
+- **Through checkout.** The default. Works for any paid recurring product. See [Checkout](/features/checkout/session).
+- **Through the API, for free recurring products only.** You can call [Create Subscription](/api-reference/subscriptions/create) to subscribe an existing customer to a free product — no order, no email, no charge. This is useful for freemium onboarding flows where you want every signup to have a subscription tied to it from day one. Paid products always go through checkout so that Polar can collect and validate the payment method.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Managing subscriptions"
+    icon="sliders"
+    href="/features/subscriptions/manage"
+  >
+    Change plans, seats, trials, billing dates, cancel or revoke — from the
+    dashboard or the API.
+  </Card>
+  <Card
+    title="Proration"
+    icon="scale-balanced"
+    href="/features/subscriptions/proration"
+  >
+    Control how the price difference is handled when a subscription is upgraded
+    or downgraded.
+  </Card>
+  <Card
+    title="Recovering failed payments"
+    icon="credit-card"
+    href="/features/subscriptions/failed-payments"
+  >
+    How Polar retries failed renewals and when benefits are revoked.
+  </Card>
+  <Card
+    title="Subscriptions API"
+    icon="code"
+    href="/api-reference/subscriptions/list"
+  >
+    List, create, update, and revoke subscriptions programmatically.
+  </Card>
+</CardGroup>
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="What's the difference between a subscription and a product?">
+    A product is the thing you're selling — name, description, benefits,
+    pricing. A subscription is one specific customer's ongoing relationship
+    with that product.
+
+    Polar treats one-time purchases and recurring subscriptions as the same
+    kind of object (both are "products"); the only difference is whether the
+    price is recurring. See [Products](/features/products) for the full model.
+  </Accordion>
+  <Accordion title="Can a customer have more than one active subscription?">
+    By default, no — a customer can only have one active subscription per
+    organization at a time. This keeps the common case simple.
+
+    If your product genuinely needs multiple parallel subscriptions per
+    customer, you can opt in under **Organization Settings → Subscriptions**
+    by toggling on **Allow multiple subscriptions**.
+  </Accordion>
+  <Accordion title="When is a customer actually charged?">
+    At the end of each billing cycle. When a subscription renews, Polar
+    advances the cycle, creates a new order with tax and any applicable
+    discount, and charges the customer's default payment method. If the
+    charge fails the subscription moves to `past_due` and Polar starts the
+    [payment recovery flow](/features/subscriptions/failed-payments).
+
+    The first charge happens at checkout (or when the [trial](/features/subscriptions/trials)
+    ends, if one is configured).
+  </Accordion>
+  <Accordion title="Can I change the price of an existing subscription?">
+    Not the amount on an existing subscription directly — subscriptions lock
+    in the price they were created with so existing subscribers aren't
+    surprised by changes.
+
+    If you update the price on a product, the change applies only to **new**
+    subscriptions. To move an existing subscriber to different pricing,
+    either create a new product and run an [update to switch them to
+    it](/features/subscriptions/manage#change-the-plan), or ask them to
+    change plans themselves from the Customer Portal.
+  </Accordion>
+  <Accordion title="What happens to benefits when a subscription is canceled?">
+    Benefits are tied to the subscription's status, not to the cancellation
+    action itself:
+
+    - If you **cancel at period end**, the customer keeps their benefits
+      until `current_period_end` — they paid for that period.
+    - If you **revoke immediately**, the subscription becomes `canceled`
+      right away and all benefits are revoked.
+    - If a renewal payment can't be recovered after Polar's retries, the
+      subscription moves to `unpaid` and benefits are revoked the same way
+      as a revoke — subject to the optional
+      [grace period](/features/subscriptions/failed-payments#benefit-revocation-grace-period)
+      you can configure on your organization.
+  </Accordion>
+</AccordionGroup>

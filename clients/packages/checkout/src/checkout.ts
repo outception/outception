@@ -1,0 +1,426 @@
+const POLAR_CHECKOUT_EVENT = 'POLAR_CHECKOUT'
+
+/**
+ * Message sent to the parent window when the embedded checkout is fully loaded.
+ */
+interface EmbedCheckoutMessageLoaded {
+  event: 'loaded'
+}
+
+/**
+ * Message sent to the parent window when the embedded checkout needs to be closed.
+ */
+interface EmbedCheckoutMessageClose {
+  event: 'close'
+}
+
+/**
+ * Message sent to the parent window when the checkout is confirmed.
+ *
+ * At that point, the parent window shouldn't allow to close the checkout.
+ */
+interface EmbedCheckoutMessageConfirmed {
+  event: 'confirmed'
+}
+
+/**
+ * Message sent to the parent window when the checkout is successfully completed.
+ *
+ * If `redirect` is set to `true`, the parent window should redirect to the `successURL`.
+ */
+interface EmbedCheckoutMessageSuccess {
+  event: 'success'
+  successURL: string
+  redirect: boolean
+}
+
+/**
+ * Represents an embedded checkout message.
+ */
+type EmbedCheckoutMessage =
+  | EmbedCheckoutMessageLoaded
+  | EmbedCheckoutMessageClose
+  | EmbedCheckoutMessageConfirmed
+  | EmbedCheckoutMessageSuccess
+
+const isEmbedCheckoutMessage = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  message: any,
+): message is EmbedCheckoutMessage => {
+  return message.type === POLAR_CHECKOUT_EVENT
+}
+
+/**
+ * Represents an embedded checkout instance.
+ */
+class EmbedCheckout {
+  private iframe: HTMLIFrameElement
+  private loader: HTMLDivElement
+  private loaded: boolean
+  private closable: boolean
+  private eventTarget: EventTarget
+  private windowMessageListener: (event: MessageEvent) => void
+
+  public constructor(iframe: HTMLIFrameElement, loader: HTMLDivElement) {
+    this.iframe = iframe
+    this.loader = loader
+    this.loaded = false
+    this.closable = true
+    this.eventTarget = new EventTarget()
+    this.windowMessageListener = this.handleWindowMessage.bind(this)
+    window.addEventListener('message', this.windowMessageListener)
+  }
+
+  /**
+   * Send an embed checkout event to the parent window.
+   * @param message
+   * @param targetOrigin
+   */
+  public static postMessage(
+    message: EmbedCheckoutMessage,
+    targetOrigin: string,
+  ): void {
+    window.parent.postMessage(
+      { ...message, type: POLAR_CHECKOUT_EVENT },
+      targetOrigin,
+    )
+  }
+
+  /**
+   * Create a new embedded checkout instance by injecting an iframe into the DOM.
+   *
+   * @param url A Checkout Link.
+   * @param options Configuration options for the embedded checkout.
+   * @param options.theme The theme of the embedded checkout. Defaults to `light`.
+   * @param options.onLoaded Callback function that will be invoked when the checkout is fully loaded.
+   *
+   * @returns A promise that resolves to an instance of EmbedCheckout.
+   * The promise resolves when the embedded checkout is fully loaded.
+   */
+  public static async create(
+    url: string,
+    options?: {
+      theme?: 'light' | 'dark'
+      onLoaded?: (event: CustomEvent<EmbedCheckoutMessageLoaded>) => void
+    },
+  ): Promise<EmbedCheckout> {
+    if (typeof options === 'string') {
+      console.warn(
+        `Passing theme as string is deprecated. Use { theme: "${options}" } instead.`,
+      )
+      options = { theme: options }
+    }
+
+    const styleSheet = document.createElement('style')
+    styleSheet.innerText = `
+      .polar-loader-spinner {
+        width: 20px;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background: ${options?.theme === 'dark' ? '#000' : '#fff'};
+        box-shadow: 0 0 0 0 ${options?.theme === 'dark' ? '#fff' : '#000'};
+        animation: polar-loader-spinner-animation 1s infinite;
+      }
+      @keyframes polar-loader-spinner-animation {
+        100% {box-shadow: 0 0 0 30px #0000}
+      }
+      body.polar-no-scroll {
+        overflow: hidden;
+      }
+    `
+    document.head.appendChild(styleSheet)
+
+    // Create loader
+    const loader = document.createElement('div')
+    loader.style.position = 'absolute'
+    loader.style.top = '50%'
+    loader.style.left = '50%'
+    loader.style.transform = 'translate(-50%, -50%)'
+    loader.style.zIndex = '2147483647'
+    loader.style.colorScheme = 'auto'
+
+    // Create spinning icon
+    const spinner = document.createElement('div')
+    spinner.className = 'polar-loader-spinner'
+    loader.appendChild(spinner)
+
+    // Insert into the DOM
+    document.body.classList.add('polar-no-scroll')
+    document.body.appendChild(loader)
+
+    // Add query parameters to the Checkout Link
+    const parsedURL = new URL(url)
+    parsedURL.searchParams.set('embed', 'true')
+    parsedURL.searchParams.set('embed_origin', window.location.origin)
+    if (options?.theme) {
+      parsedURL.searchParams.set('theme', options.theme)
+    }
+    const embedURL = parsedURL.toString()
+
+    // Create iframe
+    const iframe = document.createElement('iframe')
+    iframe.src = embedURL
+    iframe.style.position = 'fixed'
+    iframe.style.top = '0'
+    iframe.style.left = '0'
+    iframe.style.width = '100%'
+    iframe.style.height = '100%'
+    iframe.style.border = 'none'
+    iframe.style.zIndex = '2147483647'
+    iframe.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'
+    iframe.style.colorScheme = 'auto'
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const origins = __POLAR_CHECKOUT_EMBED_SCRIPT_ALLOWED_ORIGINS__
+      .split(',')
+      .join(' ')
+    iframe.allow = `payment 'self' ${origins}; publickey-credentials-get 'self' ${origins};`
+
+    document.body.appendChild(iframe)
+
+    const embedCheckout = new EmbedCheckout(iframe, loader)
+
+    if (options?.onLoaded) {
+      embedCheckout.addEventListener('loaded', options.onLoaded, { once: true })
+    }
+
+    return new Promise((resolve) => {
+      embedCheckout.addEventListener('loaded', () => resolve(embedCheckout), {
+        once: true,
+      })
+    })
+  }
+
+  /**
+   * Initialize embedded checkout triggers.
+   *
+   * This method will add a click event listener to all elements with the `data-polar-checkout` attribute.
+   * The Checkout Link is either the `href` attribute for a link element or the value of `data-polar-checkout` attribute.
+   *
+   * The theme can be optionally set using the `data-polar-checkout-theme` attribute.
+   *
+   * @example
+   * ```html
+   * <a href="https://buy.polar.sh/polar_cl_123" data-polar-checkout data-polar-checkout-theme="dark">Checkout</a>
+   * ```
+   */
+  public static init(): void {
+    const checkoutElements = document.querySelectorAll('[data-polar-checkout]')
+    checkoutElements.forEach((checkoutElement) => {
+      checkoutElement.removeEventListener(
+        'click',
+        EmbedCheckout.checkoutElementClickHandler,
+      )
+      checkoutElement.addEventListener(
+        'click',
+        EmbedCheckout.checkoutElementClickHandler,
+      )
+    })
+  }
+
+  /**
+   * Close the embedded checkout.
+   */
+  public close(): void {
+    window.removeEventListener('message', this.windowMessageListener)
+    if (document.body.contains(this.iframe))
+      document.body.removeChild(this.iframe)
+    document.body.classList.remove('polar-no-scroll')
+  }
+
+  /**
+   * Add an event listener to the embedded checkout events.
+   *
+   * @param type
+   * @param listener
+   */
+  public addEventListener(
+    type: 'loaded',
+    listener: (event: CustomEvent<EmbedCheckoutMessageLoaded>) => void,
+    options?: AddEventListenerOptions | boolean,
+  ): void
+  public addEventListener(
+    type: 'close',
+    listener: (event: CustomEvent<EmbedCheckoutMessageClose>) => void,
+    options?: AddEventListenerOptions | boolean,
+  ): void
+  public addEventListener(
+    type: 'confirmed',
+    listener: (event: CustomEvent<EmbedCheckoutMessageConfirmed>) => void,
+    options?: AddEventListenerOptions | boolean,
+  ): void
+  public addEventListener(
+    type: 'success',
+    listener: (event: CustomEvent<EmbedCheckoutMessageSuccess>) => void,
+    options?: AddEventListenerOptions | boolean,
+  ): void
+  public addEventListener(
+    type: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    listener: any,
+    options?: AddEventListenerOptions | boolean,
+  ): void {
+    this.eventTarget.addEventListener(type, listener, options)
+  }
+
+  /**
+   * Remove an event listener from the embedded checkout events.
+   *
+   * @param type
+   * @param listener
+   */
+  public removeEventListener(
+    type: 'loaded',
+    listener: (event: CustomEvent<EmbedCheckoutMessageLoaded>) => void,
+  ): void
+  public removeEventListener(
+    type: 'close',
+    listener: (event: CustomEvent<EmbedCheckoutMessageClose>) => void,
+  ): void
+  public removeEventListener(
+    type: 'confirmed',
+    listener: (event: CustomEvent<EmbedCheckoutMessageConfirmed>) => void,
+  ): void
+  public removeEventListener(
+    type: 'success',
+    listener: (event: CustomEvent<EmbedCheckoutMessageSuccess>) => void,
+  ): void
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public removeEventListener(type: string, listener: any): void {
+    this.eventTarget.removeEventListener(type, listener)
+  }
+
+  private static async checkoutElementClickHandler(e: Event) {
+    e.preventDefault()
+    let checkoutElement = e.target as HTMLElement
+
+    // Find the closest parent element with the `data-polar-checkout` attribute,
+    // in case the checkout element has children triggering the event.
+    while (!checkoutElement.hasAttribute('data-polar-checkout')) {
+      if (!checkoutElement.parentElement) {
+        return
+      }
+      checkoutElement = checkoutElement.parentElement
+    }
+
+    const url =
+      checkoutElement.getAttribute('href') ||
+      (checkoutElement.getAttribute('data-polar-checkout') as string)
+    const theme = checkoutElement.getAttribute('data-polar-checkout-theme') as
+      | 'light'
+      | 'dark'
+      | undefined
+    EmbedCheckout.create(url, theme ? { theme } : undefined)
+  }
+
+  /**
+   * Default action for the `loaded` event: remove the loader spinner.
+   */
+  private handleLoaded(): void {
+    if (this.loaded) {
+      return
+    }
+    document.body.removeChild(this.loader)
+    this.loaded = true
+  }
+
+  /**
+   * Default action for the `close` event: remove the embedded checkout from
+   * the DOM, unless closing has been locked by a prior `confirmed` event.
+   */
+  private handleClose(): void {
+    if (this.closable) {
+      this.close()
+    }
+  }
+
+  /**
+   * Default action for the `confirmed` event: lock closing while the
+   * checkout is being processed.
+   */
+  private handleConfirmed(): void {
+    this.closable = false
+  }
+
+  /**
+   * Default action for the `success` event: re-enable closing and, if
+   * requested, redirect the parent window to the `successURL`.
+   */
+  private handleSuccess(detail: EmbedCheckoutMessageSuccess): void {
+    this.closable = true
+    if (detail.redirect) {
+      window.location.href = detail.successURL
+    }
+  }
+
+  /**
+   * Handle window message events from the embedded checkout iframe.
+   *
+   * Dispatches a cancelable `CustomEvent` to consumer listeners first, then
+   * runs the default action unless a listener called `event.preventDefault()`.
+   */
+  private handleWindowMessage({ data, origin }: MessageEvent): void {
+    if (
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      !__POLAR_CHECKOUT_EMBED_SCRIPT_ALLOWED_ORIGINS__
+        .split(',')
+        .includes(origin)
+    ) {
+      return
+    }
+    if (!isEmbedCheckoutMessage(data)) {
+      return
+    }
+    const event = new CustomEvent(data.event, {
+      detail: data,
+      cancelable: true,
+    })
+    this.eventTarget.dispatchEvent(event)
+    if (event.defaultPrevented) {
+      return
+    }
+    switch (data.event) {
+      case 'loaded':
+        this.handleLoaded()
+        break
+      case 'close':
+        this.handleClose()
+        break
+      case 'confirmed':
+        this.handleConfirmed()
+        break
+      case 'success':
+        this.handleSuccess(data)
+        break
+    }
+  }
+}
+
+declare global {
+  interface PolarWindow {
+    EmbedCheckout: typeof EmbedCheckout
+  }
+  interface Window {
+    Polar: Partial<PolarWindow>
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.Polar = {
+    ...(window.Polar ?? {}),
+    EmbedCheckout,
+  }
+}
+
+if (typeof document !== 'undefined') {
+  const currentScript = document.currentScript as HTMLScriptElement | null
+  if (currentScript && currentScript.hasAttribute('data-auto-init')) {
+    document.addEventListener('DOMContentLoaded', async () => {
+      EmbedCheckout.init()
+    })
+  }
+}
+
+export { EmbedCheckout as PolarEmbedCheckout }

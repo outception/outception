@@ -1,0 +1,306 @@
+import io
+from collections.abc import Iterator
+from typing import Any
+
+import boto3
+import pytest
+from botocore.exceptions import ClientError
+from moto import mock_aws
+from mypy_boto3_s3 import S3Client
+from PIL import Image
+
+import handler as handler_module
+from handler import handler, is_image, resize_image, snap_to_size
+
+BUCKET = "my-bucket"
+
+
+@pytest.fixture
+def aws(monkeypatch: pytest.MonkeyPatch) -> Iterator[S3Client]:
+    with mock_aws():
+        client = boto3.client("s3", region_name="us-east-1")
+        client.create_bucket(Bucket=BUCKET)
+        monkeypatch.setattr(handler_module, "s3", client)
+        yield client
+
+
+def _make_event(
+    uri: str = "/images/photo.jpg",
+    querystring: str = "width=300",
+    bucket: str = BUCKET,
+    origin_type: str = "s3",
+) -> dict[str, Any]:
+    return {
+        "Records": [
+            {
+                "cf": {
+                    "request": {
+                        "uri": uri,
+                        "querystring": querystring,
+                        "origin": {
+                            origin_type: {"domainName": f"{bucket}.s3.amazonaws.com"}
+                        },
+                    }
+                }
+            }
+        ]
+    }
+
+
+def _make_image(width: int = 200, height: int = 200, fmt: str = "JPEG") -> bytes:
+    img = Image.new("RGB", (width, height), color="red")
+    buf = io.BytesIO()
+    img.save(buf, format=fmt)
+    return buf.getvalue()
+
+
+def _upload(client: S3Client, key: str, body: bytes) -> None:
+    client.put_object(Bucket=BUCKET, Key=key, Body=body)
+
+
+class TestSnapToSize:
+    def test_rounds_up_to_nearest(self) -> None:
+        assert snap_to_size(60) == 64
+        assert snap_to_size(150) == 192
+        assert snap_to_size(48) == 48
+
+    def test_caps_at_max(self) -> None:
+        assert snap_to_size(9999) == 1920
+
+
+class TestIsImage:
+    @pytest.mark.parametrize(
+        "uri", ["/img.jpg", "/img.jpeg", "/img.png", "/img.gif", "/img.webp"]
+    )
+    def test_accepts_image_extensions(self, uri: str) -> None:
+        assert is_image(uri) is True
+
+    @pytest.mark.parametrize("uri", ["/file.pdf", "/doc.txt", "/app.js", "/no-ext"])
+    def test_rejects_non_images(self, uri: str) -> None:
+        assert is_image(uri) is False
+
+
+class TestResizeImage:
+    def test_resizes_by_width(self) -> None:
+        image_bytes = _make_image(200, 200)
+        result = resize_image(image_bytes, 100, None)
+        assert result is not None
+        img = Image.open(io.BytesIO(result))
+        assert img.size[0] == 100
+
+    def test_returns_none_when_no_downscale(self) -> None:
+        image_bytes = _make_image(100, 100)
+        assert resize_image(image_bytes, 200, None) is None
+
+    def test_resizes_by_height(self) -> None:
+        image_bytes = _make_image(200, 200)
+        result = resize_image(image_bytes, None, 100)
+        assert result is not None
+        img = Image.open(io.BytesIO(result))
+        assert img.size[1] == 100
+
+
+class TestResizeLargeImage:
+    def test_draft_mode_for_large_jpeg(self) -> None:
+        image_bytes = _make_image(6400, 8000)
+        result = resize_image(image_bytes, 1440, None)
+        assert result is not None
+        img = Image.open(io.BytesIO(result))
+        assert img.size[0] == 1440
+
+    def test_draft_mode_preserves_aspect_ratio(self) -> None:
+        image_bytes = _make_image(6000, 4000)
+        result = resize_image(image_bytes, 256, None)
+        assert result is not None
+        img = Image.open(io.BytesIO(result))
+        assert img.size == (256, 170)
+
+    def test_large_png_skips_resize(self) -> None:
+        image_bytes = _make_image(6400, 8000, fmt="PNG")
+        result = resize_image(image_bytes, 1440, None)
+        assert result is None
+
+    def test_small_image_skips_draft(self) -> None:
+        image_bytes = _make_image(800, 800)
+        result = resize_image(image_bytes, 256, None)
+        assert result is not None
+        img = Image.open(io.BytesIO(result))
+        assert img.size[0] == 256
+
+
+class TestHandler:
+    def test_passthrough_no_querystring(self) -> None:
+        event = _make_event(querystring="")
+        result = handler(event, None)
+        assert result["uri"] == "/images/photo.jpg"
+        assert result.get("querystring") == ""
+
+    def test_passthrough_non_image(self) -> None:
+        event = _make_event(uri="/files/doc.pdf", querystring="width=100")
+        result = handler(event, None)
+        assert result["uri"] == "/files/doc.pdf"
+
+    def test_passthrough_invalid_params(self) -> None:
+        event = _make_event(querystring="width=abc")
+        result = handler(event, None)
+        assert result["uri"] == "/images/photo.jpg"
+
+    def test_passthrough_no_width_or_height(self) -> None:
+        event = _make_event(querystring="format=webp")
+        result = handler(event, None)
+        assert result["uri"] == "/images/photo.jpg"
+
+    def test_cache_hit(self, aws: S3Client) -> None:
+        _upload(aws, "resized/128x0/images/photo.jpg", b"cached-data")
+
+        event = _make_event(querystring="width=100")
+        result = handler(event, None)
+
+        assert result["uri"] == "/resized/128x0/images/photo.jpg"
+        assert result["querystring"] == ""
+
+    def test_cache_miss_resize_and_store(self, aws: S3Client) -> None:
+        _upload(aws, "images/photo.jpg", _make_image(800, 800))
+
+        event = _make_event(querystring="width=200")
+        result = handler(event, None)
+
+        assert result["uri"] == "/resized/256x0/images/photo.jpg"
+        assert result["querystring"] == ""
+
+        obj = aws.get_object(Bucket=BUCKET, Key="resized/256x0/images/photo.jpg")
+        assert obj["ContentType"] == "image/jpeg"
+
+        img = Image.open(io.BytesIO(obj["Body"].read()))
+        assert img.size == (256, 256)
+
+    def test_original_too_small_serves_original(self, aws: S3Client) -> None:
+        _upload(aws, "images/photo.jpg", _make_image(50, 50))
+
+        event = _make_event(querystring="width=200")
+        result = handler(event, None)
+
+        assert result["uri"] == "/images/photo.jpg"
+
+        with pytest.raises(ClientError):
+            aws.head_object(Bucket=BUCKET, Key="resized/200x0/images/photo.jpg")
+
+    def test_s3_get_error_returns_original(self, aws: S3Client) -> None:
+        event = _make_event(querystring="width=200")
+        result = handler(event, None)
+
+        assert result["uri"] == "/images/photo.jpg"
+
+    def test_s3_head_non_404_error_returns_original(
+        self, aws: S3Client, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        original_head = aws.head_object
+
+        def head_500(**kwargs: Any) -> Any:
+            raise ClientError(
+                {"Error": {"Code": "500", "Message": "Internal"}}, "HeadObject"
+            )
+
+        monkeypatch.setattr(aws, "head_object", head_500)
+
+        event = _make_event(querystring="width=200")
+        result = handler(event, None)
+
+        assert result["uri"] == "/images/photo.jpg"
+        monkeypatch.setattr(aws, "head_object", original_head)
+
+    def test_url_encoded_uri_is_decoded_for_s3_key(self, aws: S3Client) -> None:
+        _upload(
+            aws,
+            "images/my photo.jpg",
+            _make_image(800, 800),
+        )
+
+        event = _make_event(uri="/images/my%20photo.jpg", querystring="width=200")
+        result = handler(event, None)
+
+        assert result["uri"] == "/resized/256x0/images/my%20photo.jpg"
+        assert result["querystring"] == ""
+
+        obj = aws.get_object(Bucket=BUCKET, Key="resized/256x0/images/my photo.jpg")
+        img = Image.open(io.BytesIO(obj["Body"].read()))
+        assert img.size == (256, 256)
+
+    def test_uri_with_literal_space_is_normalized(self, aws: S3Client) -> None:
+        """CloudFront may decode %20 to a literal space before passing to Lambda@Edge."""
+        _upload(
+            aws,
+            "images/my photo.jpg",
+            _make_image(800, 800),
+        )
+
+        event = _make_event(uri="/images/my photo.jpg", querystring="width=200")
+        result = handler(event, None)
+
+        # URI must never contain a literal space (Lambda@Edge rejects those)
+        assert " " not in result["uri"]
+        assert result["uri"] == "/resized/256x0/images/my%20photo.jpg"
+        assert result["querystring"] == ""
+
+    def test_custom_origin_with_encoded_space(self, aws: S3Client) -> None:
+        """Production CloudFront uses custom origin (no s3_origin_config)."""
+        _upload(aws, "images/my photo.jpg", _make_image(800, 800))
+
+        event = _make_event(
+            uri="/images/my%20photo.jpg",
+            querystring="width=200",
+            origin_type="custom",
+        )
+        result = handler(event, None)
+
+        assert " " not in result["uri"]
+        assert result["uri"] == "/resized/256x0/images/my%20photo.jpg"
+        assert result["querystring"] == ""
+
+    def test_custom_origin_with_literal_space(self, aws: S3Client) -> None:
+        """Custom origin + CloudFront-decoded literal space."""
+        _upload(aws, "images/my photo.jpg", _make_image(800, 800))
+
+        event = _make_event(
+            uri="/images/my photo.jpg",
+            querystring="width=200",
+            origin_type="custom",
+        )
+        result = handler(event, None)
+
+        assert " " not in result["uri"]
+        assert result["uri"] == "/resized/256x0/images/my%20photo.jpg"
+        assert result["querystring"] == ""
+
+    def test_production_path_with_uuids_and_space(self, aws: S3Client) -> None:
+        """Full production-like path with UUIDs and encoded space."""
+        key = "product_media/f1917a86-cc1b-4edc-808c-447c41638af4/938c2d40-d614-427a-b9fc-24ea97a26165/Monochrome 3.jpg"
+        _upload(aws, key, _make_image(800, 800))
+
+        event = _make_event(
+            uri=f"/{key.replace(' ', '%20')}",
+            querystring="width=200",
+            origin_type="custom",
+        )
+        result = handler(event, None)
+
+        assert " " not in result["uri"]
+        assert result["uri"].startswith("/resized/256x0/product_media/")
+        assert result["uri"].endswith("Monochrome%203.jpg")
+        assert result["querystring"] == ""
+
+    def test_passthrough_preserves_encoded_space_no_querystring(self) -> None:
+        """Passthrough (no resize) still normalizes %20 in URI."""
+        event = _make_event(uri="/images/my%20photo.jpg", querystring="")
+        result = handler(event, None)
+
+        assert " " not in result["uri"]
+        assert result["uri"] == "/images/my%20photo.jpg"
+
+    def test_passthrough_normalizes_literal_space_no_querystring(self) -> None:
+        """Passthrough with literal space gets normalized to %20."""
+        event = _make_event(uri="/images/my photo.jpg", querystring="")
+        result = handler(event, None)
+
+        assert " " not in result["uri"]
+        assert result["uri"] == "/images/my%20photo.jpg"

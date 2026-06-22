@@ -1,0 +1,7 @@
+[Unit]
+Description=Process preview infra triggers
+StartLimitIntervalSec=0
+
+[Service]
+Type=oneshot
+ExecStart=/srv/preview-tools/process-preview-triggers.sh

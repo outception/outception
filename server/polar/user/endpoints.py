@@ -1,0 +1,193 @@
+from uuid import UUID
+
+from fastapi import Depends, Request
+
+from polar.auth.dependencies import Authenticator
+from polar.auth.models import AuthSubject
+from polar.authz.dependencies import (
+    AuthorizeUserRead,
+    AuthorizeUserWrite,
+    AuthorizeWebUserRead,
+    AuthorizeWebUserWrite,
+)
+from polar.exceptions import ResourceNotFound
+from polar.models import User
+from polar.models.user import OAuthPlatform
+from polar.openapi import APITag
+from polar.organization.schemas import OrganizationWithRole
+from polar.postgres import (
+    AsyncReadSession,
+    AsyncSession,
+    get_db_read_session,
+    get_db_session,
+)
+from polar.routing import APIRouter
+from polar.user.oauth_service import oauth_account_service
+from polar.user.service import user as user_service
+from polar.user_organization.repository import UserOrganizationRepository
+from polar.user_organization.schemas import (
+    UserOrganizationNotificationSettings,
+    UserOrganizationNotificationSettingsUpdate,
+)
+from polar.user_organization.service import (
+    UserNotMemberOfOrganization,
+)
+from polar.user_organization.service import (
+    user_organization as user_organization_service,
+)
+
+from .schemas import (
+    UserDeletionResponse,
+    UserRead,
+    UserScopes,
+    UserUpdate,
+)
+
+router = APIRouter(prefix="/users", tags=["users", APITag.private])
+
+
+@router.get("/me", response_model=UserRead)
+async def get_authenticated(
+    auth_subject: AuthorizeWebUserRead,
+    session: AsyncReadSession = Depends(get_db_read_session),
+) -> UserRead:
+    user = auth_subject.subject
+    repository = UserOrganizationRepository.from_session(session)
+    org_with_roles = await repository.get_organizations_with_role(user.id)
+    return UserRead.model_validate(user).model_copy(
+        update={
+            "organizations": [
+                OrganizationWithRole.from_organization(org, role)
+                for org, role in org_with_roles
+            ]
+        }
+    )
+
+
+@router.patch("/me", response_model=UserRead)
+async def update_authenticated(
+    user_update: UserUpdate,
+    request: Request,
+    auth_subject: AuthorizeWebUserWrite,
+    session: AsyncSession = Depends(get_db_session),
+) -> User:
+    ip_address = request.client.host if request.client else None
+    return await user_service.update(
+        session, auth_subject.subject, user_update, ip_address=ip_address
+    )
+
+
+@router.patch(
+    "/me/organizations/{organization_id}/notification-settings",
+    response_model=UserOrganizationNotificationSettings,
+    responses={
+        404: {
+            "description": "User is not a member of this organization.",
+            "model": ResourceNotFound.schema(),
+        }
+    },
+)
+async def update_authenticated_notification_settings(
+    organization_id: UUID,
+    body: UserOrganizationNotificationSettingsUpdate,
+    auth_subject: AuthorizeUserWrite,
+    session: AsyncSession = Depends(get_db_session),
+) -> UserOrganizationNotificationSettings:
+    """Update the authenticated user's notification settings for an organization."""
+    try:
+        user_org = await user_organization_service.update_notification_settings(
+            session,
+            user_id=auth_subject.subject.id,
+            organization_id=organization_id,
+            notification_settings=body.notification_settings,
+        )
+    except UserNotMemberOfOrganization as exc:
+        raise ResourceNotFound() from exc
+
+    return UserOrganizationNotificationSettings.model_validate(user_org)
+
+
+@router.get(
+    "/me/organizations/{organization_id}/notification-settings",
+    response_model=UserOrganizationNotificationSettings,
+    responses={
+        404: {
+            "description": "User is not a member of this organization.",
+            "model": ResourceNotFound.schema(),
+        }
+    },
+)
+async def get_authenticated_notification_settings(
+    organization_id: UUID,
+    auth_subject: AuthorizeUserRead,
+    session: AsyncReadSession = Depends(get_db_read_session),
+) -> UserOrganizationNotificationSettings:
+    """Get the authenticated user's notification settings for an organization."""
+
+    user_org = await user_organization_service.get_by_user_and_org(
+        session, auth_subject.subject.id, organization_id
+    )
+    if user_org is None:
+        raise ResourceNotFound()
+
+    return UserOrganizationNotificationSettings.model_validate(user_org)
+
+
+@router.get("/me/scopes", response_model=UserScopes)
+async def scopes(
+    auth_subject: AuthSubject[User] = Depends(Authenticator(allowed_subjects={User})),
+) -> UserScopes:
+    return UserScopes(scopes=list(auth_subject.scopes))
+
+
+@router.delete(
+    "/me",
+    response_model=UserDeletionResponse,
+    responses={
+        200: {"description": "Deletion result"},
+    },
+)
+async def delete_authenticated_user(
+    auth_subject: AuthorizeUserWrite,
+    session: AsyncSession = Depends(get_db_session),
+) -> UserDeletionResponse:
+    """
+    Delete the authenticated user account.
+
+    A user can only be deleted if all organizations they are members of have been
+    deleted first. If the user has active organizations, the response will include
+    the list of organizations that must be deleted before the user account can be
+    removed.
+
+    When deleted:
+    - User's email is anonymized
+    - User's avatar and metadata are cleared
+    - User's OAuth accounts are deleted (cascade)
+    - User's Account (payout account) is deleted if present
+    """
+    return await user_service.request_deletion(session, auth_subject.subject)
+
+
+@router.delete(
+    "/me/oauth-accounts/{platform}",
+    status_code=204,
+    responses={
+        404: {"description": "OAuth account not found"},
+        400: {"description": "Cannot disconnect last authentication method"},
+    },
+)
+async def disconnect_oauth_account(
+    platform: OAuthPlatform,
+    auth_subject: AuthorizeWebUserWrite,
+    session: AsyncSession = Depends(get_db_session),
+) -> None:
+    """
+    Disconnect an OAuth account (GitHub or Google) from the authenticated user.
+
+    This allows users to unlink their OAuth provider while keeping their Polar account.
+    They can still authenticate using other methods (email magic link or other OAuth providers).
+
+    Note: You cannot disconnect your last authentication method if your email is not verified.
+    """
+    user = auth_subject.subject
+    await oauth_account_service.disconnect_platform(session, user, platform)

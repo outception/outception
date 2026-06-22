@@ -1,0 +1,190 @@
+from abc import abstractmethod
+from datetime import datetime
+from enum import StrEnum
+from typing import TYPE_CHECKING, Annotated, Literal
+
+import pycountry
+from pydantic import UUID4, BaseModel, Discriminator, computed_field
+
+from polar.config import settings
+from polar.kit.currency import format_currency
+from polar.kit.schemas import Schema
+
+if TYPE_CHECKING:
+    from polar.email.schemas import Email
+
+
+class NotificationType(StrEnum):
+    maintainer_new_paid_subscription = "MaintainerNewPaidSubscriptionNotification"
+    maintainer_new_product_sale = "MaintainerNewProductSaleNotification"
+    maintainer_account_credits_granted = "MaintainerAccountCreditsGrantedNotification"
+
+
+class NotificationPayloadBase(BaseModel):
+    @abstractmethod
+    def subject(self) -> str:
+        pass
+
+    @classmethod
+    @abstractmethod
+    def template_name(cls) -> str:
+        pass
+
+    def to_email(self) -> Email:
+        from polar.email.schemas import EmailAdapter
+
+        return EmailAdapter.validate_python(
+            {
+                "template": self.template_name(),
+                "props": self,
+            }
+        )
+
+
+class NotificationBase(Schema):
+    id: UUID4
+    created_at: datetime
+    type: NotificationType
+
+
+class MaintainerAccountUnderReviewNotificationPayload(NotificationPayloadBase):
+    account_type: str
+
+    def subject(self) -> str:
+        return "Your Polar account is being reviewed"
+
+    @classmethod
+    def template_name(cls) -> str:
+        return "notification_account_under_review"
+
+
+class MaintainerNewPaidSubscriptionNotificationPayload(NotificationPayloadBase):
+    subscriber_name: str
+    subscriber_email: str | None = None
+    tier_name: str
+    tier_price_amount: int | None
+    tier_price_recurring_interval: str
+    tier_price_recurring_interval_count: int = 1
+    tier_organization_name: str
+    tier_organization_slug: str | None = None
+    subscription_id: str | None = None
+    currency: str = "usd"
+
+    @computed_field
+    def formatted_price_amount(self) -> str:
+        if self.tier_price_amount is None:
+            return ""
+        return format_currency(self.tier_price_amount, self.currency)
+
+    @computed_field
+    def formatted_price_with_interval(self) -> str:
+        if self.tier_price_amount is None:
+            return "free"
+        amount = self.formatted_price_amount
+        count = self.tier_price_recurring_interval_count
+        if count > 1:
+            if 11 <= (count % 100) <= 13:
+                suffix = "th"
+            else:
+                suffix = {1: "st", 2: "nd", 3: "rd"}.get(count % 10, "th")
+            return f"{amount}/{count}{suffix} {self.tier_price_recurring_interval}"
+        return f"{amount}/{self.tier_price_recurring_interval}"
+
+    def subject(self) -> str:
+        return f"You have a new subscriber on {self.tier_name} ({self.formatted_price_with_interval})!"
+
+    @classmethod
+    def template_name(cls) -> str:
+        return "notification_new_subscription"
+
+
+class MaintainerNewPaidSubscriptionNotification(NotificationBase):
+    type: Literal[NotificationType.maintainer_new_paid_subscription]
+    payload: MaintainerNewPaidSubscriptionNotificationPayload
+
+
+class MaintainerNewProductSaleNotificationPayload(NotificationPayloadBase):
+    product_name: str
+    product_price_amount: int
+    customer_name: str = ""
+    organization_name: str = ""
+
+    customer_email: str | None = None
+    billing_address_country: str | None = None
+    billing_address_city: str | None = None
+    billing_address_line1: str | None = None
+    product_image_url: str | None = None
+    order_id: str | None = None
+    order_date: str | None = None
+    organization_slug: str | None = None
+    billing_reason: str | None = None
+    currency: str = "usd"
+
+    @computed_field
+    def formatted_price_amount(self) -> str:
+        return format_currency(self.product_price_amount, self.currency)
+
+    @computed_field
+    def formatted_billing_reason(self) -> str | None:
+        return self.billing_reason
+
+    @computed_field
+    def formatted_address_country(self) -> str | None:
+        if not self.billing_address_country:
+            return None
+        country = pycountry.countries.get(alpha_2=self.billing_address_country)
+        return country.name if country else self.billing_address_country
+
+    @computed_field
+    def order_url(self) -> str | None:
+        if not self.organization_slug or not self.order_id:
+            return None
+        return f"{settings.FRONTEND_BASE_URL}/dashboard/{self.organization_slug}/sales/{self.order_id}"
+
+    def subject(self) -> str:
+        return f"You've made a new sale ({self.formatted_price_amount})!"
+
+    @classmethod
+    def template_name(cls) -> str:
+        return "notification_new_sale"
+
+
+class MaintainerNewProductSaleNotification(NotificationBase):
+    type: Literal[NotificationType.maintainer_new_product_sale]
+    payload: MaintainerNewProductSaleNotificationPayload
+
+
+class MaintainerAccountCreditsGrantedNotificationPayload(NotificationPayloadBase):
+    organization_name: str
+    amount: int
+    currency: str = "usd"
+
+    @computed_field
+    def formatted_amount(self) -> str:
+        return format_currency(self.amount, self.currency)
+
+    def subject(self) -> str:
+        return f"{self.organization_name} has received {self.formatted_amount} in fee credits!"
+
+    @classmethod
+    def template_name(cls) -> str:
+        return "notification_credits_granted"
+
+
+class MaintainerAccountCreditsGrantedNotification(NotificationBase):
+    type: Literal[NotificationType.maintainer_account_credits_granted]
+    payload: MaintainerAccountCreditsGrantedNotificationPayload
+
+
+NotificationPayload = (
+    MaintainerNewPaidSubscriptionNotificationPayload
+    | MaintainerNewProductSaleNotificationPayload
+    | MaintainerAccountCreditsGrantedNotificationPayload
+)
+
+Notification = Annotated[
+    MaintainerNewPaidSubscriptionNotification
+    | MaintainerNewProductSaleNotification
+    | MaintainerAccountCreditsGrantedNotification,
+    Discriminator(discriminator="type"),
+]

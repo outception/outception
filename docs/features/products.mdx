@@ -1,0 +1,263 @@
+---
+title: "Products"
+description: "Start selling digital products on Polar in minutes."
+---
+
+<Info>
+**Everything is a product**
+
+Subscriptions and one-time purchases are both products in Polar — same API, same data model, just different pricing and billing logic. They live together in the Products dashboard, filterable by pricing model.
+</Info>
+
+## Billing cycle
+
+A product is either a **one-time purchase** or **recurring**. One-time products charge the customer once and grant access forever. Recurring products bill on an interval — daily, weekly, monthly, or yearly — and you can extend any of those with an interval count to express things like "every 2 weeks" or "every 3 months".
+
+The billing cycle and recurring interval are locked in at creation. If you need to change them later, create a new product instead.
+
+## Pricing
+
+Polar supports several pricing models, and you pick one per product:
+
+- **Fixed price.** Set an amount and that's what customers pay.
+- **Pay what you want.** Customers choose the amount. You can set a minimum and a default that's pre-filled at checkout.
+- **Free.** No charge. Useful for lead magnets, free tiers, or gating benefits behind a sign-up.
+- **Metered pricing.** Charge based on usage — bill per API call, per token, per anything you can count. [Learn more about usage-based billing](/features/usage-based-billing/introduction).
+- **Seat-based pricing.** Sell a number of seats with optional volume tiers, and let the buyer assign them to teammates. [Learn more about seat-based billing](/features/seat-based-pricing).
+
+Metered prices stack on top of the others. You can pair one with a fixed base fee for a classic "base + usage" plan, and you can attach multiple metered prices to the same product if you want to bill on more than one dimension at once — say, per API call *and* per GB of storage.
+
+Pricing type is locked in at creation, but for fixed-price products you can change the amount at any time. Existing subscribers are **grandfathered** onto the price they signed up at, so a price change only affects new purchases. If you do want to migrate someone onto the new price, you can do it [per subscription](/features/subscriptions/manage) from the dashboard or the API.
+
+Whether the amount you enter includes tax or has tax added on top depends on your tax behavior setting. By default, Polar picks the convention that matches the customer's country (inclusive in most of the world, exclusive in the US, Canada, and India). You can set your own default under **Settings**. See [Tax Inclusive Pricing](/features/tax-inclusive-pricing) for how the amount you set translates to what customers actually pay.
+
+### Multiple payment currencies
+
+Products can be priced in several currencies at once so customers pay in their local currency. Your organization has a default payment currency that acts as the fallback, and you can add more on top. The price structure (price type, metered prices, etc.) must match across every currency you enable.
+
+Polar picks the currency based on the customer's geolocation at checkout. If their currency isn't enabled on the product, it falls back to your organization's default.
+
+<Warning>
+**Creating checkout sessions from a backend or proxy?** Polar reads the customer's geolocation from the IP address of the request that creates the session. If you create sessions server-side (an API, a Cloudflare Worker, etc.), Polar sees *your server's* IP and may pick the wrong currency.
+
+Forward the customer's IP as [`customer_ip_address`](/features/checkout/session#customer-ip-address) when creating the session.
+</Warning>
+
+<Accordion title="Supported currencies">
+Polar supports 130+ currencies for product pricing:
+
+| Code | Currency |
+| --- | --- |
+| `AED` | United Arab Emirates Dirham |
+| `ALL` | Albanian Lek |
+| `AMD` | Armenian Dram |
+| `AOA` | Angolan Kwanza |
+| `ARS` | Argentine Peso |
+| `AUD` | Australian Dollar |
+| `AWG` | Aruban Florin |
+| `AZN` | Azerbaijani Manat |
+| `BAM` | Bosnia-Herzegovina Convertible Mark |
+| `BBD` | Barbadian Dollar |
+| `BDT` | Bangladeshi Taka |
+| `BIF` | Burundian Franc |
+| `BMD` | Bermudan Dollar |
+| `BND` | Brunei Dollar |
+| `BOB` | Bolivian Boliviano |
+| `BRL` | Brazilian Real |
+| `BSD` | Bahamian Dollar |
+| `BWP` | Botswanan Pula |
+| `BZD` | Belize Dollar |
+| `CAD` | Canadian Dollar |
+| `CDF` | Congolese Franc |
+| `CHF` | Swiss Franc |
+| `CLP` | Chilean Peso |
+| `CNY` | Chinese Yuan |
+| `COP` | Colombian Peso |
+| `CRC` | Costa Rican Colón |
+| `CVE` | Cape Verdean Escudo |
+| `CZK` | Czech Koruna |
+| `DJF` | Djiboutian Franc |
+| `DKK` | Danish Krone |
+| `DOP` | Dominican Peso |
+| `DZD` | Algerian Dinar |
+| `EGP` | Egyptian Pound |
+| `ETB` | Ethiopian Birr |
+| `EUR` | Euro |
+| `FJD` | Fijian Dollar |
+| `FKP` | Falkland Islands Pound |
+| `GBP` | British Pound |
+| `GEL` | Georgian Lari |
+| `GIP` | Gibraltar Pound |
+| `GMD` | Gambian Dalasi |
+| `GNF` | Guinean Franc |
+| `GTQ` | Guatemalan Quetzal |
+| `GYD` | Guyanaese Dollar |
+| `HKD` | Hong Kong Dollar |
+| `HNL` | Honduran Lempira |
+| `HTG` | Haitian Gourde |
+| `HUF` | Hungarian Forint |
+| `IDR` | Indonesian Rupiah |
+| `ILS` | Israeli New Shekel |
+| `INR` | Indian Rupee |
+| `ISK` | Icelandic Króna |
+| `JMD` | Jamaican Dollar |
+| `JPY` | Japanese Yen |
+| `KES` | Kenyan Shilling |
+| `KGS` | Kyrgystani Som |
+| `KHR` | Cambodian Riel |
+| `KMF` | Comorian Franc |
+| `KRW` | South Korean Won |
+| `KYD` | Cayman Islands Dollar |
+| `KZT` | Kazakhstani Tenge |
+| `LAK` | Laotian Kip |
+| `LKR` | Sri Lankan Rupee |
+| `LRD` | Liberian Dollar |
+| `LSL` | Lesotho Loti |
+| `MAD` | Moroccan Dirham |
+| `MDL` | Moldovan Leu |
+| `MGA` | Malagasy Ariary |
+| `MKD` | Macedonian Denar |
+| `MNT` | Mongolian Tugrik |
+| `MOP` | Macanese Pataca |
+| `MUR` | Mauritian Rupee |
+| `MVR` | Maldivian Rufiyaa |
+| `MWK` | Malawian Kwacha |
+| `MXN` | Mexican Peso |
+| `MYR` | Malaysian Ringgit |
+| `MZN` | Mozambican Metical |
+| `NAD` | Namibian Dollar |
+| `NGN` | Nigerian Naira |
+| `NIO` | Nicaraguan Córdoba |
+| `NOK` | Norwegian Krone |
+| `NPR` | Nepalese Rupee |
+| `NZD` | New Zealand Dollar |
+| `PAB` | Panamanian Balboa |
+| `PEN` | Peruvian Sol |
+| `PGK` | Papua New Guinean Kina |
+| `PHP` | Philippine Peso |
+| `PKR` | Pakistani Rupee |
+| `PLN` | Polish Zloty |
+| `PYG` | Paraguayan Guarani |
+| `QAR` | Qatari Riyal |
+| `RON` | Romanian Leu |
+| `RSD` | Serbian Dinar |
+| `RWF` | Rwandan Franc |
+| `SAR` | Saudi Riyal |
+| `SBD` | Solomon Islands Dollar |
+| `SCR` | Seychellois Rupee |
+| `SEK` | Swedish Krona |
+| `SGD` | Singapore Dollar |
+| `SHP` | St. Helena Pound |
+| `SOS` | Somali Shilling |
+| `SRD` | Surinamese Dollar |
+| `SZL` | Swazi Lilangeni |
+| `THB` | Thai Baht |
+| `TJS` | Tajikistani Somoni |
+| `TOP` | Tongan Paʻanga |
+| `TRY` | Turkish Lira |
+| `TTD` | Trinidad & Tobago Dollar |
+| `TWD` | New Taiwan Dollar |
+| `TZS` | Tanzanian Shilling |
+| `UAH` | Ukrainian Hryvnia |
+| `UGX` | Ugandan Shilling |
+| `USD` | US Dollar |
+| `UYU` | Uruguayan Peso |
+| `UZS` | Uzbekistani Som |
+| `VND` | Vietnamese Dong |
+| `VUV` | Vanuatu Vatu |
+| `WST` | Samoan Tala |
+| `XAF` | Central African CFA Franc |
+| `XCD` | East Caribbean Dollar |
+| `XCG` | Caribbean Guilder |
+| `XOF` | West African CFA Franc |
+| `XPF` | CFP Franc |
+| `YER` | Yemeni Rial |
+| `ZAR` | South African Rand |
+| `ZMW` | Zambian Kwacha |
+</Accordion>
+
+## Trial period
+
+For recurring products, toggle **Enable trial period** to give customers a window where they aren't charged. Pick a number and a unit (days, weeks, months, or years) and Polar handles the rest.
+
+[Learn more about trials](/features/subscriptions/trials).
+
+## Metadata
+
+You can attach arbitrary key–value metadata to a product. It's not shown to customers, but it travels along on every order, subscription, and webhook tied to the product, which makes it useful for keeping track of internal IDs or categories that live outside Polar.
+
+## Automated Benefits
+
+Benefits are what your customers actually get when they buy: license keys, Discord roles, GitHub repository access, file downloads, feature flags, or a custom benefit you wire up yourself.
+
+Polar grants and revokes benefits automatically as customers purchase, renew, or cancel. [Learn more about benefits](/features/benefits/introduction).
+
+## Checkout Page
+
+How your product is represented during checkout.
+
+### Description
+
+Optional copy that appears on the checkout page. Use it to pitch the product, list what's included, or anything else that helps the customer commit. Markdown is supported.
+
+### Product media
+
+Upload images to display on the checkout page. Images can be up to 10MB each, and you can re-arrange or remove them at any time.
+
+### Checkout fields
+
+Collect extra information from customers at checkout — phone numbers, terms-of-service agreements, custom data you need for fulfillment, anything you want.
+
+Fields are defined once at the organization level and then enabled per product, where you also choose whether each one is required. Supported field types: text, number, date, checkbox, and select.
+
+<Info>
+A required checkbox blocks confirmation until the customer ticks it. Handy for legal terms.
+</Info>
+
+The collected values show up on the resulting order or subscription.
+
+## Update a product
+
+Most things on a product can be edited after the fact, except for the billing cycle and pricing type — those are locked in at creation. To change either, create a new product.
+
+A few things to know:
+
+- **Existing subscribers stay on their original price.** Changing a fixed price only affects new purchases.
+- **Benefit changes propagate.** Add a benefit and existing customers get it automatically. Remove one and they lose access.
+- **Need a similar product?** Use **Duplicate Product** from the product menu to clone an existing one as a starting point — handy for spinning up a yearly variant of a monthly plan, or for A/B testing pricing.
+
+## Archive a product
+
+Products can be archived but not permanently deleted. Click **Archive** from the product menu and the product disappears from new checkouts.
+
+Existing customers keep their access, and active subscriptions keep renewing. You can unarchive at any time from the same menu to make the product available again.
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="What about variants? Can I sell a monthly and a yearly version of the same product?">
+    Polar takes a different approach to what the industry typically calls **variants**. Each product has a single pricing model, and instead of bolting variants onto one product, you create one product per pricing model and showcase them together at checkout.
+
+    So a "monthly" and "yearly" plan are two products, each with their own pricing and benefits, presented side-by-side via [Checkout Links](/features/checkout/links) or the [Checkout Session API](/features/checkout/session). It keeps the API and the data model clean, and gives you full freedom over what each option includes.
+  </Accordion>
+
+  <Accordion title="Can I change the price of a product after publishing it?">
+    Yes, for fixed-price products. Existing subscribers are grandfathered onto their original price and only new purchases see the updated amount — but you can move individual subscribers onto the new price [per subscription](/features/subscriptions/manage) if you want. Billing cycle and pricing type can't change.
+  </Accordion>
+
+  <Accordion title="Can I sell usage-based or metered products?">
+    Yes. Set the price type to **Metered** and link it to a meter that tracks the events you care about. Full walkthrough in the [usage-based billing guide](/features/usage-based-billing/introduction).
+  </Accordion>
+
+  <Accordion title="Can I sell team or per-seat plans?">
+    Yes, via [seat-based pricing](/features/seat-based-pricing). The buyer purchases a number of seats and assigns them to teammates, who each get the product's benefits.
+  </Accordion>
+
+  <Accordion title="Will customers see prices in their local currency?">
+    If you've enabled additional payment currencies on the product, yes — Polar matches the customer's geolocation to one of the enabled currencies. If there's no match, it falls back to your organization's default. See [Multiple payment currencies](#multiple-payment-currencies) above.
+  </Accordion>
+
+  <Accordion title="Can I duplicate a product?">
+    Yes. From the product list or the product menu, pick **Duplicate Product** to clone all the settings into a new draft you can tweak before saving.
+  </Accordion>
+</AccordionGroup>

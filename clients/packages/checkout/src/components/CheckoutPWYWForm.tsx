@@ -1,0 +1,148 @@
+import type { schemas } from '@polar-sh/client'
+import { formatCurrency } from '@polar-sh/currency'
+import {
+  DEFAULT_LOCALE,
+  useTranslations,
+  type AcceptedLocale,
+} from '@polar-sh/i18n'
+import MoneyInput from '@polar-sh/ui/components/atoms/MoneyInput'
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@polar-sh/ui/components/ui/form'
+import { useCallback, useEffect, useRef } from 'react'
+import { useForm, useWatch } from 'react-hook-form'
+import useDebouncedCallback from '../hooks/debounce'
+
+export interface CheckoutPWYWFormProps {
+  update: (data: schemas['CheckoutUpdatePublic']) => void
+  checkout: schemas['CheckoutPublic']
+  productPrice: schemas['ProductPriceCustom']
+  locale?: AcceptedLocale
+}
+
+export const CheckoutPWYWForm = ({
+  update,
+  checkout,
+  productPrice,
+  locale = DEFAULT_LOCALE,
+}: CheckoutPWYWFormProps) => {
+  const t = useTranslations(locale)
+  const { amount } = checkout
+
+  const form = useForm<{ amount: number }>({
+    defaultValues: { amount: amount || 0 },
+  })
+  const { control, trigger, reset } = form
+
+  const minimumAmount = productPrice.minimum_amount ?? 50 // should be set, but fallback to 50 for type safety
+
+  const validateAmount = useCallback(
+    (value: number): string | true => {
+      // Handle gap validation when free is allowed (minimumAmount = 0)
+      if (minimumAmount === 0 && value > 0 && value < 50) {
+        return t('checkout.pwywForm.amountFreeOrMinimum', {
+          min: formatCurrency('compact', locale)(50, checkout.currency),
+          zero: formatCurrency('compact', locale)(0, checkout.currency),
+        })
+      }
+
+      if (value < minimumAmount) {
+        return t('checkout.pwywForm.amountMinimum', {
+          min: formatCurrency('compact', locale)(
+            minimumAmount,
+            checkout.currency,
+          ),
+        })
+      }
+
+      return true
+    },
+    [minimumAmount, checkout.currency, locale, t],
+  )
+
+  const checkoutAmountRef = useRef(amount)
+
+  useEffect(() => {
+    checkoutAmountRef.current = amount
+  }, [amount])
+
+  const debouncedAmountUpdate = useDebouncedCallback(
+    async (newAmount: number) => {
+      if (newAmount === checkoutAmountRef.current) return
+      const isValid = await trigger('amount')
+      if (isValid) {
+        update?.({ amount: newAmount })
+      }
+    },
+    600,
+    [update, trigger],
+  )
+
+  const watchedAmount = useWatch({ control, name: 'amount' })
+
+  useEffect(() => {
+    if (watchedAmount !== undefined) {
+      debouncedAmountUpdate(watchedAmount)
+    }
+  }, [watchedAmount, debouncedAmountUpdate])
+
+  useEffect(() => {
+    reset({ amount: amount || 0 })
+  }, [amount, reset])
+
+  const minLabelText =
+    minimumAmount === 0
+      ? null
+      : t('checkout.pwywForm.minimum', {
+          amount: formatCurrency('compact', locale)(
+            minimumAmount,
+            checkout.currency,
+          ),
+        })
+
+  return (
+    <Form {...form}>
+      <form className="flex w-full flex-col gap-3">
+        <FormLabel>
+          {t('checkout.pwywForm.label')}
+          {minLabelText && (
+            <>
+              {' '}
+              <span className="text-gray-400">({minLabelText})</span>
+            </>
+          )}
+        </FormLabel>
+        <div className="flex flex-row items-center gap-2">
+          <FormField
+            control={control}
+            shouldUnregister={true}
+            name="amount"
+            rules={{
+              validate: validateAmount,
+            }}
+            render={({ field }) => {
+              return (
+                <FormItem className="w-full">
+                  <MoneyInput
+                    className="bg-white shadow-xs"
+                    name={field.name}
+                    currency={checkout.currency}
+                    value={field.value || undefined}
+                    onChange={field.onChange}
+                    placeholder={0}
+                    disabled={field.disabled}
+                  />
+                  <FormMessage />
+                </FormItem>
+              )
+            }}
+          />
+        </div>
+      </form>
+    </Form>
+  )
+}

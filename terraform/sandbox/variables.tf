@@ -1,0 +1,415 @@
+# =============================================================================
+# Variables
+# =============================================================================
+
+variable "ghcr_auth_token" {
+  description = "GitHub Container Registry auth token (Personal Access Token with read:packages scope)"
+  type        = string
+  sensitive   = true
+}
+
+variable "ghcr_username" {
+  description = "GitHub username for GHCR authentication"
+  type        = string
+  sensitive   = true
+}
+
+variable "google_client_id_sandbox" {
+  description = "Google Client ID for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+variable "google_client_secret_sandbox" {
+  description = "Google Client Secret for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+variable "openai_api_key_sandbox" {
+  description = "OpenAI API Key for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+variable "pydantic_ai_gateway_api_key_sandbox" {
+  description = "Pydantic AI Gateway API Key for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+# Backend - Sandbox
+variable "backend_current_jwk_kid_sandbox" {
+  description = "Current JWK KID for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+variable "backend_discord_bot_token_sandbox" {
+  description = "Discord Bot Token for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+variable "backend_discord_client_id_sandbox" {
+  description = "Discord Client ID for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+variable "backend_discord_client_secret_sandbox" {
+  description = "Discord Client Secret for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+variable "backend_discord_proxy_url" {
+  description = "Discord Proxy URL"
+  type        = string
+  sensitive   = true
+}
+
+variable "backend_resend_api_key_sandbox" {
+  description = "Resend API Key for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+variable "backend_resend_webhook_secret" {
+  description = "Resend Webhook Secret for sandbox"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "backend_logo_dev_publishable_key_sandbox" {
+  description = "Logo.dev Publishable Key for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+variable "backend_secret_sandbox" {
+  description = "Backend Secret for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+variable "backend_sentry_dsn_sandbox" {
+  description = "Sentry DSN for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+variable "backend_jwks_sandbox" {
+  description = "Backend JWKS content for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+# AWS S3 - Sandbox
+variable "aws_access_key_id_sandbox" {
+  description = "AWS Access Key ID for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+variable "aws_secret_access_key_sandbox" {
+  description = "AWS Secret Access Key for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+variable "s3_files_download_salt_sandbox" {
+  description = "S3 Files Download Salt for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+variable "s3_files_download_secret_sandbox" {
+  description = "S3 Files Download Secret for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+# GitHub - Sandbox
+variable "github_client_id_sandbox" {
+  description = "GitHub Client ID for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+variable "github_client_secret_sandbox" {
+  description = "GitHub Client Secret for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+variable "github_repository_benefits_app_identifier_sandbox" {
+  description = "GitHub Repository Benefits App Identifier for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+variable "github_repository_benefits_app_namespace_sandbox" {
+  description = "GitHub Repository Benefits App Namespace for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+variable "github_repository_benefits_app_private_key_sandbox" {
+  description = "GitHub Repository Benefits App Private Key for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+variable "github_repository_benefits_client_id_sandbox" {
+  description = "GitHub Repository Benefits Client ID for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+variable "github_repository_benefits_client_secret_sandbox" {
+  description = "GitHub Repository Benefits Client Secret for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+# Stripe - Sandbox
+variable "stripe_connect_webhook_secret_sandbox" {
+  description = "Stripe Connect Webhook Secret for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+variable "stripe_secret_key_sandbox" {
+  description = "Stripe Secret Key for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+variable "stripe_publishable_key_sandbox" {
+  description = "Stripe Publishable Key for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+variable "stripe_webhook_secret_sandbox" {
+  description = "Stripe Webhook Secret for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+# Apple (shared across environments)
+variable "apple_client_id" {
+  description = "Apple Client ID"
+  type        = string
+  sensitive   = true
+}
+
+variable "apple_team_id" {
+  description = "Apple Team ID"
+  type        = string
+  sensitive   = true
+}
+
+variable "apple_key_id" {
+  description = "Apple Key ID"
+  type        = string
+  sensitive   = true
+}
+
+variable "apple_key_value" {
+  description = "Apple Key Value"
+  type        = string
+  sensitive   = true
+}
+
+# Polar
+variable "polar_access_token" {
+  description = "Polar API access token"
+  type        = string
+  sensitive   = true
+}
+
+variable "polar_webhook_secret" {
+  description = "Polar webhook secret"
+  type        = string
+  sensitive   = true
+}
+
+variable "polar_organization_id" {
+  description = "Polar organization ID"
+  type        = string
+}
+
+variable "polar_free_product_id" {
+  description = "Polar free-tier product ID"
+  type        = string
+}
+
+variable "polar_scale_product_id" {
+  description = "Polar Scale-tier product ID"
+  type        = string
+}
+
+variable "grafana_cloud_prometheus_url" {
+  description = "Grafana Cloud Prometheus base URL"
+  type        = string
+  sensitive   = true
+}
+
+variable "grafana_cloud_prometheus_username" {
+  description = "Grafana Cloud Prometheus username (numeric stack ID)"
+  type        = string
+  sensitive   = true
+}
+
+variable "grafana_cloud_prometheus_password" {
+  description = "Grafana Cloud Prometheus write API key"
+  type        = string
+  sensitive   = true
+}
+
+
+
+# Logfire
+variable "logfire_token" {
+  description = "Logfire Token"
+  type        = string
+  sensitive   = true
+}
+
+variable "numeral_api_key_sandbox" {
+  description = "Numeral API Key for sandbox"
+  type        = string
+  sensitive   = true
+}
+
+# Tinybird
+variable "tinybird_api_token" {
+  description = "Tinybird API Token"
+  type        = string
+  sensitive   = true
+}
+
+variable "tinybird_clickhouse_username" {
+  description = "Tinybird ClickHouse Username"
+  type        = string
+  sensitive   = true
+}
+
+variable "tinybird_clickhouse_token" {
+  description = "Tinybird ClickHouse Token"
+  type        = string
+  sensitive   = true
+}
+
+variable "tinybird_workspace" {
+  description = "Tinybird Workspace name"
+  type        = string
+}
+
+variable "tinybird_read_token" {
+  description = "Tinybird Read Token"
+  type        = string
+  sensitive   = true
+}
+
+variable "customer_portal_url_overrides" {
+  description = "JSON object mapping organization IDs to custom customer portal URLs"
+  type        = string
+  default     = "{}"
+}
+
+variable "plain_default_tier_external_id" {
+  description = "Default Plain tier external ID used as a fallback for the polar-self support benefit"
+  type        = string
+}
+
+variable "firecrawl_api_key" {
+  description = "Firecrawl Cloud API key"
+  type        = string
+  sensitive   = true
+}
+
+# Vercel frontend secrets
+variable "stripe_publishable_key" {
+  description = "Stripe publishable key for the Vercel frontend"
+  type        = string
+  sensitive   = true
+}
+
+variable "stripe_publishable_key_preview" {
+  description = "Stripe publishable key for Vercel preview deployments"
+  type        = string
+  sensitive   = true
+}
+
+
+variable "pydantic_ai_gateway_api_key" {
+  description = "Pydantic AI Gateway API key for the Vercel frontend"
+  type        = string
+  sensitive   = true
+}
+
+
+
+variable "gram_api_key" {
+  description = "Gram API key for the Vercel frontend"
+  type        = string
+  sensitive   = true
+}
+
+variable "mintlify_assistant_api_key" {
+  description = "Mintlify assistant API key for the Vercel frontend"
+  type        = string
+  sensitive   = true
+}
+
+variable "mcp_oauth2_client_id" {
+  description = "MCP OAuth2 client ID for the Vercel frontend"
+  type        = string
+  sensitive   = true
+}
+
+variable "mcp_oauth2_client_secret" {
+  description = "MCP OAuth2 client secret for the Vercel frontend"
+  type        = string
+  sensitive   = true
+}
+
+variable "sentry_auth_token" {
+  description = "Sentry auth token for the Vercel frontend build"
+  type        = string
+  sensitive   = true
+}
+
+variable "polar_preview_access_token" {
+  description = "Polar preview access token for the Vercel frontend"
+  type        = string
+  sensitive   = true
+}
+
+variable "next_public_sentry_dsn" {
+  description = "Sentry DSN for the Vercel frontend"
+  type        = string
+  sensitive   = true
+}
+
+variable "next_public_posthog_token" {
+  description = "PostHog token for the Vercel frontend"
+  type        = string
+  sensitive   = true
+}
+
+variable "next_public_apple_domain_association" {
+  description = "Apple Pay domain association for the Vercel frontend"
+  type        = string
+  sensitive   = true
+}
+
+variable "next_public_stripe_payment_method_configuration" {
+  description = "Stripe payment method configuration ID for the Vercel frontend"
+  type        = string
+  sensitive   = true
+}

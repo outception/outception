@@ -1,0 +1,27 @@
+# Global code owners
+* @polarsource/engineering
+
+# Backend
+server/** @frankie567 @polarsource/engineering
+server/polar/metrics/** @Yopi @pieterbeulque
+server/tests/metrics/** @Yopi @pieterbeulque
+server/polar/organization_review/** @psincraian
+server/tests/organization_review/** @psincraian
+server/polar/customer_seat/** @psincraian
+server/tests/customer_seat/** @psincraian
+server/tests/e2e/** @psincraian
+
+# Infrastructure
+terraform/** @Yopi
+infra/** @Yopi
+
+# Frontend
+clients/apps/web/src/components/Checkout/** @sebastianekstrom
+clients/packages/checkout/** @sebastianekstrom
+clients/packages/orbit/** @emilwidlund @sebastianekstrom
+
+# Docs
+/docs/ @pieterbeulque
+
+# Other
+**/legal @victoriabolin @birkjernstrom

@@ -1,0 +1,58 @@
+{
+  "name": "@polar-sh/i18n",
+  "version": "0.1.0",
+  "description": "Polar i18n - Locale files and translation utilities",
+  "author": "Polar",
+  "license": "Apache-2.0",
+  "type": "module",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/polarsource/polar.git",
+    "directory": "clients/packages/i18n"
+  },
+  "scripts": {
+    "translate": "tsx scripts/translate.ts",
+    "validate": "tsx scripts/validate.ts",
+    "lint": "oxfmt --check . && eslint --max-warnings 0 .",
+    "typecheck": "tsc --noEmit",
+    "build": "rm -rf dist && tsup",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./formatters/date": {
+      "types": "./dist/formatters/date.d.ts",
+      "default": "./dist/formatters/date.js"
+    },
+    "./formatters/ordinal": {
+      "types": "./dist/formatters/ordinal.d.ts",
+      "default": "./dist/formatters/ordinal.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "devDependencies": {
+    "@ai-sdk/google": "^2.0.69",
+    "@ai-sdk/openai": "^3.0.53",
+    "@polar-sh/eslint-config": "workspace:*",
+    "@polar-sh/typescript-config": "workspace:*",
+    "@types/react": "^19.2.14",
+    "ai": "^6.0.167",
+    "dotenv": "^16.6.1",
+    "react": "^19.2.5",
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
+    "typescript": "latest",
+    "vitest": "^4.1.4"
+  },
+  "peerDependencies": {
+    "react": "^19.2.4"
+  }
+}

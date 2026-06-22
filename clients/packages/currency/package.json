@@ -1,0 +1,45 @@
+{
+  "name": "@polar-sh/currency",
+  "description": "Polar Currency Utilities",
+  "author": "Polar",
+  "license": "Apache-2.0",
+  "type": "module",
+  "private": true,
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/polarsource/polar.git",
+    "directory": "clients/packages/currency"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "build": "rm -rf dist/ && tsup",
+    "format": "oxfmt ./src",
+    "format:check": "oxfmt --check ./src",
+    "lint": "pnpm format:check && eslint --max-warnings 0 .",
+    "typecheck": "tsc --noEmit"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "devDependencies": {
+    "@polar-sh/eslint-config": "workspace:*",
+    "@polar-sh/typescript-config": "workspace:*",
+    "tsup": "^8.5.1",
+    "typescript": "latest",
+    "vitest": "^4.1.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

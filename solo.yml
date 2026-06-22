@@ -1,0 +1,36 @@
+# Visit https://soloterm.com to learn more
+name: Polar
+icon: ./clients/apps/web/public/favicon.png
+processes:
+  Containers:
+    command: cd server && docker compose up
+    working_dir: ./server
+    auto_start: true
+    auto_restart: true
+  Funnel:
+    command: tailscale funnel 8000
+    auto_start: true
+    auto_restart: true
+  API:
+    command: cd server && uv run task api
+    working_dir: ./server
+    auto_start: true
+    auto_restart: false
+    restart_when_changed:
+      - server/.env
+    env: {}
+  Worker:
+    command: cd server && uv run task worker
+    working_dir: ./server
+    auto_start: true
+    auto_restart: false
+    restart_when_changed:
+      - server/.env
+    env: {}
+  Web:
+    command: cd clients && pnpm dev
+    working_dir: ./clients
+    auto_start: true
+    auto_restart: false
+    restart_when_changed: []
+    env: {}
