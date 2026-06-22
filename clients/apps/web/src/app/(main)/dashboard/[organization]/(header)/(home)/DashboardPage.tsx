@@ -8,7 +8,9 @@ interface OverviewPageProps {
   organization: schemas['Organization']
 }
 
-export default function OverviewPage({ organization: _organization }: OverviewPageProps) {
+export default function OverviewPage({
+  organization: _organization,
+}: OverviewPageProps) {
   return (
     <DashboardBody className="gap-y-8 pb-16 md:gap-y-16" title={null}>
       <PromotionsDashboard />

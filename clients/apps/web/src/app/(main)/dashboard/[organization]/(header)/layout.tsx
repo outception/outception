@@ -11,10 +11,8 @@ export default async function Layout({
   const defaultCollapsed = cookieStore.get('sidebar_state')?.value === 'false'
 
   return (
-    <>
-      <SidebarProvider defaultOpen={!defaultCollapsed}>
-        <DashboardLayout>{children}</DashboardLayout>
-      </SidebarProvider>
-    </>
+    <SidebarProvider defaultOpen={!defaultCollapsed}>
+      <DashboardLayout>{children}</DashboardLayout>
+    </SidebarProvider>
   )
 }

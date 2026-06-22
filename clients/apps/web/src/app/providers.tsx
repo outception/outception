@@ -39,17 +39,7 @@ export function PolarPostHogProvider({
   return <PostHogProvider client={posthog}>{children}</PostHogProvider>
 }
 
-const FORCED_DARK_PREFIXES = [
-  '/features',
-  '/customers',
-  '/blog',
-  '/resources',
-  '/company',
-  '/startup-program',
-  '/downloads',
-  '/legal',
-  '/midday/portal',
-]
+const FORCED_DARK_PREFIXES = ['/legal']
 
 const isForcedDarkPath = (pathname: string): boolean =>
   pathname === '/' ||

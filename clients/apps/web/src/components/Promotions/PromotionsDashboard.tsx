@@ -28,9 +28,7 @@ const KpiCard = ({ label, value }: { label: string; value: string }) => (
   </Box>
 )
 
-const statusColor = (
-  status: string,
-): 'green' | 'blue' | 'gray' | 'yellow' => {
+const statusColor = (status: string): 'green' | 'blue' | 'gray' | 'yellow' => {
   if (status === 'active') return 'green'
   if (status === 'queued') return 'blue'
   if (status === 'pending_payment') return 'yellow'

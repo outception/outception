@@ -61,7 +61,6 @@ export const DashboardSidebar = ({
   }, [])
   const isTopBannerVisible = CONFIG.IS_SANDBOX || _isImpersonating
 
-
   return (
     <Sidebar variant="inset" collapsible="icon">
       <SidebarHeader
@@ -104,7 +103,6 @@ export const DashboardSidebar = ({
         </motion.div>
       </SidebarContent>
       <SidebarFooter>
-
         {type === 'organization' && organization && (
           <SupportButton organization={organization} />
         )}

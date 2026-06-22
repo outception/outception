@@ -30,7 +30,6 @@ export const useDeletePersonalAccessToken = () =>
     },
   })
 
-
 export const useUpdateUser = () =>
   useMutation({
     mutationFn: (body: schemas['UserUpdate']) => {

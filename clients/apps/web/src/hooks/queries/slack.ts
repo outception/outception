@@ -64,7 +64,6 @@ export const useSaveSlackCredentials = () =>
     },
   })
 
-
 export const useSlackWorkspaceUsers = (
   integrationId?: string,
   { enabled = true }: { enabled?: boolean } = {},

@@ -1,8 +1,5 @@
 import { getQueryClient } from '@/utils/api/query'
-import {
-  promotionsApi,
-  type PromotionCreate,
-} from '@/utils/promotions'
+import { promotionsApi, type PromotionCreate } from '@/utils/promotions'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { defaultRetry } from './retry'
 

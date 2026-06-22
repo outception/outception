@@ -1,17 +1,19 @@
 import { usePolarClient } from '@/providers/PolarClientProvider'
-import { schemas, unwrap } from '@polar-sh/client'
+import { newsApi, type NewsSort } from '@/utils/news'
 import { useQuery } from '@tanstack/react-query'
 
-export type NewsSourceMeta = schemas['SourceMeta']
-export type NewsSourceResponse = schemas['SourceResponse']
-export type NewsItem = schemas['NewsItem']
-export type NewsSort = 'hot' | 'new' | 'top' | 'rising'
+export type {
+  NewsItem,
+  NewsSort,
+  NewsSourceMeta,
+  NewsSourceResponse,
+} from '@/utils/news'
 
 export const useNewsSources = () => {
   const { polar } = usePolarClient()
   return useQuery({
     queryKey: ['news', 'sources'],
-    queryFn: () => unwrap(polar.GET('/v1/news/sources')),
+    queryFn: () => newsApi(polar).sources(),
     staleTime: Infinity,
   })
 }
@@ -23,12 +25,7 @@ export const useNewsSource = (
   const { polar } = usePolarClient()
   return useQuery({
     queryKey: ['news', 'source', id, sort],
-    queryFn: () =>
-      unwrap(
-        polar.GET('/v1/news/{source_id}', {
-          params: { path: { source_id: id ?? '' }, query: { sort } },
-        }),
-      ),
+    queryFn: () => newsApi(polar).source(id ?? '', sort),
     enabled: !!id,
     staleTime: 5 * 60_000,
   })

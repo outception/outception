@@ -26,7 +26,13 @@ const ComposePromotionForm = ({ hide }: { hide: () => void }) => {
   const { data: pricing } = usePromotionPricing()
   const createPromotion = useCreatePromotion()
   const { control, handleSubmit } = useForm<ComposeForm>({
-    defaultValues: { category: 'news', title: '', body: '', link: '', blocks: 1 },
+    defaultValues: {
+      category: 'news',
+      title: '',
+      body: '',
+      link: '',
+      blocks: 1,
+    },
   })
 
   const watchedBlocks = useWatch({ control, name: 'blocks' })
@@ -144,7 +150,8 @@ const ComposePromotionForm = ({ hide }: { hide: () => void }) => {
           />
         </Box>
         <Text color="muted">
-          Total: ${(priceCents / 100).toFixed(2)} for {blocks * blockMinutes} min
+          Total: ${(priceCents / 100).toFixed(2)} for {blocks * blockMinutes}{' '}
+          min
         </Text>
       </Box>
 

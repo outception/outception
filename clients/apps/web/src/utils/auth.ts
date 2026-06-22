@@ -1,5 +1,5 @@
 import { getPublicServerURL } from '@/utils/api'
-import { Client, operations, schemas } from '@polar-sh/client'
+import { Client, schemas } from '@polar-sh/client'
 import { redirect } from 'next/navigation'
 
 export const getGitHubAuthorizeLoginURL = (): string => {
@@ -29,8 +29,6 @@ export const getGoogleAuthorizeLinkURL = (return_to?: string): string => {
 export const getAppleAuthorizeURL = (): string => {
   return `${getPublicServerURL()}/v1/auth/apple/authorize`
 }
-
-
 
 export const checkAuthenticationSession = async (
   api: Client,
