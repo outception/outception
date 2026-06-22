@@ -6,7 +6,6 @@ from polar.billing.endpoints import router as billing_router
 from polar.email_update.endpoints import router as email_update_router
 from polar.eventstream.endpoints import router as stream_router
 from polar.integrations.github.endpoints import router as github_router
-from polar.integrations.slack.endpoints import router as slack_router
 from polar.news.endpoints import router as news_router
 from polar.oauth2.endpoints.oauth2 import router as oauth2_router
 from polar.organization.endpoints import router as organization_router
@@ -23,8 +22,6 @@ router = APIRouter(prefix="/v1")
 router.include_router(user_router)
 # /integrations/github
 router.include_router(github_router)
-# /integrations/slack
-router.include_router(slack_router)
 # /personal_access_tokens
 router.include_router(pat_router)
 # /stream

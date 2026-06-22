@@ -133,7 +133,6 @@ job auto-translates the rest. Don't edit other locale files. (More in `clients/A
   product id + access token + webhook secret in `server/.env`.
 - **Tinybird** (optional): promotion event ingestion + analytics pipe. Falls back to Postgres.
 - **GitHub / Google / Apple**: OAuth2 authentication.
-- **Slack**: workspace integration for notifications. Configured via OAuth at runtime (no `.env` setup).
 - **S3 / Minio**: object storage.
 - **Redis**: cache and job queue.
 - **PostgreSQL**: primary database.

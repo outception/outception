@@ -72,10 +72,6 @@ class Settings(BaseSettings):
     GRAFANA_CLOUD_PROMETHEUS_QUERY_USER: str | None = None
     GRAFANA_CLOUD_PROMETHEUS_QUERY_KEY: str | None = None
 
-    # Slack
-    SLACK_BOT_TOKEN: str | None = None
-    SLACK_CHANNEL: str | None = None
-
     # SLO Report
     SLO_REPORT_ENABLED: bool = True
 
@@ -225,15 +221,6 @@ class Settings(BaseSettings):
     GITHUB_REPOSITORY_BENEFITS_APP_PRIVATE_KEY: str = ""
     GITHUB_REPOSITORY_BENEFITS_CLIENT_ID: str = ""
     GITHUB_REPOSITORY_BENEFITS_CLIENT_SECRET: str = ""
-
-    # Discord
-    DISCORD_CLIENT_ID: str = ""
-    DISCORD_CLIENT_SECRET: str = ""
-    DISCORD_BOT_TOKEN: str = ""
-    DISCORD_BOT_PERMISSIONS: str = (
-        "268435459"  # Manage Roles, Kick Members, Create Instant Invite
-    )
-    DISCORD_PROXY_URL: str = ""
 
     # Google
     GOOGLE_CLIENT_ID: str = ""

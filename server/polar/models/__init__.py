@@ -14,7 +14,6 @@ from .organization import Organization
 from .organization_access_token import OrganizationAccessToken
 from .personal_access_token import PersonalAccessToken
 from .promotion import Promotion, PromotionStatus
-from .slack_app import SlackApp
 from .totp_enrollment import TOTPEnrollment
 from .user import OAuthAccount, User
 from .user_organization import UserOrganization
@@ -38,7 +37,6 @@ __all__ = [
     "PersonalAccessToken",
     "Promotion",
     "PromotionStatus",
-    "SlackApp",
     "TOTPEnrollment",
     "TimestampedModel",
     "User",
