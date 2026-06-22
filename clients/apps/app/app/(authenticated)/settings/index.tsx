@@ -10,7 +10,7 @@ import Constants from 'expo-constants'
 import { useUpdates } from 'expo-updates'
 import { Stack, useRouter } from 'expo-router'
 import React, { useContext, useState } from 'react'
-import { Alert, Linking, RefreshControl, ScrollView } from 'react-native'
+import { Alert, RefreshControl, ScrollView } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
@@ -97,26 +97,6 @@ export default function Index() {
             title="Notifications"
             variant="navigate"
             onPress={() => router.push('/settings/notifications')}
-          />
-          <Box height={1} backgroundColor="border" marginVertical="spacing-8" />
-          <SettingsItem
-            title="Support"
-            variant="link"
-            onPress={() => Linking.openURL('https://polar.sh/docs/support')}
-          />
-          <SettingsItem
-            title="Privacy Policy"
-            variant="link"
-            onPress={() =>
-              Linking.openURL('https://polar.sh/legal/privacy-policy')
-            }
-          />
-          <SettingsItem
-            title="Terms of Service"
-            variant="link"
-            onPress={() =>
-              Linking.openURL('https://polar.sh/legal/master-services-terms')
-            }
           />
           <Box height={1} backgroundColor="border" marginVertical="spacing-8" />
           <SettingsItem

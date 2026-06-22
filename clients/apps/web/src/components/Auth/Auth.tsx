@@ -119,23 +119,6 @@ const Auth = ({
           />
         </LastUsedWrapper>
       </div>
-      <div className="dark:text-polar-500 mt-6 text-center text-xs text-balance text-gray-400">
-        By using Polar, you agree to our{' '}
-        <a
-          className="dark:text-polar-300 text-gray-600"
-          href="https://polar.sh/legal/master-services-terms"
-        >
-          Terms of Service
-        </a>{' '}
-        &amp;{' '}
-        <a
-          className="dark:text-polar-300 text-gray-600"
-          href="https://polar.sh/legal/privacy-policy"
-        >
-          Privacy Policy
-        </a>
-        .
-      </div>
     </div>
   )
 }

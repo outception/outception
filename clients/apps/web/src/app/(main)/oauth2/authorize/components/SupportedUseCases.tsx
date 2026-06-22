@@ -31,15 +31,7 @@ export default function SupportedUseCases() {
           </Box>
           <Box as="li">
             <p className="dark:text-polar-500 text-sm text-gray-500">
-              • Anything in our list of{' '}
-              <a
-                href="https://polar.sh/legal/acceptable-use-policy"
-                className="text-blue-500 underline dark:text-blue-400"
-                target="_blank"
-                rel="noreferrer"
-              >
-                prohibited products
-              </a>
+              • Anything in our list of prohibited products
             </p>
           </Box>
         </Box>
