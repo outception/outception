@@ -60,3 +60,63 @@ class TestOAuth2UserInfo:
 
         json = response.json()
         assert json["sub"] == str(user.id)
+
+    async def test_email_scope_returns_email(
+        self,
+        method: str,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user: User,
+        oauth2_client: OAuth2Client,
+    ) -> None:
+        await create_oauth2_token(
+            save_fixture,
+            client=oauth2_client,
+            access_token="ACCESS_TOKEN",
+            refresh_token="REFRESH_TOKEN",
+            scopes=["openid", "email"],
+            user=user,
+        )
+
+        response = await client.request(
+            method,
+            "/v1/oauth2/userinfo",
+            headers={"Authorization": "Bearer ACCESS_TOKEN"},
+        )
+
+        assert response.status_code == 200
+        json = response.json()
+        assert json["sub"] == str(user.id)
+        assert json["email"] == user.email
+        assert "email_verified" in json
+
+    async def test_without_email_scope_omits_email(
+        self,
+        method: str,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user: User,
+        oauth2_client: OAuth2Client,
+    ) -> None:
+        # PII gating: even with openid + profile, the email must not leak
+        # unless the email scope was granted.
+        await create_oauth2_token(
+            save_fixture,
+            client=oauth2_client,
+            access_token="ACCESS_TOKEN",
+            refresh_token="REFRESH_TOKEN",
+            scopes=["openid", "profile"],
+            user=user,
+        )
+
+        response = await client.request(
+            method,
+            "/v1/oauth2/userinfo",
+            headers={"Authorization": "Bearer ACCESS_TOKEN"},
+        )
+
+        assert response.status_code == 200
+        json = response.json()
+        assert json["sub"] == str(user.id)
+        assert "email" not in json
+        assert "email_verified" not in json
