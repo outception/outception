@@ -98,7 +98,7 @@ class PromotionRepository(RepositoryBase[Promotion]):
         promoter's own view, or pass ``None`` for the platform-wide total."""
         paid = Promotion.paid_at.isnot(None)
         statement = select(
-            func.count().label("total_promotions"),
+            func.count().filter(paid).label("total_promotions"),
             func.coalesce(
                 func.sum(Promotion.amount_cents).filter(paid), 0
             ).label("total_spend_cents"),

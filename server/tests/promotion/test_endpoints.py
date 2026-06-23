@@ -298,3 +298,24 @@ class TestGetAnalytics:
         assert body["total_spend_cents"] >= promotion.amount_cents
         assert "ctr" in body
         assert isinstance(body["periods"], list)
+
+    @pytest.mark.auth
+    async def test_count_excludes_unpaid_drafts(
+        self,
+        client: AsyncClient,
+        session: AsyncSession,
+        user: User,
+        mocker: MockerFixture,
+    ) -> None:
+        mocker.patch.object(settings, "is_tinybird_configured", return_value=False)
+        paid = await _make_pending(session, user)
+        await promotion_service.activate_paid(
+            session, paid.id, external_ref="order:paid"
+        )
+        # An abandoned checkout: created but never confirmed by the webhook.
+        await _make_pending(session, user)
+
+        response = await client.get("/v1/promotions/analytics")
+        body = response.json()
+        assert body["total_promotions"] == 1
+        assert body["total_spend_cents"] == paid.amount_cents
