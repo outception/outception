@@ -75,7 +75,9 @@ class EmailUpdateService(ResourceServiceReader[EmailVerification]):
         extra_url_params: dict[str, str] = {},
     ) -> None:
         delta = email_update_record.expires_at - utc_now()
-        token_lifetime_minutes = int(ceil(delta.seconds / 60))
+        # total_seconds(), not .seconds — the latter drops whole days, so a TTL
+        # over a day would under-report the lifetime in the email.
+        token_lifetime_minutes = int(ceil(delta.total_seconds() / 60))
 
         email = email_update_record.email
         url_params = {"token": token, **extra_url_params}
