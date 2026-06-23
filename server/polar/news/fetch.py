@@ -7,6 +7,7 @@ uses — scraper URLs are hardcoded per source, but the guard costs
 little and keeps the public endpoints safe-by-construction.
 """
 
+import calendar
 from typing import Any
 
 import feedparser
@@ -125,8 +126,6 @@ def parse_rss(text: str, *, limit: int = 30) -> list[NewsItem]:
         pub_date: int | None = None
         parsed = entry.get("published_parsed") or entry.get("updated_parsed")
         if parsed is not None:
-            import calendar
-
             pub_date = calendar.timegm(parsed) * 1000
         items.append(NewsItem(id=link, title=title, url=link, pub_date=pub_date))
     return items

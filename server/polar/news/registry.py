@@ -8,6 +8,7 @@ no path from user input to an arbitrary URL.
 
 from collections.abc import Awaitable, Callable
 
+from .cache import DEFAULT_INTERVAL_MS
 from .metadata import SOURCES
 from .schemas import NewsItem
 
@@ -45,6 +46,4 @@ def resolve(source_id: str) -> str | None:
 
 
 def interval_ms(source_id: str) -> int:
-    from .cache import DEFAULT_INTERVAL_MS
-
     return SOURCES.get(source_id, {}).get("interval", DEFAULT_INTERVAL_MS)
