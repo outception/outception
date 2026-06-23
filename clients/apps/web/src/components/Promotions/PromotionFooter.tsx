@@ -31,6 +31,19 @@ export const PromotionFooter = ({ topic }: { topic: string | null }) => {
           {topicLabel(promotion.category)}
         </Text>
       </Box>
+      {promotion.image_url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={promotion.image_url}
+          alt=""
+          style={{
+            width: '100%',
+            height: 140,
+            objectFit: 'cover',
+            borderRadius: 12,
+          }}
+        />
+      ) : null}
       <Text variant="body" as="h4">
         {promotion.title}
       </Text>

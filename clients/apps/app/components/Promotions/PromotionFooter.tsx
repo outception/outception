@@ -1,7 +1,9 @@
 import { Box } from '@/components/Shared/Box'
+import { Image } from '@/components/Shared/Image/Image'
 import { Pill } from '@/components/Shared/Pill'
 import { Text } from '@/components/Shared/Text'
 import { Touchable } from '@/components/Shared/Touchable'
+import { useTheme } from '@/design-system/useTheme'
 import { topicLabel, useTopicPromotion } from '@/hooks/polar/promotions'
 import { Linking } from 'react-native'
 
@@ -11,6 +13,7 @@ const SERVER_URL =
 /** The paid promotion for a card's topic, pinned at the bottom. Clicks go
  * through the backend redirect so they're counted for analytics. */
 export const PromotionFooter = ({ topic }: { topic: string | null }) => {
+  const theme = useTheme()
   const { data: promotion } = useTopicPromotion(topic)
 
   if (!promotion) {
@@ -37,6 +40,17 @@ export const PromotionFooter = ({ topic }: { topic: string | null }) => {
             {topicLabel(promotion.category)}
           </Text>
         </Box>
+        {promotion.image_url ? (
+          <Image
+            source={{ uri: promotion.image_url }}
+            contentFit="cover"
+            style={{
+              width: '100%',
+              height: theme.dimension['dimension-120'],
+              borderRadius: theme.dimension['dimension-12'],
+            }}
+          />
+        ) : null}
         <Text variant="bodyMedium">{promotion.title}</Text>
         <Text variant="caption" color="subtext">
           {promotion.body}

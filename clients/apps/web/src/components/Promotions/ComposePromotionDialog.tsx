@@ -19,6 +19,7 @@ interface ComposeForm {
   title: string
   body: string
   link: string
+  image_url: string
   blocks: number
 }
 
@@ -31,6 +32,7 @@ const ComposePromotionForm = ({ hide }: { hide: () => void }) => {
       title: '',
       body: '',
       link: '',
+      image_url: '',
       blocks: 1,
     },
   })
@@ -47,7 +49,7 @@ const ComposePromotionForm = ({ hide }: { hide: () => void }) => {
         title: data.title,
         body: data.body,
         link: data.link || null,
-        image_url: null,
+        image_url: data.image_url || null,
         blocks: Number(data.blocks) || 1,
       },
       {
@@ -133,6 +135,22 @@ const ComposePromotionForm = ({ hide }: { hide: () => void }) => {
           name="link"
           render={({ field }) => (
             <Input {...field} placeholder="https://…" type="url" />
+          )}
+        />
+      </Box>
+
+      <Box flexDirection="column" rowGap="s">
+        <Text variant="caption">Image URL (optional)</Text>
+        <Controller
+          control={control}
+          name="image_url"
+          render={({ field }) => (
+            <Input
+              {...field}
+              placeholder="https://…/image.png"
+              type="url"
+              maxLength={2048}
+            />
           )}
         />
       </Box>

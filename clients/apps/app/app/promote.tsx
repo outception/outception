@@ -26,6 +26,7 @@ export default function Promote() {
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
   const [link, setLink] = useState('')
+  const [imageUrl, setImageUrl] = useState('')
   const [blocks, setBlocks] = useState('1')
 
   if (!session) {
@@ -43,7 +44,7 @@ export default function Promote() {
         title,
         body,
         link: link || null,
-        image_url: null,
+        image_url: imageUrl || null,
         blocks: blockCount,
       },
       {
@@ -130,6 +131,19 @@ export default function Promote() {
             value={link}
             onChangeText={setLink}
             placeholder="https://…"
+            autoCapitalize="none"
+            keyboardType="url"
+          />
+        </Box>
+
+        <Box gap="spacing-8">
+          <Text variant="caption" color="subtext">
+            Image URL (optional)
+          </Text>
+          <Input
+            value={imageUrl}
+            onChangeText={setImageUrl}
+            placeholder="https://…/image.png"
             autoCapitalize="none"
             keyboardType="url"
           />
