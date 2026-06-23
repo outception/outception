@@ -15,7 +15,7 @@ from polar.models import Promotion
 from polar.models.promotion import PromotionStatus
 from polar.postgres import AsyncReadSession, AsyncSession
 
-from . import events
+from . import events, notifications
 from .repository import PromotionRepository
 
 log: Logger = structlog.get_logger()
@@ -115,6 +115,7 @@ class PromotionService:
                 flush=True,
             )
             events.emit(active, events.PromotionEventName.expired)
+            notifications.notify(active, "expired")
             active = None
         if active is not None:
             return  # slot still occupied — nothing to promote
@@ -133,6 +134,7 @@ class PromotionService:
             flush=True,
         )
         events.emit(nxt, events.PromotionEventName.activated)
+        notifications.notify(nxt, "activated")
 
     async def get_featured(
         self, session: AsyncSession, categories: Sequence[str]

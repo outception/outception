@@ -203,3 +203,47 @@ class TestTinybirdAnalyticsRead:
             author_id=None, days=30
         )
         assert result is None
+
+
+@pytest.mark.asyncio
+class TestLifecycleNotifications:
+    @staticmethod
+    def _kinds_for(enqueue_mock: AsyncMock, promotion_id: object) -> list[str]:
+        return [
+            call.kwargs["kind"]
+            for call in enqueue_mock.call_args_list
+            if call.args[0] == "promotion.send_lifecycle_email"
+            and call.kwargs["promotion_id"] == str(promotion_id)
+        ]
+
+    async def test_activation_notifies_author(
+        self, mocker: MockerFixture, session: AsyncSession, user: User
+    ) -> None:
+        enqueue_mock = mocker.patch("polar.promotion.notifications.enqueue_job")
+        promotion = await _make_pending(session, user)
+        await promotion_service.activate_paid(
+            session, promotion.id, external_ref="order:notify"
+        )
+        assert "activated" in self._kinds_for(enqueue_mock, promotion.id)
+
+    async def test_expiry_notifies_author(
+        self, mocker: MockerFixture, session: AsyncSession, user: User
+    ) -> None:
+        from datetime import timedelta
+
+        from polar.kit.utils import utc_now
+
+        promotion = await _make_pending(session, user)
+        await promotion_service.activate_paid(
+            session, promotion.id, external_ref="order:expire"
+        )
+        repo = PromotionRepository.from_session(session)
+        active = await repo.get_by_id(promotion.id)
+        assert active is not None
+        active.active_until = utc_now() - timedelta(minutes=1)
+        await session.flush()
+
+        # Mock only now so we capture the expiry notification, not activation.
+        enqueue_mock = mocker.patch("polar.promotion.notifications.enqueue_job")
+        await promotion_service.get_featured(session, ["tech"])
+        assert "expired" in self._kinds_for(enqueue_mock, promotion.id)
