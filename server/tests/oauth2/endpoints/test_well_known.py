@@ -24,4 +24,5 @@ async def test_openid_configuration(client: AsyncClient) -> None:
     json = response.json()
     assert len(json["revocation_endpoint_auth_methods_supported"]) > 0
     assert len(json["introspection_endpoint_auth_methods_supported"]) > 0
-    assert len(json["code_challenge_methods_supported"]) > 0
+    # S256 only — "plain" PKCE is intentionally not advertised or accepted.
+    assert json["code_challenge_methods_supported"] == ["S256"]

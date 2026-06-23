@@ -155,7 +155,10 @@ class AuthorizationCodeGrant(SubTypeGrantMixin, _AuthorizationCodeGrant):
 
 
 class CodeChallenge(_CodeChallenge):
-    pass
+    # Only allow S256, not "plain". With "plain" the code_challenge equals the
+    # verifier, so capturing the authorization request reveals it; S256 sends
+    # only a hash. RFC 9700 recommends S256-only.
+    SUPPORTED_CODE_CHALLENGE_METHOD = ["S256"]
 
 
 class OpenIDCode(_OpenIDCode):
