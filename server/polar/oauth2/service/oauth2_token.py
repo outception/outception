@@ -138,7 +138,7 @@ class OAuth2TokenService(ResourceServiceReader[OAuth2Token]):
                     )
                 ),
                 to_email_addr=recipient,
-                subject="Security Notice - Your Polar Access Token has been leaked",
+                subject="Security Notice - Your Outception Access Token has been leaked",
             )
 
         log.info(

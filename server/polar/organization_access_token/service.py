@@ -242,7 +242,7 @@ class OrganizationAccessTokenService:
                     )
                 ),
                 to_email_addr=email,
-                subject="Security Notice - Your Polar Organization Access Token has been leaked",
+                subject="Security Notice - Your Outception Organization Access Token has been leaked",
             )
 
         log.info(

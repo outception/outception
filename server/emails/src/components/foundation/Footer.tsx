@@ -1,4 +1,5 @@
 import { Section } from 'react-email'
+import { BRAND_NAME } from '../brand'
 import Divider from './Divider'
 import { Text } from './Text'
 
@@ -20,7 +21,7 @@ const Footer = ({ email }: { email: string | null }) => (
         </Text>
       )}
       <Text variant="detail" weight="semibold" align="center" noMargin={!email}>
-        Polar Software Inc
+        {BRAND_NAME}
       </Text>
     </Section>
   </>

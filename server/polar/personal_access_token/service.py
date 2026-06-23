@@ -118,7 +118,7 @@ class PersonalAccessTokenService(ResourceServiceReader[PersonalAccessToken]):
                 )
             ),
             to_email_addr=email,
-            subject="Security Notice - Your Polar Personal Access Token has been leaked",
+            subject="Security Notice - Your Outception Personal Access Token has been leaked",
         )
 
         log.info(

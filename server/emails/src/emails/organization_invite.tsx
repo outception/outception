@@ -1,3 +1,4 @@
+import { BRAND_NAME } from '../components/brand'
 import {
   Button,
   Footer,
@@ -15,20 +16,21 @@ export function OrganizationInvite({
 }: schemas['OrganizationInviteProps']) {
   return (
     <WrapperPolar
-      preview={`You've been added to ${organization_name} on Polar`}
+      preview={`You've been added to ${organization_name} on ${BRAND_NAME}`}
     >
       <Intro>
         {inviter_email} has added you to{' '}
         <Text as="span" weight="bold">
           {organization_name}
         </Text>{' '}
-        on Polar.
+        on {BRAND_NAME}.
       </Intro>
       <Text>
         As a member of {organization_name} you're now able to manage{' '}
-        {organization_name}'s products, customers, and subscriptions on Polar.
+        {organization_name}'s products, customers, and subscriptions on{' '}
+        {BRAND_NAME}.
       </Text>
-      <Button href={invite_url}>Go to the Polar dashboard</Button>
+      <Button href={invite_url}>Go to the {BRAND_NAME} dashboard</Button>
       <Footer email={email} />
     </WrapperPolar>
   )

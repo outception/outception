@@ -76,7 +76,7 @@ class OAuth2ClientService(ResourceServiceReader[OAuth2Client]):
         if token_type == TokenType.client_secret:
             client.client_secret = generate_token(prefix=CLIENT_SECRET_PREFIX)  # pyright: ignore
             subject = (
-                "Security Notice - Your Polar OAuth2 Client Secret has been leaked"
+                "Security Notice - Your Outception OAuth2 Client Secret has been leaked"
             )
         elif token_type == TokenType.client_registration_token:
             client.registration_access_token = generate_token(
@@ -84,7 +84,7 @@ class OAuth2ClientService(ResourceServiceReader[OAuth2Client]):
             )
             subject = (
                 "Security Notice - "
-                "Your Polar OAuth2 Client Registration Token has been leaked"
+                "Your Outception OAuth2 Client Registration Token has been leaked"
             )
         session.add(client)
 

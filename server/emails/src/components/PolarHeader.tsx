@@ -1,14 +1,12 @@
-import { Img, Section } from 'react-email'
+import { Section } from 'react-email'
+import { BRAND_NAME } from './brand'
+import { Text } from './foundation/Text'
 
 const Header = () => (
   <Section>
-    <div className="relative h-[48px]">
-      <Img
-        alt="Polar Logo"
-        height="48"
-        src="https://polar-public-assets.s3.us-east-2.amazonaws.com/emails/polar-logo-black-badge.png"
-      />
-    </div>
+    <Text variant="lead" weight="bold" as="span" noMargin>
+      {BRAND_NAME}
+    </Text>
   </Section>
 )
 

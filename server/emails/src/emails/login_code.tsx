@@ -1,3 +1,4 @@
+import { BRAND_NAME } from '../components/brand'
 import { Footer, Intro, Text, WrapperPolar } from '../components/foundation'
 import OTPCode from '../components/OTPCode'
 import type { schemas } from '../types'
@@ -13,7 +14,7 @@ export function LoginCode({
       preview={`Your code to sign in is ${code}. It is valid for the next ${code_lifetime_minutes.toFixed()} minutes.`}
     >
       <Intro>
-        Here is your code to sign in to Polar.{' '}
+        Here is your code to sign in to {BRAND_NAME}.{' '}
         <Text as="span" weight="bold">
           This code is only valid for the next {code_lifetime_minutes} minutes.
         </Text>
