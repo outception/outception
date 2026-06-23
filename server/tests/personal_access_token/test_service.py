@@ -4,17 +4,25 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
+from polar.auth.models import AuthSubject
+from polar.auth.scope import Scope
 from polar.config import settings
 from polar.email.schemas import PersonalAccessTokenLeakedEmail
 from polar.enums import TokenType
+from polar.exceptions import PolarRequestValidationError
 from polar.kit.crypto import get_token_hash
 from polar.kit.utils import utc_now
 from polar.models import PersonalAccessToken, User
+from polar.personal_access_token.schemas import PersonalAccessTokenCreate
 from polar.personal_access_token.service import (
     personal_access_token as personal_access_token_service,
 )
 from polar.postgres import AsyncSession
 from tests.fixtures.database import SaveFixture
+
+
+def _auth(user: User, scopes: set[Scope]) -> AuthSubject[User]:
+    return AuthSubject(user, scopes, MagicMock())
 
 
 @pytest.fixture(autouse=True)
@@ -77,3 +85,52 @@ class TestRevokeLeaked:
         assert isinstance(
             enqueue_email_mock.call_args[0][0], PersonalAccessTokenLeakedEmail
         )
+
+
+@pytest.mark.asyncio
+class TestCreate:
+    async def test_returns_raw_token_and_stores_only_hash(
+        self, session: AsyncSession, user: User
+    ) -> None:
+        pat, token = await personal_access_token_service.create(
+            session,
+            _auth(user, {Scope.user_read}),
+            PersonalAccessTokenCreate(comment="ci", scopes=[Scope.user_read]),
+        )
+        assert token.startswith("polar_pat_")
+        # Only the hash is persisted; the raw token never is.
+        assert pat.token == get_token_hash(token, secret=settings.SECRET)
+        assert pat.token != token
+        assert pat.scopes == {Scope.user_read}
+        assert pat.comment == "ci"
+        assert pat.user_id == user.id
+        assert pat.expires_at is None
+
+    async def test_rejects_scopes_exceeding_caller(
+        self, session: AsyncSession, user: User
+    ) -> None:
+        # A read-scoped caller must not mint a write-scoped token.
+        with pytest.raises(PolarRequestValidationError):
+            await personal_access_token_service.create(
+                session,
+                _auth(user, {Scope.user_read}),
+                PersonalAccessTokenCreate(
+                    comment="escalate", scopes=[Scope.user_write]
+                ),
+            )
+
+    async def test_expires_in_sets_expiry(
+        self, session: AsyncSession, user: User
+    ) -> None:
+        before = utc_now()
+        pat, _ = await personal_access_token_service.create(
+            session,
+            _auth(user, {Scope.user_read}),
+            PersonalAccessTokenCreate(
+                comment="x",
+                scopes=[Scope.user_read],
+                expires_in=timedelta(days=1),
+            ),
+        )
+        assert pat.expires_at is not None
+        assert pat.expires_at > before

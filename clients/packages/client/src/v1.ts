@@ -94,7 +94,11 @@ export interface paths {
      */
     get: operations['personal_access_token:list_personal_access_tokens']
     put?: never
-    post?: never
+    /**
+     * Create Personal Access Token
+     * @description Create a personal access token. The raw token is returned only once.
+     */
+    post: operations['personal_access_token:create_personal_access_token']
     delete?: never
     options?: never
     head?: never
@@ -915,7 +919,8 @@ export interface paths {
     /**
      * Click Promotion
      * @description Track a click and redirect to the promotion's link. Falls back to the
-     *     news wall when the promotion has no link or doesn't exist.
+     *     news wall when the promotion has no link or doesn't exist. The click is
+     *     deduped per viewer (the redirect always happens).
      */
     get: operations['promotions:click_promotion']
     put?: never
@@ -3416,6 +3421,24 @@ export interface components {
       /** Last Used At */
       last_used_at: string | null
     }
+    /** PersonalAccessTokenCreate */
+    PersonalAccessTokenCreate: {
+      /** Comment */
+      comment: string
+      /** Scopes */
+      scopes: components['schemas']['Scope'][]
+      /**
+       * Expires In
+       * @description Lifetime of the token; omit for one that never expires.
+       */
+      expires_in?: string | null
+    }
+    /** PersonalAccessTokenCreateResponse */
+    PersonalAccessTokenCreateResponse: {
+      personal_access_token: components['schemas']['PersonalAccessToken']
+      /** Token */
+      token: string
+    }
     /**
      * PresentmentCurrency
      * @enum {string}
@@ -4499,6 +4522,39 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ListResource_PersonalAccessToken_']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  'personal_access_token:create_personal_access_token': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PersonalAccessTokenCreate']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PersonalAccessTokenCreateResponse']
         }
       }
       /** @description Validation Error */

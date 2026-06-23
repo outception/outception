@@ -7,6 +7,7 @@ from sqlalchemy import Select, or_, select, update
 from sqlalchemy.orm import contains_eager
 
 from polar.auth.models import AuthSubject
+from polar.auth.scope import Scope
 from polar.config import settings
 from polar.email.schemas import (
     PersonalAccessTokenLeakedEmail,
@@ -14,13 +15,16 @@ from polar.email.schemas import (
 )
 from polar.email.sender import enqueue_email_template
 from polar.enums import TokenType
-from polar.kit.crypto import get_token_hash
+from polar.exceptions import PolarRequestValidationError
+from polar.kit.crypto import generate_token_hash_pair, get_token_hash
 from polar.kit.pagination import PaginationParams, paginate
 from polar.kit.services import ResourceServiceReader
 from polar.kit.utils import utc_now
 from polar.logging import Logger
 from polar.models import PersonalAccessToken, User
 from polar.postgres import AsyncSession
+
+from .schemas import PersonalAccessTokenCreate
 
 log: Logger = structlog.get_logger()
 
@@ -37,6 +41,48 @@ class PersonalAccessTokenService(ResourceServiceReader[PersonalAccessToken]):
     ) -> tuple[Sequence[PersonalAccessToken], int]:
         statement = self._get_readable_order_statement(auth_subject)
         return await paginate(session, statement, pagination=pagination)
+
+    async def create(
+        self,
+        session: AsyncSession,
+        auth_subject: AuthSubject[User],
+        create_schema: PersonalAccessTokenCreate,
+    ) -> tuple[PersonalAccessToken, str]:
+        self._validate_scopes_within_caller(auth_subject, create_schema.scopes)
+        token, token_hash = generate_token_hash_pair(
+            secret=settings.SECRET, prefix=TOKEN_PREFIX
+        )
+        personal_access_token = PersonalAccessToken(
+            user=auth_subject.subject,
+            token=token_hash,
+            scope=" ".join(create_schema.scopes),
+            comment=create_schema.comment,
+            expires_at=(
+                utc_now() + create_schema.expires_in
+                if create_schema.expires_in
+                else None
+            ),
+        )
+        session.add(personal_access_token)
+        await session.flush()
+        return personal_access_token, token
+
+    def _validate_scopes_within_caller(
+        self, auth_subject: AuthSubject[User], requested_scopes: Sequence[Scope]
+    ) -> None:
+        # A token must never be mintable with more access than the caller holds.
+        excess = set(requested_scopes) - auth_subject.scopes
+        if excess:
+            raise PolarRequestValidationError(
+                [
+                    {
+                        "type": "value_error",
+                        "loc": ("body", "scopes"),
+                        "msg": "Requested scopes exceed the caller's own scopes.",
+                        "input": sorted(s.value for s in excess),
+                    }
+                ]
+            )
 
     async def get_by_id(
         self, session: AsyncSession, auth_subject: AuthSubject[User], id: UUID

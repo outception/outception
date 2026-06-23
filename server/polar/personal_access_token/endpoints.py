@@ -8,12 +8,34 @@ from polar.openapi import APITag
 from polar.postgres import AsyncSession, get_db_session
 from polar.routing import APIRouter
 
-from .schemas import PersonalAccessToken
+from .schemas import (
+    PersonalAccessToken,
+    PersonalAccessTokenCreate,
+    PersonalAccessTokenCreateResponse,
+)
 from .service import personal_access_token as personal_access_token_service
 
 router = APIRouter(
     prefix="/personal_access_tokens", tags=["personal_access_token", APITag.private]
 )
+
+
+@router.post("/", response_model=PersonalAccessTokenCreateResponse, status_code=201)
+async def create_personal_access_token(
+    create_schema: PersonalAccessTokenCreate,
+    auth_subject: AuthorizeWebUserWrite,
+    session: AsyncSession = Depends(get_db_session),
+) -> PersonalAccessTokenCreateResponse:
+    """Create a personal access token. The raw token is returned only once."""
+    personal_access_token, token = await personal_access_token_service.create(
+        session, auth_subject, create_schema
+    )
+    return PersonalAccessTokenCreateResponse(
+        personal_access_token=PersonalAccessToken.model_validate(
+            personal_access_token
+        ),
+        token=token,
+    )
 
 
 @router.get("/", response_model=ListResource[PersonalAccessToken])
