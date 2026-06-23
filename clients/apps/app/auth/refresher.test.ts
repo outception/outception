@@ -61,12 +61,15 @@ const configure = (
 
 beforeEach(() => {
   jest.resetModules()
+  // require (not import) is required to re-load the module fresh after resetModules.
+  /* eslint-disable @typescript-eslint/no-require-imports */
   ;({
     configureRefresher,
     hasRefreshToken,
     isAccessTokenStale,
     refreshAccessToken,
   } = require('./refresher') as typeof RefresherModule)
+  /* eslint-enable @typescript-eslint/no-require-imports */
   mockRefreshAsync.mockReset()
   jest.useFakeTimers().setSystemTime(NOW)
 })

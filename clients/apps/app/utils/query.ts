@@ -1,6 +1,7 @@
-export { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ClientResponseError, isValidationError } from '@polar-sh/client'
 import { QueryClient } from '@tanstack/react-query'
+
+export { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 export const queryClient = new QueryClient({
   defaultOptions: {

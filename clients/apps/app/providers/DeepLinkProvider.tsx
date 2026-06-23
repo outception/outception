@@ -1,5 +1,4 @@
 import * as Linking from 'expo-linking'
-import { useRouter } from 'expo-router'
 import {
   createContext,
   useCallback,
@@ -25,7 +24,6 @@ export default function DeepLinkProvider({
 }: {
   children: React.ReactNode
 }) {
-  const router = useRouter()
   const handlersRef = useRef<Map<string, DeepLinkHandler>>(new Map())
   const initialUrlHandled = useRef(false)
 
