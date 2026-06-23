@@ -236,6 +236,9 @@ def _select_rule(
 
 _SENSITIVE_PATHS: list[tuple[str, str]] = [
     ("/v1/login-code/request", "login-code"),
+    ("/v1/auth/email-otp/verify", "auth-email-otp"),
+    ("/v1/auth/totp/verify", "auth-totp"),
+    ("/v1/auth/backup-codes/verify", "auth-backup-codes"),
 ]
 
 
@@ -264,3 +267,28 @@ class TestSensitiveEndpointZoneIsolation:
             f"Path {path!r} for group {group.value!r} resolved to "
             f"zone {rule.zone!r}, expected {expected_zone!r}"
         )
+
+
+@pytest.mark.parametrize("rules", [_PRODUCTION_RULES, _SANDBOX_RULES])
+@pytest.mark.parametrize(("path", "expected_zone"), _SENSITIVE_PATHS)
+@pytest.mark.parametrize("group", [RateLimitGroup.default, RateLimitGroup.pending_auth])
+class TestSensitiveEndpointLimitsStayTight:
+    """The credential-guessing endpoints must keep a tight budget so a 6-digit
+    OTP / TOTP / backup code can't be brute-forced within its lifetime. This
+    pins the limits so a future edit can't silently loosen them."""
+
+    def test_limits_are_tight(
+        self,
+        rules: dict[str, Sequence[Rule]],
+        path: str,
+        expected_zone: str,
+        group: RateLimitGroup,
+    ) -> None:
+        rule = _select_rule(rules, path, group)
+        assert rule is not None
+        assert rule.minute is not None
+        assert rule.minute <= 6
+        assert rule.hour is not None
+        assert rule.hour <= 12
+        assert rule.block_time is not None
+        assert rule.block_time >= 900
