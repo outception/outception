@@ -6,11 +6,13 @@ import {
   usePromotionPricing,
 } from '@/hooks/queries/promotions'
 import { extractApiErrorMessage } from '@/utils/api/errors'
-import { PROMOTION_TOPICS } from '@/utils/promotions'
+import { isOptionalHttpUrl, PROMOTION_TOPICS } from '@/utils/promotions'
 import { Button, Input, Modal, Text, TextArea } from '@polar-sh/orbit'
 import { Box } from '@polar-sh/orbit/Box'
 import { useState } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
+
+const URL_ERROR = 'Enter a valid http(s) URL'
 
 const BODY_MAX = 2000
 
@@ -26,7 +28,11 @@ interface ComposeForm {
 const ComposePromotionForm = ({ hide }: { hide: () => void }) => {
   const { data: pricing } = usePromotionPricing()
   const createPromotion = useCreatePromotion()
-  const { control, handleSubmit } = useForm<ComposeForm>({
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ComposeForm>({
     defaultValues: {
       category: 'news',
       title: '',
@@ -133,10 +139,16 @@ const ComposePromotionForm = ({ hide }: { hide: () => void }) => {
         <Controller
           control={control}
           name="link"
+          rules={{ validate: (v) => isOptionalHttpUrl(v) || URL_ERROR }}
           render={({ field }) => (
             <Input {...field} placeholder="https://…" type="url" />
           )}
         />
+        {errors.link ? (
+          <Text variant="caption" color="danger">
+            {errors.link.message}
+          </Text>
+        ) : null}
       </Box>
 
       <Box flexDirection="column" rowGap="s">
@@ -144,6 +156,7 @@ const ComposePromotionForm = ({ hide }: { hide: () => void }) => {
         <Controller
           control={control}
           name="image_url"
+          rules={{ validate: (v) => isOptionalHttpUrl(v) || URL_ERROR }}
           render={({ field }) => (
             <Input
               {...field}
@@ -153,6 +166,11 @@ const ComposePromotionForm = ({ hide }: { hide: () => void }) => {
             />
           )}
         />
+        {errors.image_url ? (
+          <Text variant="caption" color="danger">
+            {errors.image_url.message}
+          </Text>
+        ) : null}
       </Box>
 
       <Box flexDirection="row" columnGap="m" alignItems="end">

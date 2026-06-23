@@ -22,6 +22,19 @@ export const PROMOTION_TOPICS: { id: string; label: string }[] = [
 export const topicLabel = (id: string): string =>
   PROMOTION_TOPICS.find((t) => t.id === id)?.label ?? id
 
+/** Mirrors the backend's link/image_url validation: empty is allowed (the
+ * fields are optional), otherwise the value must be an http(s) URL. Lets the
+ * compose form flag a bad URL inline instead of bouncing at checkout. */
+export const isOptionalHttpUrl = (value: string): boolean => {
+  if (!value) return true
+  try {
+    const { protocol } = new URL(value)
+    return protocol === 'http:' || protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
 export const promotionsApi = {
   pricing: () => unwrap(api.GET('/v1/promotions/pricing')),
   featured: (categories: string[]) =>

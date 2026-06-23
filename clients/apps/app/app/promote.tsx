@@ -8,6 +8,7 @@ import {
   useCreatePromotion,
   usePromotionPricing,
 } from '@/hooks/polar/promotions'
+import { isOptionalHttpUrl } from '@/utils/promotions'
 import { useTheme } from '@/design-system/useTheme'
 import { useSession } from '@/providers/SessionProvider'
 import { Redirect } from 'expo-router'
@@ -36,6 +37,8 @@ export default function Promote() {
   const blockCount = Math.max(1, Number(blocks) || 1)
   const priceCents = (pricing?.price_cents ?? 1000) * blockCount
   const blockMinutes = pricing?.block_minutes ?? 10
+  const linkInvalid = !isOptionalHttpUrl(link)
+  const imageInvalid = !isOptionalHttpUrl(imageUrl)
 
   const onSubmit = () => {
     createPromotion.mutate(
@@ -134,6 +137,11 @@ export default function Promote() {
             autoCapitalize="none"
             keyboardType="url"
           />
+          {linkInvalid ? (
+            <Text variant="caption" color="error">
+              Enter a valid http(s) URL
+            </Text>
+          ) : null}
         </Box>
 
         <Box gap="spacing-8">
@@ -147,6 +155,11 @@ export default function Promote() {
             autoCapitalize="none"
             keyboardType="url"
           />
+          {imageInvalid ? (
+            <Text variant="caption" color="error">
+              Enter a valid http(s) URL
+            </Text>
+          ) : null}
         </Box>
 
         <Box gap="spacing-8">
@@ -168,7 +181,7 @@ export default function Promote() {
         <Button
           onPress={onSubmit}
           loading={createPromotion.isPending}
-          disabled={!title || !body}
+          disabled={!title || !body || linkInvalid || imageInvalid}
         >
           Continue to payment
         </Button>

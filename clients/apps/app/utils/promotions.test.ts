@@ -1,5 +1,6 @@
 import type { Client } from '@polar-sh/client'
 import {
+  isOptionalHttpUrl,
   PROMOTION_TOPICS,
   promotionsApi,
   topicLabel,
@@ -50,6 +51,24 @@ describe('PROMOTION_TOPICS', () => {
     for (const topic of PROMOTION_TOPICS) {
       expect(topic.label.length).toBeGreaterThan(0)
     }
+  })
+})
+
+describe('isOptionalHttpUrl', () => {
+  it('allows an empty value (the field is optional)', () => {
+    expect(isOptionalHttpUrl('')).toBe(true)
+  })
+
+  it('accepts http and https URLs', () => {
+    expect(isOptionalHttpUrl('https://example.com/a.png')).toBe(true)
+    expect(isOptionalHttpUrl('http://example.com')).toBe(true)
+  })
+
+  it('rejects non-http(s) schemes and junk', () => {
+    expect(isOptionalHttpUrl('javascript:alert(1)')).toBe(false)
+    expect(isOptionalHttpUrl('data:text/html,x')).toBe(false)
+    expect(isOptionalHttpUrl('ftp://example.com')).toBe(false)
+    expect(isOptionalHttpUrl('not a url')).toBe(false)
   })
 })
 
