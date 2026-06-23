@@ -28,6 +28,24 @@ _USER_AGENT = (
     "(KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
 )
 
+class NewsFetchError(Exception):
+    """A source fetch failed (bad URL, HTTP error, oversized body)."""
+
+
+async def _check_redirect(response: httpx.Response) -> None:
+    """Re-apply the SSRF guard to every redirect hop. ``is_fetchable`` only
+    vets the initial URL, but ``follow_redirects`` would otherwise let a source
+    bounce us to an internal address (e.g. the cloud metadata IP)."""
+    if response.is_redirect:
+        location = response.headers.get("location", "")
+        try:
+            target = str(response.url.join(location))
+        except httpx.InvalidURL as exc:
+            raise NewsFetchError(f"invalid redirect URL: {exc}") from exc
+        if not is_fetchable(target):
+            raise NewsFetchError(f"unsafe redirect to {target}")
+
+
 _client = httpx.AsyncClient(
     follow_redirects=True,
     timeout=_TIMEOUT_SECONDS,
@@ -38,11 +56,8 @@ _client = httpx.AsyncClient(
         "Accept-Language": "en-US,en;q=0.9",
     },
     transport=httpx.AsyncHTTPTransport(retries=2),
+    event_hooks={"response": [_check_redirect]},
 )
-
-
-class NewsFetchError(Exception):
-    """A source fetch failed (bad URL, HTTP error, oversized body)."""
 
 
 async def _get(
@@ -54,14 +69,26 @@ async def _get(
     if not is_fetchable(url):
         raise NewsFetchError(f"unsafe or unresolvable URL: {url}")
     try:
-        response = await _client.get(url, headers=headers, params=params)
+        # Stream so the size cap is enforced as bytes arrive, instead of
+        # buffering the whole (possibly huge or length-lying) body first.
+        async with _client.stream(
+            "GET", url, headers=headers, params=params
+        ) as response:
+            if response.status_code >= 400:
+                raise NewsFetchError(f"HTTP {response.status_code} from {url}")
+            body = bytearray()
+            async for chunk in response.aiter_bytes():
+                body.extend(chunk)
+                if len(body) > _MAX_BYTES:
+                    raise NewsFetchError(f"body too large from {url}")
+            return httpx.Response(
+                status_code=response.status_code,
+                headers=response.headers,
+                content=bytes(body),
+                request=response.request,
+            )
     except httpx.HTTPError as exc:
         raise NewsFetchError(f"fetch failed: {exc}") from exc
-    if response.status_code >= 400:
-        raise NewsFetchError(f"HTTP {response.status_code} from {url}")
-    if len(response.content) > _MAX_BYTES:
-        raise NewsFetchError(f"body too large from {url}")
-    return response
 
 
 async def fetch_text(
