@@ -100,6 +100,48 @@ class TestCreatePromotion:
         assert kwargs["amount"] == promotion.amount_cents
         assert kwargs["metadata"]["promotion_id"] == str(promotion.id)
 
+    @pytest.mark.auth
+    @pytest.mark.parametrize("field", ["link", "image_url"])
+    @pytest.mark.parametrize(
+        "value", ["javascript:alert(1)", "data:text/html,x", "not a url", "ftp://x"]
+    )
+    async def test_rejects_non_http_url(
+        self, client: AsyncClient, mocker: MockerFixture, field: str, value: str
+    ) -> None:
+        mocker.patch.object(settings, "PROMOTION_PRODUCT_ID", "prod_123")
+        response = await client.post(
+            "/v1/promotions/",
+            json={
+                "category": "tech",
+                "title": "Buy me",
+                "body": "Great deal",
+                field: value,
+                "blocks": 1,
+            },
+        )
+        assert response.status_code == 422
+
+    @pytest.mark.auth
+    async def test_accepts_http_image_url(
+        self, client: AsyncClient, mocker: MockerFixture
+    ) -> None:
+        mocker.patch.object(settings, "PROMOTION_PRODUCT_ID", "prod_123")
+        mocker.patch(
+            "polar.billing.service.payment_gateway_client.create_checkout",
+            new=AsyncMock(return_value="https://checkout.example/abc"),
+        )
+        response = await client.post(
+            "/v1/promotions/",
+            json={
+                "category": "tech",
+                "title": "Buy me",
+                "body": "Great deal",
+                "image_url": "https://cdn.example.com/a.png",
+                "blocks": 1,
+            },
+        )
+        assert response.status_code == 200
+
 
 @pytest.mark.asyncio
 class TestPreferences:

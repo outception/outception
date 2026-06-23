@@ -1,7 +1,21 @@
 from datetime import datetime
+from typing import Annotated
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, HttpUrl, TypeAdapter
+
+_http_url_adapter = TypeAdapter(HttpUrl)
+
+
+def _require_http_url(value: str) -> str:
+    """Reject non-http(s) URLs (``javascript:``, ``data:``, …) while keeping the
+    value a plain string. Promotion links are 302-redirected to and images are
+    rendered in ``<img src>``, so both must be http(s)."""
+    _http_url_adapter.validate_python(value)
+    return value
+
+
+HttpUrlString = Annotated[str, AfterValidator(_require_http_url)]
 
 
 class PromotionCreate(BaseModel):
@@ -11,8 +25,8 @@ class PromotionCreate(BaseModel):
     category: str = Field(min_length=1, max_length=64)
     title: str = Field(min_length=1, max_length=200)
     body: str = Field(min_length=1, max_length=2000)
-    link: str | None = Field(default=None, max_length=2048)
-    image_url: str | None = Field(default=None, max_length=2048)
+    link: HttpUrlString | None = Field(default=None, max_length=2048)
+    image_url: HttpUrlString | None = Field(default=None, max_length=2048)
     # Each block is PROMOTION_BLOCK_MINUTES of featured time. Capped at 144
     # (a full day at 10 min/block) so a single buy can't monopolise a category.
     blocks: int = Field(default=1, ge=1, le=144)
