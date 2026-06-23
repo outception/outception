@@ -199,12 +199,17 @@ async def get_analytics(
 
 @router.get("/{promotion_id}/click", tags=[APITag.public])
 async def click_promotion(
+    request: Request,
     promotion_id: UUID,
     session: AsyncSession = Depends(get_db_session),
+    redis: Redis = Depends(get_redis),
 ) -> RedirectResponse:
     """Track a click and redirect to the promotion's link. Falls back to the
-    news wall when the promotion has no link or doesn't exist."""
-    link = await promotion_service.track_click(session, promotion_id)
+    news wall when the promotion has no link or doesn't exist. The click is
+    deduped per viewer (the redirect always happens)."""
+    link = await promotion_service.track_click(
+        session, promotion_id, redis=redis, viewer_key=_viewer_key(request)
+    )
     return RedirectResponse(url=link or settings.FRONTEND_BASE_URL, status_code=302)
 
 

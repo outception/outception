@@ -196,6 +196,25 @@ class PromotionService:
             )
         return active
 
+    async def _claim_viewer_event(
+        self,
+        redis: Redis | None,
+        viewer_key: str | None,
+        *,
+        kind: str,
+        promotion_id: UUID,
+    ) -> bool:
+        """Whether this (kind, promotion, viewer) should be counted: True the
+        first time within the dedup window, then False until it lapses (claimed
+        via ``SET NX EX``). Without a viewer context or with dedup disabled,
+        always True. Keeps impressions and clicks counted on the same basis so
+        CTR stays meaningful (a viewer can't click more than they're shown)."""
+        window = settings.PROMOTION_IMPRESSION_DEDUP_SECONDS
+        if redis is None or viewer_key is None or window <= 0:
+            return True
+        key = f"promotion:{kind}:{promotion_id}:{viewer_key}"
+        return bool(await redis.set(key, "1", nx=True, ex=window))
+
     async def _dedup_impressions(
         self,
         redis: Redis | None,
@@ -203,30 +222,36 @@ class PromotionService:
         promotions: Sequence[Promotion],
     ) -> list[Promotion]:
         """Of ``promotions``, the ones this viewer hasn't been counted for
-        within the dedup window. Each fresh hit claims a short-lived Redis key
-        (``SET NX EX``), so a repeat serve to the same viewer is skipped. Without
-        a viewer context (or with dedup disabled), every promotion counts."""
-        window = settings.PROMOTION_IMPRESSION_DEDUP_SECONDS
-        if redis is None or viewer_key is None or window <= 0:
-            return list(promotions)
+        within the dedup window, so background polling can't inflate the count."""
         fresh: list[Promotion] = []
         for promotion in promotions:
-            key = f"promotion:impression:{promotion.id}:{viewer_key}"
-            if await redis.set(key, "1", nx=True, ex=window):
+            if await self._claim_viewer_event(
+                redis, viewer_key, kind="impression", promotion_id=promotion.id
+            ):
                 fresh.append(promotion)
         return fresh
 
     async def track_click(
-        self, session: AsyncSession, promotion_id: UUID
+        self,
+        session: AsyncSession,
+        promotion_id: UUID,
+        *,
+        redis: Redis | None = None,
+        viewer_key: str | None = None,
     ) -> str | None:
-        """Record a click and return the promotion's outbound link (or ``None``
-        if it has none / the promotion doesn't exist)."""
+        """Return the promotion's outbound link (or ``None`` if it has none / the
+        promotion doesn't exist), counting a click at most once per viewer within
+        the dedup window. The redirect always happens; only the counter is
+        deduped, mirroring impressions so CTR can't exceed 100%."""
         repo = PromotionRepository.from_session(session)
         promotion = await repo.get_by_id(promotion_id)
         if promotion is None:
             return None
-        await repo.increment_click(promotion_id)
-        events.emit(promotion, events.PromotionEventName.click)
+        if await self._claim_viewer_event(
+            redis, viewer_key, kind="click", promotion_id=promotion_id
+        ):
+            await repo.increment_click(promotion_id)
+            events.emit(promotion, events.PromotionEventName.click)
         return promotion.link
 
     async def analytics(

@@ -160,6 +160,30 @@ class TestEngagementCounters:
         assert refreshed is not None
         assert refreshed.clicks == 1
 
+    async def test_track_click_dedups_per_viewer(
+        self, session: AsyncSession, user: User, redis: Redis
+    ) -> None:
+        promotion = await _make_pending(session, user)
+        repo = PromotionRepository.from_session(session)
+
+        # Same viewer clicks repeatedly → counted once, but always redirected.
+        for _ in range(3):
+            link = await promotion_service.track_click(
+                session, promotion.id, redis=redis, viewer_key="viewer-a"
+            )
+            assert link == "https://example.com"
+        refreshed = await repo.get_by_id(promotion.id)
+        assert refreshed is not None
+        assert refreshed.clicks == 1
+
+        # A different viewer counts independently.
+        await promotion_service.track_click(
+            session, promotion.id, redis=redis, viewer_key="viewer-b"
+        )
+        refreshed = await repo.get_by_id(promotion.id)
+        assert refreshed is not None
+        assert refreshed.clicks == 2
+
 
 @pytest.mark.asyncio
 class TestTinybirdEmission:

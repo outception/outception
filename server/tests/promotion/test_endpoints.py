@@ -310,6 +310,27 @@ class TestClickPromotion:
         assert refreshed is not None
         assert refreshed.clicks == 1
 
+    async def test_repeat_clicks_dedupe_count(
+        self, client: AsyncClient, session: AsyncSession, user: User
+    ) -> None:
+        promotion = await _make_pending(session, user)
+        await promotion_service.activate_paid(
+            session, promotion.id, external_ref="order:click_dedup"
+        )
+
+        # Same client clicking repeatedly always redirects, counts once.
+        for _ in range(3):
+            response = await client.get(
+                f"/v1/promotions/{promotion.id}/click", follow_redirects=False
+            )
+            assert response.status_code == 302
+            assert response.headers["location"] == "https://example.com"
+
+        repo = PromotionRepository.from_session(session)
+        refreshed = await repo.get_by_id(promotion.id)
+        assert refreshed is not None
+        assert refreshed.clicks == 1
+
     async def test_unknown_falls_back_to_frontend(self, client: AsyncClient) -> None:
         from uuid import uuid4
 
