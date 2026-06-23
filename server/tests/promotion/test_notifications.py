@@ -32,6 +32,13 @@ class TestBuildEmail:
         assert "30 minutes" in html  # 3 blocks × 10 min
         assert "View your promotions" in html
 
+    async def test_queued_email(self, session: AsyncSession, user: User) -> None:
+        promotion = await _make_pending(session, user)
+        subject, html = build_email(promotion, "queued")
+        assert "queued" in subject
+        assert "Buy our widget" in subject
+        assert "tech" in html
+
     async def test_expired_email_includes_stats(
         self, session: AsyncSession, user: User
     ) -> None:

@@ -36,6 +36,14 @@ def build_email(promotion: Promotion, kind: str) -> tuple[str, str]:
             f"<strong>{category}</strong> for the next "
             f"{promotion.duration_minutes} minutes."
         )
+    elif kind == "queued":
+        subject = f"Your promotion is queued: {promotion.title}"
+        heading = "Your promotion is queued"
+        body = (
+            f"“{title}” is queued in <strong>{category}</strong> and will go "
+            "live automatically as soon as the current featured slot frees up. "
+            "We’ll email you when it does."
+        )
     else:
         subject = f"Your promotion has ended: {promotion.title}"
         heading = "Your promotion has ended"

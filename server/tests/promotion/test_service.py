@@ -77,9 +77,7 @@ class TestActivatePaid:
     ) -> None:
         first = await _make_pending(session, user)
         second = await _make_pending(session, user)
-        await promotion_service.activate_paid(
-            session, first.id, external_ref="order:1"
-        )
+        await promotion_service.activate_paid(session, first.id, external_ref="order:1")
         await promotion_service.activate_paid(
             session, second.id, external_ref="order:2"
         )
@@ -155,18 +153,14 @@ class TestTinybirdEmission:
 
 @pytest.mark.asyncio
 class TestTinybirdAnalyticsRead:
-    async def test_returns_none_when_unconfigured(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_returns_none_when_unconfigured(self, mocker: MockerFixture) -> None:
         mocker.patch.object(settings, "is_tinybird_configured", return_value=False)
         result = await promotion_service.analytics_timeseries_tinybird(
             author_id=None, days=30
         )
         assert result is None
 
-    async def test_returns_rows_when_configured(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_returns_rows_when_configured(self, mocker: MockerFixture) -> None:
         mocker.patch.object(settings, "is_tinybird_configured", return_value=True)
         rows = [
             {
@@ -191,9 +185,7 @@ class TestTinybirdAnalyticsRead:
         assert await_args.args[0] == "promotion_analytics"
         assert await_args.args[1]["days"] == 7
 
-    async def test_returns_none_on_query_error(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_returns_none_on_query_error(self, mocker: MockerFixture) -> None:
         mocker.patch.object(settings, "is_tinybird_configured", return_value=True)
         mocker.patch(
             "polar.promotion.service.tinybird_client.query_pipe",
@@ -224,7 +216,26 @@ class TestLifecycleNotifications:
         await promotion_service.activate_paid(
             session, promotion.id, external_ref="order:notify"
         )
-        assert "activated" in self._kinds_for(enqueue_mock, promotion.id)
+        kinds = self._kinds_for(enqueue_mock, promotion.id)
+        assert "activated" in kinds
+        assert "queued" not in kinds  # empty category → straight to active
+
+    async def test_paid_behind_active_notifies_queued(
+        self, mocker: MockerFixture, session: AsyncSession, user: User
+    ) -> None:
+        first = await _make_pending(session, user)
+        await promotion_service.activate_paid(
+            session, first.id, external_ref="order:first"
+        )  # empty category → active, occupies the slot
+
+        second = await _make_pending(session, user)
+        enqueue_mock = mocker.patch("polar.promotion.notifications.enqueue_job")
+        await promotion_service.activate_paid(
+            session, second.id, external_ref="order:second"
+        )
+        kinds = self._kinds_for(enqueue_mock, second.id)
+        assert "queued" in kinds
+        assert "activated" not in kinds  # slot occupied → waits in queue
 
     async def test_expiry_notifies_author(
         self, mocker: MockerFixture, session: AsyncSession, user: User

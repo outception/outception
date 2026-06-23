@@ -93,6 +93,13 @@ class PromotionService:
         events.emit(promotion, events.PromotionEventName.paid)
         await self._advance(session, promotion.category, now=now)
 
+        # _advance promotes the first queued promotion when the slot is free;
+        # if this one is still queued, the slot was occupied — let the buyer know
+        # their paid promotion is waiting (it gets an "activated" email later).
+        refreshed = await repo.get_by_id(promotion_id)
+        if refreshed is not None and refreshed.status == PromotionStatus.QUEUED:
+            notifications.notify(refreshed, "queued")
+
     async def _advance(
         self, session: AsyncSession, category: str, *, now: datetime
     ) -> None:
