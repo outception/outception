@@ -36,6 +36,14 @@ class PromotionRead(BaseModel):
     created_at: datetime
 
 
+class PromotionMineRead(PromotionRead):
+    """The promoter's own view of a promotion — adds the engagement counters
+    (kept off the public ``PromotionRead`` so featured cards don't leak them)."""
+
+    impressions: int
+    clicks: int
+
+
 class PromotionCheckout(BaseModel):
     """The draft promotion's id plus the hosted gateway checkout URL. The
     promotion enters the queue once the order webhook confirms payment."""

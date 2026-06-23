@@ -127,9 +127,15 @@ export const PromotionsDashboard = () => {
                     <Pill color={statusColor(p.status)}>{p.status}</Pill>
                   </Box>
                 </Box>
-                <Text variant="caption" color="muted">
-                  {p.duration_minutes} min
-                </Text>
+                <Box flexDirection="column" alignItems="end" rowGap="xs">
+                  <Text variant="caption" color="muted">
+                    {p.duration_minutes} min
+                  </Text>
+                  <Text variant="caption" color="muted">
+                    {p.impressions.toLocaleString()} views ·{' '}
+                    {p.clicks.toLocaleString()} clicks
+                  </Text>
+                </Box>
               </Box>
             ))}
           </Box>

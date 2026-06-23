@@ -24,6 +24,7 @@ from .schemas import (
     PromotionAnalyticsPeriod,
     PromotionCheckout,
     PromotionCreate,
+    PromotionMineRead,
     PromotionPreferences,
     PromotionPricing,
     PromotionRead,
@@ -77,14 +78,14 @@ async def get_category(
     )
 
 
-@router.get("/mine", response_model=list[PromotionRead], tags=[APITag.private])
+@router.get("/mine", response_model=list[PromotionMineRead], tags=[APITag.private])
 async def list_mine(
     auth_subject: auth.PromotionUser,
     session: AsyncReadSession = Depends(get_db_read_session),
-) -> list[PromotionRead]:
+) -> list[PromotionMineRead]:
     """The authenticated user's promotions, newest first."""
     promotions = await promotion_service.list_mine(session, auth_subject.subject.id)
-    return [PromotionRead.model_validate(p) for p in promotions]
+    return [PromotionMineRead.model_validate(p) for p in promotions]
 
 
 @router.get(

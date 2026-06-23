@@ -75,6 +75,10 @@ export default function Promotions() {
                     {p.duration_minutes} min
                   </Text>
                 </Box>
+                <Text variant="caption" color="subtext">
+                  {p.impressions.toLocaleString()} views ·{' '}
+                  {p.clicks.toLocaleString()} clicks
+                </Text>
               </Box>
             ))}
           </Box>

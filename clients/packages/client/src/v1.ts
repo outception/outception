@@ -3499,6 +3499,48 @@ export interface components {
       blocks: number
     }
     /**
+     * PromotionMineRead
+     * @description The promoter's own view of a promotion — adds the engagement counters
+     *     (kept off the public ``PromotionRead`` so featured cards don't leak them).
+     */
+    PromotionMineRead: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /**
+       * Author Id
+       * Format: uuid
+       */
+      author_id: string
+      /** Category */
+      category: string
+      /** Title */
+      title: string
+      /** Body */
+      body: string
+      /** Link */
+      link: string | null
+      /** Image Url */
+      image_url: string | null
+      /** Status */
+      status: string
+      /** Duration Minutes */
+      duration_minutes: number
+      /** Active Until */
+      active_until: string | null
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string
+      /** Impressions */
+      impressions: number
+      /** Clicks */
+      clicks: number
+    }
+    /**
      * PromotionPreferences
      * @description The authenticated user's promotion-email preference.
      */
@@ -5559,7 +5601,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['PromotionRead'][]
+          'application/json': components['schemas']['PromotionMineRead'][]
         }
       }
     }

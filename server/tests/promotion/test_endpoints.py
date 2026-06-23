@@ -150,6 +150,10 @@ class TestListMine:
         ids = {row["id"] for row in body}
         assert str(mine.id) in ids
         assert all(row["author_id"] == str(user.id) for row in body)
+        # owner view exposes per-promotion engagement counters
+        row = next(r for r in body if r["id"] == str(mine.id))
+        assert row["impressions"] == 0
+        assert row["clicks"] == 0
 
 
 @pytest.mark.asyncio
