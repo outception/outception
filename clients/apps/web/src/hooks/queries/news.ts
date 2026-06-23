@@ -1,6 +1,30 @@
+import { getQueryClient } from '@/utils/api/query'
 import { newsApi, type NewsSort } from '@/utils/news'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { defaultRetry } from './retry'
+
+export const useFollowedSources = (enabled = true) =>
+  useQuery({
+    queryKey: ['news', 'followed'],
+    queryFn: () => newsApi.followed(),
+    enabled,
+    retry: defaultRetry,
+  })
+
+const invalidateFollowed = () =>
+  getQueryClient().invalidateQueries({ queryKey: ['news', 'followed'] })
+
+export const useFollowSource = () =>
+  useMutation({
+    mutationFn: (id: string) => newsApi.follow(id),
+    onSuccess: invalidateFollowed,
+  })
+
+export const useUnfollowSource = () =>
+  useMutation({
+    mutationFn: (id: string) => newsApi.unfollow(id),
+    onSuccess: invalidateFollowed,
+  })
 
 export const useNewsSources = () =>
   useQuery({

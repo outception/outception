@@ -5,6 +5,7 @@ import type { NewsSourceMeta } from '@/utils/news'
 import { Spinner, Text } from '@polar-sh/orbit'
 import { Box } from '@polar-sh/orbit/Box'
 import { PromotionFooter } from '../Promotions/PromotionFooter'
+import { FollowButton } from './FollowButton'
 
 const MAX_ITEMS = 8
 
@@ -24,20 +25,28 @@ export const NewsSourceCard = ({ source }: { source: NewsSourceMeta }) => {
       borderRadius="l"
       backgroundColor="background-card"
     >
-      <Box flexDirection="row" alignItems="center" columnGap="s">
-        <span
-          aria-hidden
-          style={{
-            display: 'inline-block',
-            width: 10,
-            height: 10,
-            borderRadius: 9999,
-            backgroundColor: source.color,
-          }}
-        />
-        <Text variant="body" as="h3">
-          {source.name}
-        </Text>
+      <Box
+        flexDirection="row"
+        alignItems="center"
+        justifyContent="between"
+        columnGap="s"
+      >
+        <Box flexDirection="row" alignItems="center" columnGap="s">
+          <span
+            aria-hidden
+            style={{
+              display: 'inline-block',
+              width: 10,
+              height: 10,
+              borderRadius: 9999,
+              backgroundColor: source.color,
+            }}
+          />
+          <Text variant="body" as="h3">
+            {source.name}
+          </Text>
+        </Box>
+        <FollowButton sourceId={source.id} />
       </Box>
 
       {isLoading ? (

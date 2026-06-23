@@ -78,3 +78,11 @@ class NewsSearchResponse(BaseModel):
 
     sources: list[SourceMeta]
     items: list[NewsSearchItem]
+
+
+class FollowedSources(BaseModel):
+    """The canonical ids of the sources the authenticated user follows."""
+
+    source_ids: list[str] = Field(alias="sourceIds")
+
+    model_config = ConfigDict(populate_by_name=True)

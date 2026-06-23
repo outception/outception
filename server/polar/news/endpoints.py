@@ -13,14 +13,22 @@ from fastapi import Depends, Query
 
 from polar.exceptions import PolarError, ResourceNotFound
 from polar.openapi import APITag
+from polar.postgres import (
+    AsyncReadSession,
+    AsyncSession,
+    get_db_read_session,
+    get_db_session,
+)
 from polar.redis import Redis, get_redis
 from polar.routing import APIRouter
 
-from . import cache, registry, search
+from . import auth as news_auth
+from . import cache, follows, registry, search
 from .fetch import NewsFetchError, fetch_text, parse_rss
 from .metadata import SOURCES
 from .schemas import (
     BatchRequest,
+    FollowedSources,
     NewsItem,
     NewsSearchResponse,
     SourceMeta,
@@ -77,6 +85,42 @@ async def search_news(
         sources=search.search_sources(q),
         items=await search.search_headlines(redis, q),
     )
+
+
+@router.get("/followed", response_model=FollowedSources, tags=[APITag.private])
+async def list_followed_sources(
+    auth_subject: news_auth.NewsUser,
+    session: AsyncReadSession = Depends(get_db_read_session),
+) -> FollowedSources:
+    """The sources the authenticated user follows (canonical ids)."""
+    return FollowedSources(
+        source_ids=await follows.list_followed(session, auth_subject.subject.id)
+    )
+
+
+@router.put("/followed/{source_id}", status_code=204, tags=[APITag.private])
+async def follow_source(
+    source_id: str,
+    auth_subject: news_auth.NewsUser,
+    session: AsyncSession = Depends(get_db_session),
+) -> None:
+    """Follow a source. The id is resolved to its canonical source (so a
+    redirect alias follows the real one); unknown ids are rejected."""
+    resolved = registry.resolve(source_id)
+    if resolved is None:
+        raise ResourceNotFound(f"Unknown news source: {source_id}")
+    await follows.follow(session, auth_subject.subject.id, resolved)
+
+
+@router.delete("/followed/{source_id}", status_code=204, tags=[APITag.private])
+async def unfollow_source(
+    source_id: str,
+    auth_subject: news_auth.NewsUser,
+    session: AsyncSession = Depends(get_db_session),
+) -> None:
+    """Unfollow a source (idempotent)."""
+    resolved = registry.resolve(source_id) or source_id
+    await follows.unfollow(session, auth_subject.subject.id, resolved)
 
 
 def _reddit_sort_url(sub: str, sort: str) -> str:

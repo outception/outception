@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
 
 vi.mock('@/utils/client', () => ({
-  api: { GET: vi.fn(), POST: vi.fn() },
+  api: { GET: vi.fn(), POST: vi.fn(), PUT: vi.fn(), DELETE: vi.fn() },
 }))
 
 import { api } from '@/utils/client'
@@ -15,12 +15,18 @@ const ok = (data: unknown) => ({
 
 const get = api.GET as unknown as Mock
 const post = api.POST as unknown as Mock
+const put = api.PUT as unknown as Mock
+const del = api.DELETE as unknown as Mock
 
 beforeEach(() => {
   get.mockReset()
   post.mockReset()
+  put.mockReset()
+  del.mockReset()
   get.mockResolvedValue(ok([]))
   post.mockResolvedValue(ok({}))
+  put.mockResolvedValue(ok(undefined))
+  del.mockResolvedValue(ok(undefined))
 })
 
 describe('newsApi', () => {
@@ -63,6 +69,26 @@ describe('newsApi', () => {
     await newsApi.search('rust')
     expect(get).toHaveBeenCalledWith('/v1/news/search', {
       params: { query: { q: 'rust' } },
+    })
+  })
+
+  it('followed GETs the followed endpoint', async () => {
+    get.mockResolvedValue(ok({ sourceIds: [] }))
+    await newsApi.followed()
+    expect(get).toHaveBeenCalledWith('/v1/news/followed')
+  })
+
+  it('follow PUTs the source id', async () => {
+    await newsApi.follow('hackernews')
+    expect(put).toHaveBeenCalledWith('/v1/news/followed/{source_id}', {
+      params: { path: { source_id: 'hackernews' } },
+    })
+  })
+
+  it('unfollow DELETEs the source id', async () => {
+    await newsApi.unfollow('hackernews')
+    expect(del).toHaveBeenCalledWith('/v1/news/followed/{source_id}', {
+      params: { path: { source_id: 'hackernews' } },
     })
   })
 })

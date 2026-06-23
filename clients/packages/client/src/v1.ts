@@ -648,6 +648,51 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/v1/news/followed': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * List Followed Sources
+     * @description The sources the authenticated user follows (canonical ids).
+     */
+    get: operations['news:list_followed_sources']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/news/followed/{source_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    /**
+     * Follow Source
+     * @description Follow a source. The id is resolved to its canonical source (so a
+     *     redirect alias follows the real one); unknown ids are rejected.
+     */
+    put: operations['news:follow_source']
+    post?: never
+    /**
+     * Unfollow Source
+     * @description Unfollow a source (idempotent).
+     */
+    delete: operations['news:unfollow_source']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/v1/news/{source_id}': {
     parameters: {
       query?: never
@@ -1608,6 +1653,14 @@ export interface components {
       | 'apple'
       | 'github'
       | 'google'
+    /**
+     * FollowedSources
+     * @description The canonical ids of the sources the authenticated user follows.
+     */
+    FollowedSources: {
+      /** Sourceids */
+      sourceIds: string[]
+    }
     /** HTTPValidationError */
     HTTPValidationError: {
       /** Detail */
@@ -5499,6 +5552,84 @@ export interface operations {
         content: {
           'application/json': components['schemas']['NewsSearchResponse']
         }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  'news:list_followed_sources': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['FollowedSources']
+        }
+      }
+    }
+  }
+  'news:follow_source': {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        source_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  'news:unfollow_source': {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        source_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
       }
       /** @description Validation Error */
       422: {

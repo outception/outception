@@ -20,4 +20,13 @@ export const newsApi = {
     unwrap(api.POST('/v1/news/batch', { body: { sources } })),
   search: (q: string) =>
     unwrap(api.GET('/v1/news/search', { params: { query: { q } } })),
+  followed: () => unwrap(api.GET('/v1/news/followed')),
+  follow: (id: string) =>
+    api.PUT('/v1/news/followed/{source_id}', {
+      params: { path: { source_id: id } },
+    }),
+  unfollow: (id: string) =>
+    api.DELETE('/v1/news/followed/{source_id}', {
+      params: { path: { source_id: id } },
+    }),
 }

@@ -16,6 +16,7 @@ from .personal_access_token import PersonalAccessToken
 from .promotion import Promotion, PromotionStatus
 from .totp_enrollment import TOTPEnrollment
 from .user import OAuthAccount, User
+from .user_followed_source import UserFollowedSource
 from .user_organization import UserOrganization
 from .user_session import UserSession
 
@@ -40,6 +41,7 @@ __all__ = [
     "TOTPEnrollment",
     "TimestampedModel",
     "User",
+    "UserFollowedSource",
     "UserOrganization",
     "UserSession",
 ]

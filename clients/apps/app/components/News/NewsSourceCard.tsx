@@ -4,6 +4,7 @@ import { Touchable } from '@/components/Shared/Touchable'
 import { useNewsSource, type NewsSourceMeta } from '@/hooks/polar/news'
 import { ActivityIndicator, Linking } from 'react-native'
 import { PromotionFooter } from '../Promotions/PromotionFooter'
+import { FollowButton } from './FollowButton'
 
 const MAX_ITEMS = 6
 
@@ -20,14 +21,27 @@ export const NewsSourceCard = ({ source }: { source: NewsSourceMeta }) => {
       borderRadius="border-radius-16"
       backgroundColor="card"
     >
-      <Box flexDirection="row" alignItems="center" gap="spacing-8">
+      <Box
+        flexDirection="row"
+        alignItems="center"
+        justifyContent="space-between"
+        gap="spacing-8"
+      >
         <Box
-          width={10}
-          height={10}
-          borderRadius="border-radius-999"
-          style={{ backgroundColor: source.color }}
-        />
-        <Text variant="title">{source.name}</Text>
+          flexDirection="row"
+          alignItems="center"
+          gap="spacing-8"
+          flexShrink={1}
+        >
+          <Box
+            width={10}
+            height={10}
+            borderRadius="border-radius-999"
+            style={{ backgroundColor: source.color }}
+          />
+          <Text variant="title">{source.name}</Text>
+        </Box>
+        <FollowButton sourceId={source.id} />
       </Box>
 
       {isLoading ? (

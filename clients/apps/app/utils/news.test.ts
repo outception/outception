@@ -7,8 +7,18 @@ const makeClient = () => {
     error: undefined,
     response: { status: 200 },
   })
-  const client = { GET } as unknown as Client
-  return { client, GET }
+  const PUT = jest.fn().mockResolvedValue({
+    data: undefined,
+    error: undefined,
+    response: { status: 204 },
+  })
+  const DELETE = jest.fn().mockResolvedValue({
+    data: undefined,
+    error: undefined,
+    response: { status: 204 },
+  })
+  const client = { GET, PUT, DELETE } as unknown as Client
+  return { client, GET, PUT, DELETE }
 }
 
 const okGet = (data: unknown) => ({
@@ -49,6 +59,25 @@ describe('newsApi', () => {
     await newsApi(client).search('rust')
     expect(GET).toHaveBeenCalledWith('/v1/news/search', {
       params: { query: { q: 'rust' } },
+    })
+  })
+
+  it('followed GETs the followed endpoint', async () => {
+    const { client, GET } = makeClient()
+    GET.mockResolvedValue(okGet({ sourceIds: [] }))
+    await newsApi(client).followed()
+    expect(GET).toHaveBeenCalledWith('/v1/news/followed')
+  })
+
+  it('follow PUTs / unfollow DELETEs the source id', async () => {
+    const { client, PUT, DELETE } = makeClient()
+    await newsApi(client).follow('hackernews')
+    expect(PUT).toHaveBeenCalledWith('/v1/news/followed/{source_id}', {
+      params: { path: { source_id: 'hackernews' } },
+    })
+    await newsApi(client).unfollow('hackernews')
+    expect(DELETE).toHaveBeenCalledWith('/v1/news/followed/{source_id}', {
+      params: { path: { source_id: 'hackernews' } },
     })
   })
 })

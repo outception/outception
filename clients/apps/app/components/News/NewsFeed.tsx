@@ -3,7 +3,8 @@ import { Input } from '@/components/Shared/Input'
 import { Text } from '@/components/Shared/Text'
 import { Touchable } from '@/components/Shared/Touchable'
 import { useTheme } from '@/design-system/useTheme'
-import { useNewsSources } from '@/hooks/polar/news'
+import { useFollowedSources, useNewsSources } from '@/hooks/polar/news'
+import { useSession } from '@/providers/SessionProvider'
 import { useMemo, useState } from 'react'
 import { ActivityIndicator, ScrollView } from 'react-native'
 import { NewsSearchResults } from './NewsSearchResults'
@@ -16,7 +17,10 @@ const MAX_CARDS = 12
 export const NewsFeed = () => {
   const theme = useTheme()
   const { data: sources, isLoading } = useNewsSources()
+  const { session } = useSession()
+  const { data: followed } = useFollowedSources(!!session)
   const [column, setColumn] = useState<string | null>(null)
+  const [following, setFollowing] = useState(false)
   const [query, setQuery] = useState('')
   const searching = query.trim().length >= 2
 
@@ -30,9 +34,13 @@ export const NewsFeed = () => {
 
   const visible = useMemo(() => {
     const list = (sources ?? []).filter((s) => !s.redirect)
+    if (following) {
+      const ids = new Set(followed?.sourceIds ?? [])
+      return list.filter((s) => ids.has(s.id)).slice(0, MAX_CARDS)
+    }
     const filtered = column ? list.filter((s) => s.column === column) : list
     return filtered.slice(0, MAX_CARDS)
-  }, [sources, column])
+  }, [sources, column, following, followed])
 
   return (
     <Box flex={1} gap="spacing-16">
@@ -64,15 +72,31 @@ export const NewsFeed = () => {
           >
             <TopicChip
               label="All"
-              active={column === null}
-              onPress={() => setColumn(null)}
+              active={!following && column === null}
+              onPress={() => {
+                setFollowing(false)
+                setColumn(null)
+              }}
             />
+            {session ? (
+              <TopicChip
+                label="★ Following"
+                active={following}
+                onPress={() => {
+                  setFollowing(true)
+                  setColumn(null)
+                }}
+              />
+            ) : null}
             {columns.map((c) => (
               <TopicChip
                 key={c}
                 label={c}
-                active={column === c}
-                onPress={() => setColumn(c)}
+                active={!following && column === c}
+                onPress={() => {
+                  setFollowing(false)
+                  setColumn(c)
+                }}
               />
             ))}
           </ScrollView>

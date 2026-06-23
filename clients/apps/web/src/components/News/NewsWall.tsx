@@ -1,6 +1,7 @@
 'use client'
 
-import { useNewsSources } from '@/hooks/queries/news'
+import { useAuth } from '@/hooks'
+import { useFollowedSources, useNewsSources } from '@/hooks/queries/news'
 import type { NewsSourceMeta } from '@/utils/news'
 import { Button, Grid, Input, Spinner, Text } from '@polar-sh/orbit'
 import { Box } from '@polar-sh/orbit/Box'
@@ -15,7 +16,10 @@ const MAX_CARDS = 12
  * paid promotions woven in per topic. */
 export const NewsWall = () => {
   const { data: sources, isLoading } = useNewsSources()
+  const { currentUser } = useAuth()
+  const { data: followed } = useFollowedSources(!!currentUser)
   const [column, setColumn] = useState<string | null>(null)
+  const [following, setFollowing] = useState(false)
   const [query, setQuery] = useState('')
   const searching = query.trim().length >= 2
 
@@ -29,9 +33,13 @@ export const NewsWall = () => {
 
   const visible: NewsSourceMeta[] = useMemo(() => {
     const list = (sources ?? []).filter((s) => !s.redirect)
+    if (following) {
+      const ids = new Set(followed?.sourceIds ?? [])
+      return list.filter((s) => ids.has(s.id)).slice(0, MAX_CARDS)
+    }
     const filtered = column ? list.filter((s) => s.column === column) : list
     return filtered.slice(0, MAX_CARDS)
-  }, [sources, column])
+  }, [sources, column, following, followed])
 
   return (
     <Box flexDirection="column" rowGap="xl" padding="xl">
@@ -63,18 +71,36 @@ export const NewsWall = () => {
         <>
           <Box flexDirection="row" columnGap="s" flexWrap="wrap" rowGap="s">
             <Button
-              variant={column === null ? 'default' : 'secondary'}
+              variant={!following && column === null ? 'default' : 'secondary'}
               size="sm"
-              onClick={() => setColumn(null)}
+              onClick={() => {
+                setFollowing(false)
+                setColumn(null)
+              }}
             >
               All
             </Button>
+            {currentUser && (
+              <Button
+                variant={following ? 'default' : 'secondary'}
+                size="sm"
+                onClick={() => {
+                  setFollowing(true)
+                  setColumn(null)
+                }}
+              >
+                ★ Following
+              </Button>
+            )}
             {columns.map((c) => (
               <Button
                 key={c}
-                variant={column === c ? 'default' : 'secondary'}
+                variant={!following && column === c ? 'default' : 'secondary'}
                 size="sm"
-                onClick={() => setColumn(c)}
+                onClick={() => {
+                  setFollowing(false)
+                  setColumn(c)
+                }}
               >
                 {c}
               </Button>

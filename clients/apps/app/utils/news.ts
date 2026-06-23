@@ -17,4 +17,13 @@ export const newsApi = (polar: Client) => ({
     ),
   search: (q: string) =>
     unwrap(polar.GET('/v1/news/search', { params: { query: { q } } })),
+  followed: () => unwrap(polar.GET('/v1/news/followed')),
+  follow: (id: string) =>
+    polar.PUT('/v1/news/followed/{source_id}', {
+      params: { path: { source_id: id } },
+    }),
+  unfollow: (id: string) =>
+    polar.DELETE('/v1/news/followed/{source_id}', {
+      params: { path: { source_id: id } },
+    }),
 })
