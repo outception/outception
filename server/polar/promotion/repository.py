@@ -24,6 +24,19 @@ class PromotionRepository(RepositoryBase[Promotion]):
         )
         return await self.get_one_or_none(statement)
 
+    async def get_by_id_for_update(self, promotion_id: UUID) -> Promotion | None:
+        """Row-locked fetch (``FOR UPDATE``). Used by ``activate_paid`` so the
+        PENDING_PAYMENT -> QUEUED transition is atomic: a concurrently
+        redelivered order webhook blocks here, then sees the already-paid status
+        and becomes a no-op instead of activating the promotion twice."""
+        statement = (
+            self.get_base_statement()
+            .where(Promotion.id == promotion_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
+        return await self.get_one_or_none(statement)
+
     async def get_by_payment_ref(self, payment_ref: str) -> Promotion | None:
         statement = self.get_base_statement().where(
             Promotion.payment_ref == payment_ref

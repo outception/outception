@@ -73,6 +73,25 @@ class TestActivatePaid:
         assert second_refreshed is not None
         assert second_refreshed.status == PromotionStatus.PENDING_PAYMENT
 
+    async def test_already_paid_promotion_is_noop(
+        self, session: AsyncSession, user: User
+    ) -> None:
+        # A second activation of an already-paid promotion (e.g. a redelivered
+        # webhook that slipped past the payment_ref check) must not re-process
+        # it: the status guard, made atomic by the row lock, leaves the original
+        # payment ref intact.
+        promotion = await _make_pending(session, user)
+        await promotion_service.activate_paid(
+            session, promotion.id, external_ref="order:first"
+        )
+        await promotion_service.activate_paid(
+            session, promotion.id, external_ref="order:second"
+        )
+        repo = PromotionRepository.from_session(session)
+        refreshed = await repo.get_by_id(promotion.id)
+        assert refreshed is not None
+        assert refreshed.payment_ref == "order:first"
+
     async def test_second_paid_promotion_queues(
         self, session: AsyncSession, user: User
     ) -> None:

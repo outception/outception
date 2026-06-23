@@ -88,7 +88,9 @@ class PromotionService:
         existing = await repo.get_by_payment_ref(external_ref)
         if existing is not None:
             return
-        promotion = await repo.get_by_id(promotion_id)
+        # Lock the row so a concurrently-redelivered webhook can't also pass the
+        # PENDING_PAYMENT check and activate this promotion twice.
+        promotion = await repo.get_by_id_for_update(promotion_id)
         if promotion is None or promotion.status != PromotionStatus.PENDING_PAYMENT:
             return
         if paid_amount_cents is not None and paid_amount_cents < promotion.amount_cents:
