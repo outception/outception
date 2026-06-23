@@ -8,7 +8,13 @@ from typing import Annotated, Literal
 from urllib.parse import urlparse
 
 from annotated_types import Ge
-from pydantic import AfterValidator, DirectoryPath, Field, PostgresDsn
+from pydantic import (
+    AfterValidator,
+    DirectoryPath,
+    Field,
+    PostgresDsn,
+    model_validator,
+)
 from pydantic_ai.models import Model, infer_model, parse_model_id
 from pydantic_ai.providers.gateway import gateway_provider
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -50,6 +56,12 @@ else:
     env_file = ".env"
 file_extension = ".exe" if os.name == "nt" else ""
 
+# The development default for ``SECRET``. It is fine locally but must never be
+# used in a hosted environment — it keys all token hashing (PATs, OAuth codes,
+# OTPs, sessions), so a known value means forgeable credentials. Enforced by
+# ``_require_strong_secret`` below.
+INSECURE_DEFAULT_SECRET = "super secret jwt secret"
+
 
 class Settings(BaseSettings):
     ENV: Environment = Environment.development
@@ -87,7 +99,7 @@ class Settings(BaseSettings):
     CUSTOMER_METER_UPDATE_DEBOUNCE_MIN_THRESHOLD: timedelta = timedelta(seconds=15)
     CUSTOMER_METER_UPDATE_DEBOUNCE_MAX_THRESHOLD: timedelta = timedelta(minutes=180)
 
-    SECRET: str = "super secret jwt secret"
+    SECRET: str = INSECURE_DEFAULT_SECRET
     JWKS: JWKSFile = Field(default="./.jwks.json")
     CURRENT_JWK_KID: str = "polar_dev"
     WWW_AUTHENTICATE_REALM: str = "polar"
@@ -577,6 +589,21 @@ class Settings(BaseSettings):
                 path=self.POSTGRES_READ_DATABASE,
             )
         )
+
+    @model_validator(mode="after")
+    def _require_strong_secret(self) -> "Settings":
+        # A hosted environment must never run with the development default
+        # SECRET — it keys all token hashing, so a known value makes every
+        # credential forgeable. Fail fast at startup rather than serve traffic.
+        if (
+            self.ENV in {Environment.production, Environment.sandbox}
+            and self.SECRET == INSECURE_DEFAULT_SECRET
+        ):
+            raise ValueError(
+                "POLAR_SECRET must be set to a strong, unique value in "
+                f"{self.ENV} — it is still the insecure development default."
+            )
+        return self
 
     def is_environment(self, environments: set[Environment]) -> bool:
         return self.ENV in environments
