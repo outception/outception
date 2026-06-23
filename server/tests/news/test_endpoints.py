@@ -136,6 +136,31 @@ class TestFollow:
         response = await client.put("/v1/news/followed/not-a-real-source")
         assert response.status_code == 404
 
+    async def test_feed_anonymous(self, client: AsyncClient) -> None:
+        assert (await client.get("/v1/news/followed/feed")).status_code == 401
+
+    @pytest.mark.auth
+    async def test_feed_merges_warm_cache_freshest_first(
+        self, client: AsyncClient, redis: Redis
+    ) -> None:
+        from polar.news import cache
+
+        await cache.set(
+            redis,
+            "hackernews",
+            [
+                NewsItem(id="1", title="Older", url="https://e.com/1", pub_date=1000),
+                NewsItem(id="2", title="Newer", url="https://e.com/2", pub_date=2000),
+            ],
+        )
+        await client.put("/v1/news/followed/hackernews")
+
+        response = await client.get("/v1/news/followed/feed")
+        assert response.status_code == 200
+        items = response.json()["items"]
+        assert [i["item"]["title"] for i in items] == ["Newer", "Older"]
+        assert all(i["sourceId"] == "hackernews" for i in items)
+
     @pytest.mark.auth
     async def test_follow_resolves_redirect_alias(
         self, client: AsyncClient

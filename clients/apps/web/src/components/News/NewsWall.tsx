@@ -1,12 +1,13 @@
 'use client'
 
 import { useAuth } from '@/hooks'
-import { useFollowedSources, useNewsSources } from '@/hooks/queries/news'
+import { useNewsSources } from '@/hooks/queries/news'
 import type { NewsSourceMeta } from '@/utils/news'
 import { Button, Grid, Input, Spinner, Text } from '@polar-sh/orbit'
 import { Box } from '@polar-sh/orbit/Box'
 import { useMemo, useState } from 'react'
 import { ComposePromotionDialog } from '../Promotions/ComposePromotionDialog'
+import { FollowingFeed } from './FollowingFeed'
 import { NewsSearchResults } from './NewsSearchResults'
 import { NewsSourceCard } from './NewsSourceCard'
 
@@ -17,7 +18,6 @@ const MAX_CARDS = 12
 export const NewsWall = () => {
   const { data: sources, isLoading } = useNewsSources()
   const { currentUser } = useAuth()
-  const { data: followed } = useFollowedSources(!!currentUser)
   const [column, setColumn] = useState<string | null>(null)
   const [following, setFollowing] = useState(false)
   const [query, setQuery] = useState('')
@@ -33,13 +33,9 @@ export const NewsWall = () => {
 
   const visible: NewsSourceMeta[] = useMemo(() => {
     const list = (sources ?? []).filter((s) => !s.redirect)
-    if (following) {
-      const ids = new Set(followed?.sourceIds ?? [])
-      return list.filter((s) => ids.has(s.id)).slice(0, MAX_CARDS)
-    }
     const filtered = column ? list.filter((s) => s.column === column) : list
     return filtered.slice(0, MAX_CARDS)
-  }, [sources, column, following, followed])
+  }, [sources, column])
 
   return (
     <Box flexDirection="column" rowGap="xl" padding="xl">
@@ -107,7 +103,9 @@ export const NewsWall = () => {
             ))}
           </Box>
 
-          {isLoading ? (
+          {following ? (
+            <FollowingFeed />
+          ) : isLoading ? (
             <Box justifyContent="center" padding="xl">
               <Spinner />
             </Box>

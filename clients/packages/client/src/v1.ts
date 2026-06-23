@@ -668,6 +668,27 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/v1/news/followed/feed': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Followed Feed
+     * @description A merged, freshest-first feed of cached headlines from the sources the
+     *     user follows (warm cache only — never triggers a fetch).
+     */
+    get: operations['news:followed_feed']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/v1/news/followed/{source_id}': {
     parameters: {
       query?: never
@@ -5580,6 +5601,26 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['FollowedSources']
+        }
+      }
+    }
+  }
+  'news:followed_feed': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['NewsSearchResponse']
         }
       }
     }

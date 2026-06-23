@@ -21,6 +21,7 @@ export const newsApi = {
   search: (q: string) =>
     unwrap(api.GET('/v1/news/search', { params: { query: { q } } })),
   followed: () => unwrap(api.GET('/v1/news/followed')),
+  followedFeed: () => unwrap(api.GET('/v1/news/followed/feed')),
   follow: (id: string) =>
     api.PUT('/v1/news/followed/{source_id}', {
       params: { path: { source_id: id } },

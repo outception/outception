@@ -98,6 +98,24 @@ async def list_followed_sources(
     )
 
 
+@router.get(
+    "/followed/feed",
+    response_model=NewsSearchResponse,
+    tags=[APITag.private],
+)
+async def followed_feed(
+    auth_subject: news_auth.NewsUser,
+    session: AsyncReadSession = Depends(get_db_read_session),
+    redis: Redis = Depends(get_redis),
+) -> NewsSearchResponse:
+    """A merged, freshest-first feed of cached headlines from the sources the
+    user follows (warm cache only — never triggers a fetch)."""
+    source_ids = await follows.list_followed(session, auth_subject.subject.id)
+    return NewsSearchResponse(
+        sources=[], items=await follows.followed_feed(redis, source_ids)
+    )
+
+
 @router.put("/followed/{source_id}", status_code=204, tags=[APITag.private])
 async def follow_source(
     source_id: str,

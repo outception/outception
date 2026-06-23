@@ -78,6 +78,12 @@ describe('newsApi', () => {
     expect(get).toHaveBeenCalledWith('/v1/news/followed')
   })
 
+  it('followedFeed GETs the feed endpoint', async () => {
+    get.mockResolvedValue(ok({ sources: [], items: [] }))
+    await newsApi.followedFeed()
+    expect(get).toHaveBeenCalledWith('/v1/news/followed/feed')
+  })
+
   it('follow PUTs the source id', async () => {
     await newsApi.follow('hackernews')
     expect(put).toHaveBeenCalledWith('/v1/news/followed/{source_id}', {

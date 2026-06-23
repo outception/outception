@@ -6,6 +6,11 @@ from sqlalchemy import delete, select
 
 from polar.models import UserFollowedSource
 from polar.postgres import AsyncReadSession, AsyncSession
+from polar.redis import Redis
+
+from . import cache
+from .metadata import SOURCES
+from .schemas import NewsSearchItem
 
 
 async def list_followed(session: AsyncReadSession, user_id: UUID) -> list[str]:
@@ -38,3 +43,25 @@ async def unfollow(session: AsyncSession, user_id: UUID, source_id: str) -> None
             UserFollowedSource.source_id == source_id,
         )
     )
+
+
+async def followed_feed(
+    redis: Redis, source_ids: list[str], *, limit: int = 40
+) -> list[NewsSearchItem]:
+    """Merge cached headlines from the given sources into one freshest-first
+    feed. Reads warm cache only (never fetches), so cold sources contribute
+    nothing until the wall warms them."""
+    hits: list[NewsSearchItem] = []
+    for source_id in source_ids:
+        entry = await cache.get(redis, source_id)
+        if entry is None:
+            continue
+        source_name = str(SOURCES.get(source_id, {}).get("name", source_id))
+        for item in entry.items:
+            hits.append(
+                NewsSearchItem(
+                    source_id=source_id, source_name=source_name, item=item
+                )
+            )
+    hits.sort(key=lambda h: h.item.pub_date or 0, reverse=True)
+    return hits[:limit]

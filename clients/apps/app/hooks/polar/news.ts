@@ -30,6 +30,16 @@ export const useFollowedSources = (enabled = true) => {
   })
 }
 
+export const useFollowedFeed = (enabled = true) => {
+  const { polar } = usePolarClient()
+  return useQuery({
+    queryKey: ['news', 'followed', 'feed'],
+    queryFn: () => newsApi(polar).followedFeed(),
+    enabled,
+    staleTime: 60_000,
+  })
+}
+
 export const useFollowSource = () => {
   const { polar } = usePolarClient()
   return useMutation({

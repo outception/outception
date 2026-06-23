@@ -3,10 +3,11 @@ import { Input } from '@/components/Shared/Input'
 import { Text } from '@/components/Shared/Text'
 import { Touchable } from '@/components/Shared/Touchable'
 import { useTheme } from '@/design-system/useTheme'
-import { useFollowedSources, useNewsSources } from '@/hooks/polar/news'
+import { useNewsSources } from '@/hooks/polar/news'
 import { useSession } from '@/providers/SessionProvider'
 import { useMemo, useState } from 'react'
 import { ActivityIndicator, ScrollView } from 'react-native'
+import { FollowingFeed } from './FollowingFeed'
 import { NewsSearchResults } from './NewsSearchResults'
 import { NewsSourceCard } from './NewsSourceCard'
 
@@ -18,7 +19,6 @@ export const NewsFeed = () => {
   const theme = useTheme()
   const { data: sources, isLoading } = useNewsSources()
   const { session } = useSession()
-  const { data: followed } = useFollowedSources(!!session)
   const [column, setColumn] = useState<string | null>(null)
   const [following, setFollowing] = useState(false)
   const [query, setQuery] = useState('')
@@ -34,13 +34,9 @@ export const NewsFeed = () => {
 
   const visible = useMemo(() => {
     const list = (sources ?? []).filter((s) => !s.redirect)
-    if (following) {
-      const ids = new Set(followed?.sourceIds ?? [])
-      return list.filter((s) => ids.has(s.id)).slice(0, MAX_CARDS)
-    }
     const filtered = column ? list.filter((s) => s.column === column) : list
     return filtered.slice(0, MAX_CARDS)
-  }, [sources, column, following, followed])
+  }, [sources, column])
 
   return (
     <Box flex={1} gap="spacing-16">
@@ -56,10 +52,6 @@ export const NewsFeed = () => {
 
       {searching ? (
         <NewsSearchResults query={query} />
-      ) : isLoading ? (
-        <Box flex={1} justifyContent="center" alignItems="center">
-          <ActivityIndicator />
-        </Box>
       ) : (
         <>
           <ScrollView
@@ -101,16 +93,24 @@ export const NewsFeed = () => {
             ))}
           </ScrollView>
 
-          <ScrollView
-            contentContainerStyle={{
-              gap: theme.spacing['spacing-16'],
-              padding: theme.spacing['spacing-16'],
-            }}
-          >
-            {visible.map((source) => (
-              <NewsSourceCard key={source.id} source={source} />
-            ))}
-          </ScrollView>
+          {following ? (
+            <FollowingFeed />
+          ) : isLoading ? (
+            <Box flex={1} justifyContent="center" alignItems="center">
+              <ActivityIndicator />
+            </Box>
+          ) : (
+            <ScrollView
+              contentContainerStyle={{
+                gap: theme.spacing['spacing-16'],
+                padding: theme.spacing['spacing-16'],
+              }}
+            >
+              {visible.map((source) => (
+                <NewsSourceCard key={source.id} source={source} />
+              ))}
+            </ScrollView>
+          )}
         </>
       )}
     </Box>

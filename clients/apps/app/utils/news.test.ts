@@ -69,6 +69,13 @@ describe('newsApi', () => {
     expect(GET).toHaveBeenCalledWith('/v1/news/followed')
   })
 
+  it('followedFeed GETs the feed endpoint', async () => {
+    const { client, GET } = makeClient()
+    GET.mockResolvedValue(okGet({ sources: [], items: [] }))
+    await newsApi(client).followedFeed()
+    expect(GET).toHaveBeenCalledWith('/v1/news/followed/feed')
+  })
+
   it('follow PUTs / unfollow DELETEs the source id', async () => {
     const { client, PUT, DELETE } = makeClient()
     await newsApi(client).follow('hackernews')

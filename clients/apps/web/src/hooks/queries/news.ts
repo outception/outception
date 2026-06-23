@@ -11,6 +11,15 @@ export const useFollowedSources = (enabled = true) =>
     retry: defaultRetry,
   })
 
+export const useFollowedFeed = (enabled = true) =>
+  useQuery({
+    queryKey: ['news', 'followed', 'feed'],
+    queryFn: () => newsApi.followedFeed(),
+    enabled,
+    staleTime: 60_000,
+    retry: defaultRetry,
+  })
+
 const invalidateFollowed = () =>
   getQueryClient().invalidateQueries({ queryKey: ['news', 'followed'] })
 
