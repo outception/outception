@@ -58,6 +58,21 @@ class TestSendLifecycleEmail:
         assert kwargs["html_content"]
         assert kwargs["template"] is None
 
+    async def test_skips_when_author_opted_out(
+        self, session: AsyncSession, user: User, mocker: MockerFixture
+    ) -> None:
+        user.promotion_emails_enabled = False
+        await session.flush()
+        promotion = await _make_pending(session, user)
+        mocker.patch(
+            "polar.promotion.tasks.AsyncSessionMaker",
+            return_value=_FakeSessionMaker(session),
+        )
+        enqueue = mocker.patch("polar.promotion.tasks.enqueue_job")
+
+        await promotion_send_lifecycle_email(str(promotion.id), "activated")
+        enqueue.assert_not_called()
+
     async def test_missing_promotion_is_noop(
         self, session: AsyncSession, mocker: MockerFixture
     ) -> None:

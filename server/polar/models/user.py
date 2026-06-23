@@ -166,6 +166,10 @@ class User(RecordModel):
 
     meta: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
 
+    promotion_emails_enabled: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default="true"
+    )
+
     first_name: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
     last_name: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
     country: Mapped[str | None] = mapped_column(String(2), nullable=True, default=None)

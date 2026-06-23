@@ -32,6 +32,8 @@ async def promotion_send_lifecycle_email(promotion_id: str, kind: str) -> None:
         author = await session.get(User, promotion.author_id)
         if author is None or not author.email:
             return
+        if not author.promotion_emails_enabled:
+            return
 
         subject, html_content = build_email(promotion, kind)
         enqueue_job(

@@ -3734,6 +3734,8 @@ export interface components {
       country: string | null
       /** Date Of Birth */
       date_of_birth: string | null
+      /** Promotion Emails Enabled */
+      promotion_emails_enabled: boolean
       /** Oauth Accounts */
       oauth_accounts: components['schemas']['OAuthAccountRead'][]
       /**
@@ -4007,6 +4009,8 @@ export interface components {
       date_of_birth?: string | null
       /** Accepted Terms Of Service */
       accepted_terms_of_service?: boolean | null
+      /** Promotion Emails Enabled */
+      promotion_emails_enabled?: boolean | null
     }
     /** ValidationError */
     ValidationError: {

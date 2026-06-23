@@ -38,6 +38,7 @@ class UserRead(UserBase, TimestampedSchema):
     last_name: str | None
     country: str | None
     date_of_birth: date | None
+    promotion_emails_enabled: bool
     oauth_accounts: list[OAuthAccountRead]
     organizations: list[OrganizationWithRole] = Field(
         default_factory=list,
@@ -65,6 +66,7 @@ class UserUpdate(Schema):
     country: CountryAlpha2Input | None = None
     date_of_birth: date | None = None
     accepted_terms_of_service: bool | None = None
+    promotion_emails_enabled: bool | None = None
 
 
 class UserIdentityVerification(Schema):
