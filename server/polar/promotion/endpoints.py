@@ -127,7 +127,7 @@ async def get_preferences(
 )
 async def update_preferences(
     data: PromotionPreferences,
-    auth_subject: auth.PromotionUser,
+    auth_subject: auth.PromotionUserWrite,
     session: AsyncSession = Depends(get_db_session),
 ) -> PromotionPreferences:
     """Turn the promotion lifecycle emails (go-live / queued / expiry) on or off.
@@ -211,7 +211,7 @@ async def click_promotion(
 @router.post("/", response_model=PromotionCheckout, tags=[APITag.private])
 async def create_promotion(
     data: PromotionCreate,
-    auth_subject: auth.PromotionUser,
+    auth_subject: auth.PromotionUserWrite,
     session: AsyncSession = Depends(get_db_session),
 ) -> PromotionCheckout:
     """Buy a promotion: creates the draft and returns a hosted checkout URL. The

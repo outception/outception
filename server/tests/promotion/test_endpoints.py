@@ -4,6 +4,7 @@ import pytest
 from httpx import AsyncClient
 from pytest_mock import MockerFixture
 
+from polar.auth.scope import Scope
 from polar.config import settings
 from polar.models import User
 from polar.models.promotion import Promotion, PromotionStatus
@@ -11,6 +12,7 @@ from polar.postgres import AsyncSession
 from polar.promotion.repository import PromotionRepository
 from polar.promotion.service import PRICE_CENTS_PER_BLOCK
 from polar.promotion.service import promotion as promotion_service
+from tests.fixtures.auth import AuthSubjectFixture
 
 
 async def _make_pending(
@@ -159,6 +161,19 @@ class TestCreatePromotion:
         )
         assert response.status_code == 200
 
+    @pytest.mark.auth(AuthSubjectFixture(scopes={Scope.promotions_read}))
+    async def test_read_scope_cannot_create(
+        self, client: AsyncClient, mocker: MockerFixture
+    ) -> None:
+        # A token with only promotions:read must not be able to start a paid
+        # checkout — buying requires promotions:write.
+        mocker.patch.object(settings, "PROMOTION_PRODUCT_ID", "prod_123")
+        response = await client.post(
+            "/v1/promotions/",
+            json={"category": "tech", "title": "Hi", "body": "There", "blocks": 1},
+        )
+        assert response.status_code == 403
+
 
 @pytest.mark.asyncio
 class TestPreferences:
@@ -191,6 +206,20 @@ class TestListMine:
     async def test_anonymous(self, client: AsyncClient) -> None:
         response = await client.get("/v1/promotions/mine")
         assert response.status_code == 401
+
+    @pytest.mark.auth(AuthSubjectFixture(scopes={Scope.promotions_read}))
+    async def test_read_scope_allows(self, client: AsyncClient) -> None:
+        # promotions:read is enough to read your own promotions.
+        response = await client.get("/v1/promotions/mine")
+        assert response.status_code == 200
+
+    @pytest.mark.auth(AuthSubjectFixture(scopes={Scope.user_read}))
+    async def test_without_promotion_scope_forbidden(
+        self, client: AsyncClient
+    ) -> None:
+        # A token carrying no promotion scope can't read promotions.
+        response = await client.get("/v1/promotions/mine")
+        assert response.status_code == 403
 
     @pytest.mark.auth
     async def test_lists_only_own(

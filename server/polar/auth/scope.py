@@ -21,6 +21,9 @@ class Scope(StrEnum):
     organization_access_tokens_read = "organization_access_tokens:read"
     organization_access_tokens_write = "organization_access_tokens:write"
 
+    promotions_read = "promotions:read"
+    promotions_write = "promotions:write"
+
     @classmethod
     def __get_pydantic_json_schema__(
         cls, core_schema: cs.CoreSchema, handler: GetJsonSchemaHandler
@@ -39,6 +42,7 @@ READ_ONLY_SCOPES: set[Scope] = {
     Scope.organizations_read,
     Scope.members_read,
     Scope.organization_access_tokens_read,
+    Scope.promotions_read,
 }
 
 SCOPES_SUPPORTED = [s.value for s in Scope]
@@ -54,6 +58,8 @@ SCOPES_SUPPORTED_DISPLAY_NAMES: dict[Scope, str] = {
     Scope.members_write: "Create or modify members",
     Scope.organization_access_tokens_read: "Read organization access tokens",
     Scope.organization_access_tokens_write: "Create or modify organization access tokens",
+    Scope.promotions_read: "Read your promotions",
+    Scope.promotions_write: "Create and manage your promotions",
 }
 
 

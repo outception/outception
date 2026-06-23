@@ -793,7 +793,8 @@ export interface paths {
     /**
      * Get Featured
      * @description The active "in focus" promotion for each requested category (at most one
-     *     per category). Advances each category's queue as a side effect.
+     *     per category). Advances each category's queue as a side effect. Impressions
+     *     are deduped per viewer so background polling doesn't inflate the count.
      */
     get: operations['promotions:get_featured']
     put?: never
@@ -835,6 +836,8 @@ export interface paths {
     /**
      * List Mine
      * @description The authenticated user's promotions, newest first.
+     *
+     *     **Scopes**: `promotions:read` `promotions:write`
      */
     get: operations['promotions:list_mine']
     put?: never
@@ -855,6 +858,8 @@ export interface paths {
     /**
      * Get Preferences
      * @description Whether the authenticated user receives promotion lifecycle emails.
+     *
+     *     **Scopes**: `promotions:read` `promotions:write`
      */
     get: operations['promotions:get_preferences']
     put?: never
@@ -868,6 +873,8 @@ export interface paths {
      *
      *     Accepts web sessions and API tokens, so both the web dashboard and the
      *     mobile app can set it.
+     *
+     *     **Scopes**: `promotions:write`
      */
     patch: operations['promotions:update_preferences']
     trace?: never
@@ -886,6 +893,8 @@ export interface paths {
      *     from the Postgres counters; the daily series is read from the Tinybird
      *     ``promotion_analytics`` pipe when configured (which adds per-day impressions
      *     and clicks), otherwise from a Postgres spend-only series.
+     *
+     *     **Scopes**: `promotions:read` `promotions:write`
      */
     get: operations['promotions:get_analytics']
     put?: never
@@ -931,6 +940,8 @@ export interface paths {
      * @description Buy a promotion: creates the draft and returns a hosted checkout URL. The
      *     promotion joins its category's queue once the order webhook confirms
      *     payment.
+     *
+     *     **Scopes**: `promotions:write`
      */
     post: operations['promotions:create_promotion']
     delete?: never
@@ -991,7 +1002,9 @@ export interface components {
        *       "members:read": "Read members",
        *       "members:write": "Create or modify members",
        *       "organization_access_tokens:read": "Read organization access tokens",
-       *       "organization_access_tokens:write": "Create or modify organization access tokens"
+       *       "organization_access_tokens:write": "Create or modify organization access tokens",
+       *       "promotions:read": "Read your promotions",
+       *       "promotions:write": "Create and manage your promotions"
        *     }
        */
       scope_display_names: {
@@ -1024,7 +1037,9 @@ export interface components {
        *       "members:read": "Read members",
        *       "members:write": "Create or modify members",
        *       "organization_access_tokens:read": "Read organization access tokens",
-       *       "organization_access_tokens:write": "Create or modify organization access tokens"
+       *       "organization_access_tokens:write": "Create or modify organization access tokens",
+       *       "promotions:read": "Read your promotions",
+       *       "promotions:write": "Create and manage your promotions"
        *     }
        */
       scope_display_names: {
@@ -1062,6 +1077,8 @@ export interface components {
       | 'members:write'
       | 'organization_access_tokens:read'
       | 'organization_access_tokens:write'
+      | 'promotions:read'
+      | 'promotions:write'
     /** BackupCodesEnrollment */
     BackupCodesEnrollment: {
       /** Codes */
@@ -1840,7 +1857,7 @@ export interface components {
       response_types: 'code'[]
       /**
        * Scope
-       * @default openid profile email user:read user:write organizations:read organizations:write members:read members:write organization_access_tokens:read organization_access_tokens:write
+       * @default openid profile email user:read user:write organizations:read organizations:write members:read members:write organization_access_tokens:read organization_access_tokens:write promotions:read promotions:write
        */
       scope: string
       /** Client Name */
@@ -1905,7 +1922,7 @@ export interface components {
       response_types: 'code'[]
       /**
        * Scope
-       * @default openid profile email user:read user:write organizations:read organizations:write members:read members:write organization_access_tokens:read organization_access_tokens:write
+       * @default openid profile email user:read user:write organizations:read organizations:write members:read members:write organization_access_tokens:read organization_access_tokens:write promotions:read promotions:write
        */
       scope: string
       /** Client Name */
@@ -1951,7 +1968,7 @@ export interface components {
       response_types: 'code'[]
       /**
        * Scope
-       * @default openid profile email user:read user:write organizations:read organizations:write members:read members:write organization_access_tokens:read organization_access_tokens:write
+       * @default openid profile email user:read user:write organizations:read organizations:write members:read members:write organization_access_tokens:read organization_access_tokens:write promotions:read promotions:write
        */
       scope: string
       /** Client Name */
@@ -3746,6 +3763,8 @@ export interface components {
       | 'members:write'
       | 'organization_access_tokens:read'
       | 'organization_access_tokens:write'
+      | 'promotions:read'
+      | 'promotions:write'
     /** SourceMeta */
     SourceMeta: {
       /** Id */
@@ -6033,6 +6052,8 @@ export const availableScopeValues: ReadonlyArray<
   'members:write',
   'organization_access_tokens:read',
   'organization_access_tokens:write',
+  'promotions:read',
+  'promotions:write',
 ]
 export const body_oauth2_consentActionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Body_oauth2_consent']['action']
@@ -7526,6 +7547,8 @@ export const scopeValues: ReadonlyArray<
   'members:write',
   'organization_access_tokens:read',
   'organization_access_tokens:write',
+  'promotions:read',
+  'promotions:write',
 ]
 export const sourceMetaTypeAnyOf0Values: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SourceMeta']['type']
