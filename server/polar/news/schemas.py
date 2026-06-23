@@ -6,8 +6,23 @@ power the public landing page where the item list is rendered verbatim.
 """
 
 from typing import Literal
+from urllib.parse import urlparse
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+
+def _safe_external_url(value: str | None) -> str | None:
+    """Neutralize non-http(s) URLs coming from untrusted feeds so they can never
+    become a ``javascript:``/``data:`` href when rendered in an ``<a>`` tag.
+    Returns the URL unchanged when it's http(s), otherwise an empty string (the
+    link goes nowhere instead of executing)."""
+    if not value:
+        return value
+    try:
+        scheme = urlparse(value).scheme.lower()
+    except ValueError:
+        return ""
+    return value if scheme in ("http", "https") else ""
 
 
 class NewsExtra(BaseModel):
@@ -30,6 +45,11 @@ class NewsItem(BaseModel):
     mobile_url: str | None = Field(default=None, alias="mobileUrl")
     pub_date: int | None = Field(default=None, alias="pubDate")  # epoch ms
     extra: NewsExtra | None = None
+
+    @field_validator("url", "mobile_url")
+    @classmethod
+    def _neutralize_unsafe_urls(cls, value: str | None) -> str | None:
+        return _safe_external_url(value)
 
 
 class SourceResponse(BaseModel):
