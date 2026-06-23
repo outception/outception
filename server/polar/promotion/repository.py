@@ -60,6 +60,21 @@ class PromotionRepository(RepositoryBase[Promotion]):
         )
         return await self.get_all(statement)
 
+    async def list_open_categories(self) -> Sequence[str]:
+        """Distinct categories with an active or queued promotion — the only
+        ones a queue advance could affect."""
+        statement = (
+            select(Promotion.category)
+            .where(
+                Promotion.status.in_(
+                    [PromotionStatus.ACTIVE, PromotionStatus.QUEUED]
+                )
+            )
+            .distinct()
+        )
+        result = await self.session.execute(statement)
+        return result.scalars().all()
+
     async def list_active_for_categories(
         self, categories: Sequence[str]
     ) -> Sequence[Promotion]:

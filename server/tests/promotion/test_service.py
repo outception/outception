@@ -1,3 +1,4 @@
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
 import httpx
@@ -5,6 +6,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from polar.config import settings
+from polar.kit.utils import utc_now
 from polar.models import User
 from polar.models.promotion import Promotion, PromotionStatus
 from polar.postgres import AsyncSession
@@ -351,3 +353,47 @@ class TestLifecycleNotifications:
         enqueue_mock = mocker.patch("polar.promotion.notifications.enqueue_job")
         await promotion_service.get_featured(session, ["tech"])
         assert "expired" in self._kinds_for(enqueue_mock, promotion.id)
+
+
+@pytest.mark.asyncio
+class TestSweep:
+    async def test_advances_expired_slot_without_a_read(
+        self, session: AsyncSession, user: User
+    ) -> None:
+        first = await _make_pending(session, user)
+        await promotion_service.activate_paid(
+            session, first.id, external_ref="order:sweep1"
+        )  # empty category → ACTIVE
+        second = await _make_pending(session, user)
+        await promotion_service.activate_paid(
+            session, second.id, external_ref="order:sweep2"
+        )  # QUEUED behind first
+
+        repo = PromotionRepository.from_session(session)
+        active = await repo.get_by_id(first.id)
+        assert active is not None
+        active.active_until = utc_now() - timedelta(minutes=1)
+        await session.flush()
+
+        # No wall read — the sweep alone must roll the queue forward.
+        await promotion_service.sweep(session)
+
+        first_refreshed = await repo.get_by_id(first.id)
+        second_refreshed = await repo.get_by_id(second.id)
+        assert first_refreshed is not None
+        assert first_refreshed.status == PromotionStatus.EXPIRED
+        assert second_refreshed is not None
+        assert second_refreshed.status == PromotionStatus.ACTIVE
+
+    async def test_noop_when_active_not_expired(
+        self, session: AsyncSession, user: User
+    ) -> None:
+        promotion = await _make_pending(session, user)
+        await promotion_service.activate_paid(
+            session, promotion.id, external_ref="order:sweep_noop"
+        )  # ACTIVE with active_until in the future
+        await promotion_service.sweep(session)
+        repo = PromotionRepository.from_session(session)
+        refreshed = await repo.get_by_id(promotion.id)
+        assert refreshed is not None
+        assert refreshed.status == PromotionStatus.ACTIVE

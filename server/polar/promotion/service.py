@@ -30,10 +30,10 @@ class PromotionService:
     """Pay-to-post promotions and the per-category featured-slot queue.
 
     The queue is a lazy state machine: it advances on payment and on every
-    public read, so no scheduled job is required for the common (someone's
-    looking) case. Each advance row-locks the category to stay correct under
-    concurrency. A background sweep could complement this to honour a buyer's
-    window even with zero traffic — left as a follow-up.
+    public read. Each advance row-locks the category to stay correct under
+    concurrency. A periodic ``sweep`` complements the lazy advance so a paid
+    slot still expires and the next promotion goes live (with its emails) even
+    in a category with zero traffic.
     """
 
     async def create_pending(
@@ -164,6 +164,15 @@ class PromotionService:
         )
         events.emit(nxt, events.PromotionEventName.activated)
         notifications.notify(nxt, "activated")
+
+    async def sweep(self, session: AsyncSession) -> None:
+        """Advance every open category's queue on a schedule, so an expired slot
+        rolls over to the next promotion (and the expiry/activation emails fire)
+        even when no one is reading that category's wall."""
+        now = utc_now()
+        repo = PromotionRepository.from_session(session)
+        for category in await repo.list_open_categories():
+            await self._advance(session, category, now=now)
 
     async def get_featured(
         self,

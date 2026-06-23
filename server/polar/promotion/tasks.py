@@ -9,16 +9,34 @@ from polar.email.sender import (
 )
 from polar.integrations.tinybird import tinybird_client
 from polar.models import User
-from polar.worker import AsyncSessionMaker, TaskPriority, actor, enqueue_job
+from polar.worker import (
+    AsyncSessionMaker,
+    CronTrigger,
+    TaskPriority,
+    actor,
+    enqueue_job,
+)
 
 from .events import PROMOTION_EVENTS_DATASOURCE
 from .notifications import build_email
 from .repository import PromotionRepository
+from .service import promotion as promotion_service
 
 
 @actor(actor_name="promotion.emit_events", priority=TaskPriority.LOW)
 async def promotion_emit_events(events: list[dict[str, Any]]) -> None:
     await tinybird_client.send_events(PROMOTION_EVENTS_DATASOURCE, events)
+
+
+@actor(
+    actor_name="promotion.sweep",
+    cron_trigger=CronTrigger(minute="*"),
+    priority=TaskPriority.LOW,
+    max_retries=0,
+)
+async def promotion_sweep() -> None:
+    async with AsyncSessionMaker() as session:
+        await promotion_service.sweep(session)
 
 
 @actor(actor_name="promotion.send_lifecycle_email", priority=TaskPriority.LOW)
