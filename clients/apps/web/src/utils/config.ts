@@ -1,11 +1,3 @@
-const stringToNumber = (
-  value: string | undefined,
-  fallback: number,
-): number => {
-  if (value === undefined) return fallback
-  return parseInt(value)
-}
-
 const defaults = {
   ENVIRONMENT:
     process.env.NEXT_PUBLIC_ENVIRONMENT ||
@@ -32,13 +24,6 @@ const defaults = {
   SANDBOX_FRONTEND_BASE_URL:
     process.env.NEXT_PUBLIC_SANDBOX_FRONTEND_BASE_URL ||
     'http://127.0.0.1:3000',
-  CHECKOUT_EMBED_SCRIPT_SRC:
-    process.env.NEXT_PUBLIC_CHECKOUT_EMBED_SCRIPT_SRC ||
-    'node_modules/@polar-sh/checkout/dist/embed.global.js',
-  CHECKOUT_EXTERNAL_WEBHOOKS_WAITING_LIMIT_MS: stringToNumber(
-    process.env.NEXT_PUBLIC_CHECKOUT_EXTERNAL_WEBHOOKS_WAITING_LIMIT_MS,
-    30000,
-  ),
 }
 
 export const CONFIG = {
