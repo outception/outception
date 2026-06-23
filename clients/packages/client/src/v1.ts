@@ -758,6 +758,33 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/v1/promotions/preferences': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Get Preferences
+     * @description Whether the authenticated user receives promotion lifecycle emails.
+     */
+    get: operations['promotions:get_preferences']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    /**
+     * Update Preferences
+     * @description Turn the promotion lifecycle emails (go-live / queued / expiry) on or off.
+     *
+     *     Accepts web sessions and API tokens, so both the web dashboard and the
+     *     mobile app can set it.
+     */
+    patch: operations['promotions:update_preferences']
+    trace?: never
+  }
   '/v1/promotions/analytics': {
     parameters: {
       query?: never
@@ -3472,6 +3499,14 @@ export interface components {
       blocks: number
     }
     /**
+     * PromotionPreferences
+     * @description The authenticated user's promotion-email preference.
+     */
+    PromotionPreferences: {
+      /** Promotion Emails Enabled */
+      promotion_emails_enabled: boolean
+    }
+    /**
      * PromotionPricing
      * @description How a promotion is priced — shown on the compose form.
      */
@@ -5525,6 +5560,59 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['PromotionRead'][]
+        }
+      }
+    }
+  }
+  'promotions:get_preferences': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PromotionPreferences']
+        }
+      }
+    }
+  }
+  'promotions:update_preferences': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PromotionPreferences']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PromotionPreferences']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
         }
       }
     }

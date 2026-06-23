@@ -1,4 +1,5 @@
 import { OrganizationsSheet } from '@/components/Settings/OrganizationsSheet'
+import { PromotionEmailToggle } from '@/components/Settings/PromotionEmailToggle'
 import { SettingsItem } from '@/components/Settings/SettingsList'
 import { Box } from '@/components/Shared/Box'
 import { Text } from '@/components/Shared/Text'
@@ -93,6 +94,8 @@ export default function Index() {
               {selectedOrganization?.name}
             </Text>
           </SettingsItem>
+          <Box height={1} backgroundColor="border" marginVertical="spacing-8" />
+          <PromotionEmailToggle />
           <Box height={1} backgroundColor="border" marginVertical="spacing-8" />
           <SettingsItem
             title="Delete Account"

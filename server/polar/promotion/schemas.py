@@ -82,3 +82,9 @@ class PromotionAnalytics(BaseModel):
     total_clicks: int
     ctr: float = Field(description="Clicks / impressions, 0 when no impressions.")
     periods: list[PromotionAnalyticsPeriod]
+
+
+class PromotionPreferences(BaseModel):
+    """The authenticated user's promotion-email preference."""
+
+    promotion_emails_enabled: bool

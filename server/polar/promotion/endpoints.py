@@ -24,6 +24,7 @@ from .schemas import (
     PromotionAnalyticsPeriod,
     PromotionCheckout,
     PromotionCreate,
+    PromotionPreferences,
     PromotionPricing,
     PromotionRead,
 )
@@ -84,6 +85,39 @@ async def list_mine(
     """The authenticated user's promotions, newest first."""
     promotions = await promotion_service.list_mine(session, auth_subject.subject.id)
     return [PromotionRead.model_validate(p) for p in promotions]
+
+
+@router.get(
+    "/preferences", response_model=PromotionPreferences, tags=[APITag.private]
+)
+async def get_preferences(
+    auth_subject: auth.PromotionUser,
+) -> PromotionPreferences:
+    """Whether the authenticated user receives promotion lifecycle emails."""
+    return PromotionPreferences(
+        promotion_emails_enabled=auth_subject.subject.promotion_emails_enabled
+    )
+
+
+@router.patch(
+    "/preferences", response_model=PromotionPreferences, tags=[APITag.private]
+)
+async def update_preferences(
+    data: PromotionPreferences,
+    auth_subject: auth.PromotionUser,
+    session: AsyncSession = Depends(get_db_session),
+) -> PromotionPreferences:
+    """Turn the promotion lifecycle emails (go-live / queued / expiry) on or off.
+
+    Accepts web sessions and API tokens, so both the web dashboard and the
+    mobile app can set it."""
+    user = auth_subject.subject
+    user.promotion_emails_enabled = data.promotion_emails_enabled
+    session.add(user)
+    await session.flush()
+    return PromotionPreferences(
+        promotion_emails_enabled=user.promotion_emails_enabled
+    )
 
 
 @router.get("/analytics", response_model=PromotionAnalytics, tags=[APITag.private])

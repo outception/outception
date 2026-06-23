@@ -61,3 +61,22 @@ export const useCreatePromotion = () => {
     },
   })
 }
+
+export const usePromotionPreferences = () => {
+  const { polar } = usePolarClient()
+  return useQuery({
+    queryKey: ['promotions', 'preferences'],
+    queryFn: () => promotionsApi(polar).preferences(),
+  })
+}
+
+export const useUpdatePromotionPreferences = () => {
+  const { polar } = usePolarClient()
+  return useMutation({
+    mutationFn: (enabled: boolean) =>
+      promotionsApi(polar).updatePreferences(enabled),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['promotions', 'preferences'] })
+    },
+  })
+}

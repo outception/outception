@@ -37,4 +37,11 @@ export const promotionsApi = (polar: Client) => ({
     ),
   create: (body: PromotionCreate) =>
     unwrap(polar.POST('/v1/promotions/', { body })),
+  preferences: () => unwrap(polar.GET('/v1/promotions/preferences')),
+  updatePreferences: (promotion_emails_enabled: boolean) =>
+    unwrap(
+      polar.PATCH('/v1/promotions/preferences', {
+        body: { promotion_emails_enabled },
+      }),
+    ),
 })

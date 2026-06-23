@@ -102,6 +102,32 @@ class TestCreatePromotion:
 
 
 @pytest.mark.asyncio
+class TestPreferences:
+    async def test_anonymous(self, client: AsyncClient) -> None:
+        assert (await client.get("/v1/promotions/preferences")).status_code == 401
+
+    @pytest.mark.auth
+    async def test_get_defaults_to_enabled(self, client: AsyncClient) -> None:
+        response = await client.get("/v1/promotions/preferences")
+        assert response.status_code == 200
+        assert response.json() == {"promotion_emails_enabled": True}
+
+    @pytest.mark.auth
+    async def test_patch_toggles_and_persists(
+        self, client: AsyncClient, session: AsyncSession, user: User
+    ) -> None:
+        response = await client.patch(
+            "/v1/promotions/preferences",
+            json={"promotion_emails_enabled": False},
+        )
+        assert response.status_code == 200
+        assert response.json() == {"promotion_emails_enabled": False}
+
+        await session.refresh(user)
+        assert user.promotion_emails_enabled is False
+
+
+@pytest.mark.asyncio
 class TestListMine:
     async def test_anonymous(self, client: AsyncClient) -> None:
         response = await client.get("/v1/promotions/mine")

@@ -1,6 +1,7 @@
 import AuthenticationSettings from '@/components/Settings/AuthenticationSettings'
 import GeneralSettings from '@/components/Settings/GeneralSettings'
 import PersonalInformationSettings from '@/components/Settings/PersonalInformationSettings'
+import { PromotionEmailSettings } from '@/components/Settings/PromotionEmailSettings'
 import { Section, SectionDescription } from '@/components/Settings/Section'
 import TwoFactorSettings from '@/components/Settings/TwoFactorSettings'
 import UserDeleteSettings from '@/components/Settings/UserDeleteSettings'
@@ -29,6 +30,13 @@ export default function Page() {
       <Section>
         <SectionDescription title="Two-Factor Authentication" />
         <TwoFactorSettings />
+      </Section>
+      <Section>
+        <SectionDescription
+          title="Promotion Emails"
+          description="Control the emails you receive about your promotions."
+        />
+        <PromotionEmailSettings />
       </Section>
       <Section>
         <SectionDescription
