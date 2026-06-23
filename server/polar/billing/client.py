@@ -32,7 +32,9 @@ class PaymentGatewayClient:
             body["metadata"] = metadata
         async with httpx.AsyncClient(
             base_url=settings.PAYMENT_GATEWAY_BASE_URL,
-            headers={"Authorization": f"Bearer {settings.PAYMENT_GATEWAY_ACCESS_TOKEN}"},
+            headers={
+                "Authorization": f"Bearer {settings.PAYMENT_GATEWAY_ACCESS_TOKEN}"
+            },
             timeout=30.0,
         ) as client:
             response = await client.post("/v1/checkouts/", json=body)

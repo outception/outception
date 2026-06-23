@@ -431,7 +431,6 @@ class Organization(OrganizationBase):
         None, description="Two-letter country code (ISO 3166-1 alpha-2)."
     )
 
-
     capabilities: OrganizationCapabilities = Field(
         description="Capabilities currently granted to the organization.",
     )

@@ -18,7 +18,10 @@ from .service import organization as organization_service
 
 router = APIRouter(prefix="/organizations", tags=["organizations"])
 
-OrganizationNotFound = {"description": "Organization not found.", "model": ResourceNotFound.schema()}
+OrganizationNotFound = {
+    "description": "Organization not found.",
+    "model": ResourceNotFound.schema(),
+}
 
 
 @router.get("/", response_model=ListResource[OrganizationSchema], tags=[APITag.public])
@@ -74,5 +77,7 @@ async def update(
     organization = await organization_service.get(session, auth_subject, id)
     if organization is None:
         raise ResourceNotFound()
-    updated = await organization_service.update(session, organization, organization_update)
+    updated = await organization_service.update(
+        session, organization, organization_update
+    )
     return OrganizationSchema.model_validate(updated)

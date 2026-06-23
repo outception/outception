@@ -97,9 +97,7 @@ class TestSearch:
         assert items[0]["sourceId"] == "hackernews"
         assert "Rust" in items[0]["item"]["title"]
 
-    async def test_no_headline_match_on_cold_cache(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_no_headline_match_on_cold_cache(self, client: AsyncClient) -> None:
         response = await client.get("/v1/news/search", params={"q": "zxqwv"})
         assert response.status_code == 200
         assert response.json()["items"] == []
@@ -114,22 +112,17 @@ class TestFollow:
     async def test_follow_list_unfollow(self, client: AsyncClient) -> None:
         assert (await client.get("/v1/news/followed")).json()["sourceIds"] == []
 
-        assert (
-            await client.put("/v1/news/followed/hackernews")
-        ).status_code == 204
+        assert (await client.put("/v1/news/followed/hackernews")).status_code == 204
         # idempotent
-        assert (
-            await client.put("/v1/news/followed/hackernews")
-        ).status_code == 204
+        assert (await client.put("/v1/news/followed/hackernews")).status_code == 204
         followed = (await client.get("/v1/news/followed")).json()["sourceIds"]
         assert followed.count("hackernews") == 1
 
+        assert (await client.delete("/v1/news/followed/hackernews")).status_code == 204
         assert (
-            await client.delete("/v1/news/followed/hackernews")
-        ).status_code == 204
-        assert "hackernews" not in (
-            await client.get("/v1/news/followed")
-        ).json()["sourceIds"]
+            "hackernews"
+            not in (await client.get("/v1/news/followed")).json()["sourceIds"]
+        )
 
     @pytest.mark.auth
     async def test_follow_unknown_source_404(self, client: AsyncClient) -> None:
@@ -162,9 +155,7 @@ class TestFollow:
         assert all(i["sourceId"] == "hackernews" for i in items)
 
     @pytest.mark.auth
-    async def test_follow_resolves_redirect_alias(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_follow_resolves_redirect_alias(self, client: AsyncClient) -> None:
         # `reddit` is a redirect alias for `reddit-popular`.
         assert (await client.put("/v1/news/followed/reddit")).status_code == 204
         followed = (await client.get("/v1/news/followed")).json()["sourceIds"]

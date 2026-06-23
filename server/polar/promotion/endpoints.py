@@ -110,9 +110,7 @@ async def list_mine(
     return [PromotionMineRead.model_validate(p) for p in promotions]
 
 
-@router.get(
-    "/preferences", response_model=PromotionPreferences, tags=[APITag.private]
-)
+@router.get("/preferences", response_model=PromotionPreferences, tags=[APITag.private])
 async def get_preferences(
     auth_subject: auth.PromotionUser,
 ) -> PromotionPreferences:
@@ -138,9 +136,7 @@ async def update_preferences(
     user.promotion_emails_enabled = data.promotion_emails_enabled
     session.add(user)
     await session.flush()
-    return PromotionPreferences(
-        promotion_emails_enabled=user.promotion_emails_enabled
-    )
+    return PromotionPreferences(promotion_emails_enabled=user.promotion_emails_enabled)
 
 
 @router.get("/analytics", response_model=PromotionAnalytics, tags=[APITag.private])

@@ -1,4 +1,3 @@
-
 from fastapi import Depends, Request
 
 from polar.auth.dependencies import Authenticator

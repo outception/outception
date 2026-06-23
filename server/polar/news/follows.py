@@ -64,9 +64,7 @@ async def followed_feed(
         source_name = str(SOURCES.get(source_id, {}).get("name", source_id))
         for item in entry.items:
             hits.append(
-                NewsSearchItem(
-                    source_id=source_id, source_name=source_name, item=item
-                )
+                NewsSearchItem(source_id=source_id, source_name=source_name, item=item)
             )
     hits.sort(key=lambda h: h.item.pub_date or 0, reverse=True)
     return hits[:limit]

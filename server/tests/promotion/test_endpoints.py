@@ -214,9 +214,7 @@ class TestListMine:
         assert response.status_code == 200
 
     @pytest.mark.auth(AuthSubjectFixture(scopes={Scope.user_read}))
-    async def test_without_promotion_scope_forbidden(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_without_promotion_scope_forbidden(self, client: AsyncClient) -> None:
         # A token carrying no promotion scope can't read promotions.
         response = await client.get("/v1/promotions/mine")
         assert response.status_code == 403

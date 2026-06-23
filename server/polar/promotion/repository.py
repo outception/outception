@@ -51,9 +51,7 @@ class PromotionRepository(RepositoryBase[Promotion]):
             select(Promotion)
             .where(
                 Promotion.category == category,
-                Promotion.status.in_(
-                    [PromotionStatus.ACTIVE, PromotionStatus.QUEUED]
-                ),
+                Promotion.status.in_([PromotionStatus.ACTIVE, PromotionStatus.QUEUED]),
             )
             .order_by(*_QUEUE_ORDER)
             .with_for_update()
@@ -66,9 +64,7 @@ class PromotionRepository(RepositoryBase[Promotion]):
         statement = (
             select(Promotion.category)
             .where(
-                Promotion.status.in_(
-                    [PromotionStatus.ACTIVE, PromotionStatus.QUEUED]
-                )
+                Promotion.status.in_([PromotionStatus.ACTIVE, PromotionStatus.QUEUED])
             )
             .distinct()
         )
@@ -127,9 +123,9 @@ class PromotionRepository(RepositoryBase[Promotion]):
         paid = Promotion.paid_at.isnot(None)
         statement = select(
             func.count().filter(paid).label("total_promotions"),
-            func.coalesce(
-                func.sum(Promotion.amount_cents).filter(paid), 0
-            ).label("total_spend_cents"),
+            func.coalesce(func.sum(Promotion.amount_cents).filter(paid), 0).label(
+                "total_spend_cents"
+            ),
             func.coalesce(func.sum(Promotion.impressions), 0).label(
                 "total_impressions"
             ),
@@ -149,9 +145,7 @@ class PromotionRepository(RepositoryBase[Promotion]):
         statement = (
             select(
                 bucket,
-                func.coalesce(func.sum(Promotion.amount_cents), 0).label(
-                    "spend_cents"
-                ),
+                func.coalesce(func.sum(Promotion.amount_cents), 0).label("spend_cents"),
                 func.count().label("promotions"),
             )
             .where(

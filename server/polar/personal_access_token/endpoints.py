@@ -31,9 +31,7 @@ async def create_personal_access_token(
         session, auth_subject, create_schema
     )
     return PersonalAccessTokenCreateResponse(
-        personal_access_token=PersonalAccessToken.model_validate(
-            personal_access_token
-        ),
+        personal_access_token=PersonalAccessToken.model_validate(personal_access_token),
         token=token,
     )
 

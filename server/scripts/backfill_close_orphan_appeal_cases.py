@@ -29,12 +29,6 @@ from collections.abc import Sequence
 
 import structlog
 import typer
-from rich.console import Console
-from rich.table import Table
-from sqlalchemy import Select, select
-
-from polar.kit.db.postgres import create_async_sessionmaker
-from polar.models import Organization
 from polar.models.organization_review import OrganizationReview
 from polar.models.organization_review_feedback import OrganizationReviewFeedback
 from polar.models.support_case import (
@@ -49,9 +43,15 @@ from polar.organization_review.schemas import (
     DecisionType,
     ReviewContext,
 )
-from polar.postgres import create_async_engine
 from polar.support_case.repository import SupportCaseMessageRepository
 from polar.support_case.service import support_case as support_case_service
+from rich.console import Console
+from rich.table import Table
+from sqlalchemy import Select, select
+
+from polar.kit.db.postgres import create_async_sessionmaker
+from polar.models import Organization
+from polar.postgres import create_async_engine
 from scripts.helper import configure_script_console_logging, typer_async
 
 cli = typer.Typer()

@@ -19,9 +19,7 @@ class Anonymous: ...
 
 Subject = User | Organization | Anonymous
 SubjectType = type[User] | type[Organization] | type[Anonymous]
-Session = (
-    UserSession | OrganizationAccessToken | OAuth2Token | PersonalAccessToken
-)
+Session = UserSession | OrganizationAccessToken | OAuth2Token | PersonalAccessToken
 
 
 S = TypeVar("S", bound=Subject, covariant=True)

@@ -130,9 +130,7 @@ class PromotionService:
         repo = PromotionRepository.from_session(session)
         rows = list(await repo.lock_category_open(category))
 
-        active = next(
-            (p for p in rows if p.status == PromotionStatus.ACTIVE), None
-        )
+        active = next((p for p in rows if p.status == PromotionStatus.ACTIVE), None)
         if (
             active is not None
             and active.active_until is not None
@@ -306,18 +304,14 @@ class PromotionService:
         """A category's active promotion plus its queued in-feed promotions."""
         await self._advance(session, category, now=utc_now())
         repo = PromotionRepository.from_session(session)
-        active = next(
-            iter(await repo.list_active_for_categories([category])), None
-        )
+        active = next(iter(await repo.list_active_for_categories([category])), None)
         queued = await repo.list_queue(category)
         return active, queued
 
     async def list_mine(
         self, session: AsyncReadSession | AsyncSession, author_id: UUID
     ) -> Sequence[Promotion]:
-        return await PromotionRepository.from_session(session).list_by_author(
-            author_id
-        )
+        return await PromotionRepository.from_session(session).list_by_author(author_id)
 
 
 promotion = PromotionService()

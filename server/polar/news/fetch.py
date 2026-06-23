@@ -28,6 +28,7 @@ _USER_AGENT = (
     "(KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
 )
 
+
 class NewsFetchError(Exception):
     """A source fetch failed (bad URL, HTTP error, oversized body)."""
 

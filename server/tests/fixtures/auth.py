@@ -34,8 +34,6 @@ class AuthSubjectFixture:
         return f"AuthSubjectFixture(subject={self.subject!r}, scopes={scopes})"
 
 
-
-
 @pytest.fixture
 def auth_subject(
     request: pytest.FixtureRequest,

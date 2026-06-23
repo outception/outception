@@ -5,11 +5,11 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 
 import typer
+from polar.integrations.plain.service import plain as plain_service
 from rich.progress import Progress
 from sqlalchemy import func, or_, select
 
 from polar.config import settings
-from polar.integrations.plain.service import plain as plain_service
 from polar.kit.db.postgres import (
     AsyncSessionMaker,
     create_async_sessionmaker,

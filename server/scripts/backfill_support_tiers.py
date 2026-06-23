@@ -3,11 +3,11 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 
 import typer
+from polar.integrations.polar.service import polar_self as polar_self_service
 from polar_sdk import Polar
 from polar_sdk.models import Benefit, BenefitGrant
 
 from polar.config import settings
-from polar.integrations.polar.service import polar_self as polar_self_service
 from polar.kit.db.postgres import (
     AsyncSessionMaker,
     create_async_sessionmaker,
