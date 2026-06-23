@@ -10,6 +10,7 @@ from polar.models.promotion import Promotion, PromotionStatus
 from polar.postgres import AsyncSession
 from polar.promotion.repository import PromotionRepository
 from polar.promotion.service import promotion as promotion_service
+from polar.redis import Redis
 
 
 async def _make_pending(
@@ -102,6 +103,32 @@ class TestEngagementCounters:
         refreshed = await repo.get_by_id(promotion.id)
         assert refreshed is not None
         assert refreshed.impressions == 1
+
+    async def test_get_featured_dedups_impressions_per_viewer(
+        self, session: AsyncSession, user: User, redis: Redis
+    ) -> None:
+        promotion = await _make_pending(session, user)
+        await promotion_service.activate_paid(
+            session, promotion.id, external_ref="order:dedup"
+        )
+        repo = PromotionRepository.from_session(session)
+
+        # Same viewer served three times → one impression.
+        for _ in range(3):
+            await promotion_service.get_featured(
+                session, ["tech"], redis=redis, viewer_key="viewer-a"
+            )
+        refreshed = await repo.get_by_id(promotion.id)
+        assert refreshed is not None
+        assert refreshed.impressions == 1
+
+        # A different viewer counts independently.
+        await promotion_service.get_featured(
+            session, ["tech"], redis=redis, viewer_key="viewer-b"
+        )
+        refreshed = await repo.get_by_id(promotion.id)
+        assert refreshed is not None
+        assert refreshed.impressions == 2
 
     async def test_track_click_increments_and_returns_link(
         self, session: AsyncSession, user: User

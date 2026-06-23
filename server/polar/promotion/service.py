@@ -14,6 +14,7 @@ from polar.logging import Logger
 from polar.models import Promotion
 from polar.models.promotion import PromotionStatus
 from polar.postgres import AsyncReadSession, AsyncSession
+from polar.redis import Redis
 
 from . import events, notifications
 from .repository import PromotionRepository
@@ -163,23 +164,55 @@ class PromotionService:
         notifications.notify(nxt, "activated")
 
     async def get_featured(
-        self, session: AsyncSession, categories: Sequence[str]
+        self,
+        session: AsyncSession,
+        categories: Sequence[str],
+        *,
+        redis: Redis | None = None,
+        viewer_key: str | None = None,
     ) -> Sequence[Promotion]:
         """The active promotion for each category (advancing each queue first).
-        Tallies one impression per served promotion for analytics."""
+        Tallies one impression per served promotion for analytics.
+
+        When ``redis`` and ``viewer_key`` are given (the public endpoint), a
+        viewer counts at most one impression per promotion within the dedup
+        window, so background polling of the wall doesn't inflate the count.
+        Callers without that context (internal/tests) count every serve."""
         now = utc_now()
         repo = PromotionRepository.from_session(session)
         for category in categories:
             await self._advance(session, category, now=now)
         active = await repo.list_active_for_categories(categories)
-        await repo.increment_impressions([p.id for p in active])
-        events.emit_many(
-            [
-                events.build_event(p, events.PromotionEventName.impression)
-                for p in active
-            ]
-        )
+        countable = await self._dedup_impressions(redis, viewer_key, active)
+        if countable:
+            await repo.increment_impressions([p.id for p in countable])
+            events.emit_many(
+                [
+                    events.build_event(p, events.PromotionEventName.impression)
+                    for p in countable
+                ]
+            )
         return active
+
+    async def _dedup_impressions(
+        self,
+        redis: Redis | None,
+        viewer_key: str | None,
+        promotions: Sequence[Promotion],
+    ) -> list[Promotion]:
+        """Of ``promotions``, the ones this viewer hasn't been counted for
+        within the dedup window. Each fresh hit claims a short-lived Redis key
+        (``SET NX EX``), so a repeat serve to the same viewer is skipped. Without
+        a viewer context (or with dedup disabled), every promotion counts."""
+        window = settings.PROMOTION_IMPRESSION_DEDUP_SECONDS
+        if redis is None or viewer_key is None or window <= 0:
+            return list(promotions)
+        fresh: list[Promotion] = []
+        for promotion in promotions:
+            key = f"promotion:impression:{promotion.id}:{viewer_key}"
+            if await redis.set(key, "1", nx=True, ex=window):
+                fresh.append(promotion)
+        return fresh
 
     async def track_click(
         self, session: AsyncSession, promotion_id: UUID

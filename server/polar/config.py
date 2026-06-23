@@ -124,6 +124,10 @@ class Settings(BaseSettings):
     PROMOTION_PRODUCT_ID: str = ""
     PROMOTION_PRICE_CENTS: int = 1000  # $10 per block
     PROMOTION_BLOCK_MINUTES: int = 10
+    # A viewer (IP + user-agent) counts at most one impression per promotion
+    # within this window, so the news wall's background polling can't inflate
+    # the count. 0 disables dedup.
+    PROMOTION_IMPRESSION_DEDUP_SECONDS: int = 600
     # External payment gateway (polar.sh hosted checkout + Standard Webhooks).
     PAYMENT_GATEWAY_BASE_URL: str = "https://api.polar.sh"
     PAYMENT_GATEWAY_ACCESS_TOKEN: str = ""

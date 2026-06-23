@@ -1,7 +1,8 @@
+import hashlib
 from datetime import timedelta
 from uuid import UUID
 
-from fastapi import Depends, Query
+from fastapi import Depends, Query, Request
 from fastapi.responses import RedirectResponse
 
 from polar.billing.service import billing as billing_service
@@ -14,6 +15,7 @@ from polar.postgres import (
     get_db_read_session,
     get_db_session,
 )
+from polar.redis import Redis, get_redis
 from polar.routing import APIRouter
 
 from . import auth
@@ -35,6 +37,21 @@ from .service import promotion as promotion_service
 router = APIRouter(prefix="/promotions", tags=["promotions"])
 
 
+def _viewer_key(request: Request) -> str:
+    """A stable, privacy-preserving identifier for the requesting viewer, used
+    to dedupe impressions. Derived from the (proxy-aware) client IP and
+    user-agent, then hashed so no raw IP is stored."""
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        ip = forwarded.split(",")[0].strip()
+    else:
+        ip = request.headers.get("x-real-ip") or (
+            request.client.host if request.client else "unknown"
+        )
+    user_agent = request.headers.get("user-agent", "")
+    return hashlib.sha256(f"{ip}|{user_agent}".encode()).hexdigest()[:32]
+
+
 @router.get("/pricing", response_model=PromotionPricing, tags=[APITag.public])
 async def get_pricing() -> PromotionPricing:
     """Featured-slot pricing for the compose form."""
@@ -45,17 +62,22 @@ async def get_pricing() -> PromotionPricing:
 
 @router.get("/featured", response_model=list[PromotionRead], tags=[APITag.public])
 async def get_featured(
+    request: Request,
     categories: str = Query(
         ..., description="Comma-separated category ids the reader cares about."
     ),
     session: AsyncSession = Depends(get_db_session),
+    redis: Redis = Depends(get_redis),
 ) -> list[PromotionRead]:
     """The active "in focus" promotion for each requested category (at most one
-    per category). Advances each category's queue as a side effect."""
+    per category). Advances each category's queue as a side effect. Impressions
+    are deduped per viewer so background polling doesn't inflate the count."""
     cats = [c.strip() for c in categories.split(",") if c.strip()]
     if not cats:
         return []
-    promotions = await promotion_service.get_featured(session, cats)
+    promotions = await promotion_service.get_featured(
+        session, cats, redis=redis, viewer_key=_viewer_key(request)
+    )
     return [PromotionRead.model_validate(p) for p in promotions]
 
 

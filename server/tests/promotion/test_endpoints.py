@@ -239,6 +239,26 @@ class TestGetFeatured:
         body = response.json()
         assert any(row["id"] == str(promotion.id) for row in body)
 
+    async def test_repeat_views_dedupe_impressions(
+        self, client: AsyncClient, session: AsyncSession, user: User
+    ) -> None:
+        promotion = await _make_pending(session, user, category="news")
+        await promotion_service.activate_paid(
+            session, promotion.id, external_ref="order:feat_dedup"
+        )
+
+        # Same client (same IP + user-agent) polling the wall repeatedly.
+        for _ in range(3):
+            response = await client.get(
+                "/v1/promotions/featured", params={"categories": "news"}
+            )
+            assert response.status_code == 200
+
+        repo = PromotionRepository.from_session(session)
+        refreshed = await repo.get_by_id(promotion.id)
+        assert refreshed is not None
+        assert refreshed.impressions == 1
+
 
 @pytest.mark.asyncio
 class TestClickPromotion:
