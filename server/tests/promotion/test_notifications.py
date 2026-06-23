@@ -38,6 +38,15 @@ class TestBuildEmail:
         assert "queued" in subject
         assert "Buy our widget" in subject
         assert "tech" in html
+        assert "in line" not in html  # no position given
+
+    async def test_queued_email_with_position(
+        self, session: AsyncSession, user: User
+    ) -> None:
+        promotion = await _make_pending(session, user)
+        _subject, html = build_email(promotion, "queued", position=3)
+        assert "#3" in html
+        assert "in line" in html
 
     async def test_expired_email_includes_stats(
         self, session: AsyncSession, user: User

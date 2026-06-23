@@ -73,6 +73,31 @@ class TestSendLifecycleEmail:
         await promotion_send_lifecycle_email(str(promotion.id), "activated")
         enqueue.assert_not_called()
 
+    async def test_queued_email_includes_position(
+        self, session: AsyncSession, user: User, mocker: MockerFixture
+    ) -> None:
+        first = await _make_pending(session, user)
+        await promotion_service.activate_paid(
+            session, first.id, external_ref="task:active"
+        )  # occupies the slot
+        second = await _make_pending(session, user)
+        await promotion_service.activate_paid(
+            session, second.id, external_ref="task:queued"
+        )  # queued behind first
+
+        mocker.patch(
+            "polar.promotion.tasks.AsyncSessionMaker",
+            return_value=_FakeSessionMaker(session),
+        )
+        enqueue = mocker.patch("polar.promotion.tasks.enqueue_job")
+
+        await promotion_send_lifecycle_email(str(second.id), "queued")
+
+        enqueue.assert_called_once()
+        html = enqueue.call_args.kwargs["html_content"]
+        assert "in line" in html
+        assert "#1" in html  # first (and only) queued promotion
+
     async def test_missing_promotion_is_noop(
         self, session: AsyncSession, mocker: MockerFixture
     ) -> None:

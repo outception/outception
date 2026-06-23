@@ -23,8 +23,11 @@ def notify(promotion: Promotion, kind: str) -> None:
     )
 
 
-def build_email(promotion: Promotion, kind: str) -> tuple[str, str]:
-    """Return ``(subject, html)`` for a promotion lifecycle email."""
+def build_email(
+    promotion: Promotion, kind: str, *, position: int | None = None
+) -> tuple[str, str]:
+    """Return ``(subject, html)`` for a promotion lifecycle email. ``position``
+    is the 1-based place in the category queue, included in the queued email."""
     title = escape(promotion.title)
     category = escape(promotion.category)
 
@@ -39,10 +42,15 @@ def build_email(promotion: Promotion, kind: str) -> tuple[str, str]:
     elif kind == "queued":
         subject = f"Your promotion is queued: {promotion.title}"
         heading = "Your promotion is queued"
+        place = (
+            f" You’re <strong>#{position}</strong> in line."
+            if position is not None
+            else ""
+        )
         body = (
-            f"“{title}” is queued in <strong>{category}</strong> and will go "
-            "live automatically as soon as the current featured slot frees up. "
-            "We’ll email you when it does."
+            f"“{title}” is queued in <strong>{category}</strong>.{place} It will "
+            "go live automatically as soon as the current featured slot frees up "
+            "— we’ll email you when it does."
         )
     else:
         subject = f"Your promotion has ended: {promotion.title}"

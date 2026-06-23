@@ -35,7 +35,16 @@ async def promotion_send_lifecycle_email(promotion_id: str, kind: str) -> None:
         if not author.promotion_emails_enabled:
             return
 
-        subject, html_content = build_email(promotion, kind)
+        position: int | None = None
+        if kind == "queued":
+            queue = await PromotionRepository.from_session(session).list_queue(
+                promotion.category
+            )
+            ids = [p.id for p in queue]
+            if promotion.id in ids:
+                position = ids.index(promotion.id) + 1
+
+        subject, html_content = build_email(promotion, kind, position=position)
         enqueue_job(
             "email.send",
             to_email_addr=author.email,
