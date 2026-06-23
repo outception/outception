@@ -18,7 +18,7 @@ class TestNewsItemUrlSafety:
     def test_unsafe_url_is_neutralized(self, url: str) -> None:
         # Untrusted feed content must never reach an <a href> as a non-http(s)
         # URL, or it becomes a clickable XSS vector.
-        item = NewsItem(id="i", title="t", url=url, mobileUrl=url)
+        item = NewsItem(id="i", title="t", url=url, mobile_url=url)
         assert item.url == ""
         assert item.mobile_url == ""
 

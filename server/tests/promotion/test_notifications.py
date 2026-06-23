@@ -1,6 +1,6 @@
 import pytest
 
-from polar.models import User
+from polar.models import Promotion, User
 from polar.postgres import AsyncSession
 from polar.promotion.notifications import build_email
 from polar.promotion.service import promotion as promotion_service
@@ -8,7 +8,7 @@ from polar.promotion.service import promotion as promotion_service
 
 async def _make_pending(
     session: AsyncSession, user: User, *, blocks: int = 2
-) -> object:
+) -> Promotion:
     return await promotion_service.create_pending(
         session,
         author_id=user.id,
