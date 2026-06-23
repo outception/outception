@@ -16,10 +16,16 @@ from polar.openapi import APITag
 from polar.redis import Redis, get_redis
 from polar.routing import APIRouter
 
-from . import cache, registry
+from . import cache, registry, search
 from .fetch import NewsFetchError, fetch_text, parse_rss
 from .metadata import SOURCES
-from .schemas import BatchRequest, NewsItem, SourceMeta, SourceResponse
+from .schemas import (
+    BatchRequest,
+    NewsItem,
+    NewsSearchResponse,
+    SourceMeta,
+    SourceResponse,
+)
 from .sources.reddit import REDDIT_SUBS
 
 log = structlog.get_logger()
@@ -58,6 +64,19 @@ async def list_sources() -> list[SourceMeta]:
         )
         for source_id, meta in SOURCES.items()
     ]
+
+
+@router.get("/search", response_model=NewsSearchResponse, tags=[APITag.public])
+async def search_news(
+    q: str = Query(..., min_length=2, max_length=80, description="Search query."),
+    redis: Redis = Depends(get_redis),
+) -> NewsSearchResponse:
+    """Search the wall: source names (always) and cached headlines (warm
+    sources only — search never triggers an outbound fetch)."""
+    return NewsSearchResponse(
+        sources=search.search_sources(q),
+        items=await search.search_headlines(redis, q),
+    )
 
 
 def _reddit_sort_url(sub: str, sort: str) -> str:

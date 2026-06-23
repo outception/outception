@@ -4,10 +4,21 @@ import { useQuery } from '@tanstack/react-query'
 
 export type {
   NewsItem,
+  NewsSearchResult,
   NewsSort,
   NewsSourceMeta,
   NewsSourceResponse,
 } from '@/utils/news'
+
+export const useNewsSearch = (query: string) => {
+  const { polar } = usePolarClient()
+  return useQuery({
+    queryKey: ['news', 'search', query],
+    queryFn: () => newsApi(polar).search(query),
+    enabled: query.trim().length >= 2,
+    staleTime: 30_000,
+  })
+}
 
 export const useNewsSources = () => {
   const { polar } = usePolarClient()

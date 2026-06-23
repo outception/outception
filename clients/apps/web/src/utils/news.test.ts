@@ -57,4 +57,12 @@ describe('newsApi', () => {
       body: { sources: ['hackernews', 'reddit'] },
     })
   })
+
+  it('search GETs with the query', async () => {
+    get.mockResolvedValue(ok({ sources: [], items: [] }))
+    await newsApi.search('rust')
+    expect(get).toHaveBeenCalledWith('/v1/news/search', {
+      params: { query: { q: 'rust' } },
+    })
+  })
 })

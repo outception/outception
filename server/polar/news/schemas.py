@@ -60,3 +60,21 @@ class SourceMeta(BaseModel):
 
 class BatchRequest(BaseModel):
     sources: list[str] = Field(min_length=1, max_length=256)
+
+
+class NewsSearchItem(BaseModel):
+    """A headline matched by search, tagged with its source."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    source_id: str = Field(alias="sourceId")
+    source_name: str = Field(alias="sourceName")
+    item: NewsItem
+
+
+class NewsSearchResponse(BaseModel):
+    """Search results: matching sources (by name) and matching cached
+    headlines."""
+
+    sources: list[SourceMeta]
+    items: list[NewsSearchItem]

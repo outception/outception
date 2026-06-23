@@ -4,6 +4,7 @@ import { unwrap } from '@polar-sh/client'
 export type NewsSourceMeta = schemas['SourceMeta']
 export type NewsSourceResponse = schemas['SourceResponse']
 export type NewsItem = schemas['NewsItem']
+export type NewsSearchResult = schemas['NewsSearchResponse']
 export type NewsSort = 'hot' | 'new' | 'top' | 'rising'
 
 export const newsApi = (polar: Client) => ({
@@ -14,4 +15,6 @@ export const newsApi = (polar: Client) => ({
         params: { path: { source_id: id }, query: { sort } },
       }),
     ),
+  search: (q: string) =>
+    unwrap(polar.GET('/v1/news/search', { params: { query: { q } } })),
 })

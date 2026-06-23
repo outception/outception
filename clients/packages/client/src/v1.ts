@@ -627,6 +627,27 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/v1/news/search': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Search News
+     * @description Search the wall: source names (always) and cached headlines (warm
+     *     sources only — search never triggers an outbound fetch).
+     */
+    get: operations['news:search_news']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/v1/news/{source_id}': {
     parameters: {
       query?: never
@@ -1681,6 +1702,28 @@ export interface components {
       /** Pubdate */
       pubDate?: number | null
       extra?: components['schemas']['NewsExtra'] | null
+    }
+    /**
+     * NewsSearchItem
+     * @description A headline matched by search, tagged with its source.
+     */
+    NewsSearchItem: {
+      /** Sourceid */
+      sourceId: string
+      /** Sourcename */
+      sourceName: string
+      item: components['schemas']['NewsItem']
+    }
+    /**
+     * NewsSearchResponse
+     * @description Search results: matching sources (by name) and matching cached
+     *     headlines.
+     */
+    NewsSearchResponse: {
+      /** Sources */
+      sources: components['schemas']['SourceMeta'][]
+      /** Items */
+      items: components['schemas']['NewsSearchItem'][]
     }
     /** NotPermitted */
     NotPermitted: {
@@ -5432,6 +5475,38 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['SourceMeta'][]
+        }
+      }
+    }
+  }
+  'news:search_news': {
+    parameters: {
+      query: {
+        /** @description Search query. */
+        q: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['NewsSearchResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
         }
       }
     }

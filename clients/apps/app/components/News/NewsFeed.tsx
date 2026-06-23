@@ -1,10 +1,12 @@
 import { Box } from '@/components/Shared/Box'
+import { Input } from '@/components/Shared/Input'
 import { Text } from '@/components/Shared/Text'
 import { Touchable } from '@/components/Shared/Touchable'
 import { useTheme } from '@/design-system/useTheme'
 import { useNewsSources } from '@/hooks/polar/news'
 import { useMemo, useState } from 'react'
 import { ActivityIndicator, ScrollView } from 'react-native'
+import { NewsSearchResults } from './NewsSearchResults'
 import { NewsSourceCard } from './NewsSourceCard'
 
 const MAX_CARDS = 12
@@ -15,6 +17,8 @@ export const NewsFeed = () => {
   const theme = useTheme()
   const { data: sources, isLoading } = useNewsSources()
   const [column, setColumn] = useState<string | null>(null)
+  const [query, setQuery] = useState('')
+  const searching = query.trim().length >= 2
 
   const columns = useMemo(() => {
     const set = new Set<string>()
@@ -30,49 +34,61 @@ export const NewsFeed = () => {
     return filtered.slice(0, MAX_CARDS)
   }, [sources, column])
 
-  if (isLoading) {
-    return (
-      <Box flex={1} justifyContent="center" alignItems="center">
-        <ActivityIndicator />
-      </Box>
-    )
-  }
-
   return (
     <Box flex={1} gap="spacing-16">
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{
-          gap: theme.spacing['spacing-8'],
-          paddingHorizontal: theme.spacing['spacing-16'],
-        }}
-      >
-        <TopicChip
-          label="All"
-          active={column === null}
-          onPress={() => setColumn(null)}
+      <Box paddingHorizontal="spacing-16" paddingTop="spacing-8">
+        <Input
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Search headlines and sources…"
+          autoCapitalize="none"
+          autoCorrect={false}
         />
-        {columns.map((c) => (
-          <TopicChip
-            key={c}
-            label={c}
-            active={column === c}
-            onPress={() => setColumn(c)}
-          />
-        ))}
-      </ScrollView>
+      </Box>
 
-      <ScrollView
-        contentContainerStyle={{
-          gap: theme.spacing['spacing-16'],
-          padding: theme.spacing['spacing-16'],
-        }}
-      >
-        {visible.map((source) => (
-          <NewsSourceCard key={source.id} source={source} />
-        ))}
-      </ScrollView>
+      {searching ? (
+        <NewsSearchResults query={query} />
+      ) : isLoading ? (
+        <Box flex={1} justifyContent="center" alignItems="center">
+          <ActivityIndicator />
+        </Box>
+      ) : (
+        <>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              gap: theme.spacing['spacing-8'],
+              paddingHorizontal: theme.spacing['spacing-16'],
+            }}
+          >
+            <TopicChip
+              label="All"
+              active={column === null}
+              onPress={() => setColumn(null)}
+            />
+            {columns.map((c) => (
+              <TopicChip
+                key={c}
+                label={c}
+                active={column === c}
+                onPress={() => setColumn(c)}
+              />
+            ))}
+          </ScrollView>
+
+          <ScrollView
+            contentContainerStyle={{
+              gap: theme.spacing['spacing-16'],
+              padding: theme.spacing['spacing-16'],
+            }}
+          >
+            {visible.map((source) => (
+              <NewsSourceCard key={source.id} source={source} />
+            ))}
+          </ScrollView>
+        </>
+      )}
     </Box>
   )
 }

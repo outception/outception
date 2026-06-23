@@ -42,4 +42,13 @@ describe('newsApi', () => {
       params: { path: { source_id: 'hackernews' }, query: { sort: 'top' } },
     })
   })
+
+  it('search GETs with the query', async () => {
+    const { client, GET } = makeClient()
+    GET.mockResolvedValue(okGet({ sources: [], items: [] }))
+    await newsApi(client).search('rust')
+    expect(GET).toHaveBeenCalledWith('/v1/news/search', {
+      params: { query: { q: 'rust' } },
+    })
+  })
 })

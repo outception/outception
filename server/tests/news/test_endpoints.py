@@ -5,6 +5,7 @@ from httpx import AsyncClient
 from pytest_mock import MockerFixture
 
 from polar.news.schemas import NewsItem
+from polar.redis import Redis
 
 
 @pytest.mark.asyncio
@@ -65,3 +66,40 @@ class TestBatch:
         )
         assert response.status_code == 200
         assert response.json() == []
+
+
+@pytest.mark.asyncio
+class TestSearch:
+    async def test_short_query_rejected(self, client: AsyncClient) -> None:
+        response = await client.get("/v1/news/search", params={"q": "a"})
+        assert response.status_code == 422
+
+    async def test_matches_source_by_name(self, client: AsyncClient) -> None:
+        response = await client.get("/v1/news/search", params={"q": "hacker"})
+        assert response.status_code == 200
+        body = response.json()
+        assert any(s["id"] == "hackernews" for s in body["sources"])
+
+    async def test_matches_cached_headline(
+        self, client: AsyncClient, redis: Redis
+    ) -> None:
+        from polar.news import cache
+
+        await cache.set(
+            redis,
+            "hackernews",
+            [NewsItem(id="1", title="Rust 2.0 released today", url="https://e.com")],
+        )
+        response = await client.get("/v1/news/search", params={"q": "rust"})
+        assert response.status_code == 200
+        items = response.json()["items"]
+        assert len(items) == 1
+        assert items[0]["sourceId"] == "hackernews"
+        assert "Rust" in items[0]["item"]["title"]
+
+    async def test_no_headline_match_on_cold_cache(
+        self, client: AsyncClient
+    ) -> None:
+        response = await client.get("/v1/news/search", params={"q": "zxqwv"})
+        assert response.status_code == 200
+        assert response.json()["items"] == []

@@ -19,6 +19,15 @@ export const useNewsSource = (id: string | null, sort: NewsSort = 'hot') =>
     retry: defaultRetry,
   })
 
+export const useNewsSearch = (query: string) =>
+  useQuery({
+    queryKey: ['news', 'search', query],
+    queryFn: () => newsApi.search(query),
+    enabled: query.trim().length >= 2,
+    staleTime: 30_000,
+    retry: defaultRetry,
+  })
+
 export const useNewsBatch = (sources: string[]) =>
   useQuery({
     queryKey: ['news', 'batch', [...sources].sort()],

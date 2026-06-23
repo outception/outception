@@ -6,16 +6,23 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const sources = vi.fn()
 const source = vi.fn()
 const batch = vi.fn()
+const search = vi.fn()
 
 vi.mock('@/utils/news', () => ({
   newsApi: {
     sources: (...args: unknown[]) => sources(...args),
     source: (...args: unknown[]) => source(...args),
     batch: (...args: unknown[]) => batch(...args),
+    search: (...args: unknown[]) => search(...args),
   },
 }))
 
-import { useNewsBatch, useNewsSource, useNewsSources } from './news'
+import {
+  useNewsBatch,
+  useNewsSearch,
+  useNewsSource,
+  useNewsSources,
+} from './news'
 
 const makeWrapper = () => {
   const client = new QueryClient({
@@ -32,6 +39,7 @@ beforeEach(() => {
   sources.mockReset()
   source.mockReset()
   batch.mockReset()
+  search.mockReset()
 })
 
 describe('useNewsSources', () => {
@@ -83,5 +91,24 @@ describe('useNewsBatch', () => {
     )
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(batch).toHaveBeenCalledWith(['hackernews', 'reddit'])
+  })
+})
+
+describe('useNewsSearch', () => {
+  it('does not fetch for queries under 2 characters', () => {
+    const { result } = renderHook(() => useNewsSearch('a'), {
+      wrapper: makeWrapper(),
+    })
+    expect(result.current.fetchStatus).toBe('idle')
+    expect(search).not.toHaveBeenCalled()
+  })
+
+  it('searches once the query is long enough', async () => {
+    search.mockResolvedValue({ sources: [], items: [] })
+    const { result } = renderHook(() => useNewsSearch('rust'), {
+      wrapper: makeWrapper(),
+    })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(search).toHaveBeenCalledWith('rust')
   })
 })
