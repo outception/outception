@@ -18,11 +18,39 @@ def _require_http_url(value: str) -> str:
 HttpUrlString = Annotated[str, AfterValidator(_require_http_url)]
 
 
+# The fixed set of topics a promotion can target. Promotions only ever surface
+# in these categories, so buying into any other would silently never render.
+# Must stay in sync with ``PROMOTION_TOPICS`` in the clients (web
+# ``utils/promotions.ts``, re-exported by mobile).
+PROMOTION_CATEGORIES: frozenset[str] = frozenset(
+    {
+        "news",
+        "tech",
+        "science",
+        "finance",
+        "sports",
+        "entertainment",
+        "gaming",
+        "social",
+        "world",
+    }
+)
+
+
+def _require_known_category(value: str) -> str:
+    if value not in PROMOTION_CATEGORIES:
+        raise ValueError(f"Unknown promotion category: {value!r}")
+    return value
+
+
+PromotionCategory = Annotated[str, AfterValidator(_require_known_category)]
+
+
 class PromotionCreate(BaseModel):
     """Request body for buying a promotion. ``blocks`` of featured time are
     purchased; the price and duration are derived server-side."""
 
-    category: str = Field(min_length=1, max_length=64)
+    category: PromotionCategory = Field(min_length=1, max_length=64)
     title: str = Field(min_length=1, max_length=200)
     body: str = Field(min_length=1, max_length=2000)
     link: HttpUrlString | None = Field(default=None, max_length=2048)

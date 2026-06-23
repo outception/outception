@@ -122,6 +122,23 @@ class TestCreatePromotion:
         assert response.status_code == 422
 
     @pytest.mark.auth
+    @pytest.mark.parametrize("category", ["", "bogus", "News", "tech ", "politics"])
+    async def test_rejects_unknown_category(
+        self, client: AsyncClient, mocker: MockerFixture, category: str
+    ) -> None:
+        mocker.patch.object(settings, "PROMOTION_PRODUCT_ID", "prod_123")
+        response = await client.post(
+            "/v1/promotions/",
+            json={
+                "category": category,
+                "title": "Buy me",
+                "body": "Great deal",
+                "blocks": 1,
+            },
+        )
+        assert response.status_code == 422
+
+    @pytest.mark.auth
     async def test_accepts_http_image_url(
         self, client: AsyncClient, mocker: MockerFixture
     ) -> None:
