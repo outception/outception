@@ -127,6 +127,7 @@ class TestTinybirdEmission:
     async def test_lifecycle_emits_events(
         self, mocker: MockerFixture, session: AsyncSession, user: User
     ) -> None:
+        mocker.patch.object(settings, "is_tinybird_configured", return_value=True)
         enqueue_mock = mocker.patch("polar.promotion.events.enqueue_job")
 
         promotion = await _make_pending(session, user)
@@ -149,6 +150,28 @@ class TestTinybirdEmission:
         enqueue_mock = mocker.patch("polar.promotion.events.enqueue_job")
         await promotion_service.get_featured(session, ["tech"])
         enqueue_mock.assert_not_called()
+
+    async def test_no_events_enqueued_when_tinybird_unconfigured(
+        self, mocker: MockerFixture, session: AsyncSession, user: User
+    ) -> None:
+        mocker.patch.object(settings, "is_tinybird_configured", return_value=False)
+        enqueue_mock = mocker.patch("polar.promotion.events.enqueue_job")
+
+        promotion = await _make_pending(session, user)
+        await promotion_service.activate_paid(
+            session, promotion.id, external_ref="order:tboff"
+        )
+        await promotion_service.get_featured(session, ["tech"])
+        await promotion_service.track_click(session, promotion.id)
+
+        # Tinybird off: events are skipped at the producer, but the Postgres
+        # counters are still tallied independently.
+        enqueue_mock.assert_not_called()
+        repo = PromotionRepository.from_session(session)
+        refreshed = await repo.get_by_id(promotion.id)
+        assert refreshed is not None
+        assert refreshed.impressions == 1
+        assert refreshed.clicks == 1
 
 
 @pytest.mark.asyncio

@@ -1,6 +1,7 @@
 import uuid
 from typing import Any
 
+from polar.config import settings
 from polar.kit.utils import utc_now
 from polar.models import Promotion
 from polar.worker import enqueue_job
@@ -39,7 +40,10 @@ def emit(promotion: Promotion, name: str) -> None:
 
 
 def emit_many(events: list[dict[str, Any]]) -> None:
-    """Enqueue a batch of pre-built promotion events. No-op when empty; the
-    worker task is itself a no-op when Tinybird isn't configured."""
-    if events:
+    """Enqueue a batch of pre-built promotion events for Tinybird ingestion.
+    No-op when empty or when Tinybird isn't configured — skipping the enqueue
+    keeps the hot path (an impression per public wall render) from queuing jobs
+    the worker would only no-op. Postgres analytics counters are tallied
+    separately, so nothing is lost when Tinybird is off."""
+    if events and settings.is_tinybird_configured():
         enqueue_job("promotion.emit_events", events=events)
