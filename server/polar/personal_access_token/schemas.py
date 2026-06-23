@@ -16,9 +16,10 @@ class PersonalAccessToken(TimestampedSchema):
 
 class PersonalAccessTokenCreate(Schema):
     comment: str = Field(min_length=1, max_length=255)
-    scopes: list[Scope]
+    scopes: list[Scope] = Field(min_length=1)
     expires_in: timedelta | None = Field(
         default=None,
+        gt=timedelta(0),
         description="Lifetime of the token; omit for one that never expires.",
     )
 

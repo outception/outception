@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from enum import StrEnum
 
-from pydantic import UUID4
+from pydantic import UUID4, Field
 
 from polar.auth.scope import SCOPES_SUPPORTED, Scope
 from polar.kit.schemas import Schema, TimestampedSchema
@@ -16,8 +16,8 @@ AvailableScope = StrEnum(  # type: ignore
 class OrganizationAccessTokenCreate(Schema):
     organization_id: UUID4 | None = None
     comment: str
-    expires_in: timedelta | None = None
-    scopes: list[AvailableScope]  # pyright: ignore
+    expires_in: timedelta | None = Field(default=None, gt=timedelta(0))
+    scopes: list[AvailableScope] = Field(min_length=1)  # pyright: ignore
 
 
 class OrganizationAccessTokenUpdate(Schema):
