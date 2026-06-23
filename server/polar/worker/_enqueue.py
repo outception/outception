@@ -41,7 +41,7 @@ FLUSH_BATCH_SIZE = 50
 
 
 class JobQueueManager:
-    __slots__ = ("_enqueued_jobs", "_ingested_events")
+    __slots__ = ("_enqueued_jobs",)
 
     def __init__(self) -> None:
         self._enqueued_jobs: list[
@@ -52,7 +52,6 @@ class JobQueueManager:
                 int | None,
             ]
         ] = []
-        self._ingested_events: list[uuid.UUID] = []
 
     def enqueue_job(
         self,
@@ -64,13 +63,7 @@ class JobQueueManager:
         self._enqueued_jobs.append((actor, args, kwargs, delay))
         log.debug("polar.worker.job_enqueued", actor=actor, delay=delay)
 
-    def enqueue_events(self, *event_ids: uuid.UUID) -> None:
-        self._ingested_events.extend(event_ids)
-
     async def flush(self, broker: dramatiq.Broker, redis: Redis) -> None:
-        if len(self._ingested_events) > 0:
-            self.enqueue_job("event.ingested", self._ingested_events)
-
         if not self._enqueued_jobs:
             self.reset()
             return
@@ -184,7 +177,6 @@ class JobQueueManager:
 
     def reset(self) -> None:
         self._enqueued_jobs = []
-        self._ingested_events = []
 
     @classmethod
     def set(cls) -> "Self":
@@ -232,12 +224,6 @@ def enqueue_job(
     """
     job_queue_manager = JobQueueManager.get()
     job_queue_manager.enqueue_job(actor, *args, delay=delay, **kwargs)
-
-
-def enqueue_events(*event_ids: uuid.UUID) -> None:
-    """Enqueue events to be ingested."""
-    job_queue_manager = JobQueueManager.get()
-    job_queue_manager.enqueue_events(*event_ids)
 
 
 type BulkJobDelayCalculator = Callable[[int], int | None]

@@ -79,13 +79,21 @@ async def paginate(
         result = await session.execute(paginated)
         results: list[Any] = []
         count = 0
-        for row in result.unique().all():
+        rows = result.unique().all()
+        for row in rows:
             (*queried_data, c) = row._tuple()
             count = int(c)
             if len(queried_data) == 1:
                 results.append(queried_data[0])
             else:
                 results.append(queried_data)
+        if not rows:
+            # The total is piggybacked on each returned row, so a page past the
+            # last record (no rows) can't carry it — fall back to a real count.
+            count_statement = select(func.count()).select_from(
+                count_subquery(statement)
+            )
+            count = int((await session.execute(count_statement)).scalar_one())
         return results, count
 
     count_statement = select(func.count()).select_from(count_subquery(statement))

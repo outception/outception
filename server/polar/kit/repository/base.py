@@ -157,7 +157,9 @@ class RepositoryBase[M: ModelIDProtocol[Any]]:
         return object
 
     async def count(self, statement: Select[tuple[M]]) -> int:
-        count_statement = statement.with_only_columns(func.count())
+        # Count via a row-collapsing subquery (like ``paginate``) so a statement
+        # that joins a one-to-many doesn't double-count.
+        count_statement = select(func.count()).select_from(count_subquery(statement))
         result = await self.session.execute(count_statement)
         return result.scalar_one()
 

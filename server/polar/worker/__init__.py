@@ -18,7 +18,6 @@ from ._encoder import JSONEncoder
 from ._enqueue import (
     BulkJobDelayCalculator,
     JobQueueManager,
-    enqueue_events,
     enqueue_job,
     make_bulk_job_delay_calculator,
 )
@@ -124,7 +123,6 @@ __all__ = [
     "TaskQueue",
     "actor",
     "can_retry",
-    "enqueue_events",
     "enqueue_job",
     "get_message_timestamp",
     "get_retries",
