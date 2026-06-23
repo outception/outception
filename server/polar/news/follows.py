@@ -3,7 +3,9 @@
 from uuid import UUID
 
 from sqlalchemy import delete, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 
+from polar.kit.utils import generate_uuid, utc_now
 from polar.models import UserFollowedSource
 from polar.postgres import AsyncReadSession, AsyncSession
 from polar.redis import Redis
@@ -23,17 +25,20 @@ async def list_followed(session: AsyncReadSession, user_id: UUID) -> list[str]:
 
 
 async def follow(session: AsyncSession, user_id: UUID, source_id: str) -> None:
-    """Idempotently follow a source (the unique constraint also guards races)."""
-    existing = await session.execute(
-        select(UserFollowedSource).where(
-            UserFollowedSource.user_id == user_id,
-            UserFollowedSource.source_id == source_id,
+    """Idempotently follow a source. The insert upserts on the unique
+    constraint, so concurrent double-follows collapse to a single row instead
+    of racing a read-then-write and 500ing on the unique violation."""
+    stmt = (
+        pg_insert(UserFollowedSource)
+        .values(
+            id=generate_uuid(),
+            created_at=utc_now(),
+            user_id=user_id,
+            source_id=source_id,
         )
+        .on_conflict_do_nothing(constraint="uq_user_followed_source")
     )
-    if existing.scalar_one_or_none() is not None:
-        return
-    session.add(UserFollowedSource(user_id=user_id, source_id=source_id))
-    await session.flush()
+    await session.execute(stmt)
 
 
 async def unfollow(session: AsyncSession, user_id: UUID, source_id: str) -> None:
