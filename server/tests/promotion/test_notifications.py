@@ -59,11 +59,14 @@ class TestBuildEmail:
         assert "42" in html
         assert "7" in html
 
+    @pytest.mark.parametrize("kind", ["activated", "queued", "expired"])
     async def test_title_is_html_escaped(
-        self, session: AsyncSession, user: User
+        self, session: AsyncSession, user: User, kind: str
     ) -> None:
+        # Every branch interpolates the title into the HTML body, so each must
+        # escape it — guards against a future branch using the raw title.
         promotion = await _make_pending(session, user)
         promotion.title = "<script>alert(1)</script>"
-        _subject, html = build_email(promotion, "activated")
+        _subject, html = build_email(promotion, kind)
         assert "<script>" not in html
         assert "&lt;script&gt;" in html
