@@ -8,6 +8,22 @@ export type NewsSearchResult = schemas['NewsSearchResponse']
 
 export type NewsSort = 'hot' | 'new' | 'top' | 'rising'
 
+/**
+ * Defense-in-depth for news links: items come from untrusted external feeds, so
+ * only ever put an http(s) URL in an href. Returns undefined for anything else
+ * (the anchor renders without an href, so a `javascript:`/`data:` URL can't be
+ * clicked). The backend also neutralizes these, so this is a second line.
+ */
+export const safeExternalHref = (url: string | null | undefined) => {
+  if (!url) return undefined
+  try {
+    const { protocol } = new URL(url)
+    return protocol === 'http:' || protocol === 'https:' ? url : undefined
+  } catch {
+    return undefined
+  }
+}
+
 export const newsApi = {
   sources: () => unwrap(api.GET('/v1/news/sources')),
   source: (id: string, latest = false, sort: NewsSort = 'hot') =>

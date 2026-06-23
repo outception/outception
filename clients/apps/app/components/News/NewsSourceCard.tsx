@@ -2,7 +2,8 @@ import { Box } from '@/components/Shared/Box'
 import { Text } from '@/components/Shared/Text'
 import { Touchable } from '@/components/Shared/Touchable'
 import { useNewsSource, type NewsSourceMeta } from '@/hooks/polar/news'
-import { ActivityIndicator, Linking } from 'react-native'
+import { openExternalUrl } from '@/utils/news'
+import { ActivityIndicator } from 'react-native'
 import { PromotionFooter } from '../Promotions/PromotionFooter'
 import { FollowButton } from './FollowButton'
 
@@ -53,7 +54,7 @@ export const NewsSourceCard = ({ source }: { source: NewsSourceMeta }) => {
       ) : (
         <Box gap="spacing-8">
           {items.map((item) => (
-            <Touchable key={item.id} onPress={() => Linking.openURL(item.url)}>
+            <Touchable key={item.id} onPress={() => openExternalUrl(item.url)}>
               <Text variant="body">{item.title}</Text>
             </Touchable>
           ))}

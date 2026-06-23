@@ -1,7 +1,7 @@
 'use client'
 
 import { useNewsSource } from '@/hooks/queries/news'
-import type { NewsSourceMeta } from '@/utils/news'
+import { safeExternalHref, type NewsSourceMeta } from '@/utils/news'
 import { Spinner, Text } from '@polar-sh/orbit'
 import { Box } from '@polar-sh/orbit/Box'
 import { PromotionFooter } from '../Promotions/PromotionFooter'
@@ -62,7 +62,7 @@ export const NewsSourceCard = ({ source }: { source: NewsSourceMeta }) => {
           {items.map((item) => (
             <Box as="li" key={item.id}>
               <a
-                href={item.url}
+                href={safeExternalHref(item.url)}
                 target="_blank"
                 rel="noreferrer noopener"
                 className="hover:text-blue-500"

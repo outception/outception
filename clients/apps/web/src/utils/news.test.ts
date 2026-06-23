@@ -5,7 +5,7 @@ vi.mock('@/utils/client', () => ({
 }))
 
 import { api } from '@/utils/client'
-import { newsApi } from './news'
+import { newsApi, safeExternalHref } from './news'
 
 const ok = (data: unknown) => ({
   data,
@@ -17,6 +17,24 @@ const get = api.GET as unknown as Mock
 const post = api.POST as unknown as Mock
 const put = api.PUT as unknown as Mock
 const del = api.DELETE as unknown as Mock
+
+describe('safeExternalHref', () => {
+  it('returns http(s) URLs unchanged', () => {
+    expect(safeExternalHref('https://example.com/a')).toBe(
+      'https://example.com/a',
+    )
+    expect(safeExternalHref('http://example.com')).toBe('http://example.com')
+  })
+
+  it('returns undefined for unsafe schemes, junk, or empty', () => {
+    expect(safeExternalHref('javascript:alert(1)')).toBeUndefined()
+    expect(safeExternalHref('data:text/html,x')).toBeUndefined()
+    expect(safeExternalHref('not a url')).toBeUndefined()
+    expect(safeExternalHref('')).toBeUndefined()
+    expect(safeExternalHref(null)).toBeUndefined()
+    expect(safeExternalHref(undefined)).toBeUndefined()
+  })
+})
 
 beforeEach(() => {
   get.mockReset()

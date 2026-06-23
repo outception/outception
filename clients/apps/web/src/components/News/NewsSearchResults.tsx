@@ -1,6 +1,7 @@
 'use client'
 
 import { useNewsSearch } from '@/hooks/queries/news'
+import { safeExternalHref } from '@/utils/news'
 import { Pill, Spinner, Text } from '@polar-sh/orbit'
 import { Box } from '@polar-sh/orbit/Box'
 
@@ -38,7 +39,7 @@ export const NewsSearchResults = ({ query }: { query: string }) => {
             {sources.map((s) => (
               <a
                 key={s.id}
-                href={s.home ?? '#'}
+                href={safeExternalHref(s.home)}
                 target="_blank"
                 rel="noreferrer"
               >
@@ -58,7 +59,7 @@ export const NewsSearchResults = ({ query }: { query: string }) => {
             {items.map((hit, i) => (
               <a
                 key={`${hit.sourceId}-${i}`}
-                href={hit.item.url}
+                href={safeExternalHref(hit.item.url)}
                 target="_blank"
                 rel="noreferrer"
               >

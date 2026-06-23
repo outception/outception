@@ -3,7 +3,8 @@ import { Text } from '@/components/Shared/Text'
 import { Touchable } from '@/components/Shared/Touchable'
 import { useTheme } from '@/design-system/useTheme'
 import { useFollowedFeed } from '@/hooks/polar/news'
-import { ActivityIndicator, Linking, ScrollView } from 'react-native'
+import { openExternalUrl } from '@/utils/news'
+import { ActivityIndicator, ScrollView } from 'react-native'
 
 export const FollowingFeed = () => {
   const theme = useTheme()
@@ -40,7 +41,7 @@ export const FollowingFeed = () => {
       {items.map((hit, i) => (
         <Touchable
           key={`${hit.sourceId}-${i}`}
-          onPress={() => Linking.openURL(hit.item.url)}
+          onPress={() => openExternalUrl(hit.item.url)}
         >
           <Box
             gap="spacing-4"

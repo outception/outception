@@ -4,7 +4,8 @@ import { Text } from '@/components/Shared/Text'
 import { Touchable } from '@/components/Shared/Touchable'
 import { useTheme } from '@/design-system/useTheme'
 import { useNewsSearch } from '@/hooks/polar/news'
-import { ActivityIndicator, Linking, ScrollView } from 'react-native'
+import { openExternalUrl } from '@/utils/news'
+import { ActivityIndicator, ScrollView } from 'react-native'
 
 export const NewsSearchResults = ({ query }: { query: string }) => {
   const theme = useTheme()
@@ -44,12 +45,7 @@ export const NewsSearchResults = ({ query }: { query: string }) => {
           <Text variant="bodyMedium">Sources</Text>
           <Box flexDirection="row" flexWrap="wrap" gap="spacing-8">
             {sources.map((s) => (
-              <Touchable
-                key={s.id}
-                onPress={() => {
-                  if (s.home) Linking.openURL(s.home)
-                }}
-              >
+              <Touchable key={s.id} onPress={() => openExternalUrl(s.home)}>
                 <Pill color="gray">{s.name}</Pill>
               </Touchable>
             ))}
@@ -63,7 +59,7 @@ export const NewsSearchResults = ({ query }: { query: string }) => {
           {items.map((hit, i) => (
             <Touchable
               key={`${hit.sourceId}-${i}`}
-              onPress={() => Linking.openURL(hit.item.url)}
+              onPress={() => openExternalUrl(hit.item.url)}
             >
               <Box
                 gap="spacing-4"

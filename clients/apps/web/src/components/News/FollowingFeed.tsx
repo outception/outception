@@ -1,6 +1,7 @@
 'use client'
 
 import { useFollowedFeed } from '@/hooks/queries/news'
+import { safeExternalHref } from '@/utils/news'
 import { Spinner, Text } from '@polar-sh/orbit'
 import { Box } from '@polar-sh/orbit/Box'
 
@@ -31,7 +32,7 @@ export const FollowingFeed = () => {
       {items.map((hit, i) => (
         <a
           key={`${hit.sourceId}-${i}`}
-          href={hit.item.url}
+          href={safeExternalHref(hit.item.url)}
           target="_blank"
           rel="noreferrer"
         >

@@ -1,5 +1,26 @@
 import type { Client } from '@polar-sh/client'
-import { newsApi } from './news'
+import { Linking } from 'react-native'
+import { newsApi, openExternalUrl } from './news'
+
+describe('openExternalUrl', () => {
+  it('opens http(s) URLs', () => {
+    const spy = jest.spyOn(Linking, 'openURL').mockResolvedValue(true as never)
+    openExternalUrl('https://example.com/a')
+    expect(spy).toHaveBeenCalledWith('https://example.com/a')
+    spy.mockRestore()
+  })
+
+  it('ignores unsafe schemes, deep links, and empty values', () => {
+    const spy = jest.spyOn(Linking, 'openURL').mockResolvedValue(true as never)
+    openExternalUrl('javascript:alert(1)')
+    openExternalUrl('tel:12345')
+    openExternalUrl('myapp://deeplink')
+    openExternalUrl('')
+    openExternalUrl(null)
+    expect(spy).not.toHaveBeenCalled()
+    spy.mockRestore()
+  })
+})
 
 const makeClient = () => {
   const GET = jest.fn().mockResolvedValue({
