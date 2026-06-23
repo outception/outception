@@ -12,6 +12,19 @@ from .client import payment_gateway_client
 
 log: Logger = structlog.get_logger()
 
+# Order fields that may carry the amount the customer was charged, most
+# authoritative first. ``total_amount`` is the gross charged (incl. tax), so it
+# only ever exceeds the promotion price for a valid payment.
+_ORDER_AMOUNT_FIELDS = ("total_amount", "amount", "subtotal_amount", "net_amount")
+
+
+def _extract_paid_amount(data: dict[str, Any]) -> int | None:
+    for field in _ORDER_AMOUNT_FIELDS:
+        value = data.get(field)
+        if isinstance(value, int) and not isinstance(value, bool):
+            return value
+    return None
+
 
 class BillingService:
     """Payment-gateway integration for one-off promotion purchases."""
@@ -51,7 +64,9 @@ class BillingService:
         """Activate a promotion on a completed order. Gated on our own
         ``kind == "promotion_purchase"`` metadata, so other orders are ignored.
         Idempotent: ``activate_paid`` keys on the order id, so a redelivered
-        order.* event queues the promotion exactly once."""
+        order.* event queues the promotion exactly once. The order must also
+        report an amount that covers the promotion's price (the product is
+        pay-what-you-want, so an underpaid order is refused, not activated)."""
         from polar.promotion.service import promotion as promotion_service
 
         metadata = data.get("metadata") or {}
@@ -79,8 +94,20 @@ class BillingService:
             )
             return
 
+        paid_amount_cents = _extract_paid_amount(data)
+        if paid_amount_cents is None:
+            log.warning(
+                "billing.promotion.no_amount",
+                order_id=order_id,
+                data_keys=sorted(data.keys()),
+            )
+            return
+
         await promotion_service.activate_paid(
-            session, promotion_id, external_ref=f"order:{order_id}"
+            session,
+            promotion_id,
+            external_ref=f"order:{order_id}",
+            paid_amount_cents=paid_amount_cents,
         )
 
 

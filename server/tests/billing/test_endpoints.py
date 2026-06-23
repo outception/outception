@@ -95,6 +95,7 @@ class TestWebhook:
             "data": {
                 "id": "order_abc",
                 "status": "paid",
+                "total_amount": promotion.amount_cents,
                 "metadata": {
                     "kind": "promotion_purchase",
                     "user_id": str(user.id),
@@ -116,6 +117,49 @@ class TestWebhook:
         # Empty category → promoted straight to ACTIVE.
         assert refreshed.status == PromotionStatus.ACTIVE
         assert refreshed.payment_ref == "order:order_abc"
+
+    @pytest.mark.parametrize(
+        "data_extra",
+        [
+            pytest.param({"total_amount": 1}, id="underpaid"),
+            pytest.param({}, id="no_amount_field"),
+        ],
+    )
+    async def test_underpaid_or_amountless_order_is_refused(
+        self,
+        client: AsyncClient,
+        session: AsyncSession,
+        user: User,
+        mocker: MockerFixture,
+        data_extra: dict[str, Any],
+    ) -> None:
+        mocker.patch.object(settings, "PAYMENT_GATEWAY_WEBHOOK_SECRET", WEBHOOK_SECRET)
+        promotion = await _make_pending(session, user)
+        assert promotion.amount_cents > 1
+        payload = {
+            "type": "order.paid",
+            "data": {
+                "id": "order_cheap",
+                "status": "paid",
+                **data_extra,
+                "metadata": {
+                    "kind": "promotion_purchase",
+                    "user_id": str(user.id),
+                    "promotion_id": str(promotion.id),
+                },
+            },
+        }
+        body, headers = _signed_headers(payload)
+
+        response = await client.post(
+            "/v1/billing/webhook", content=body, headers=headers
+        )
+        assert response.status_code == 202
+
+        repo = PromotionRepository.from_session(session)
+        refreshed = await repo.get_by_id(promotion.id)
+        assert refreshed is not None
+        assert refreshed.status == PromotionStatus.PENDING_PAYMENT
 
     async def test_ignores_non_promotion_order(
         self,

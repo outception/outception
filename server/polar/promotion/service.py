@@ -68,17 +68,36 @@ class PromotionService:
         return promotion
 
     async def activate_paid(
-        self, session: AsyncSession, promotion_id: UUID, *, external_ref: str
+        self,
+        session: AsyncSession,
+        promotion_id: UUID,
+        *,
+        external_ref: str,
+        paid_amount_cents: int | None = None,
     ) -> None:
         """Mark a paid promotion ``queued`` and advance its category. Idempotent
         on ``external_ref`` (the order ref), so a redelivered webhook is a
-        no-op."""
+        no-op.
+
+        When ``paid_amount_cents`` is given (the webhook path), the order must
+        have paid at least the promotion's price; an underpayment is refused so
+        the slot can't be bought below cost. ``None`` skips the check for
+        internal callers that already trust the amount."""
         repo = PromotionRepository.from_session(session)
         existing = await repo.get_by_payment_ref(external_ref)
         if existing is not None:
             return
         promotion = await repo.get_by_id(promotion_id)
         if promotion is None or promotion.status != PromotionStatus.PENDING_PAYMENT:
+            return
+        if paid_amount_cents is not None and paid_amount_cents < promotion.amount_cents:
+            log.warning(
+                "promotion.activate_paid.underpaid",
+                promotion_id=str(promotion_id),
+                external_ref=external_ref,
+                expected_cents=promotion.amount_cents,
+                paid_cents=paid_amount_cents,
+            )
             return
         now = utc_now()
         await repo.update(
