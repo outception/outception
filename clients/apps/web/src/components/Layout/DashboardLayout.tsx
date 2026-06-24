@@ -1,6 +1,6 @@
 'use client'
 
-import LogoIcon from '@/components/Brand/logos/LogoIcon'
+import { Wordmark } from '@/components/Brand/Wordmark'
 import { Modal } from '@polar-sh/orbit'
 import { useModal } from '@/components/Modal/useModal'
 import { useAuth } from '@/hooks/auth'
@@ -107,7 +107,7 @@ const MobileNav = ({
         href="/"
         className="shrink-0 items-center font-semibold text-black dark:text-white"
       >
-        <LogoIcon className="h-10 w-10" />
+        <Wordmark className="text-black dark:text-white" />
       </a>
 
       <div className="flex flex-row items-center gap-x-6">

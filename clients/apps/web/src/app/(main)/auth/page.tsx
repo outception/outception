@@ -1,4 +1,4 @@
-import { PolarLogotype } from '@/components/Layout/Public/PolarLogotype'
+import { Wordmark } from '@/components/Brand/Wordmark'
 import { CONFIG } from '@/utils/config'
 import { Metadata } from 'next'
 import { cookies } from 'next/headers'
@@ -43,7 +43,7 @@ export default async function Page(props: {
     <div className="flex h-screen w-full grow items-center justify-center">
       <div className="dark:bg-polar-900 flex w-full max-w-md flex-col justify-between gap-8 rounded-3xl bg-gray-50 p-12">
         <div className="flex flex-col gap-y-4">
-          <PolarLogotype logoVariant="icon" size={60} />
+          <Wordmark size={60} className="text-black dark:text-white" />
           <div className="flex flex-col gap-4">
             <h2 className="text-2xl text-black dark:text-white">
               {CONFIG.IS_SANDBOX

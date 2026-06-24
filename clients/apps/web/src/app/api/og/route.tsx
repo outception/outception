@@ -1,4 +1,3 @@
-import LogoType from '@/components/Brand/logos/LogoType'
 import { ImageResponse } from 'next/og'
 
 export const runtime = 'edge'
@@ -42,14 +41,18 @@ export async function GET(request: Request) {
         fontFamily: 'sans-serif',
       }}
     >
-      {/* Logo */}
+      {/* Wordmark */}
       <div
         style={{
           display: 'flex',
           color: '#fff',
+          fontSize: '40px',
+          fontWeight: 700,
+          letterSpacing: '-1px',
+          fontFamily: 'Inter',
         }}
       >
-        <LogoType width={200} />
+        Outception
       </div>
 
       {/* Main copy */}

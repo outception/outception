@@ -1,4 +1,4 @@
-import LogoIcon from '@/components/Brand/logos/LogoIcon'
+import { Wordmark } from '@/components/Brand/Wordmark'
 import { Metadata } from 'next'
 import VerifyPage from './VerifyPage'
 import { checkAuthenticationSession } from '@/utils/auth'
@@ -25,7 +25,7 @@ export default async function Page(props: {
   return (
     <div className="dark:bg-polar-950 flex h-screen w-full grow items-center justify-center bg-white">
       <div className="flex w-80 flex-col items-center">
-        <LogoIcon size={60} className="mb-6 text-black dark:text-white" />
+        <Wordmark size={60} className="mb-6 text-black dark:text-white" />
         {intent === 'signup' && (
           <h1 className="mb-1 text-xl font-medium text-gray-700 dark:text-white">
             Welcome to Outception!

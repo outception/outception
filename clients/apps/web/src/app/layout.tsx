@@ -5,7 +5,6 @@ import { getDistinctId } from '@/experiments/distinct-id'
 import { ExperimentProvider } from '@/experiments/ExperimentProvider'
 import { getExperiments } from '@/experiments/server'
 import { UserContextProvider } from '@/providers/auth'
-import { CONFIG } from '@/utils/config'
 import { getAuthenticatedUser, getUserOrganizations } from '@/utils/user'
 import { schemas } from '@polar-sh/client'
 import { PHASE_PRODUCTION_BUILD } from 'next/constants'
@@ -46,35 +45,6 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning className="antialiased">
-      <head>
-        {CONFIG.ENVIRONMENT === 'development' ? (
-          <>
-            <link
-              href="/favicon-dev.png"
-              rel="icon"
-              media="(prefers-color-scheme: dark)"
-            />
-            <link
-              href="/favicon-dev-dark.png"
-              rel="icon"
-              media="(prefers-color-scheme: light)"
-            />
-          </>
-        ) : (
-          <>
-            <link
-              href="/favicon.png"
-              rel="icon"
-              media="(prefers-color-scheme: dark)"
-            />
-            <link
-              href="/favicon-dark.png"
-              rel="icon"
-              media="(prefers-color-scheme: light)"
-            />
-          </>
-        )}
-      </head>
       <body style={{ textRendering: 'optimizeLegibility' }}>
         <ExperimentProvider experiments={experimentVariants}>
           <UserContextProvider

@@ -23,10 +23,11 @@ import {
 } from '@polar-sh/ui/components/ui/dropdown-menu'
 import { Separator } from '@polar-sh/ui/components/ui/separator'
 import { motion } from 'motion/react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
-import { PolarLogotype } from '../Public/PolarLogotype'
+import { Wordmark } from '@/components/Brand/Wordmark'
 import {
   AccountNavigation,
   OrganizationNavigation,
@@ -68,10 +69,13 @@ export const DashboardSidebar = ({
             : 'flex-row items-center justify-between',
         )}
       >
-        <PolarLogotype
-          size={32}
-          href={organization ? `/dashboard/${organization.slug}` : '/dashboard'}
-        />
+        <Link
+          href={
+            organization ? `/dashboard/${organization.slug}` : '/dashboard'
+          }
+        >
+          <Wordmark size={32} className="text-black dark:text-white" />
+        </Link>
         <motion.div
           key={isCollapsed ? 'header-collapsed' : 'header-expanded'}
           className={`flex ${isCollapsed ? 'flex-row md:flex-col-reverse' : 'flex-row'} items-center gap-2`}
