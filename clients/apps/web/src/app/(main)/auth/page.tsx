@@ -12,7 +12,7 @@ import { schemas } from '@polar-sh/client'
 import { redirect } from 'next/navigation'
 
 export const metadata: Metadata = {
-  title: 'Log in to Polar',
+  title: 'Log in to Outception',
 }
 
 export default async function Page(props: {
@@ -47,8 +47,8 @@ export default async function Page(props: {
           <div className="flex flex-col gap-4">
             <h2 className="text-2xl text-black dark:text-white">
               {CONFIG.IS_SANDBOX
-                ? 'Welcome to the Polar Sandbox'
-                : 'Welcome to Polar'}
+                ? 'Welcome to the Outception Sandbox'
+                : 'Welcome to Outception'}
             </h2>
             <span className="dark:text-polar-400 text-lg text-balance text-gray-500">
               {CONFIG.IS_SANDBOX ? (
@@ -57,7 +57,7 @@ export default async function Page(props: {
                   your live account and payments are not processed.
                 </>
               ) : (
-                'Monetize your software'
+                'Live news, pay to promote'
               )}
             </span>
           </div>

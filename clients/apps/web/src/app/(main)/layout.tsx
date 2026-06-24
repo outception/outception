@@ -7,25 +7,23 @@ import { PolarThemeProvider } from '../providers'
 export async function generateMetadata(): Promise<Metadata> {
   const baseMetadata: Metadata = {
     title: {
-      template: '%s | Polar',
-      default: 'Polar',
+      template: '%s | Outception',
+      default: 'Outception',
     },
-    description: 'A billing platform for the intelligence era',
+    description: 'A live news wall with pay-to-promote',
     openGraph: {
-      images: 'https://polar.sh/assets/brand/polar_og.jpg',
       type: 'website',
-      siteName: 'Polar',
-      title: 'Polar | A billing platform for the intelligence era',
+      siteName: 'Outception',
+      title: 'Outception | A live news wall with pay-to-promote',
       description:
-        'Create digital products and SaaS billing with flexible pricing models and seamless payment processing.',
+        'Follow 250+ news sources on one live wall, and pay to promote your post to the top.',
       locale: 'en_US',
     },
     twitter: {
-      images: 'https://polar.sh/assets/brand/polar_og.jpg',
       card: 'summary_large_image',
-      title: 'Polar | A billing platform for the intelligence era',
+      title: 'Outception | A live news wall with pay-to-promote',
       description:
-        'Create digital products and SaaS billing with flexible pricing models and seamless payment processing.',
+        'Follow 250+ news sources on one live wall, and pay to promote your post to the top.',
     },
     metadataBase: new URL('https://polar.sh/'),
     alternates: {

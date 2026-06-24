@@ -23,7 +23,7 @@ export async function GET(request: Request) {
 
   const title = searchParams.has('title')
     ? searchParams.get('title')?.slice(0, 100)
-    : 'Polar'
+    : 'Outception'
 
   const description = searchParams.has('description')
     ? searchParams.get('description')?.slice(0, 160)

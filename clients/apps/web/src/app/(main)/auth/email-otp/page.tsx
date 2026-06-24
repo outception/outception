@@ -28,7 +28,7 @@ export default async function Page(props: {
         <LogoIcon size={60} className="mb-6 text-black dark:text-white" />
         {intent === 'signup' && (
           <h1 className="mb-1 text-xl font-medium text-gray-700 dark:text-white">
-            Welcome to Polar!
+            Welcome to Outception!
           </h1>
         )}
         <div className="dark:text-polar-400 mb-2 text-center text-gray-500">
