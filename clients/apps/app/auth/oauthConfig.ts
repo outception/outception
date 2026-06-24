@@ -1,30 +1,28 @@
-export const CLIENT_ID = 'polar_ci_yZLBGwoWZVsOdfN5CODRwVSTlJfwJhXqwg65e2CuNMZ'
+// OAuth2 (PKCE) config for the mobile app. Everything is env-driven so wiring
+// the app to a deployment is just setting env vars — no code edits.
+//
+// To get a CLIENT_ID:
+//   1. Create an OAuth app at <web>/dashboard/account/developer
+//   2. Choose "Public Client" and grant it the `scopes` below
+//   3. Set the Redirect URI to "polar://oauth/callback"
+//
+// Then set, for your environment:
+//   EXPO_PUBLIC_POLAR_SERVER_URL   — the API base (e.g. https://api.yourdomain)
+//   EXPO_PUBLIC_POLAR_WEB_URL      — the web base (e.g. https://app.yourdomain)
+//   EXPO_PUBLIC_OAUTH_CLIENT_ID    — the public client id from step 2
+
+const API_URL =
+  process.env.EXPO_PUBLIC_POLAR_SERVER_URL ?? 'http://127.0.0.1:8000'
+const WEB_URL = process.env.EXPO_PUBLIC_POLAR_WEB_URL ?? 'http://127.0.0.1:3000'
+
+export const CLIENT_ID = process.env.EXPO_PUBLIC_OAUTH_CLIENT_ID ?? ''
 
 export const discovery = {
-  authorizationEndpoint: 'https://polar.sh/oauth2/authorize',
-  tokenEndpoint: 'https://api.polar.sh/v1/oauth2/token',
-  registrationEndpoint: 'https://api.polar.sh/v1/oauth2/register',
-  revocationEndpoint: 'https://api.polar.sh/v1/oauth2/revoke',
+  authorizationEndpoint: `${WEB_URL}/oauth2/authorize`,
+  tokenEndpoint: `${API_URL}/v1/oauth2/token`,
+  registrationEndpoint: `${API_URL}/v1/oauth2/register`,
+  revocationEndpoint: `${API_URL}/v1/oauth2/revoke`,
 }
-
-/*
-Uncomment these lines and update the client ID to run against a local version of the backend
-
-To get the CLIENT_ID:
-1. Create a new Oauth app at http://127.0.0.1:3000/dashboard/account/developer
-2. Select "Public Client" and give it all the scopes
-3. Set "Redirect URIs" to "polar://oauth/callback"
-
-And make sure to set the EXPO_PUBLIC_POLAR_SERVER_URL is set to "http://127.0.0.1:8000".
-
-export const CLIENT_ID = 'polar_ci_hbFdMZZRghgdm2F4LMceQSrcQNunmjlh6ukGJ1dG0Vg'
-
-export const discovery = {
-  authorizationEndpoint: 'http://127.0.0.1:3000/oauth2/authorize',
-  tokenEndpoint: `${process.env.EXPO_PUBLIC_POLAR_SERVER_URL}/v1/oauth2/token`,
-  registrationEndpoint: `${process.env.EXPO_PUBLIC_POLAR_SERVER_URL}/v1/oauth2/register`,
-  revocationEndpoint: `${process.env.EXPO_PUBLIC_POLAR_SERVER_URL}/v1/oauth2/revoke`,
-*/
 
 export const scopes = [
   'openid',
@@ -38,4 +36,6 @@ export const scopes = [
   'members:write',
   'organization_access_tokens:read',
   'organization_access_tokens:write',
+  'promotions:read',
+  'promotions:write',
 ]

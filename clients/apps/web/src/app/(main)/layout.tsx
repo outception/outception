@@ -25,9 +25,9 @@ export async function generateMetadata(): Promise<Metadata> {
       description:
         'Follow 250+ news sources on one live wall, and pay to promote your post to the top.',
     },
-    metadataBase: new URL('https://polar.sh/'),
+    metadataBase: new URL(CONFIG.FRONTEND_BASE_URL),
     alternates: {
-      canonical: 'https://polar.sh/',
+      canonical: CONFIG.FRONTEND_BASE_URL,
     },
   }
 

@@ -62,25 +62,31 @@ Without these, promotion analytics fall back to Postgres-only counters.
 
 `POLAR_TINYBIRD_API_URL`, `POLAR_TINYBIRD_API_TOKEN`, `POLAR_TINYBIRD_READ_TOKEN`.
 
-## 5. Web frontend (`clients/apps/web`)
+## 5. Web frontend (`clients/apps/web`) — all env vars, no code edits
 
-- **Production domain** — `src/app/(main)/layout.tsx` still has `metadataBase` and
-  `alternates.canonical` set to `https://polar.sh/`. Point these at your real domain
-  (they were left as-is rather than guessed).
-- **OG/social image** — the Polar-branded OG image was removed. Add an Outception
-  social-preview image (static asset or the existing `/api/og` route) and reference it
-  in the same metadata block.
-- `NEXT_PUBLIC_API_URL` / server URL env → this deployment's backend.
+| Env var | Notes |
+| --- | --- |
+| `NEXT_PUBLIC_FRONTEND_BASE_URL` | Your web domain. Now **drives `metadataBase` + canonical** automatically (no longer hardcoded). |
+| `NEXT_PUBLIC_API_URL` | This deployment's backend. |
+| `NEXT_PUBLIC_ENVIRONMENT` | `production` / `sandbox`. |
 
-## 6. Mobile app (`clients/apps/app`)
+Only remaining manual item: **OG/social image** — the Polar-branded image was removed.
+Add an Outception social-preview image (a static asset, or reference the existing
+`/api/og` route) in the metadata block of `src/app/(main)/layout.tsx`.
 
-- `auth/oauthConfig.ts` currently points the OAuth flow at **production `polar.sh`**.
-  Repoint `discovery` (authorize/token/register/revoke endpoints) and `CLIENT_ID` at
-  **this deployment's backend** before mobile auth will work.
-- Add `promotions:read` and `promotions:write` to the requested `scopes` array — the
-  backend now gates the paid promotion endpoints on those scopes (`promotions:write`
-  for create/preferences). The OAuth client registered on the backend must also allow
-  those scopes.
+## 6. Mobile app (`clients/apps/app`) — all env vars, no code edits
+
+`auth/oauthConfig.ts` is now fully env-driven (defaults to the local dev backend, and
+already requests `promotions:read`/`promotions:write`). Set:
+
+| Env var | Notes |
+| --- | --- |
+| `EXPO_PUBLIC_POLAR_SERVER_URL` | API base, e.g. `https://api.yourdomain`. |
+| `EXPO_PUBLIC_POLAR_WEB_URL` | Web base, e.g. `https://app.yourdomain`. |
+| `EXPO_PUBLIC_OAUTH_CLIENT_ID` | A **public** OAuth client registered on your backend (`<web>/dashboard/account/developer`), redirect URI `polar://oauth/callback`, granting the scopes listed in `oauthConfig.ts`. |
+
+The OAuth client you register must allow `promotions:read`/`promotions:write` (the
+backend gates the paid promotion endpoints on them).
 
 ## 7. Verify before shipping
 
