@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Wordmark } from '../Brand/Wordmark'
+import LogoType from '../Brand/logos/LogoType'
 
 export default function InternalServerError({ digest }: { digest?: string }) {
   return (
@@ -26,7 +26,7 @@ export default function InternalServerError({ digest }: { digest?: string }) {
           </Link>
         </li>
       </ul>
-      <Wordmark className="text-black dark:text-white" />
+      <LogoType className="h-5 text-black dark:text-white" />
       {digest && (
         <pre className="dark:text-polar-600 font-mono text-xs whitespace-break-spaces text-gray-400">
           Debugging information: {digest}

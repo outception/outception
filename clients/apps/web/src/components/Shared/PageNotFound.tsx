@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Wordmark } from '../Brand/Wordmark'
+import LogoType from '../Brand/logos/LogoType'
 
 const PageNotFound = () => {
   return (
@@ -26,7 +26,7 @@ const PageNotFound = () => {
           </Link>
         </li>
       </ul>
-      <Wordmark className="text-black dark:text-white" />
+      <LogoType className="h-5 text-black dark:text-white" />
     </div>
   )
 }

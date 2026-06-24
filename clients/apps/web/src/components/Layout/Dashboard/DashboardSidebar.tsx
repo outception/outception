@@ -27,7 +27,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
-import { Wordmark } from '@/components/Brand/Wordmark'
+import LogoIcon from '@/components/Brand/logos/LogoIcon'
 import {
   AccountNavigation,
   OrganizationNavigation,
@@ -74,7 +74,7 @@ export const DashboardSidebar = ({
             organization ? `/dashboard/${organization.slug}` : '/dashboard'
           }
         >
-          <Wordmark size={32} className="text-black dark:text-white" />
+          <LogoIcon size={32} className="text-black dark:text-white" />
         </Link>
         <motion.div
           key={isCollapsed ? 'header-collapsed' : 'header-expanded'}

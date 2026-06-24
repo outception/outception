@@ -1,4 +1,4 @@
-import { Wordmark } from '@/components/Brand/Wordmark'
+import LogoType from '@/components/Brand/logos/LogoType'
 import { CONFIG } from '@/utils/config'
 import { getAuthenticatedUser } from '@/utils/user'
 import { Button } from '@polar-sh/orbit'
@@ -28,7 +28,7 @@ export default async function Page(props: {
         <ShadowBox className="flex w-full max-w-7xl flex-col items-center gap-12 md:px-32 md:py-24">
           <div className="flex w-full flex-col items-center gap-y-6 md:max-w-md">
             <div className="flex flex-col items-center gap-4 text-center">
-              <Wordmark className="mb-6 text-black dark:text-white" />
+              <LogoType className="mb-6 h-10 text-black dark:text-white" />
 
               <h2 className="text-2xl text-pretty text-black dark:text-white">
                 Log in to confirm your email change
@@ -67,7 +67,7 @@ export default async function Page(props: {
       <ShadowBox className="flex w-full max-w-7xl flex-col items-center gap-12 md:px-32 md:py-24">
         <div className="flex w-full flex-col items-center gap-y-6 md:max-w-sm">
           <div className="flex flex-col items-center gap-4 text-center">
-            <Wordmark className="mb-6 text-black dark:text-white" />
+            <LogoType className="mb-6 h-10 text-black dark:text-white" />
 
             <h2 className="text-2xl text-black dark:text-white">
               Confirm your new email
