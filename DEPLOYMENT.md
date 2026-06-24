@@ -35,13 +35,14 @@ Pricing/duration knobs (optional): `POLAR_PROMOTION_PRICE_CENTS` (default 1000),
 `POLAR_PROMOTION_BLOCK_MINUTES` (default 10), `POLAR_PROMOTION_IMPRESSION_DEDUP_SECONDS`
 (default 600).
 
-> ⚠️ **Underpayment check needs verification.** The order webhook refuses to activate a
-> promotion that paid less than `promotion.amount_cents`, reading the amount from the
-> order's `total_amount` / `amount` / `subtotal_amount` / `net_amount` field (first
-> present). If your real polar.sh `order.*` payload uses a different field name, the
-> check fails closed (logs `billing.promotion.no_amount` and refuses a valid payment).
-> **Send a sample `order.paid` webhook body** and the exact field can be pinned.
-> See `server/polar/billing/service.py::_extract_paid_amount`.
+> ✅ **Underpayment check — confirmed against polar.sh's Order shape.** The order webhook
+> refuses to activate a promotion that paid less than `promotion.amount_cents`. polar.sh's
+> Order carries `subtotal_amount` / `discount_amount` / `tax_amount` / `total_amount`
+> (the gross charged) / `net_amount` (after Polar's fee). The check reads `total_amount`
+> first (`server/polar/billing/service.py::_extract_paid_amount`), so it compares against
+> the gross the customer paid and won't false-reject because the merchant nets less after
+> fees — covered by `tests/billing/test_endpoints.py::...real_polar_order_shape...`. No
+> action needed; verify against a live delivery only if you want belt-and-suspenders.
 
 ## 3. Email — transactional sender (`server/.env`)
 

@@ -161,6 +161,52 @@ class TestWebhook:
         assert refreshed is not None
         assert refreshed.status == PromotionStatus.PENDING_PAYMENT
 
+    async def test_real_polar_order_shape_uses_gross_total_amount(
+        self,
+        client: AsyncClient,
+        session: AsyncSession,
+        user: User,
+        mocker: MockerFixture,
+    ) -> None:
+        # A real polar.sh order carries subtotal/tax/total/net. The customer
+        # paid `total_amount` (gross); `net_amount` is lower because Polar's fee
+        # is deducted. The check must accept on the gross total, not refuse just
+        # because the merchant nets less than the slot price after fees.
+        mocker.patch.object(settings, "PAYMENT_GATEWAY_WEBHOOK_SECRET", WEBHOOK_SECRET)
+        promotion = await _make_pending(session, user)
+        price = promotion.amount_cents
+        payload = {
+            "type": "order.paid",
+            "data": {
+                "id": "order_real_shape",
+                "status": "paid",
+                "currency": "usd",
+                "subtotal_amount": price,
+                "discount_amount": 0,
+                "tax_amount": 0,
+                "total_amount": price,  # what the customer was charged
+                "net_amount": price - 50,  # after Polar's fee — intentionally < price
+                "metadata": {
+                    "kind": "promotion_purchase",
+                    "user_id": str(user.id),
+                    "promotion_id": str(promotion.id),
+                },
+            },
+        }
+        body, headers = _signed_headers(payload)
+
+        response = await client.post(
+            "/v1/billing/webhook", content=body, headers=headers
+        )
+        assert response.status_code == 202
+
+        repo = PromotionRepository.from_session(session)
+        refreshed = await repo.get_by_id(promotion.id)
+        assert refreshed is not None
+        # Activated despite net_amount < price — the gross total covered the slot.
+        assert refreshed.status == PromotionStatus.ACTIVE
+        assert refreshed.payment_ref == "order:order_real_shape"
+
     async def test_ignores_non_promotion_order(
         self,
         client: AsyncClient,
