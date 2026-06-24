@@ -184,16 +184,23 @@ export async function proxy(request: NextRequest) {
   const { id: distinctId, isNew: isNewDistinctId } =
     getOrCreateDistinctId(request)
 
-  const headers: Record<string, string> = {
-    'x-polar-distinct-id': distinctId,
-  }
+  // Build the downstream *request* headers (what Server Components read via
+  // `headers()`). Strip any client-supplied x-polar-* first so a forged
+  // `x-polar-user` header can't impersonate a user, then set the values we
+  // derived from the backend-validated session. Using `request.headers` (not
+  // response headers) is what actually forwards these to Server Components.
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.delete('x-polar-user')
+  requestHeaders.delete('x-polar-distinct-id')
+  requestHeaders.set('x-polar-distinct-id', distinctId)
   if (user) {
-    headers['x-polar-user'] = Buffer.from(JSON.stringify(user)).toString(
-      'base64',
+    requestHeaders.set(
+      'x-polar-user',
+      Buffer.from(JSON.stringify(user)).toString('base64'),
     )
   }
 
-  const response = NextResponse.next({ headers })
+  const response = NextResponse.next({ request: { headers: requestHeaders } })
 
   if (isNewDistinctId) {
     response.cookies.set(DISTINCT_ID_COOKIE, distinctId, {

@@ -212,7 +212,7 @@ describe('middleware function', () => {
     expect(response.headers.get('location')).toContain('return_to=%2Fdashboard')
   })
 
-  it('should allow authenticated users to access protected routes', async () => {
+  it('should forward the authenticated user to server components', async () => {
     const mockUser = { id: '123', email: 'test@example.com' }
     createServerSideAPI.mockResolvedValue({
       GET: vi.fn().mockResolvedValue({
@@ -227,7 +227,9 @@ describe('middleware function', () => {
     const response = await proxy(request)
 
     expect(response.status).toBe(200)
-    expect(response.headers.get('x-polar-user')).toBe(
+    // NextResponse.next({ request: { headers } }) communicates request-header
+    // overrides to the server via `x-middleware-request-*`.
+    expect(response.headers.get('x-middleware-request-x-polar-user')).toBe(
       Buffer.from(JSON.stringify(mockUser)).toString('base64'),
     )
   })
@@ -238,7 +240,25 @@ describe('middleware function', () => {
     const response = await proxy(request)
 
     expect(response.status).toBe(200)
-    expect(response.headers.get('x-polar-user')).toBeNull()
+    expect(
+      response.headers.get('x-middleware-request-x-polar-user'),
+    ).toBeNull()
+  })
+
+  it('should strip a forged x-polar-user header from an unauthenticated request', async () => {
+    const forged = Buffer.from(
+      JSON.stringify({ id: 'attacker', email: 'evil@example.com' }),
+    ).toString('base64')
+    const request = new NextRequest('https://example.com/', {
+      headers: { 'x-polar-user': forged },
+    })
+
+    const response = await proxy(request)
+
+    // The forged value must not survive to the server component.
+    expect(
+      response.headers.get('x-middleware-request-x-polar-user'),
+    ).toBeNull()
   })
 
   it('should redirect to login with query params preserved', async () => {
