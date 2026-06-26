@@ -268,7 +268,7 @@ class Settings(BaseSettings):
     # Stripe webhook secrets
     STRIPE_WEBHOOK_SECRET: str = ""
     STRIPE_CONNECT_WEBHOOK_SECRET: str = ""
-    STRIPE_STATEMENT_DESCRIPTOR: str = "POLAR"
+    STRIPE_STATEMENT_DESCRIPTOR: str = "OUTCEPTION"
 
     # Numeral
     NUMERAL_API_KEY: str | None = None
@@ -407,7 +407,7 @@ class Settings(BaseSettings):
         "[support@outception.com](mailto:support@outception.com)"
     )
     INVOICES_VAT_NUMBERS: dict[str, str] = {}
-    PAYOUT_INVOICES_PREFIX: str = "POLAR-"
+    PAYOUT_INVOICES_PREFIX: str = "OUTCEPTION-"
 
     # Application behaviours
     API_PAGINATION_MAX_LIMIT: int = 100
