@@ -1,13 +1,13 @@
 ---
 name: add-locale
-description: Add a new translation locale to the Polar frontend. Walks through registering the locale, generating translations, wiring the generated file into the i18n package, and updating the public-facing docs. Expects the target locale's ISO 639-1 alpha-2 code (optionally with a BCP-47 region suffix, e.g. `pt-PT`).
+description: Add a new translation locale to the Outception frontend. Walks through registering the locale, generating translations, wiring the generated file into the i18n package, and updating the public-facing docs. Expects the target locale's ISO 639-1 alpha-2 code (optionally with a BCP-47 region suffix, e.g. `pt-PT`).
 user-invocable: true
 allowed-tools: Read Edit Write Bash Grep Glob
 ---
 
 # Add a new translation locale
 
-This skill adds a new locale to the Polar frontend i18n package (`clients/packages/i18n`) and the corresponding public docs. Each step produces its own commit so the PR reads cleanly.
+This skill adds a new locale to the Outception frontend i18n package (`clients/packages/i18n`) and the corresponding public docs. Each step produces its own commit so the PR reads cleanly.
 
 Ask the user for the locale if they haven't provided one. You need:
 

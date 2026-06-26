@@ -24,10 +24,10 @@ Email login codes are printed in the api container logs as a banner:
 Grab the latest one:
 
 ```bash
-docker logs --since 30s polar-app-<N>-api-1 2>&1 | grep -A1 "LOGIN CODE"
+docker logs --since 30s outception-app-<N>-api-1 2>&1 | grep -A1 "LOGIN CODE"
 ```
 
-Use `admin@polar.sh` as the default test account — the seed creates it with
+Use `admin@outception.com` as the default test account — the seed creates it with
 an approved org (`admin-org`) that already has a payout account, identity
 verification, and at least one product. That lets you go straight to
 checkout testing without onboarding work.
@@ -41,8 +41,8 @@ dev stripe --listen --port <api-port>
 ```
 
 `dev stripe --listen` handles the full setup in one step: installs the
-Stripe CLI if missing, logs in, writes `POLAR_STRIPE_SECRET_KEY`,
-`POLAR_STRIPE_PUBLISHABLE_KEY`, and `POLAR_STRIPE_WEBHOOK_SECRET` into the
+Stripe CLI if missing, logs in, writes `OUTCEPTION_STRIPE_SECRET_KEY`,
+`OUTCEPTION_STRIPE_PUBLISHABLE_KEY`, and `OUTCEPTION_STRIPE_WEBHOOK_SECRET` into the
 central secrets file, runs `dev/setup-environment` to propagate them, and
 then starts `stripe listen` forwarding to both the regular webhook endpoint
 and the Stripe Connect endpoint (`/v1/integrations/stripe/webhook` and
@@ -66,7 +66,7 @@ common gotchas:
 - `example.com` fails with "domain does not accept email"
 
 Use a real domain with a `+tag` to keep tests isolated:
-`yourname+test-foo@polar.sh`.
+`yourname+test-foo@outception.com`.
 
 ## Triggering Dramatiq Actors Manually
 
@@ -75,11 +75,11 @@ that normally fire on a schedule. To force one immediately, enqueue the
 actor from inside the api container:
 
 ```bash
-docker exec polar-app-<N>-api-1 sh -c 'cd /app/server && uv run python -c "
+docker exec outception-app-<N>-api-1 sh -c 'cd /app/server && uv run python -c "
 import asyncio, dramatiq
-import polar.tasks  # registers every actor as a side-effect of import
+import outception.tasks  # registers every actor as a side-effect of import
 from outception.worker import JobQueueManager, enqueue_job
-from polar.redis import create_redis
+from outception.redis import create_redis
 
 async def main():
     redis = create_redis(\"worker\")
@@ -92,11 +92,11 @@ asyncio.run(main())
 
 Two non-obvious bits:
 
-- `import polar.tasks` is required. Without it, the broker has no registered
+- `import outception.tasks` is required. Without it, the broker has no registered
   actors and `enqueue_job` raises `dramatiq.errors.ActorNotFound`.
 - The `JobQueueManager.open(...)` context manager is what flushes the queued
   message to Redis. Without it, `enqueue_job` raises `LookupError` on the
-  `polar.job_queue_manager` context var.
+  `outception.job_queue_manager` context var.
 
 ### Useful actors
 
@@ -115,6 +115,6 @@ A direct DB cross-check is still cheap and worth running when investigating
 balance/transaction issues:
 
 ```bash
-dev docker exec db psql -U polar -d polar_dev_<N> -c \
+dev docker exec db psql -U outception -d outception_dev_<N> -c \
   "SELECT total_balance FROM organizations WHERE slug='admin-org';"
 ```

@@ -16,7 +16,7 @@ If not provided in the invocation prompt, you should ask the user for the follow
 - Candidate's name
 - A prompt describing the PR that the LLM agent should draft. This should be a clear and concise description of the task that the candidate will be asked to review.
 
-## Step 1: fork the Polar repository to a private GitHub repository dedicated to the candidate
+## Step 1: fork the Outception repository to a private GitHub repository dedicated to the candidate
 
 Run the script provided in this skill `.claude/skills/interview-task/scripts/fork-repository` with the candidate's name as an argument. This will create a private repository for the candidate.
 

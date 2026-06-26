@@ -58,7 +58,7 @@ Traceback (most recent call last):
 
 **Task started:**
 ```
-[dramatiq.MainProcess] Task started: polar.tasks.example:process
+[dramatiq.MainProcess] Task started: outception.tasks.example:process
 ```
 
 **Task completed:**

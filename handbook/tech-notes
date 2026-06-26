@@ -115,10 +115,10 @@ generate_listing_content() {
     # Header
     output_content+="---
 title: \"Tech Notes\"
-description: \"Technical insights, debugging stories, and engineering learnings from the Polar team\"
+description: \"Technical insights, debugging stories, and engineering learnings from the Outception team\"
 ---
 
-Welcome to Polar Tech Notes! Here you'll find technical deep-dives, debugging stories, and insights from our engineering team.
+Welcome to Outception Tech Notes! Here you'll find technical deep-dives, debugging stories, and insights from our engineering team.
 
 ## Latest Post
 
@@ -198,7 +198,7 @@ Our tech notes document:
 - **Technical Investigations**: Deep-dives into complex problems and their solutions
 - **Debugging Stories**: Real-world debugging scenarios and methodologies
 - **Performance Optimizations**: How we improve system performance and scalability
-- **Lessons Learned**: Key insights from building and maintaining Polar
+- **Lessons Learned**: Key insights from building and maintaining Outception
 
 Want to contribute? Check out our [engineering guidelines](/engineering/introduction) and reach out to the engineering team."
 

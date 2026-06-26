@@ -18,7 +18,7 @@ Comprehensive code review with 3 specialized agents running in parallel.
 description: "Security review"
 subagent_type: "feature-dev:code-reviewer"
 prompt: |
-  SECURITY REVIEW for Polar codebase.
+  SECURITY REVIEW for Outception codebase.
 
   Review these changed files for security vulnerabilities:
   [INSERT CHANGED FILES LIST]
@@ -64,9 +64,9 @@ prompt: |
 description: "Conventions review"
 subagent_type: "feature-dev:code-reviewer"
 prompt: |
-  CONVENTIONS REVIEW for Polar codebase.
+  CONVENTIONS REVIEW for Outception codebase.
 
-  Review these changed files against Polar conventions:
+  Review these changed files against Outception conventions:
   [INSERT CHANGED FILES LIST]
 
   **Backend Conventions (server/outception/):**
@@ -94,7 +94,7 @@ prompt: |
   - PATCH returns 200 OK
   - DELETE returns 204 No Content
   - List endpoints return ListResource with pagination
-  - Use PolarRequestValidationError for 422 errors
+  - Use OutceptionRequestValidationError for 422 errors
 
   Return findings with file:line references.
 ```
@@ -105,7 +105,7 @@ prompt: |
 description: "Simplification review"
 subagent_type: "feature-dev:code-reviewer"
 prompt: |
-  SIMPLIFICATION REVIEW for Polar codebase.
+  SIMPLIFICATION REVIEW for Outception codebase.
 
   Review these changed files for opportunities to simplify:
   [INSERT CHANGED FILES LIST]

@@ -1,6 +1,6 @@
-# Polar Billing System
+# Outception Billing System
 
-Comprehensive guide to Polar's billing infrastructure, covering entities, flows, Stripe integration, and benefit provisioning.
+Comprehensive guide to Outception's billing infrastructure, covering entities, flows, Stripe integration, and benefit provisioning.
 
 ## Quick Reference
 
@@ -78,7 +78,7 @@ Represents a billing event (one-time purchase or subscription cycle).
 | `discount_amount` | int | Discount applied |
 | `tax_amount` | int | Tax collected |
 | `applied_balance_amount` | int | Account balance applied |
-| `platform_fee_amount` | int | Polar's fee |
+| `platform_fee_amount` | int | Outception's fee |
 | `refunded_amount` | int | Already refunded |
 | `next_payment_attempt_at` | datetime | Dunning retry time |
 

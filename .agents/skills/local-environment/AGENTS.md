@@ -1,6 +1,6 @@
 # Local Environment Management - Complete Guide
 
-This document provides comprehensive instructions for Claude to manage the Polar local development environment using Docker.
+This document provides comprehensive instructions for Claude to manage the Outception local development environment using Docker.
 
 ## Instance Auto-Detection
 
@@ -16,7 +16,7 @@ You can override with `-i N` if needed, but just running `dev docker up -d` will
 
 ## Overview
 
-The Polar development environment runs as a Docker Compose stack with:
+The Outception development environment runs as a Docker Compose stack with:
 
 - **Backend**: Python/FastAPI API server + background worker
 - **Frontend**: Next.js web application
@@ -60,7 +60,7 @@ dev docker up -d api web       # API and web in background
 dev docker up --monitoring -d
 ```
 
-Includes Prometheus (port 9090) and Grafana (port 3001, login: admin/polar).
+Includes Prometheus (port 9090) and Grafana (port 3001, login: admin/outception).
 
 ### Force Rebuild Images
 
@@ -157,7 +157,7 @@ Instances allow running multiple isolated development environments simultaneousl
 - Uses different ports (offset by instance × 100)
 - Has its own database and storage
 - Runs in separate Docker containers
-- Uses project name `polar-dev-{instance}`
+- Uses project name `outception-dev-{instance}`
 
 ### Port Mapping Formula
 
@@ -241,7 +241,7 @@ pnpm lint                     # Run linter
 **DB Container:**
 
 ```bash
-psql -U polar -d polar        # Connect to database
+psql -U outception -d outception        # Connect to database
 ```
 
 ---
@@ -309,7 +309,7 @@ dev docker up -b -d
 
 - Primary database
 - Port: 5432 (default)
-- Credentials: polar/polar
+- Credentials: outception/outception
 - Data persisted in `postgres_data` volume
 - Health check: `pg_isready`
 
@@ -324,9 +324,9 @@ dev docker up -b -d
 - File storage (images, downloads, etc.)
 - API Port: 9000
 - Console Port: 9001
-- Credentials: polar/polarpolar
+- Credentials: outception/outceptionoutception
 - Data persisted in `minio_data` volume
-- Buckets: `polar-s3`, `polar-s3-public`
+- Buckets: `outception-s3`, `outception-s3-public`
 
 ### Application Services
 
@@ -366,7 +366,7 @@ dev docker up -b -d
 **grafana (Dashboards)**
 
 - Port: 3001
-- Credentials: polar/polar
+- Credentials: outception/outception
 - Pre-configured dashboards
 - Enable with: `--monitoring`
 
@@ -384,18 +384,18 @@ dev docker up -b -d
 
 ```bash
 # Database
-POLAR_POSTGRES_USER=polar
-POLAR_POSTGRES_PWD=polar
-POLAR_POSTGRES_DATABASE=polar
+OUTCEPTION_POSTGRES_USER=outception
+OUTCEPTION_POSTGRES_PWD=outception
+OUTCEPTION_POSTGRES_DATABASE=outception
 
 # MinIO
-POLAR_MINIO_USER=polar
-POLAR_MINIO_PWD=polarpolar
+OUTCEPTION_MINIO_USER=outception
+OUTCEPTION_MINIO_PWD=outceptionoutception
 
 # S3
-POLAR_AWS_ACCESS_KEY_ID=polar-development
-POLAR_AWS_SECRET_ACCESS_KEY=polar123456789
-POLAR_S3_FILES_BUCKET_NAME=polar-s3
+OUTCEPTION_AWS_ACCESS_KEY_ID=outception-development
+OUTCEPTION_AWS_SECRET_ACCESS_KEY=outception123456789
+OUTCEPTION_S3_FILES_BUCKET_NAME=outception-s3
 ```
 
 ### Accessing Services Internally
@@ -499,8 +499,8 @@ Services use Docker network hostnames:
     ```
 
 2. Access MinIO console: http://localhost:9001
-    - Username: polar
-    - Password: polarpolar
+    - Username: outception
+    - Password: outceptionoutception
 
 3. Verify buckets exist in console
 
@@ -590,7 +590,7 @@ exit
 
 # Direct SQL access
 dev docker shell db
-psql -U polar -d polar
+psql -U outception -d outception
 ```
 
 ### Debugging API Issues
@@ -600,7 +600,7 @@ psql -U polar -d polar
 dev docker logs api
 
 # Enable SQL debugging (in server/.env)
-# POLAR_SQLALCHEMY_DEBUG=1
+# OUTCEPTION_SQLALCHEMY_DEBUG=1
 
 # Restart API
 dev docker restart api

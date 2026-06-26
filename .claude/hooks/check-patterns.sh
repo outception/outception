@@ -1,5 +1,5 @@
 #!/bin/bash
-# Polar pattern enforcement hook
+# Outception pattern enforcement hook
 # Runs before Edit/Write tool calls to enforce codebase conventions
 
 # Read JSON from stdin

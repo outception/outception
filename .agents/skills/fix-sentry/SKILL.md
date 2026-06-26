@@ -1,17 +1,17 @@
 ---
 name: fix-sentry
-description: Analyze and fix issues reported by Sentry in the Polar codebase.
+description: Analyze and fix issues reported by Sentry in the Outception codebase.
 user-invocable: true
 allowed-tools: Bash(gh:*) Bash(git:*) logfire_polar* sentry_polar* github*
 ---
 
-You're responsible for analyzing and fixing issues reported by Sentry in the Polar codebase. This involves investigating the Sentry reports, identifying the root causes of the issues, and implementing fixes to resolve them.
+You're responsible for analyzing and fixing issues reported by Sentry in the Outception codebase. This involves investigating the Sentry reports, identifying the root causes of the issues, and implementing fixes to resolve them.
 
 ## Input
 
 If not provided in the invocation prompt, you should ask the user for the a Sentry issue ID or a link to the Sentry issue. This will allow you to access the details of the issue and begin your analysis.
 
-The Sentry organization ID of Polar is `4505046560538624` and its slug is `polar-sh`.
+The Sentry organization ID of Outception is `4505046560538624` and its slug is `outception-sh`.
 
 ## Step 1: Analyze the Sentry issue
 

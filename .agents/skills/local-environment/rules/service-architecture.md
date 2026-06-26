@@ -12,7 +12,7 @@ tags: architecture, services, infrastructure
 
 - **Purpose:** Primary database
 - **Port:** 5432
-- **Credentials:** polar/polar
+- **Credentials:** outception/outception
 - **Volume:** postgres_data
 - **Health check:** pg_isready (2s interval)
 
@@ -26,9 +26,9 @@ tags: architecture, services, infrastructure
 
 - **Purpose:** File storage
 - **Ports:** 9000 (API), 9001 (Console)
-- **Credentials:** polar/polarpolar
+- **Credentials:** outception/outceptionoutception
 - **Volume:** minio_data
-- **Buckets:** polar-s3, polar-s3-public
+- **Buckets:** outception-s3, outception-s3-public
 
 ## Application Services
 
@@ -73,7 +73,7 @@ tags: architecture, services, infrastructure
 
 - **Purpose:** Dashboards
 - **Port:** 3001
-- **Credentials:** polar/polar
+- **Credentials:** outception/outception
 - **Enable:** --monitoring flag
 
 ## Container Dependencies

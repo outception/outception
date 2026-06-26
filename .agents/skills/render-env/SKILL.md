@@ -21,11 +21,11 @@ If either arg is missing, ask the user before doing anything. Also ask:
 - **Sensitive?** Default to `true` (almost everything in these files is sensitive). Only set `false` for non-secret config strings (cf. `slo_report_slack_channel`, `customer_portal_url_overrides`).
 - **Which environments?** Default to all three (`production`, `sandbox`, `test`). The user may want to skip one — `test` in particular often omits variables that aren't exercised there.
 
-Do **not** ask about `lifecycle { ignore_changes = [value] }`. New variables here have no `value` baked into the Terraform code, so there's nothing for Terraform to overwrite — TFC just holds whatever's typed into the UI, and `ignore_changes` would be a no-op. The handful of existing blocks that include it (e.g. `polar_organization_id`, `customer_portal_url_overrides`) seed a default `value` in code *and* want UI overrides to stick; that's a different shape from a fresh secret and the user will tell you up-front if they want it.
+Do **not** ask about `lifecycle { ignore_changes = [value] }`. New variables here have no `value` baked into the Terraform code, so there's nothing for Terraform to overwrite — TFC just holds whatever's typed into the UI, and `ignore_changes` would be a no-op. The handful of existing blocks that include it (e.g. `outception_organization_id`, `customer_portal_url_overrides`) seed a default `value` in code *and* want UI overrides to stick; that's a different shape from a fresh secret and the user will tell you up-front if they want it.
 
 ## Naming convention
 
-Follow the **modern bare-key** pattern that recent additions use (e.g. `polar_access_token`, `tinybird_api_token`, `customer_portal_url_overrides`):
+Follow the **modern bare-key** pattern that recent additions use (e.g. `outception_access_token`, `tinybird_api_token`, `customer_portal_url_overrides`):
 
 - The TFC `key` is the bare name: `key = "${name}"` — **no** `_production` / `_sandbox` / `_test` suffix on the key. Each variable set is per-workspace so the key doesn't need to be globally unique.
 - The `tfe_variable` resource label **does** get the env suffix: `resource "tfe_variable" "${name}_${env}"`.
@@ -86,12 +86,12 @@ Report to the user:
      - `backend_secrets` — sensitive backend env vars (API keys, tokens, signing secrets).
      - Themed `render_env_group` blocks (`stripe`, `github`, `logfire`, `tinybird`, `aws_s3`, `apple`, `prometheus`, `slo_report`, `google`, `openai`, etc.) each have their own object — use the matching one when the var belongs to a clear bucket.
      - Use `optional(string, "<default>")` if you want a module-level default; otherwise plain `string`.
-  2. **Wire the field into the matching `render_env_group` block in `terraform/modules/render_service/main.tf`** as `POLAR_${NAME_UPPER} = { value = var.<object>.<field> }`. Two backend groups exist:
+  2. **Wire the field into the matching `render_env_group` block in `terraform/modules/render_service/main.tf`** as `OUTCEPTION_${NAME_UPPER} = { value = var.<object>.<field> }`. Two backend groups exist:
      - `render_env_group "backend"` — applied to **every** environment.
-     - `render_env_group "backend_production"` — production-only values (e.g. `POLAR_BACKOFFICE_HOST`, `POLAR_PLAIN_TOKEN`). Put a var here when sandbox/test should not see it.
+     - `render_env_group "backend_production"` — production-only values (e.g. `OUTCEPTION_BACKOFFICE_HOST`, `OUTCEPTION_PLAIN_TOKEN`). Put a var here when sandbox/test should not see it.
   3. **Pass the value in from each `terraform/${env}/render.tf`** module call, e.g. `backend_secrets = { ... ${field} = var.${name} ... }`. Sandbox and test won't have this line if the var is production-only.
   4. **Set the actual value in TFC** under the matching variable set (Production / Sandbox / Test).
-  5. **If this is a `POLAR_*` env var, also add the field to the `Settings` class in `server/outception/config.py`** (Pydantic `BaseSettings` with `env_prefix="polar_"`; the env var name is `POLAR_<FIELD_NAME>`).
+  5. **If this is a `OUTCEPTION_*` env var, also add the field to the `Settings` class in `server/outception/config.py`** (Pydantic `BaseSettings` with `env_prefix="outception_"`; the env var name is `OUTCEPTION_<FIELD_NAME>`).
 
 ### Hardcoded string vs `tfe_variable`
 

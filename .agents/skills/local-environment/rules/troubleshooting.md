@@ -44,12 +44,12 @@ dev docker logs db
 
 **Verify database is healthy:**
 ```bash
-# Each instance has its own database: polar_dev_<instance-number>
-dev docker exec db psql -U polar -d polar_dev_<N> -c "SELECT 1"
+# Each instance has its own database: outception_dev_<instance-number>
+dev docker exec db psql -U outception -d outception_dev_<N> -c "SELECT 1"
 ```
 
-Shared infra (db/redis/minio) is on the `polar-shared` Docker network with no
-host port — reach it through `dev docker exec` or `docker exec polar-shared-<svc>-1`.
+Shared infra (db/redis/minio) is on the `outception-shared` Docker network with no
+host port — reach it through `dev docker exec` or `docker exec outception-shared-<svc>-1`.
 
 ## Hot-Reload Not Working
 
@@ -89,7 +89,7 @@ docker system prune
 
 On a fresh worktree the api container (building the email renderer) and the
 web container (installing frontend deps) can both run `pnpm install` at the
-same time and OOM. Symptom in `docker logs polar-app-<N>-api-1`:
+same time and OOM. Symptom in `docker logs outception-app-<N>-api-1`:
 
 ```
 ERR_PNPM_ENOMEM  ENOMEM: not enough memory, copyfile ...
@@ -100,7 +100,7 @@ ERR_PNPM_ENOMEM  ENOMEM: not enough memory, copyfile ...
 **Fix — restart the failed containers, pnpm resumes from its cache:**
 
 ```bash
-docker start polar-app-<N>-api-1 polar-app-<N>-web-1
+docker start outception-app-<N>-api-1 outception-app-<N>-web-1
 ```
 
 Wait for `/healthz` on the API port (printed by `dev docker up`) to come up
@@ -117,8 +117,8 @@ dev docker logs minio-setup
 
 **Access MinIO console:**
 - URL: http://localhost:9001
-- User: polar
-- Password: polarpolar
+- User: outception
+- Password: outceptionoutception
 
 **Verify buckets exist in console UI**
 
@@ -160,7 +160,7 @@ uv run alembic downgrade -1
 
 ## Stale Connections After Shared DB Recycle
 
-If `polar-shared-db-1` was recreated (e.g. you ran `dev docker down` on the
+If `outception-shared-db-1` was recreated (e.g. you ran `dev docker down` on the
 shared stack, or it was replaced by an unrelated `docker compose` run), the
 running api/worker still hold connections to the old container and surface
 errors like:
@@ -173,13 +173,13 @@ sqlalchemy.dialects.postgresql.asyncpg.InterfaceError
 **Fix — restart api and worker so the pool reconnects:**
 
 ```bash
-docker restart polar-app-<N>-api-1 polar-app-<N>-worker-1
+docker restart outception-app-<N>-api-1 outception-app-<N>-worker-1
 ```
 
 ## Don't Mix `dev docker` and Bare `docker compose`
 
-`dev docker` runs the shared infra under the project name `polar-shared` on
-the `polar-shared` network. Running `cd server && docker compose up` from the
+`dev docker` runs the shared infra under the project name `outception-shared` on
+the `outception-shared` network. Running `cd server && docker compose up` from the
 same checkout creates a parallel stack on `server_default` with `server-`
 prefixed containers. They don't conflict by name, but: they double the
 memory footprint, `docker ps` shows two of everything, and a later

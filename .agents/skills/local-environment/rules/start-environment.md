@@ -6,7 +6,7 @@ tags: docker, start, development
 
 # Starting the Local Environment
 
-Use `dev docker up` to start the Polar development environment.
+Use `dev docker up` to start the Outception development environment.
 
 ## Basic Commands
 

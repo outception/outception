@@ -1,13 +1,13 @@
 ---
 name: handbook-backend-development
-description: A skill to add a new entry in the section "Backend Development" of the Polar Handbook. Those entries are there to explain concepts, tooling and best practices related to backend development, and are meant to be read by Polar developers.
+description: A skill to add a new entry in the section "Backend Development" of the Outception Handbook. Those entries are there to explain concepts, tooling and best practices related to backend development, and are meant to be read by Outception developers.
 user-invocable: true
 allowed-tools: Read Grep Write
 ---
 
 # Handbook - Backend Development
 
-This skill explains the process to add a new entry in the section "Backend Development" of the Polar Handbook. Those entries are there to explain concepts, tooling and best practices related to backend development, and are meant to be read by Polar developers.
+This skill explains the process to add a new entry in the section "Backend Development" of the Outception Handbook. Those entries are there to explain concepts, tooling and best practices related to backend development, and are meant to be read by Outception developers.
 
 The user should explain which concept they want to explain in the new entry, and the skill will guide them through the process of creating the file, exploring the code base to find relevant information, and writing the content of the entry.
 
@@ -42,4 +42,4 @@ To write the content of the entry, you will need to explore the code base to fin
 
 ## Step 3: Ask for feedback
 
-Once you have a draft of the entry, ask for feedback from the user. If you have any doubts about the content, ask for clarification. You can also ask for feedback on the structure and the clarity of the entry. The goal is to make sure that the entry is accurate, clear, and useful for Polar developers.
+Once you have a draft of the entry, ask for feedback from the user. If you have any doubts about the content, ask for clarification. You can also ask for feedback on the structure and the clarity of the entry. The goal is to make sure that the entry is accurate, clear, and useful for Outception developers.

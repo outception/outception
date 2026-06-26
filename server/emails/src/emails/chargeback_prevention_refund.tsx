@@ -100,7 +100,7 @@ export function ChargebackPreventionRefund({
 
 ChargebackPreventionRefund.PreviewProps = {
   email: 'merchant@example.com',
-  order_number: 'POLAR-2026-00042',
+  order_number: 'OUTCEPTION-2026-00042',
   customer_name: 'Bob Ross',
   amount: 4595,
   currency: 'usd',
