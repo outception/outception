@@ -1,11 +1,11 @@
 ---
 title: "2026-06-12"
-description: "An incident report detailing the outage of the Polar platform on June 12, 2026, its impact, root cause analysis, and actions taken to prevent future occurrences."
+description: "An incident report detailing the outage of the Outception platform on June 12, 2026, its impact, root cause analysis, and actions taken to prevent future occurrences."
 ---
 
 ## Summary
 
-On Jun 12, 2026 at 13:17 UTC, the Polar platform was down for an hour.
+On Jun 12, 2026 at 13:17 UTC, the Outception platform was down for an hour.
 
 The incident occurred following a routine security procedure of rotating the credentials to our database. We restored a Point in Time (PIT) snapshot of our database, timestamped 13:17 (UTC), losing less than a minute of data, which was fully restored and reconciled post-incident at 14:16.
 
@@ -17,7 +17,7 @@ This post-mortem explains what happened, how we recovered, and the actions we ar
 
 Between 13:17 and 14:18 (UTC):
 
-- The Polar dashboard, API, and checkout infrastructure were unavailable.
+- The Outception dashboard, API, and checkout infrastructure were unavailable.
 - Event ingestion was unavailable during part of the recovery process.
 - Webhook delivery was delayed while systems recovered.
 
@@ -32,7 +32,7 @@ _All times are in UTC._
 - _**13:16:59**: Point in Time database backup (automatically run)_
 - **13:17:44**: Terraform begins to destroy database
 - **13:17:46**: Database dropped
-- **13:17:46**: Polar fully down. **Incident starts**
+- **13:17:46**: Outception fully down. **Incident starts**
 - **13:25:00**: Status page is updated to down
 - **13:25:04**: Maintenance mode enabled
 - **13:30:12**: Database restoration from Point In Time snapshot started
@@ -40,7 +40,7 @@ _All times are in UTC._
 - **14:17:00**: All sandbox services are restarted with the new database host
 - **14:17:31**: Maintenance mode disabled
 - **14:18:00**: All production services are restarted with the new database host
-- **14:18:00**: Polar confirmed to be up but with degraded performance on metrics endpoints
+- **14:18:00**: Outception confirmed to be up but with degraded performance on metrics endpoints
 - **14:23:27**: Database read replica is enabled and begins backfilling data.
 - **14:26:00**: Status page is updated to “degraded”
 - **17:07:00**: Missing user events and orders are recreated in database

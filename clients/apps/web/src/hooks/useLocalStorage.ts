@@ -24,7 +24,7 @@ interface UseLocalStorageOptions<T> {
  * built-in `storage` event only fires in *other* tabs, so a per-tab event
  * is needed to keep subscribers in the writing tab in sync.
  */
-const CHANGED_EVENT = 'polar:local-storage-changed'
+const CHANGED_EVENT = 'outception:local-storage-changed'
 
 /**
  * Module-level cache so the snapshot returned to React stays

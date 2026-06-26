@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run Polar development environment for Conductor
+# Run Outception development environment for Conductor
 #
 # This script is called by Conductor to start the development services.
 # It uses the Docker-based development setup for isolation.

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Codemod: replace <p> and <span> with <Text /> from @polar-sh/orbit
+ * Codemod: replace <p> and <span> with <Text /> from @outception-com/orbit
  *
  * Usage:
  *   node codemods/p-span-to-text.mjs [--dry-run] [glob]
@@ -16,7 +16,7 @@
  *   <span ...>     →  <Text as="span" ...>
  *   </span>        →  </Text>
  *
- * The import { Text } from '@polar-sh/orbit' is added/updated automatically.
+ * The import { Text } from '@outception-com/orbit' is added/updated automatically.
  *
  * Skips files that already have no <p> or <span> JSX elements, and files
  * that appear to be test files or node_modules.
@@ -128,9 +128,9 @@ function transform(source, filePath) {
 }
 
 /**
- * Ensures `Text` is imported from `@polar-sh/orbit` in the given source string.
- * - If an import from `@polar-sh/orbit` already exists and includes `Text` → no-op
- * - If an import from `@polar-sh/orbit` exists without `Text` → adds `Text` to it
+ * Ensures `Text` is imported from `@outception-com/orbit` in the given source string.
+ * - If an import from `@outception-com/orbit` already exists and includes `Text` → no-op
+ * - If an import from `@outception-com/orbit` exists without `Text` → adds `Text` to it
  * - If no such import exists → prepends one after any 'use client'/'use server' directive
  */
 function ensureTextImport(source, filePath) {
@@ -148,7 +148,7 @@ function ensureTextImport(source, filePath) {
     if (
       ts.isImportDeclaration(stmt) &&
       ts.isStringLiteral(stmt.moduleSpecifier) &&
-      stmt.moduleSpecifier.text === '@polar-sh/orbit'
+      stmt.moduleSpecifier.text === '@outception-com/orbit'
     ) {
       orbitImportNode = stmt
       break
@@ -178,7 +178,7 @@ function ensureTextImport(source, filePath) {
     return source.slice(0, start) + newBindings + source.slice(end)
   }
 
-  // No @polar-sh/orbit import — add one.
+  // No @outception-com/orbit import — add one.
   // Insert after the first 'use client'/'use server' directive (if any), or at
   // the very top of the file.
   let insertPos = 0
@@ -196,7 +196,7 @@ function ensureTextImport(source, filePath) {
     }
   }
 
-  const importLine = `import { Text } from '@polar-sh/orbit'\n`
+  const importLine = `import { Text } from '@outception-com/orbit'\n`
   return source.slice(0, insertPos) + importLine + source.slice(insertPos)
 }
 

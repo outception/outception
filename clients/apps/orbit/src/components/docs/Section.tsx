@@ -1,5 +1,5 @@
-import { Box } from '@polar-sh/orbit/Box'
-import { Text } from '@polar-sh/orbit'
+import { Box } from '@outception-com/orbit/Box'
+import { Text } from '@outception-com/orbit'
 import { type ReactNode } from 'react'
 
 export function Section({

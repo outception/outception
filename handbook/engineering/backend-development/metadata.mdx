@@ -1,18 +1,18 @@
 ---
 title: "Metadata"
-description: "A shared mechanism letting users attach arbitrary key-value data to Polar models."
+description: "A shared mechanism letting users attach arbitrary key-value data to Outception models."
 ---
 
-Metadata is a shared mechanism that lets Polar users attach arbitrary key-value pairs to supported resources (customers, orders, subscriptions, products, etc.). It is entirely for the benefit of integrators — Polar itself does not use these values — and is exposed as a plain `metadata` field in every API request and response.
+Metadata is a shared mechanism that lets Outception users attach arbitrary key-value pairs to supported resources (customers, orders, subscriptions, products, etc.). It is entirely for the benefit of integrators — Outception itself does not use these values — and is exposed as a plain `metadata` field in every API request and response.
 
 ## When to use this concept
 
 Add metadata support to a model whenever:
 
 - The resource is user-facing and exposed through the public API.
-- Users are likely to need to cross-reference Polar records with their own systems (e.g. storing an internal record ID, a feature flag, or a campaign tag).
+- Users are likely to need to cross-reference Outception records with their own systems (e.g. storing an internal record ID, a feature flag, or a campaign tag).
 
-Do **not** use `user_metadata` to store Polar-internal data; use dedicated columns for that.
+Do **not** use `user_metadata` to store Outception-internal data; use dedicated columns for that.
 
 ## How to use this concept
 

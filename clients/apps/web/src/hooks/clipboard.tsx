@@ -1,5 +1,5 @@
 import type { toast as toastFunction } from '@/components/Toast/use-toast'
-import { Button } from '@polar-sh/orbit'
+import { Button } from '@outception-com/orbit'
 import { useCallback } from 'react'
 
 export const useSafeCopy = (toast: typeof toastFunction) => {

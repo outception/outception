@@ -1,5 +1,5 @@
 import ArrowDownward from '@mui/icons-material/ArrowDownward'
-import { Text } from '@polar-sh/orbit'
+import { Text } from '@outception-com/orbit'
 import { PhyllotaxisSunflower } from './PhyllotaxisSunflower'
 
 export function CoverSection() {
@@ -7,7 +7,7 @@ export function CoverSection() {
     <div className="relative flex h-screen w-full flex-col justify-between p-8 md:p-16">
       <div className="flex items-start justify-between">
         <Text as="span" variant="heading-xxs">
-          Polar Software Inc
+          Outception Software Inc
         </Text>
         <span className="font-medium">{new Date().getFullYear()}</span>
       </div>

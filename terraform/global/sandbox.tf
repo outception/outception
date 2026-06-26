@@ -2,13 +2,13 @@
 
 data "tfe_project" "sandbox" {
   name         = "sandbox"
-  organization = "polar-sh"
+  organization = "outception-com"
 }
 
 resource "tfe_variable_set" "sandbox" {
   name              = "Sandbox Settings"
   description       = "Variables specific to the sandbox environment"
-  organization      = "polar-sh"
+  organization      = "outception-com"
   parent_project_id = data.tfe_project.sandbox.id
 }
 
@@ -260,26 +260,26 @@ resource "tfe_variable" "numeral_api_key_sandbox" {
   variable_set_id = tfe_variable_set.sandbox.id
 }
 
-resource "tfe_variable" "polar_access_token_sandbox" {
-  key             = "polar_access_token"
+resource "tfe_variable" "outception_access_token_sandbox" {
+  key             = "outception_access_token"
   category        = "terraform"
-  description     = "Polar API access token"
+  description     = "Outception API access token"
   sensitive       = true
   variable_set_id = tfe_variable_set.sandbox.id
 }
 
-resource "tfe_variable" "polar_webhook_secret_sandbox" {
-  key             = "polar_webhook_secret"
+resource "tfe_variable" "outception_webhook_secret_sandbox" {
+  key             = "outception_webhook_secret"
   category        = "terraform"
-  description     = "Polar webhook secret"
+  description     = "Outception webhook secret"
   sensitive       = true
   variable_set_id = tfe_variable_set.sandbox.id
 }
 
-resource "tfe_variable" "polar_organization_id_sandbox" {
-  key             = "polar_organization_id"
+resource "tfe_variable" "outception_organization_id_sandbox" {
+  key             = "outception_organization_id"
   category        = "terraform"
-  description     = "Polar organization ID"
+  description     = "Outception organization ID"
   variable_set_id = tfe_variable_set.sandbox.id
 
   lifecycle {
@@ -287,10 +287,10 @@ resource "tfe_variable" "polar_organization_id_sandbox" {
   }
 }
 
-resource "tfe_variable" "polar_free_product_id_sandbox" {
-  key             = "polar_free_product_id"
+resource "tfe_variable" "outception_free_product_id_sandbox" {
+  key             = "outception_free_product_id"
   category        = "terraform"
-  description     = "Polar free-tier product ID"
+  description     = "Outception free-tier product ID"
   variable_set_id = tfe_variable_set.sandbox.id
 
   lifecycle {
@@ -298,10 +298,10 @@ resource "tfe_variable" "polar_free_product_id_sandbox" {
   }
 }
 
-resource "tfe_variable" "polar_scale_product_id_sandbox" {
-  key             = "polar_scale_product_id"
+resource "tfe_variable" "outception_scale_product_id_sandbox" {
+  key             = "outception_scale_product_id"
   category        = "terraform"
-  description     = "Polar Scale-tier product ID for sandbox"
+  description     = "Outception Scale-tier product ID for sandbox"
   variable_set_id = tfe_variable_set.sandbox.id
 }
 
@@ -364,7 +364,7 @@ resource "tfe_variable" "customer_portal_url_overrides_sandbox" {
 resource "tfe_variable" "plain_default_tier_external_id_sandbox" {
   key             = "plain_default_tier_external_id"
   category        = "terraform"
-  description     = "Default Plain tier external ID used as a fallback for the polar-self support benefit for sandbox"
+  description     = "Default Plain tier external ID used as a fallback for the outception-self support benefit for sandbox"
   sensitive       = false
   variable_set_id = tfe_variable_set.sandbox.id
 }
@@ -442,10 +442,10 @@ resource "tfe_variable" "vercel_sentry_auth_token_sandbox" {
   variable_set_id = tfe_variable_set.sandbox.id
 }
 
-resource "tfe_variable" "vercel_polar_preview_access_token_sandbox" {
-  key             = "polar_preview_access_token"
+resource "tfe_variable" "vercel_outception_preview_access_token_sandbox" {
+  key             = "outception_preview_access_token"
   category        = "terraform"
-  description     = "Polar preview access token for the Vercel sandbox frontend"
+  description     = "Outception preview access token for the Vercel sandbox frontend"
   sensitive       = true
   variable_set_id = tfe_variable_set.sandbox.id
 }

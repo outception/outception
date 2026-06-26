@@ -43,12 +43,12 @@ clients/
 │   ├── client/                 # Generated API client
 │   ├── sdk/                    # Published SDK
 │   ├── checkout/               # Checkout package
-│   └── orbit/                  # Polar's design system containing components, design tokens, etc.
+│   └── orbit/                  # Outception's design system containing components, design tokens, etc.
 ```
 
 ## UI Authoring Rule (READ FIRST)
 
-**All new UI must be authored with `<Box />` from `@polar-sh/orbit/Box`.**
+**All new UI must be authored with `<Box />` from `@outception-com/orbit/Box`.**
 
 `<div>` + Tailwind classes is **deprecated** for layout, spacing, color, borders, radius,
 shadow, flex, grid, position, and other visual concerns. Box is a polymorphic, fully
@@ -64,7 +64,7 @@ arbitrary values for things the design system already defines.
 - Never use raw color hex/oklch, raw px spacing, or `dark:` variants — use the tokens.
 - Never reach for `className` on Box for properties that have a typed Box prop (padding,
   background, radius, etc.). The typed prop wins.
-- Use `<Text />` from `@polar-sh/orbit` for typography rather than tailwind text classes.
+- Use `<Text />` from `@outception-com/orbit` for typography rather than tailwind text classes.
 - Tailwind is only acceptable for: third-party component overrides where a className is the
   only API, one-off animations not yet expressible via Orbit, or temporary glue while
   migrating a legacy file.
@@ -92,10 +92,10 @@ native display so semantics aren't broken. Pass an explicit `display` (e.g.
 ### Importing
 
 ```tsx
-import { Box } from '@polar-sh/orbit/Box'
+import { Box } from '@outception-com/orbit/Box'
 ```
 
-`Box` is exposed as a deep import (`@polar-sh/orbit/Box`), not from the package root.
+`Box` is exposed as a deep import (`@outception-com/orbit/Box`), not from the package root.
 
 ### Polymorphism via `as`
 
@@ -464,7 +464,7 @@ grid properties under short, Chakra-style prop names; every other Box prop (`gap
 `padding`, color, responsive objects, …) is inherited.
 
 ```tsx
-import { Grid } from '@polar-sh/orbit'
+import { Grid } from '@outception-com/orbit'
 
 <Grid templateColumns="repeat(3, 1fr)" gap="m">
   …
@@ -484,7 +484,7 @@ Prop names: `templateColumns`, `templateRows`, `templateAreas`, `autoFlow`, `aut
 Use `GridItem` for children that need to span or be placed explicitly:
 
 ```tsx
-import { Grid, GridItem } from '@polar-sh/orbit'
+import { Grid, GridItem } from '@outception-com/orbit'
 ;<Grid templateColumns="repeat(4, 1fr)" gap="m">
   <GridItem colSpan={2}>Spans two columns</GridItem>
   <GridItem colStart={3} colEnd={5} rowSpan={2}>
@@ -502,9 +502,9 @@ import { Grid, GridItem } from '@polar-sh/orbit'
 Use these instead of hand-rolled tailwind components:
 
 ```tsx
-import { Text } from '@polar-sh/orbit' // typography (variant-driven)
-import { Button, Grid } from '@polar-sh/orbit'
-import { Avatar, SegmentedControl } from '@polar-sh/orbit'
+import { Text } from '@outception-com/orbit' // typography (variant-driven)
+import { Button, Grid } from '@outception-com/orbit'
+import { Avatar, SegmentedControl } from '@outception-com/orbit'
 ```
 
 Prefer `Box` when you need full control; prefer the named primitive when one exists for
@@ -516,7 +516,7 @@ These patterns exist throughout the codebase but **must not be used in new code*
 
 - `<div className="…">` for layout/spacing/color
 - `dark:` variants — Orbit color tokens auto-resolve
-- Hard-coded color names like `bg-blue-500`, `text-gray-500`, `dark:bg-polar-800`
+- Hard-coded color names like `bg-blue-500`, `text-gray-500`, `dark:bg-outception-800`
 - `rounded-xl`, `shadow-lg`, `p-4`, `gap-2` etc. — use Box props with tokens
 
 When editing a legacy file, migrate the file (or the immediate component) to Box rather
@@ -602,20 +602,20 @@ const MyForm = () => {
 
 ```tsx
 // Orbit (preferred — design-system primitives)
-import { Box } from '@polar-sh/orbit/Box'
-import { Text, Button, Avatar, SegmentedControl } from '@polar-sh/orbit'
-import { DataTable, Select } from '@polar-sh/orbit'
+import { Box } from '@outception-com/orbit/Box'
+import { Text, Button, Avatar, SegmentedControl } from '@outception-com/orbit'
+import { DataTable, Select } from '@outception-com/orbit'
 
-// Legacy @polar-sh/ui (use only when an Orbit equivalent doesn't exist)
-import { Card } from '@polar-sh/ui/components/atoms/Card'
-import { Status } from '@polar-sh/ui/components/atoms/Status'
+// Legacy @outception-com/ui (use only when an Orbit equivalent doesn't exist)
+import { Card } from '@outception-com/ui/components/atoms/Card'
+import { Status } from '@outception-com/ui/components/atoms/Status'
 import {
   Tabs,
   TabsList,
   TabsTrigger,
   TabsContent,
-} from '@polar-sh/ui/components/atoms/Tabs'
-import { Banner } from '@polar-sh/ui/components/molecules/Banner'
+} from '@outception-com/ui/components/atoms/Tabs'
+import { Banner } from '@outception-com/ui/components/molecules/Banner'
 ```
 
 ## Common Patterns

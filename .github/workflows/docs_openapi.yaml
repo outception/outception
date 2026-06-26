@@ -26,7 +26,7 @@ jobs:
         uses: actions/checkout@v6.0.3
 
       - name: Run update script
-        run: ./update-schema.sh https://spec.speakeasy.com/polar/polar/polar-oas-with-code-samples
+        run: ./update-schema.sh https://spec.speakeasy.com/outception/outception/outception-oas-with-code-samples
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8

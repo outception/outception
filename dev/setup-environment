@@ -31,8 +31,8 @@ from yaspin.spinners import Spinners
 ROOT_PATH = pathlib.Path(__file__).parent.parent
 SECRETS_FILE_PATH = pathlib.Path(
     os.environ.get(
-        "POLAR_SECRETS_FILE",
-        pathlib.Path.home() / ".config" / "polar" / "secrets.env",
+        "OUTCEPTION_SECRETS_FILE",
+        pathlib.Path.home() / ".config" / "outception" / "secrets.env",
     )
 )
 SETUP_PAGE = """
@@ -230,7 +230,7 @@ def _ensure_secrets_file() -> bool:
         shutil.copy(template_path, SECRETS_FILE_PATH)
     else:
         with open(SECRETS_FILE_PATH, "w") as f:
-            f.write("# Polar Development Secrets\n")
+            f.write("# Outception Development Secrets\n")
             f.write("# See dev/secrets.env.template for all options\n")
     return True
 
@@ -241,17 +241,17 @@ def _save_github_app_to_secrets(github_app: dict[str, typing.Any]) -> None:
     secrets = _load_central_secrets()
     secrets.update(
         {
-            "POLAR_GITHUB_APP_NAMESPACE": github_app["slug"],
-            "POLAR_GITHUB_CLIENT_ID": github_app["client_id"],
-            "POLAR_GITHUB_CLIENT_SECRET": github_app["client_secret"],
-            "POLAR_GITHUB_APP_WEBHOOK_SECRET": github_app["webhook_secret"],
-            "POLAR_GITHUB_APP_IDENTIFIER": str(github_app["id"]),
-            "POLAR_GITHUB_APP_PRIVATE_KEY": github_app["pem"],
-            "POLAR_GITHUB_REPOSITORY_BENEFITS_APP_NAMESPACE": github_app["slug"],
-            "POLAR_GITHUB_REPOSITORY_BENEFITS_APP_IDENTIFIER": str(github_app["id"]),
-            "POLAR_GITHUB_REPOSITORY_BENEFITS_APP_PRIVATE_KEY": github_app["pem"],
-            "POLAR_GITHUB_REPOSITORY_BENEFITS_CLIENT_ID": github_app["client_id"],
-            "POLAR_GITHUB_REPOSITORY_BENEFITS_CLIENT_SECRET": github_app[
+            "OUTCEPTION_GITHUB_APP_NAMESPACE": github_app["slug"],
+            "OUTCEPTION_GITHUB_CLIENT_ID": github_app["client_id"],
+            "OUTCEPTION_GITHUB_CLIENT_SECRET": github_app["client_secret"],
+            "OUTCEPTION_GITHUB_APP_WEBHOOK_SECRET": github_app["webhook_secret"],
+            "OUTCEPTION_GITHUB_APP_IDENTIFIER": str(github_app["id"]),
+            "OUTCEPTION_GITHUB_APP_PRIVATE_KEY": github_app["pem"],
+            "OUTCEPTION_GITHUB_REPOSITORY_BENEFITS_APP_NAMESPACE": github_app["slug"],
+            "OUTCEPTION_GITHUB_REPOSITORY_BENEFITS_APP_IDENTIFIER": str(github_app["id"]),
+            "OUTCEPTION_GITHUB_REPOSITORY_BENEFITS_APP_PRIVATE_KEY": github_app["pem"],
+            "OUTCEPTION_GITHUB_REPOSITORY_BENEFITS_CLIENT_ID": github_app["client_id"],
+            "OUTCEPTION_GITHUB_REPOSITORY_BENEFITS_CLIENT_SECRET": github_app[
                 "client_secret"
             ],
             # Frontend env vars (used by Docker web container)
@@ -260,7 +260,7 @@ def _save_github_app_to_secrets(github_app: dict[str, typing.Any]) -> None:
     )
 
     with open(SECRETS_FILE_PATH, "w") as f:
-        f.write("# Polar Development Secrets\n")
+        f.write("# Outception Development Secrets\n")
         f.write("# Shared across Git worktrees. See dev/secrets.env.template\n\n")
         for key, value in secrets.items():
             delimiter = "'" if '"' in str(value) else '"'
@@ -296,37 +296,37 @@ def _write_server_env_file(
     replacements: dict[str, str] = {}
 
     if database_name is not None:
-        replacements["POLAR_POSTGRES_DATABASE"] = database_name
-        replacements["POLAR_POSTGRES_READ_DATABASE"] = database_name
+        replacements["OUTCEPTION_POSTGRES_DATABASE"] = database_name
+        replacements["OUTCEPTION_POSTGRES_READ_DATABASE"] = database_name
 
     # Load central secrets first (can be overridden by explicit values below)
     central_secrets = _load_central_secrets()
     replacements = {**replacements, **central_secrets}
 
     # Map backend secrets to frontend env vars (used by Docker web container)
-    if "POLAR_STRIPE_PUBLISHABLE_KEY" in replacements:
+    if "OUTCEPTION_STRIPE_PUBLISHABLE_KEY" in replacements:
         replacements["NEXT_PUBLIC_STRIPE_KEY"] = replacements[
-            "POLAR_STRIPE_PUBLISHABLE_KEY"
+            "OUTCEPTION_STRIPE_PUBLISHABLE_KEY"
         ]
-    if "POLAR_GITHUB_APP_NAMESPACE" in replacements:
+    if "OUTCEPTION_GITHUB_APP_NAMESPACE" in replacements:
         replacements["NEXT_PUBLIC_GITHUB_APP_NAMESPACE"] = replacements[
-            "POLAR_GITHUB_APP_NAMESPACE"
+            "OUTCEPTION_GITHUB_APP_NAMESPACE"
         ]
 
     if github_app is not None:
         replacements = {
             **replacements,
-            "POLAR_GITHUB_APP_NAMESPACE": github_app["slug"],
-            "POLAR_GITHUB_CLIENT_ID": github_app["client_id"],
-            "POLAR_GITHUB_CLIENT_SECRET": github_app["client_secret"],
-            "POLAR_GITHUB_APP_WEBHOOK_SECRET": github_app["webhook_secret"],
-            "POLAR_GITHUB_APP_IDENTIFIER": github_app["id"],
-            "POLAR_GITHUB_APP_PRIVATE_KEY": github_app["pem"],
-            "POLAR_GITHUB_REPOSITORY_BENEFITS_APP_NAMESPACE": github_app["slug"],
-            "POLAR_GITHUB_REPOSITORY_BENEFITS_APP_IDENTIFIER": github_app["id"],
-            "POLAR_GITHUB_REPOSITORY_BENEFITS_APP_PRIVATE_KEY": github_app["pem"],
-            "POLAR_GITHUB_REPOSITORY_BENEFITS_CLIENT_ID": github_app["client_id"],
-            "POLAR_GITHUB_REPOSITORY_BENEFITS_CLIENT_SECRET": github_app[
+            "OUTCEPTION_GITHUB_APP_NAMESPACE": github_app["slug"],
+            "OUTCEPTION_GITHUB_CLIENT_ID": github_app["client_id"],
+            "OUTCEPTION_GITHUB_CLIENT_SECRET": github_app["client_secret"],
+            "OUTCEPTION_GITHUB_APP_WEBHOOK_SECRET": github_app["webhook_secret"],
+            "OUTCEPTION_GITHUB_APP_IDENTIFIER": github_app["id"],
+            "OUTCEPTION_GITHUB_APP_PRIVATE_KEY": github_app["pem"],
+            "OUTCEPTION_GITHUB_REPOSITORY_BENEFITS_APP_NAMESPACE": github_app["slug"],
+            "OUTCEPTION_GITHUB_REPOSITORY_BENEFITS_APP_IDENTIFIER": github_app["id"],
+            "OUTCEPTION_GITHUB_REPOSITORY_BENEFITS_APP_PRIVATE_KEY": github_app["pem"],
+            "OUTCEPTION_GITHUB_REPOSITORY_BENEFITS_CLIENT_ID": github_app["client_id"],
+            "OUTCEPTION_GITHUB_REPOSITORY_BENEFITS_CLIENT_SECRET": github_app[
                 "client_secret"
             ],
             # Also set frontend env vars
@@ -341,9 +341,9 @@ def _write_apps_web_env_file(github_app: dict[str, typing.Any] | None = None) ->
     replacements: dict[str, str] = {}
 
     central_secrets = _load_central_secrets()
-    if "POLAR_STRIPE_PUBLISHABLE_KEY" in central_secrets:
+    if "OUTCEPTION_STRIPE_PUBLISHABLE_KEY" in central_secrets:
         replacements["NEXT_PUBLIC_STRIPE_KEY"] = central_secrets[
-            "POLAR_STRIPE_PUBLISHABLE_KEY"
+            "OUTCEPTION_STRIPE_PUBLISHABLE_KEY"
         ]
 
     if github_app is not None:
@@ -355,7 +355,7 @@ def _write_apps_web_env_file(github_app: dict[str, typing.Any] | None = None) ->
 
 
 def _generate_jwks() -> None:
-    options = {"kid": "polar_dev", "use": "sig"}
+    options = {"kid": "outception_dev", "use": "sig"}
     key = JsonWebKey.generate_key("RSA", 2048, options, is_private=True)
     keyset = KeySet(keys=[key])
     json_keyset = keyset.as_json(is_private=True)
@@ -366,12 +366,12 @@ def _generate_jwks() -> None:
 def _get_options():
     default_backend_external_url = None
     default_github_app_name = (
-        f"polar-development-{''.join(random.choices(string.ascii_lowercase, k=8))}"
+        f"outception-development-{''.join(random.choices(string.ascii_lowercase, k=8))}"
     )
     default_github_setup_base_url = "http://localhost:51562"
 
     parser = argparse.ArgumentParser(
-        description="Setup the environment files for Polar development"
+        description="Setup the environment files for Outception development"
     )
     parser.add_argument(
         "--setup-github-app",
@@ -381,14 +381,14 @@ def _get_options():
     parser.add_argument(
         "--backend-external-url",
         type=str,
-        help="The Polar backend base URL, available externally.",
+        help="The Outception backend base URL, available externally.",
         default=default_backend_external_url,
         required=False,
     )
     parser.add_argument(
         "--github-app-name",
         type=str,
-        help="The name of the Polar backend app",
+        help="The name of the Outception backend app",
         default=default_github_app_name,
     )
     parser.add_argument(
@@ -406,7 +406,7 @@ def _get_options():
     parser.add_argument(
         "--database-name",
         type=str,
-        help="The name of the database to use (replaces POLAR_POSTGRES_DATABASE and POLAR_POSTGRES_READ_DATABASE)",
+        help="The name of the database to use (replaces OUTCEPTION_POSTGRES_DATABASE and OUTCEPTION_POSTGRES_READ_DATABASE)",
         default=None,
     )
 

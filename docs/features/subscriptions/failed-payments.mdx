@@ -1,10 +1,10 @@
 ---
 title: "Recovering failed payments"
 sidebarTitle: "Failed payments"
-description: "How Polar retries failed renewals before revoking a subscription."
+description: "How Outception retries failed renewals before revoking a subscription."
 ---
 
-When a subscription renews, Polar advances it to the next billing cycle first, then attempts to charge the customer's default payment method for the new order. If that charge fails, the subscription moves to `past_due` and enters Polar's automated **payment recovery** (dunning) flow instead of being canceled straight away.
+When a subscription renews, Outception advances it to the next billing cycle first, then attempts to charge the customer's default payment method for the new order. If that charge fails, the subscription moves to `past_due` and enters Outception's automated **payment recovery** (dunning) flow instead of being canceled straight away.
 
 This page explains exactly what happens during that window, how to give yourself breathing room before benefits are revoked, and what levers you have to help the customer recover.
 
@@ -13,10 +13,10 @@ This page explains exactly what happens during that window, how to give yourself
 As soon as the first renewal charge fails:
 
 1. The subscription's status moves from `active` to `past_due`, and `past_due_at` is stamped with the time of the failure.
-2. Polar emails the customer to let them know the charge failed and links them to the [Customer Portal](/features/customer-portal/introduction) so they can update their default payment method.
+2. Outception emails the customer to let them know the charge failed and links them to the [Customer Portal](/features/customer-portal/introduction) so they can update their default payment method.
 3. The renewal order stays open with `next_payment_attempt_at` set to the next retry time.
 
-Polar then retries the charge on a fixed schedule, starting from the time of the first failure:
+Outception then retries the charge on a fixed schedule, starting from the time of the first failure:
 
 | Attempt | Delay from previous | Cumulative time from first failure |
 | ------- | ------------------- | ---------------------------------- |
@@ -25,13 +25,13 @@ Polar then retries the charge on a fixed schedule, starting from the time of the
 | 3rd retry | 7 days  | 14 days |
 | 4th retry | 7 days  | 21 days |
 
-If any retry succeeds, the subscription returns to `active` and the cycle continues normally. If all four retries fail — or the payment's decline code indicates the method will never succeed (for example, `lost_card`) — Polar stops retrying and **revokes the subscription**. Its status moves to `canceled` and benefits are revoked (subject to the grace period below).
+If any retry succeeds, the subscription returns to `active` and the cycle continues normally. If all four retries fail — or the payment's decline code indicates the method will never succeed (for example, `lost_card`) — Outception stops retrying and **revokes the subscription**. Its status moves to `canceled` and benefits are revoked (subject to the grace period below).
 
 ## Benefit revocation grace period
 
 By default, benefits follow the subscription's status strictly: the moment the subscription leaves `active`, benefits are revoked. For many businesses that's harsh — a single expired card shouldn't instantly lock a paying customer out while they update their details.
 
-Polar has an organization-level **grace period** that holds off benefit revocation while a subscription is in `past_due`. You can set it under **Settings → Subscriptions → Grace period for benefit revocation**. The available values are:
+Outception has an organization-level **grace period** that holds off benefit revocation while a subscription is in `past_due`. You can set it under **Settings → Subscriptions → Grace period for benefit revocation**. The available values are:
 
 - **Immediately** (default) — revoke benefits as soon as the subscription leaves `active`.
 - **After 2 days**
@@ -52,7 +52,7 @@ The grace period is measured from `past_due_at`. While it's in effect the subscr
 
 ## Helping customers recover
 
-The most reliable way for a customer to get back into `active` is to update their default payment method from the [Customer Portal](/features/customer-portal/introduction). As soon as the payment method is updated, Polar retries the charge immediately rather than waiting for the next scheduled attempt.
+The most reliable way for a customer to get back into `active` is to update their default payment method from the [Customer Portal](/features/customer-portal/introduction). As soon as the payment method is updated, Outception retries the charge immediately rather than waiting for the next scheduled attempt.
 
 Things you can do from your side:
 

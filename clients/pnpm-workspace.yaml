@@ -16,4 +16,4 @@ onlyBuiltDependencies:
 
 minimumReleaseAge: 1440
 minimumReleaseAgeExclude:
-  - '@polar-sh/sdk'
+  - '@outception-com/sdk'

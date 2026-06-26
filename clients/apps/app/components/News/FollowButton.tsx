@@ -5,7 +5,7 @@ import {
   useFollowSource,
   useFollowedSources,
   useUnfollowSource,
-} from '@/hooks/polar/news'
+} from '@/hooks/outception/news'
 import { useSession } from '@/providers/SessionProvider'
 
 export const FollowButton = ({ sourceId }: { sourceId: string }) => {

@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Box } from '@polar-sh/orbit/Box'
-import { SegmentedControl } from '@polar-sh/orbit'
+import { Box } from '@outception-com/orbit/Box'
+import { SegmentedControl } from '@outception-com/orbit'
 import {
   Example,
   PageHeader,

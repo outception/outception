@@ -6,9 +6,9 @@ import pytest_asyncio
 from fakeredis import FakeAsyncRedis
 from ratelimit import Rule
 
-from polar.config import settings
-from polar.enums import RateLimitGroup
-from polar.rate_limit import (
+from outception.config import settings
+from outception.enums import RateLimitGroup
+from outception.rate_limit import (
     _PRODUCTION_RULES,
     _SANDBOX_RULES,
     _authenticate,
@@ -19,7 +19,7 @@ from polar.rate_limit import (
     clear_cached_identity,
     write_cached_identity,
 )
-from polar.redis import Redis
+from outception.redis import Redis
 
 
 @pytest_asyncio.fixture
@@ -41,12 +41,12 @@ def _http_scope(
 
 class TestBearerToken:
     def test_returns_token(self) -> None:
-        scope = _http_scope(headers=[(b"authorization", b"Bearer polar_pat_xyz")])
-        assert _bearer_token(scope) == "polar_pat_xyz"
+        scope = _http_scope(headers=[(b"authorization", b"Bearer outception_pat_xyz")])
+        assert _bearer_token(scope) == "outception_pat_xyz"
 
     def test_case_insensitive_scheme(self) -> None:
-        scope = _http_scope(headers=[(b"authorization", b"BEARER polar_pat_xyz")])
-        assert _bearer_token(scope) == "polar_pat_xyz"
+        scope = _http_scope(headers=[(b"authorization", b"BEARER outception_pat_xyz")])
+        assert _bearer_token(scope) == "outception_pat_xyz"
 
     def test_missing_header(self) -> None:
         scope = _http_scope(headers=[])
@@ -71,16 +71,16 @@ class TestBearerToken:
 
 class TestSessionCookie:
     def test_returns_value(self) -> None:
-        header = f"{settings.USER_SESSION_COOKIE_KEY}=polar_us_xyz".encode("ascii")
+        header = f"{settings.USER_SESSION_COOKIE_KEY}=outception_us_xyz".encode("ascii")
         scope = _http_scope(headers=[(b"cookie", header)])
-        assert _session_cookie(scope) == "polar_us_xyz"
+        assert _session_cookie(scope) == "outception_us_xyz"
 
     def test_among_other_cookies(self) -> None:
         header = (
-            f"foo=bar; {settings.USER_SESSION_COOKIE_KEY}=polar_us_xyz; baz=qux"
+            f"foo=bar; {settings.USER_SESSION_COOKIE_KEY}=outception_us_xyz; baz=qux"
         ).encode("ascii")
         scope = _http_scope(headers=[(b"cookie", header)])
-        assert _session_cookie(scope) == "polar_us_xyz"
+        assert _session_cookie(scope) == "outception_us_xyz"
 
     def test_missing_header(self) -> None:
         scope = _http_scope(headers=[])
@@ -103,27 +103,29 @@ class TestSessionCookie:
 @pytest.mark.asyncio
 class TestIdentityCacheRoundTrip:
     async def test_write_then_read_via_authenticate(self, redis: Redis) -> None:
-        token = "polar_pat_round_trip"
+        token = "outception_pat_round_trip"
         await write_cached_identity(
             redis, token, ("user:abc-123", RateLimitGroup.elevated)
         )
 
         identity = await _authenticate(
-            _http_scope(headers=[(b"authorization", b"Bearer polar_pat_round_trip")]),
+            _http_scope(
+                headers=[(b"authorization", b"Bearer outception_pat_round_trip")]
+            ),
             redis=redis,
         )
 
         assert identity == ("user:abc-123", RateLimitGroup.elevated)
 
     async def test_write_sets_ttl(self, redis: Redis) -> None:
-        token = "polar_pat_ttl"
+        token = "outception_pat_ttl"
         await write_cached_identity(redis, token, ("user:1", RateLimitGroup.default))
 
         ttl = await redis.ttl(_identity_cache_key(token))
         assert 0 < ttl <= 300
 
     async def test_clear_removes_entry(self, redis: Redis) -> None:
-        token = "polar_pat_clear"
+        token = "outception_pat_clear"
         await write_cached_identity(redis, token, ("user:1", RateLimitGroup.default))
         assert await redis.exists(_identity_cache_key(token)) == 1
 
@@ -137,13 +139,13 @@ class TestAuthenticate:
     async def test_cache_miss_uses_token_hash_pending_auth(self, redis: Redis) -> None:
         identity = await _authenticate(
             _http_scope(
-                headers=[(b"authorization", b"Bearer polar_pat_unknown")],
+                headers=[(b"authorization", b"Bearer outception_pat_unknown")],
                 client=("8.8.8.8", 1234),
             ),
             redis=redis,
         )
         assert identity == (
-            f"token:{_token_hash('polar_pat_unknown')}",
+            f"token:{_token_hash('outception_pat_unknown')}",
             RateLimitGroup.pending_auth,
         )
 
@@ -156,7 +158,7 @@ class TestAuthenticate:
         assert identity == ("anonymous", RateLimitGroup.default)
 
     async def test_cookie_cache_hit(self, redis: Redis) -> None:
-        cookie = "polar_us_session"
+        cookie = "outception_us_session"
         await write_cached_identity(redis, cookie, ("user:web", RateLimitGroup.web))
 
         header = f"{settings.USER_SESSION_COOKIE_KEY}={cookie}".encode("ascii")
@@ -169,29 +171,33 @@ class TestAuthenticate:
     async def test_cookie_cache_miss_uses_cookie_hash_pending_auth(
         self, redis: Redis
     ) -> None:
-        header = f"{settings.USER_SESSION_COOKIE_KEY}=polar_us_unknown".encode("ascii")
+        header = f"{settings.USER_SESSION_COOKIE_KEY}=outception_us_unknown".encode(
+            "ascii"
+        )
         identity = await _authenticate(
             _http_scope(headers=[(b"cookie", header)], client=("9.9.9.9", 1234)),
             redis=redis,
         )
         assert identity == (
-            f"cookie:{_token_hash('polar_us_unknown')}",
+            f"cookie:{_token_hash('outception_us_unknown')}",
             RateLimitGroup.pending_auth,
         )
 
     async def test_bearer_token_preferred_over_cookie(self, redis: Redis) -> None:
         await write_cached_identity(
-            redis, "polar_pat_a", ("user:bearer", RateLimitGroup.elevated)
+            redis, "outception_pat_a", ("user:bearer", RateLimitGroup.elevated)
         )
         await write_cached_identity(
-            redis, "polar_us_b", ("user:cookie", RateLimitGroup.web)
+            redis, "outception_us_b", ("user:cookie", RateLimitGroup.web)
         )
 
-        cookie_header = f"{settings.USER_SESSION_COOKIE_KEY}=polar_us_b".encode("ascii")
+        cookie_header = f"{settings.USER_SESSION_COOKIE_KEY}=outception_us_b".encode(
+            "ascii"
+        )
         identity = await _authenticate(
             _http_scope(
                 headers=[
-                    (b"authorization", b"Bearer polar_pat_a"),
+                    (b"authorization", b"Bearer outception_pat_a"),
                     (b"cookie", cookie_header),
                 ]
             ),
@@ -201,19 +207,19 @@ class TestAuthenticate:
         assert identity == ("user:bearer", RateLimitGroup.elevated)
 
     async def test_distinct_tokens_get_distinct_identities(self, redis: Redis) -> None:
-        token_a = "polar_pat_a"
-        token_b = "polar_pat_b"
+        token_a = "outception_pat_a"
+        token_b = "outception_pat_b"
         await write_cached_identity(redis, token_a, ("user:a", RateLimitGroup.default))
         await write_cached_identity(
             redis, token_b, ("organization:b", RateLimitGroup.elevated)
         )
 
         ident_a = await _authenticate(
-            _http_scope(headers=[(b"authorization", b"Bearer polar_pat_a")]),
+            _http_scope(headers=[(b"authorization", b"Bearer outception_pat_a")]),
             redis=redis,
         )
         ident_b = await _authenticate(
-            _http_scope(headers=[(b"authorization", b"Bearer polar_pat_b")]),
+            _http_scope(headers=[(b"authorization", b"Bearer outception_pat_b")]),
             redis=redis,
         )
 
@@ -249,7 +255,7 @@ class TestSensitiveEndpointZoneIsolation:
     """Pending-auth requests (unvalidated bearer/cookie) must use the
     endpoint's own zone, not fall through to the shared "api" zone.
 
-    Regression coverage for https://github.com/polarsource/polar/issues/11704.
+    Regression coverage for https://github.com/outception/outception/issues/11704.
     """
 
     def test_resolves_to_endpoint_zone(

@@ -4,7 +4,7 @@ import {
   Heading,
   List,
   Text,
-  WrapperPolar,
+  WrapperOutception,
 } from '../components/foundation'
 import InfoBox from '../components/InfoBox'
 import SecurityFaqNote from '../components/SecurityFaqNote'
@@ -17,7 +17,7 @@ export function PersonalAccessTokenLeaked({
   personal_access_token,
 }: schemas['PersonalAccessTokenLeakedProps']) {
   return (
-    <WrapperPolar preview="Important security notice: Your personal access token has been leaked">
+    <WrapperOutception preview="Important security notice: Your personal access token has been leaked">
       <Heading>Important security notice</Heading>
       <Text>
         We've been notified that one of your personal access token has been
@@ -50,7 +50,7 @@ export function PersonalAccessTokenLeaked({
       </InfoBox>
       <SecurityFaqNote />
       <Footer email={email} />
-    </WrapperPolar>
+    </WrapperOutception>
   )
 }
 

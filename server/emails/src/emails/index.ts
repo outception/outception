@@ -11,9 +11,9 @@ import { OrganizationAccessTokenLeaked } from './organization_access_token_leake
 import { OrganizationAccountUnlink } from './organization_account_unlink'
 import { OrganizationInvite } from './organization_invite'
 import { PersonalAccessTokenLeaked } from './personal_access_token_leaked'
-import { PolarSelfStartupProgramWelcome } from './polar_self_startup_program_welcome'
-import { PolarSelfSubscriptionConfirmation } from './polar_self_subscription_confirmation'
-import { PolarSelfSubscriptionCycled } from './polar_self_subscription_cycled'
+import { OutceptionSelfStartupProgramWelcome } from './outception_self_startup_program_welcome'
+import { OutceptionSelfSubscriptionConfirmation } from './outception_self_subscription_confirmation'
+import { OutceptionSelfSubscriptionCycled } from './outception_self_subscription_cycled'
 import { SeatInvitation } from './seat_invitation'
 import { SubscriptionCancellation } from './subscription_cancellation'
 import { SubscriptionConfirmation } from './subscription_confirmation'
@@ -57,9 +57,9 @@ const TEMPLATES: Record<string, React.FC<never>> = {
   support_case_organization_new_message: SupportCaseOrganizationNewMessage,
   webhook_endpoint_disabled: WebhookEndpointDisabled,
   chargeback_prevention_refund: ChargebackPreventionRefund,
-  polar_self_subscription_confirmation: PolarSelfSubscriptionConfirmation,
-  polar_self_subscription_cycled: PolarSelfSubscriptionCycled,
-  polar_self_startup_program_welcome: PolarSelfStartupProgramWelcome,
+  outception_self_subscription_confirmation: OutceptionSelfSubscriptionConfirmation,
+  outception_self_subscription_cycled: OutceptionSelfSubscriptionCycled,
+  outception_self_startup_program_welcome: OutceptionSelfStartupProgramWelcome,
 }
 
 export default TEMPLATES

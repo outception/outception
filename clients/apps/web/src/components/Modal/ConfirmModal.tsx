@@ -1,15 +1,15 @@
-import { Button } from '@polar-sh/orbit'
-import { Input } from '@polar-sh/orbit'
+import { Button } from '@outception-com/orbit'
+import { Input } from '@outception-com/orbit'
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormMessage,
-} from '@polar-sh/ui/components/ui/form'
+} from '@outception-com/ui/components/ui/form'
 import { MouseEvent, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
-import { Modal, type ModalProps } from '@polar-sh/orbit'
+import { Modal, type ModalProps } from '@outception-com/orbit'
 
 export interface ConfirmModalProps extends Omit<
   ModalProps,
@@ -75,7 +75,7 @@ export const ConfirmModal = ({
         <div className="flex flex-col gap-y-4 p-8">
           <h3 className="text-xl font-medium">{title}</h3>
           {description && (
-            <p className="dark:text-polar-400 max-w-full text-sm text-gray-500">
+            <p className="dark:text-outception-400 max-w-full text-sm text-gray-500">
               {description}
             </p>
           )}
@@ -90,7 +90,7 @@ export const ConfirmModal = ({
             >
               {confirmPrompt && (
                 <>
-                  <p className="dark:text-polar-400 max-w-full text-sm text-gray-500">
+                  <p className="dark:text-outception-400 max-w-full text-sm text-gray-500">
                     Please enter &quot;{trimmedConfirmPrompt}&quot; to confirm:
                   </p>
                   <FormField

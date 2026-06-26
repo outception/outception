@@ -1,12 +1,12 @@
-import { Button } from '@polar-sh/orbit'
-import { Input } from '@polar-sh/orbit'
+import { Button } from '@outception-com/orbit'
+import { Input } from '@outception-com/orbit'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@polar-sh/orbit'
+} from '@outception-com/orbit'
 import {
   FormControl,
   FormDescription,
@@ -14,14 +14,14 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@polar-sh/ui/components/ui/form'
+} from '@outception-com/ui/components/ui/form'
 import { type MouseEvent } from 'react'
 
 import ImageUpload from '@/components/Form/ImageUpload'
 import AddOutlined from '@mui/icons-material/AddOutlined'
 import ClearOutlined from '@mui/icons-material/ClearOutlined'
-import { enums } from '@polar-sh/client'
-import { Checkbox } from '@polar-sh/orbit'
+import { enums } from '@outception-com/client'
+import { Checkbox } from '@outception-com/orbit'
 import { useCallback, useMemo } from 'react'
 import { useFieldArray, useFormContext } from 'react-hook-form'
 import { EnhancedOAuth2ClientConfiguration } from './NewOAuthClientModal'

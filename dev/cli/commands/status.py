@@ -145,7 +145,7 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
     @app.command()
     def status() -> None:
         """Show comprehensive environment status."""
-        console.print("\n[bold blue]Polar Development Environment Status[/bold blue]\n")
+        console.print("\n[bold blue]Outception Development Environment Status[/bold blue]\n")
 
         # Infrastructure
         console.print("[bold]Infrastructure:[/bold]")

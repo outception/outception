@@ -35,8 +35,8 @@ from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 from sqlalchemy import CursorResult, text
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from polar.kit.db.postgres import AsyncSession, create_async_sessionmaker
-from polar.postgres import create_async_engine
+from outception.kit.db.postgres import AsyncSession, create_async_sessionmaker
+from outception.postgres import create_async_engine
 from scripts.helper import configure_script_console_logging, typer_async
 
 cli = typer.Typer()

@@ -1,11 +1,14 @@
 import { useMemo } from 'react'
 
 import { Box } from '@/components/Shared/Box'
-import PolarLogo from '@/components/Shared/PolarLogo'
+import OutceptionLogo from '@/components/Shared/OutceptionLogo'
 import { useTheme } from '@/design-system/useTheme'
 import { useLogout } from '@/hooks/auth'
 import { useOAuth } from '@/hooks/oauth'
-import { isValidationError, UnauthorizedResponseError } from '@polar-sh/client'
+import {
+  isValidationError,
+  UnauthorizedResponseError,
+} from '@outception-com/client'
 import { Text } from '../Shared/Text'
 import { Touchable } from '../Shared/Touchable'
 export interface ErrorFallbackProps {
@@ -62,7 +65,7 @@ export const ErrorFallback = ({
       gap="spacing-32"
       paddingHorizontal="spacing-24"
     >
-      <PolarLogo size={80} />
+      <OutceptionLogo size={80} />
       <Box gap="spacing-12">
         <Text variant="titleLarge" textAlign="center">
           {title}

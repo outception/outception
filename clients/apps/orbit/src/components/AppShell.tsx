@@ -1,15 +1,15 @@
-import { Box } from '@polar-sh/orbit/Box'
-import { Text } from '@polar-sh/orbit'
+import { Box } from '@outception-com/orbit/Box'
+import { Text } from '@outception-com/orbit'
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from '@polar-sh/ui/components/ui/sidebar'
+} from '@outception-com/ui/components/ui/sidebar'
 import Link from 'next/link'
 import { type ReactNode } from 'react'
 import { DocsSidebar } from './Sidebar'
 
-// Uses the shadcn Sidebar primitives (the same ones the Polar dashboard uses):
+// Uses the shadcn Sidebar primitives (the same ones the Outception dashboard uses):
 // SidebarProvider sets up the sidebar context + the recessed page surface, the
 // inset Sidebar floats in the gutter, and SidebarInset renders the main content
 // as a rounded, shadowed card. On mobile the sidebar is an off-canvas sheet
@@ -21,7 +21,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* min-w-0 lets the inset shrink below its content's intrinsic width so
           wide children (code blocks, tables) scroll instead of overflowing the
           viewport. On md+ the card is fixed to the viewport and scrolls itself. */}
-      <SidebarInset className="dark:border-polar-700 min-w-0 border border-gray-100 md:h-[calc(100svh-1rem)] md:overflow-y-auto">
+      <SidebarInset className="dark:border-outception-700 min-w-0 border border-gray-100 md:h-[calc(100svh-1rem)] md:overflow-y-auto">
         <Box
           as="header"
           display={{ base: 'flex', md: 'none' }}

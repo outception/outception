@@ -39,7 +39,7 @@ async function validate() {
     (l): l is TranslatedLocale => l !== DEFAULT_LOCALE,
   )
 
-  log.header('Polar i18n Validation')
+  log.header('Outception i18n Validation')
   log.info(
     `Source: ${log.bold(sourceKeys.size.toString())} keys in ${DEFAULT_LOCALE}.ts`,
   )

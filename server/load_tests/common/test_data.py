@@ -21,7 +21,7 @@ METER_SLUG_WEIGHTS = [0.6, 0.4]
 def generate_random_email() -> str:
     """Generate a random test email address."""
     random_str = "".join(random.choices(string.ascii_lowercase + string.digits, k=8))
-    return f"loadtest+{random_str}@polar.sh"
+    return f"loadtest+{random_str}@outception.com"
 
 
 def generate_customer_data() -> dict[str, Any]:
@@ -120,7 +120,7 @@ def generate_event_payload(
 
     Note:
         organization_id is not included in the payload because the load test uses
-        organization tokens (polar_oat_*) which infer the organization from the token.
+        organization tokens (outception_oat_*) which infer the organization from the token.
     """
     if event_name is None:
         event_name = random.choices(EVENT_NAMES, weights=EVENT_NAME_WEIGHTS, k=1)[0]

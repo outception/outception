@@ -9,11 +9,11 @@ import dramatiq
 import rich
 import structlog
 
-from polar import tasks  # noqa: F401
-from polar.kit.db.postgres import create_async_sessionmaker
-from polar.postgres import create_async_engine
-from polar.redis import create_redis
-from polar.worker import JobQueueManager
+from outception import tasks  # noqa: F401
+from outception.kit.db.postgres import create_async_sessionmaker
+from outception.postgres import create_async_engine
+from outception.redis import create_redis
+from outception.worker import JobQueueManager
 
 """
 This script allows interacting with the database and our services in a REPL.
@@ -22,7 +22,7 @@ Similar to how the `django shell` or `flask shell` commands work.
 I allows you to:
 
 >>> customer_repository = CustomerRepository.from_session(session)
->>> stmt = customer_repository.get_base_statement().where(Customer.email == 'test+customer045@polar.sh')
+>>> stmt = customer_repository.get_base_statement().where(Customer.email == 'test+customer045@outception.com')
 >>> await customer_repository.get_one_or_none(stmt)
 """
 
@@ -98,7 +98,7 @@ def shell_asyncio(loop: asyncio.AbstractEventLoop, **namespace: object) -> None:
 
 def start_shell() -> None:
     rich.print("""
-[bold cyan]Welcome to the Polar shell![/bold cyan]
+[bold cyan]Welcome to the Outception shell![/bold cyan]
 
 [bold yellow]Important notes:[/bold yellow]
 

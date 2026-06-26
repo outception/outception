@@ -17,10 +17,10 @@ export default async function Page() {
   }
 
   return (
-    <div className="dark:bg-polar-950 flex h-screen w-full grow items-center justify-center bg-white">
+    <div className="dark:bg-outception-950 flex h-screen w-full grow items-center justify-center bg-white">
       <div className="flex w-80 flex-col items-center">
         <LogoIcon size={60} className="mb-6 text-black dark:text-white" />
-        <div className="dark:text-polar-400 mb-6 text-center text-sm text-gray-500">
+        <div className="dark:text-outception-400 mb-6 text-center text-sm text-gray-500">
           Enter one of your backup codes
         </div>
         <VerifyPage />

@@ -5,7 +5,7 @@ import {
   Intro,
   List,
   Text,
-  WrapperPolar,
+  WrapperOutception,
 } from '../components/foundation'
 import InfoBox from '../components/InfoBox'
 import type { schemas } from '../types'
@@ -17,7 +17,7 @@ export function WebhookEndpointDisabled({
   dashboard_url,
 }: schemas['WebhookEndpointDisabledProps']) {
   return (
-    <WrapperPolar
+    <WrapperOutception
       preview={`Webhook endpoint disabled for ${organization.name} due to continuous failures`}
     >
       <Intro>
@@ -52,7 +52,7 @@ export function WebhookEndpointDisabled({
       </List>
       <Button href={dashboard_url}>Manage webhooks</Button>
       <Footer email={email} />
-    </WrapperPolar>
+    </WrapperOutception>
   )
 }
 
@@ -64,8 +64,8 @@ WebhookEndpointDisabled.PreviewProps = {
     slug: 'acme-inc',
     avatar_url: 'https://avatars.githubusercontent.com/u/105373340?s=200&v=4',
   },
-  webhook_endpoint_url: 'https://api.example.com/webhooks/polar',
-  dashboard_url: 'https://polar.sh/dashboard/acme-inc/settings/webhooks',
+  webhook_endpoint_url: 'https://api.example.com/webhooks/outception',
+  dashboard_url: 'https://outception.com/dashboard/acme-inc/settings/webhooks',
 }
 
 export default WebhookEndpointDisabled

@@ -1,5 +1,5 @@
 ---
-title: "Investigating Worker Memory Leak in Polar"
+title: "Investigating Worker Memory Leak in Outception"
 description: "A deep dive into debugging memory leaks in our Python worker system using Dramatiq and Redis"
 author: "Petru Rares Sincraian"
 date: "2025-08-29"
@@ -10,7 +10,7 @@ tags: ["debugging", "performance", "python", "dramatiq", "memory-leak"]
 **Author:** Petru Rares Sincraian • **Published:** August 29, 2025
 </Info>
 
-I'm trying to find the memory leak in the polar source code for Worker. The main stack is Python 3.12, Dramatiq with Redis as a Broker.
+I'm trying to find the memory leak in the outception source code for Worker. The main stack is Python 3.12, Dramatiq with Redis as a Broker.
 
 From what I see, I see in Logfire some message types are repeating themselves. As I would expect:
 

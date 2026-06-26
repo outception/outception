@@ -49,20 +49,11 @@ const LogoIcon = ({
           <stop offset="1" stopColor="#FF332B" />
         </linearGradient>
         <clipPath id={clip}>
-          <path
-            transform="translate(0,768) scale(0.1,-0.1)"
-            d={STAR_PATH}
-          />
+          <path transform="translate(0,768) scale(0.1,-0.1)" d={STAR_PATH} />
         </clipPath>
       </defs>
       <g clipPath={`url(#${clip})`}>
-        <rect
-          x="288"
-          y="160"
-          width="448"
-          height="448"
-          fill={`url(#${dome})`}
-        />
+        <rect x="288" y="160" width="448" height="448" fill={`url(#${dome})`} />
         <path
           d="M296 374 Q512 450 728 374 L728 624 L296 624 Z"
           fill={`url(#${tail})`}

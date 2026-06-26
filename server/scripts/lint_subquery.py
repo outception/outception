@@ -132,7 +132,7 @@ def check_file(path: Path) -> list[tuple[Path, int, str]]:
                 path,
                 node.lineno,
                 "call .with_only_columns(...) before .subquery(), or use "
-                "count_subquery() from polar.kit.pagination. "
+                "count_subquery() from outception.kit.pagination. "
                 "`deferred=True` does not propagate into .subquery(). "
                 "Escape with `# noqa: subquery-all-columns` if full-column "
                 "projection is intentional.",
@@ -143,7 +143,7 @@ def check_file(path: Path) -> list[tuple[Path, int, str]]:
 
 
 def main() -> int:
-    root = Path(__file__).resolve().parent.parent / "polar"
+    root = Path(__file__).resolve().parent.parent / "outception"
     if not root.exists():
         print(f"error: {root} not found", file=sys.stderr)
         return 2

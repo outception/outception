@@ -51,4 +51,4 @@ jobs:
       - name: Upload to S3
         run: |
           aws s3 cp lambda/image-resizer/package.zip \
-            s3://polar-lambda-artifacts/image-resizer/package.zip
+            s3://outception-lambda-artifacts/image-resizer/package.zip

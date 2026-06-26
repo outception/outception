@@ -3,7 +3,7 @@ import { Pill } from '@/components/Shared/Pill'
 import { Text } from '@/components/Shared/Text'
 import { Touchable } from '@/components/Shared/Touchable'
 import { useTheme } from '@/design-system/useTheme'
-import { useNewsSearch } from '@/hooks/polar/news'
+import { useNewsSearch } from '@/hooks/outception/news'
 import { openExternalUrl } from '@/utils/news'
 import { ActivityIndicator, ScrollView } from 'react-native'
 

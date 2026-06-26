@@ -22,7 +22,7 @@ def wait_for_postgres(timeout: int = 60) -> bool:
     start_time = time.time()
     while time.time() - start_time < timeout:
         result = run_command(
-            ["docker", "compose", "exec", "-T", "db", "pg_isready", "-U", "polar"],
+            ["docker", "compose", "exec", "-T", "db", "pg_isready", "-U", "outception"],
             cwd=SERVER_DIR,
             capture=True,
         )
@@ -92,7 +92,7 @@ def _update_secrets_file(key: str, value: str) -> None:
     existing[key] = value
 
     with open(SECRETS_FILE, "w") as f:
-        f.write("# Polar Development Secrets\n")
+        f.write("# Outception Development Secrets\n")
         f.write("# Shared across Git worktrees\n\n")
         for k, v in existing.items():
             delimiter = "'" if '"' in v else '"'
@@ -122,9 +122,9 @@ def run(ctx: Context) -> bool:
         with step_spinner("Waiting for Tinybird..."):
             token = wait_for_tinybird_and_get_token(timeout=90)
             if token:
-                _update_secrets_file("POLAR_TINYBIRD_API_TOKEN", token)
-                _update_secrets_file("POLAR_TINYBIRD_READ_TOKEN", token)
-                _update_secrets_file("POLAR_TINYBIRD_CLICKHOUSE_TOKEN", token)
+                _update_secrets_file("OUTCEPTION_TINYBIRD_API_TOKEN", token)
+                _update_secrets_file("OUTCEPTION_TINYBIRD_READ_TOKEN", token)
+                _update_secrets_file("OUTCEPTION_TINYBIRD_CLICKHOUSE_TOKEN", token)
                 run_command([str(ROOT_DIR / "dev" / "setup-environment")], capture=True)
                 step_status(True, "Tinybird", "ready (token configured)")
             else:

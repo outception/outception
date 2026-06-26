@@ -4,7 +4,7 @@ import { Text } from '@/components/Shared/Text'
 import {
   usePromotionPreferences,
   useUpdatePromotionPreferences,
-} from '@/hooks/polar/promotions'
+} from '@/hooks/outception/promotions'
 import { useState } from 'react'
 
 export const PromotionEmailToggle = () => {

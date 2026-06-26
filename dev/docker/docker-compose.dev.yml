@@ -1,4 +1,4 @@
-# Per-instance Polar app stack (api, worker, web).
+# Per-instance Outception app stack (api, worker, web).
 # Infra (postgres, redis, minio, tinybird, prometheus, grafana) lives in a
 # separate, machine-wide stack defined in docker-compose.shared.yml.
 #
@@ -13,55 +13,55 @@ x-common-env-file: &common-env-file
   - ../../server/.env
 
 x-common-backend-env: &common-backend-env
-  POLAR_ENV: development
-  POLAR_LOG_LEVEL: DEBUG
-  POLAR_TESTING: "0"
-  POLAR_SQLALCHEMY_DEBUG: "0"
-  POLAR_POSTHOG_DEBUG: "1"
-  # Database — connect to shared postgres on the polar-shared network.
+  OUTCEPTION_ENV: development
+  OUTCEPTION_LOG_LEVEL: DEBUG
+  OUTCEPTION_TESTING: "0"
+  OUTCEPTION_SQLALCHEMY_DEBUG: "0"
+  OUTCEPTION_POSTHOG_DEBUG: "1"
+  # Database — connect to shared postgres on the outception-comared network.
   # Each instance uses a separate logical DB (auto-created by startup.sh).
-  POLAR_POSTGRES_USER: ${POLAR_POSTGRES_USER:-polar}
-  POLAR_POSTGRES_PWD: ${POLAR_POSTGRES_PWD:-polar}
-  POLAR_POSTGRES_HOST: db
-  POLAR_POSTGRES_PORT: "5432"
-  POLAR_POSTGRES_DATABASE: polar_dev_${POLAR_DOCKER_INSTANCE:-1}
-  POLAR_POSTGRES_READ_USER: ${POLAR_POSTGRES_READ_USER:-polar_read}
-  POLAR_POSTGRES_READ_PWD: ${POLAR_POSTGRES_READ_PWD:-polar}
-  POLAR_POSTGRES_READ_HOST: db
-  POLAR_POSTGRES_READ_PORT: "5432"
-  POLAR_POSTGRES_READ_DATABASE: polar_dev_${POLAR_DOCKER_INSTANCE:-1}
+  OUTCEPTION_POSTGRES_USER: ${OUTCEPTION_POSTGRES_USER:-outception}
+  OUTCEPTION_POSTGRES_PWD: ${OUTCEPTION_POSTGRES_PWD:-outception}
+  OUTCEPTION_POSTGRES_HOST: db
+  OUTCEPTION_POSTGRES_PORT: "5432"
+  OUTCEPTION_POSTGRES_DATABASE: outception_dev_${OUTCEPTION_DOCKER_INSTANCE:-1}
+  OUTCEPTION_POSTGRES_READ_USER: ${OUTCEPTION_POSTGRES_READ_USER:-outception_read}
+  OUTCEPTION_POSTGRES_READ_PWD: ${OUTCEPTION_POSTGRES_READ_PWD:-outception}
+  OUTCEPTION_POSTGRES_READ_HOST: db
+  OUTCEPTION_POSTGRES_READ_PORT: "5432"
+  OUTCEPTION_POSTGRES_READ_DATABASE: outception_dev_${OUTCEPTION_DOCKER_INSTANCE:-1}
   # Redis — shared instance; each app instance picks its own DB index.
-  POLAR_REDIS_HOST: redis
-  POLAR_REDIS_PORT: "6379"
-  POLAR_REDIS_DB: ${POLAR_REDIS_DB:-0}
+  OUTCEPTION_REDIS_HOST: redis
+  OUTCEPTION_REDIS_PORT: "6379"
+  OUTCEPTION_REDIS_DB: ${OUTCEPTION_REDIS_DB:-0}
   # S3/MinIO — shared instance; each app instance gets its own bucket pair.
-  POLAR_S3_ENDPOINT_URL: http://minio:9000
-  POLAR_AWS_ACCESS_KEY_ID: ${POLAR_AWS_ACCESS_KEY_ID:-polar-development}
-  POLAR_AWS_SECRET_ACCESS_KEY: ${POLAR_AWS_SECRET_ACCESS_KEY:-polar123456789}
-  POLAR_S3_FILES_BUCKET_NAME: polar-s3-${POLAR_DOCKER_INSTANCE:-1}
-  POLAR_S3_FILES_PUBLIC_BUCKET_NAME: polar-s3-public-${POLAR_DOCKER_INSTANCE:-1}
-  POLAR_S3_CUSTOMER_INVOICES_BUCKET_NAME: polar-s3-${POLAR_DOCKER_INSTANCE:-1}
-  POLAR_S3_CUSTOMER_RECEIPTS_BUCKET_NAME: polar-s3-${POLAR_DOCKER_INSTANCE:-1}
-  POLAR_S3_PAYOUT_INVOICES_BUCKET_NAME: polar-s3-${POLAR_DOCKER_INSTANCE:-1}
+  OUTCEPTION_S3_ENDPOINT_URL: http://minio:9000
+  OUTCEPTION_AWS_ACCESS_KEY_ID: ${OUTCEPTION_AWS_ACCESS_KEY_ID:-outception-development}
+  OUTCEPTION_AWS_SECRET_ACCESS_KEY: ${OUTCEPTION_AWS_SECRET_ACCESS_KEY:-outception123456789}
+  OUTCEPTION_S3_FILES_BUCKET_NAME: outception-s3-${OUTCEPTION_DOCKER_INSTANCE:-1}
+  OUTCEPTION_S3_FILES_PUBLIC_BUCKET_NAME: outception-s3-public-${OUTCEPTION_DOCKER_INSTANCE:-1}
+  OUTCEPTION_S3_CUSTOMER_INVOICES_BUCKET_NAME: outception-s3-${OUTCEPTION_DOCKER_INSTANCE:-1}
+  OUTCEPTION_S3_CUSTOMER_RECEIPTS_BUCKET_NAME: outception-s3-${OUTCEPTION_DOCKER_INSTANCE:-1}
+  OUTCEPTION_S3_PAYOUT_INVOICES_BUCKET_NAME: outception-s3-${OUTCEPTION_DOCKER_INSTANCE:-1}
   # CORS and allowed hosts — configured for Docker networking
-  POLAR_CORS_ORIGINS: '["http://localhost:${WEB_PORT:-3000}", "http://127.0.0.1:${WEB_PORT:-3000}", "http://web:3000"]'
-  POLAR_ALLOWED_HOSTS: '["localhost:${WEB_PORT:-3000}", "127.0.0.1:${WEB_PORT:-3000}"]'
-  POLAR_FRONTEND_BASE_URL: http://localhost:${WEB_PORT:-3000}
-  POLAR_CHECKOUT_BASE_URL: http://localhost:${API_PORT:-8000}/v1/checkout-links/{client_secret}/redirect
-  POLAR_USER_SESSION_COOKIE_DOMAIN: localhost
+  OUTCEPTION_CORS_ORIGINS: '["http://localhost:${WEB_PORT:-3000}", "http://127.0.0.1:${WEB_PORT:-3000}", "http://web:3000"]'
+  OUTCEPTION_ALLOWED_HOSTS: '["localhost:${WEB_PORT:-3000}", "127.0.0.1:${WEB_PORT:-3000}"]'
+  OUTCEPTION_FRONTEND_BASE_URL: http://localhost:${WEB_PORT:-3000}
+  OUTCEPTION_CHECKOUT_BASE_URL: http://localhost:${API_PORT:-8000}/v1/checkout-links/{client_secret}/redirect
+  OUTCEPTION_USER_SESSION_COOKIE_DOMAIN: localhost
   # Tinybird — shared instance. Queries filter by organization_id and each
   # instance has its own postgres DB, so org UUIDs are globally disjoint and
   # cross-instance leakage is impossible. Tokens are auto-discovered from the
   # running container at startup (see startup.sh).
-  POLAR_TINYBIRD_API_URL: http://tinybird:7181
-  POLAR_TINYBIRD_CLICKHOUSE_URL: http://tinybird:7182
+  OUTCEPTION_TINYBIRD_API_URL: http://tinybird:7181
+  OUTCEPTION_TINYBIRD_CLICKHOUSE_URL: http://tinybird:7182
   # OAuth insecure transport for development
   AUTHLIB_INSECURE_TRANSPORT: "true"
-  # Note: Secrets like POLAR_GITHUB_CLIENT_ID, POLAR_STRIPE_* are loaded from
+  # Note: Secrets like OUTCEPTION_GITHUB_CLIENT_ID, OUTCEPTION_STRIPE_* are loaded from
   # env_file (server/.env) and NOT set here. Setting them here with ${VAR:-default}
   # would read from the HOST shell, not from env_file.
   # Prometheus (optional)
-  POLAR_PROMETHEUS_REMOTE_WRITE_URL: ${POLAR_PROMETHEUS_REMOTE_WRITE_URL:-}
+  OUTCEPTION_PROMETHEUS_REMOTE_WRITE_URL: ${OUTCEPTION_PROMETHEUS_REMOTE_WRITE_URL:-}
 
 x-api-volumes: &api-volumes
   - ../../server:/app/server:cached
@@ -91,9 +91,9 @@ services:
     networks:
       # `default` is a per-project bridge so web→api stays scoped to this
       # instance (the `api` service name would otherwise collide with other
-      # instances' api containers also on polar-shared).
+      # instances' api containers also on outception-comared).
       - default
-      - polar-shared
+      - outception-comared
     command: ["api"]
 
   worker:
@@ -106,7 +106,7 @@ services:
     volumes: *worker-volumes
     networks:
       - default
-      - polar-shared
+      - outception-comared
     depends_on:
       api:
         condition: service_started
@@ -126,8 +126,8 @@ services:
       NEXT_PUBLIC_BACKOFFICE_URL: http://localhost:${API_PORT:-8000}/backoffice
       # Note: NEXT_PUBLIC_STRIPE_KEY and NEXT_PUBLIC_GITHUB_APP_NAMESPACE
       # must be set in server/.env (they're loaded via env_file)
-      # POLAR_API_URL is for server-side requests (container-to-container)
-      POLAR_API_URL: http://api:8000
+      # OUTCEPTION_API_URL is for server-side requests (container-to-container)
+      OUTCEPTION_API_URL: http://api:8000
       # Browser-side MinIO uploads require a host-reachable MinIO. Shared
       # infra doesn't publish a host port by default, so direct browser
       # uploads won't work in this dev model — file features that round-trip
@@ -146,7 +146,7 @@ services:
       - "${WEB_PORT:-3000}:3000"
     networks:
       # web only needs to reach the same-project api (SSR proxy); browser
-      # talks to all infra via host ports. Keeping it off polar-shared means
+      # talks to all infra via host ports. Keeping it off outception-comared means
       # `http://api:8000` resolves unambiguously to THIS instance's api.
       - default
     depends_on:
@@ -158,8 +158,8 @@ services:
 
 networks:
   default:
-    name: polar-app-${POLAR_DOCKER_INSTANCE:-1}-default
-  polar-shared:
+    name: outception-app-${OUTCEPTION_DOCKER_INSTANCE:-1}-default
+  outception-comared:
     external: true
 
 volumes:

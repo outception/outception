@@ -1,6 +1,6 @@
-# The Polar Development CLI
+# The Outception Development CLI
 
-A CLI tool to streamline Polar development environment setup and management.
+A CLI tool to streamline Outception development environment setup and management.
 
 ## Installation
 
@@ -61,7 +61,7 @@ One shared infra stack (postgres, redis, minio, tinybird) plus one app stack (ap
 ```bash
 dev docker up                           # shared infra (if needed) + this instance's app stack
 dev docker logs api                     # follow logs (auto-routes to the right project)
-dev docker exec db psql -U polar -l     # one-off command in any container
+dev docker exec db psql -U outception -l     # one-off command in any container
 dev docker down                         # stop this instance (--all to also stop shared)
 ```
 

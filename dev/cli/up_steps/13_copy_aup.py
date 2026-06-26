@@ -12,7 +12,7 @@ from shared import (
 NAME = "Copying acceptable use policy"
 
 AUP_PATH = (
-    SERVER_DIR / "polar" / "organization_review" / "acceptable-use-policy.mdx"
+    SERVER_DIR / "outception" / "organization_review" / "acceptable-use-policy.mdx"
 )
 
 
@@ -24,7 +24,7 @@ def run(ctx: Context) -> bool:
 
     with step_spinner("Copying acceptable use policy..."):
         result = run_command(
-            ["uv", "run", "-m", "polar.organization_review.policy"],
+            ["uv", "run", "-m", "outception.organization_review.policy"],
             cwd=SERVER_DIR,
             capture=True,
         )

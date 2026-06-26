@@ -358,31 +358,31 @@ variable "tinybird_read_token" {
   sensitive   = true
 }
 
-# Polar
-variable "polar_access_token" {
-  description = "Polar API access token"
+# Outception
+variable "outception_access_token" {
+  description = "Outception API access token"
   type        = string
   sensitive   = true
 }
 
-variable "polar_webhook_secret" {
-  description = "Polar webhook secret"
+variable "outception_webhook_secret" {
+  description = "Outception webhook secret"
   type        = string
   sensitive   = true
 }
 
-variable "polar_organization_id" {
-  description = "Polar organization ID"
+variable "outception_organization_id" {
+  description = "Outception organization ID"
   type        = string
 }
 
-variable "polar_free_product_id" {
-  description = "Polar free-tier product ID"
+variable "outception_free_product_id" {
+  description = "Outception free-tier product ID"
   type        = string
 }
 
-variable "polar_scale_product_id" {
-  description = "Polar Scale-tier product ID"
+variable "outception_scale_product_id" {
+  description = "Outception Scale-tier product ID"
   type        = string
 }
 
@@ -405,7 +405,7 @@ variable "tailscale_advertise_routes" {
 }
 
 variable "plain_default_tier_external_id" {
-  description = "Default Plain tier external ID used as a fallback for the polar-self support benefit"
+  description = "Default Plain tier external ID used as a fallback for the outception-self support benefit"
   type        = string
 }
 
@@ -473,8 +473,8 @@ variable "sentry_auth_token" {
   sensitive   = true
 }
 
-variable "polar_preview_access_token" {
-  description = "Polar preview access token for the Vercel frontend"
+variable "outception_preview_access_token" {
+  description = "Outception preview access token for the Vercel frontend"
   type        = string
   sensitive   = true
 }

@@ -1,10 +1,10 @@
 import { useHasPermission } from '@/hooks/permissions'
-import { PolarHog, usePostHog } from '@/hooks/posthog'
+import { OutceptionHog, usePostHog } from '@/hooks/posthog'
 import CampaignOutlined from '@mui/icons-material/CampaignOutlined'
 import CodeOutlined from '@mui/icons-material/CodeOutlined'
 import SpaceDashboardOutlined from '@mui/icons-material/SpaceDashboardOutlined'
 import TuneOutlined from '@mui/icons-material/TuneOutlined'
-import { schemas } from '@polar-sh/client'
+import { schemas } from '@outception-com/client'
 import { usePathname } from 'next/navigation'
 import { useMemo } from 'react'
 
@@ -86,7 +86,7 @@ const applyIsActive = (path: string): ((r: Route) => RouteWithActive) => {
 const useResolveRoutes = (
   routesResolver: (
     org?: schemas['Organization'],
-    posthog?: PolarHog,
+    posthog?: OutceptionHog,
   ) => Route[],
   org?: schemas['Organization'],
   allowAll?: boolean,

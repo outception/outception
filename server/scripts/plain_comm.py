@@ -19,11 +19,11 @@ import typer
 from rich.console import Console
 from rich.progress import Progress
 
-from polar.config import settings
-from polar.kit.db.postgres import AsyncSession, create_async_sessionmaker
-from polar.organization.repository import OrganizationRepository
-from polar.postgres import create_async_engine
-from polar.user.repository import UserRepository
+from outception.config import settings
+from outception.kit.db.postgres import AsyncSession, create_async_sessionmaker
+from outception.organization.repository import OrganizationRepository
+from outception.postgres import create_async_engine
+from outception.user.repository import UserRepository
 
 cli = typer.Typer()
 console = Console()
@@ -258,7 +258,7 @@ async def _send_email(
         thread_result = await plain.create_thread(
             pl.CreateThreadInput(
                 customer_identifier=pl.CustomerIdentifierInput(customer_id=customer_id),
-                title="Polar Incident: Incorrect webhook events (Jan 19–21)",
+                title="Outception Incident: Incorrect webhook events (Jan 19–21)",
                 label_type_ids=["lt_01KFGJRK3DEV0TYT7D084G1MVQ"],
                 external_id=thread_key,
             )
@@ -297,7 +297,7 @@ async def _send_email(
         content = """
 Hi there,
 
-I’m Birk, Founder & CEO of Polar.
+I’m Birk, Founder & CEO of Outception.
 
 I’m writing to inform you about an incident that caused some incorrect webhooks to be sent between **January 19–21**, and was identified on **January 21**. We believe strongly in transparency and accountability, so I want to clearly explain what happened, the impact, how we’ve resolved it, and how you can confirm the resolution.
 
@@ -356,7 +356,7 @@ However, they may have been stored in your database. We’ve attached a separate
 
 You may have received incorrect subscription webhooks that mark existing subscriptions as canceled or past due. Depending on your implementation, this may have side-effects on your application if these end users actively used your product between Jan 19-21.
 
-Importantly: **No customer-facing emails** about these state changes were sent by Polar.
+Importantly: **No customer-facing emails** about these state changes were sent by Outception.
 
 Outside of normal transaction emails, we never communicate directly with your customers (our policy). However, given the incident, if you would like us to assist in communicating with affected customers, we’re happy to do so upon request.
 
@@ -370,21 +370,21 @@ This should not have been possible, and we are making immediate changes to ensur
 
 ---
 
-I sincerely apologize for the impact this incident may have had on you. We understand that Polar is a critical part of your infrastructure, and incidents like this can damage trust. We take that responsibility seriously and are implementing multiple improvements to prevent this from happening again.
+I sincerely apologize for the impact this incident may have had on you. We understand that Outception is a critical part of your infrastructure, and incidents like this can damage trust. We take that responsibility seriously and are implementing multiple improvements to prevent this from happening again.
 
 I’m personally available to answer any questions or concerns. Your trust in us and our reliability are my top priorities.
 
 Sincerely,
 Birk
 
-Founder & CEO, Polar
+Founder & CEO, Outception
 """
 
         email_result = await plain.send_new_email(
             pl.SendNewEmailInput(
                 customer_id=customer_id,
                 thread_id=thread_id,
-                subject="Polar Incident: Incorrect webhook events (Jan 19–21)",
+                subject="Outception Incident: Incorrect webhook events (Jan 19–21)",
                 text_content=content,
                 markdown_content=content,
                 attachment_ids=attachments,

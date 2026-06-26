@@ -4,7 +4,7 @@ import httpx
 import pytest
 from pytest_mock import MockerFixture
 
-from polar.news.fetch import NewsFetchError, _check_redirect, _get, fetch_text
+from outception.news.fetch import NewsFetchError, _check_redirect, _get, fetch_text
 
 
 def _redirect_response(location: str) -> httpx.Response:
@@ -42,6 +42,7 @@ class _FakeStream:
 
     status_code = 200
     headers: dict[str, str] = {}
+    charset_encoding: str | None = None
     request = httpx.Request("GET", "https://feed.example.com/rss")
 
     def __init__(self, chunks: list[bytes]) -> None:
@@ -66,23 +67,24 @@ class TestSizeCap:
         # 6 MB streamed in 1 MB chunks must abort past the 5 MB cap rather than
         # buffer the whole body.
         chunks = [b"x" * (1024 * 1024) for _ in range(6)]
-        mocker.patch("polar.news.fetch.is_fetchable", return_value=True)
+        mocker.patch("outception.news.fetch.is_fetchable", return_value=True)
         mocker.patch(
-            "polar.news.fetch._client.stream", return_value=_FakeStream(chunks)
+            "outception.news.fetch._client.stream", return_value=_FakeStream(chunks)
         )
         with pytest.raises(NewsFetchError, match="too large"):
             await _get("https://feed.example.com/rss")
 
     async def test_within_cap_returns_content(self, mocker: MockerFixture) -> None:
-        mocker.patch("polar.news.fetch.is_fetchable", return_value=True)
+        mocker.patch("outception.news.fetch.is_fetchable", return_value=True)
         mocker.patch(
-            "polar.news.fetch._client.stream",
+            "outception.news.fetch._client.stream",
             return_value=_FakeStream([b"hello ", b"world"]),
         )
-        response = await _get("https://feed.example.com/rss")
-        assert response.content == b"hello world"
+        content, charset = await _get("https://feed.example.com/rss")
+        assert content == b"hello world"
+        assert charset is None
 
     async def test_unsafe_initial_url_rejected(self, mocker: MockerFixture) -> None:
-        mocker.patch("polar.news.fetch.is_fetchable", return_value=False)
+        mocker.patch("outception.news.fetch.is_fetchable", return_value=False)
         with pytest.raises(NewsFetchError, match="unsafe"):
             await fetch_text("http://169.254.169.254/")

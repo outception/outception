@@ -1,6 +1,6 @@
 import { useLogout } from '@/hooks/auth'
-import { useDeleteUser } from '@/hooks/polar/users'
-import { schemas } from '@polar-sh/client'
+import { useDeleteUser } from '@/hooks/outception/users'
+import { schemas } from '@outception-com/client'
 import { useCallback, useState } from 'react'
 import { Alert } from 'react-native'
 

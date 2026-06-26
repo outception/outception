@@ -4,7 +4,7 @@ sidebarTitle: "Seat-Based → Member Model"
 description: "What changes when your organization moves to the member model, and how to update your integration"
 ---
 
-If you sell seat-based products on Polar, your organization will be migrated to the **member model**. This guide explains what changes, what breaks, and exactly how to update your code.
+If you sell seat-based products on Outception, your organization will be migrated to the **member model**. This guide explains what changes, what breaks, and exactly how to update your code.
 
 ## What the member model introduces
 
@@ -24,7 +24,7 @@ The migration happens in **two phases** so you can update your integration befor
 
 ### Phase 1: Preparation (non-breaking)
 
-In this phase, Polar creates `Member` records for all your existing seat holders and populates `member_id` on seats and benefit grants. **Nothing breaks** because `customer_id` on seats still points to the seat holder, and no customers are deleted.
+In this phase, Outception creates `Member` records for all your existing seat holders and populates `member_id` on seats and benefit grants. **Nothing breaks** because `customer_id` on seats still points to the seat holder, and no customers are deleted.
 
 This gives you time to start reading the new `member` and `member_id` fields and update your code before the breaking change.
 
@@ -296,7 +296,7 @@ if (event.type === 'benefit_grant.created') {
 
 ### 5. Seat assignment
 
-Existing assignment calls using `email`, `customer_id`, or `external_customer_id` continue to work. Polar resolves them to a member internally. However, the **response changes** between phases:
+Existing assignment calls using `email`, `customer_id`, or `external_customer_id` continue to work. Outception resolves them to a member internally. However, the **response changes** between phases:
 
 **Phase 1:** `seat.customer_id` in the response still points to the seat holder.
 

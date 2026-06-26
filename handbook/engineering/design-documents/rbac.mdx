@@ -6,7 +6,7 @@
 
 ## Summary
 
-Introduce role-based access control for users on a Polar organization. Three roles ship in this iteration — `owner`, `admin`, and `member` — replacing today's implicit binary where org-level admin capability (member management, organization deletion, payout-account selection, Finance and payouts) is gated by `Account.admin_id`: the single user who is recorded as the admin on the org's Polar-side billing `Account`, today set at org creation.
+Introduce role-based access control for users on a Outception organization. Three roles ship in this iteration — `owner`, `admin`, and `member` — replacing today's implicit binary where org-level admin capability (member management, organization deletion, payout-account selection, Finance and payouts) is gated by `Account.admin_id`: the single user who is recorded as the admin on the org's Outception-side billing `Account`, today set at org creation.
 
 All three roles are stored on the user–organization membership. `admin` and `member` are freely assignable; there is exactly one `owner` per organization. During rollout, `owner` is anchored to today's `Account.admin_id` via dual-write so the two never disagree. The end state of this work drops `Account.admin_id` and makes the role table itself the sole source of truth for ownership (a partial unique index enforces the singularity invariant; the KYC/identity-verification gate moves onto role transitions into `owner`). What `owner` adds on top of `admin` is a small set of ownership-tied responsibilities retained for KYC/KYB / UBO reasons: the legal/billing primary contact for the org, the recipient of identity-verification notifications, the sole authority to transfer ownership of the org, and a member-removal exemption (the `owner` cannot be removed from the org without first transferring ownership).
 
@@ -36,8 +36,8 @@ The change is mostly additive on top of the existing two-layer authorization arc
 - **`OrganizationRole`** — new enum (`owner`, `admin`, `member`) attached to a membership. `admin` and `member` are freely assignable; `owner` is constrained to exactly one user per organization. During rollout that user is identified by `Account.admin_id`; in the end state, by a partial unique index on the role table itself.
 - **`owner`** — the singular role per organization. Carries every `admin` capability plus a small set of ownership-tied responsibilities (legal/billing primary contact, identity-verification notification recipient, sole authority for ownership transfer, exemption from member removal). The user holding it must be identity-verified (Stripe KYC); the gate sits on role transitions into `owner` once `Account.admin_id` is gone.
 - **Membership** — the link between a user and an organization. Today it carries no role; this design adds one.
-- **`Account`** — Polar's internal financial container for an organization. Holds the credit balance, fee structure, billing identity (name, address) for invoices and receipts, and a single `admin_id`. One per org. Distinct from the Stripe-side payout account.
-- **`Account.admin_id`** — today, the singular authorization signal for org-level admin actions: member management, organization deletion, payout-account selection, Finance and payout reads/writes. This design moves all those gates onto role-permission checks and, in the final phase of the rollout, drops the column. While the column still exists (phases 1–5), it is dual-written with the `owner` role so the two cannot drift; once the cleanup phase lands, the role is the only source of truth and the responsibilities the column carried (legal/billing primary contact, identity-verification notification recipient, owner-side of the Polar-for-Polar relationship, Stripe-identity-verified KYC gate) are anchored on the user holding `owner` instead.
+- **`Account`** — Outception's internal financial container for an organization. Holds the credit balance, fee structure, billing identity (name, address) for invoices and receipts, and a single `admin_id`. One per org. Distinct from the Stripe-side payout account.
+- **`Account.admin_id`** — today, the singular authorization signal for org-level admin actions: member management, organization deletion, payout-account selection, Finance and payout reads/writes. This design moves all those gates onto role-permission checks and, in the final phase of the rollout, drops the column. While the column still exists (phases 1–5), it is dual-written with the `owner` role so the two cannot drift; once the cleanup phase lands, the role is the only source of truth and the responsibilities the column carried (legal/billing primary contact, identity-verification notification recipient, owner-side of the Outception-for-Outception relationship, Stripe-identity-verified KYC gate) are anchored on the user holding `owner` instead.
 - **`PayoutAccount`** — represents a Stripe Connect account. User-personal: each `PayoutAccount` has a single `admin_id` set at creation, immutable thereafter, representing the human whose KYC backs the Stripe account. A `PayoutAccount` can be linked to multiple organizations.
 - **`PayoutAccount.admin_id`** — gates Stripe-account-level actions (onboarding link, dashboard link, delete) and the user-personal `GET /v1/payout-accounts/` listing. Unrelated to organization admin role; not changing in this design.
 - **Policies** — the runtime authority for authorization decisions, organized per resource area.
@@ -48,7 +48,7 @@ The change is mostly additive on top of the existing two-layer authorization arc
 
 ### Two-layer authorization (recap)
 
-Polar's authorization model has two distinct layers:
+Outception's authorization model has two distinct layers:
 
 1. **Authentication** resolves the caller into an `AuthSubject` and attaches the token's scope set.
 2. **Authorization** atomically resolves the target resource, verifies org membership, and evaluates a policy function before the endpoint body runs.
@@ -124,7 +124,7 @@ The cleanup phase (phase 6) drops the column and re-homes the responsibilities i
 - **Singularity invariant** — moves from "anchored on the singular `Account.admin_id` column" to a partial unique index on `UserOrganization (organization_id) WHERE role = 'owner'`.
 - **KYC / identity-verification gate** — today enforced inside `account_service.change_admin` when `Account.admin_id` is mutated; moves onto role transitions into `owner` (which only the backoffice flow can perform until self-serve transfer ships).
 - **Legacy joins** — `repository.get_admin_user` and any caller that fetched "the org's admin" via `Account.admin_id` switch to a query against `UserOrganization` filtered to `role = 'owner'`.
-- **Notification routing and the Polar-for-Polar owner-side relationship** — re-anchored on the user holding `owner`. The user identified by these flows is unchanged; only the lookup path changes.
+- **Notification routing and the Outception-for-Outception owner-side relationship** — re-anchored on the user holding `owner`. The user identified by these flows is unchanged; only the lookup path changes.
 
 ### Relationship to `PayoutAccount.admin_id`
 
@@ -193,7 +193,7 @@ Enforced in the membership service: any operation that would leave an organizati
 
 ### Read-only impersonation rejection
 
-The recently-codified read-only-impersonation invariant ([#11303](https://github.com/polarsource/polar/pull/11303)) carries through: impersonation sessions hold no `_write` scope, and the role-mutation endpoint requires the `members:write` scope (which is what implies the `members:set_role` permission), so impersonation cannot mutate roles. No additional safeguards needed.
+The recently-codified read-only-impersonation invariant ([#11303](https://github.com/outception/outception/pull/11303)) carries through: impersonation sessions hold no `_write` scope, and the role-mutation endpoint requires the `members:write` scope (which is what implies the `members:set_role` permission), so impersonation cannot mutate roles. No additional safeguards needed.
 
 ## Rollout
 
@@ -240,7 +240,7 @@ Default to (3) — the user-visible cost is small and short-lived, and it avoids
 
 After phase 5 has soaked in production long enough to trust the role system as the live authorization signal, retire `Account.admin_id`. The work splits into three steps that ship together (the read-side migration first, the schema change last) so the column is never read after the dual-write stops:
 
-1. **Re-home the reads.** Migrate every remaining call site that still references `Account.admin_id` — `repository.get_admin_user`, the backoffice `change_admin` endpoint's storage layer, any notification or Polar-for-Polar lookup that resolved "the org's admin user" via the column, and any helpers that closed over it — to query `UserOrganization` filtered to `role = 'owner'`. The four authorization policies that historically read `Account.admin_id` are already off it (they switched to the permission check in Phase 3) so don't need further migration here. The backoffice ownership-transfer flow becomes a role mutation: it runs the existing KYC/identity-verification check on the incoming admin and then promotes them to `owner` (demoting the previous owner to `admin`) directly, instead of mutating `Account.admin_id` and letting the dual-write echo into the role.
+1. **Re-home the reads.** Migrate every remaining call site that still references `Account.admin_id` — `repository.get_admin_user`, the backoffice `change_admin` endpoint's storage layer, any notification or Outception-for-Outception lookup that resolved "the org's admin user" via the column, and any helpers that closed over it — to query `UserOrganization` filtered to `role = 'owner'`. The four authorization policies that historically read `Account.admin_id` are already off it (they switched to the permission check in Phase 3) so don't need further migration here. The backoffice ownership-transfer flow becomes a role mutation: it runs the existing KYC/identity-verification check on the incoming admin and then promotes them to `owner` (demoting the previous owner to `admin`) directly, instead of mutating `Account.admin_id` and letting the dual-write echo into the role.
 2. **Add the role-side enforcement.** Create a partial unique index on `UserOrganization (organization_id) WHERE role = 'owner'` so the singularity invariant survives the column's removal. Move the `IdentityVerificationStatus.verified` gate, today inside `account_service.change_admin`, to live alongside role transitions into `owner`.
 3. **Drop the column.** Remove `Account.admin_id` from the schema; remove the dual-write from any code path that previously kept it aligned with the role.
 

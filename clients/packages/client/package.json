@@ -1,7 +1,7 @@
 {
-  "name": "@polar-sh/client",
-  "description": "Polar Internal API Client",
-  "author": "Polar",
+  "name": "@outception-com/client",
+  "description": "Outception Internal API Client",
+  "author": "Outception",
   "license": "Apache-2.0",
   "type": "module",
   "private": true,
@@ -25,8 +25,8 @@
     }
   },
   "devDependencies": {
-    "@polar-sh/eslint-config": "workspace:*",
-    "@polar-sh/typescript-config": "workspace:*",
+    "@outception-com/eslint-config": "workspace:*",
+    "@outception-com/typescript-config": "workspace:*",
     "openapi-typescript": "^7.10.1",
     "tsup": "^8.5.1",
     "typescript": "latest"

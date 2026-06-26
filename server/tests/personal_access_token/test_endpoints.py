@@ -19,7 +19,7 @@ class TestCreatePersonalAccessToken:
         )
         assert response.status_code == 201
         body = response.json()
-        assert body["token"].startswith("polar_pat_")
+        assert body["token"].startswith("outception_pat_")
         pat = body["personal_access_token"]
         assert pat["comment"] == "ci token"
         assert pat["scopes"] == ["user:read"]

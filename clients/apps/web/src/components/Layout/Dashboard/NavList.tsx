@@ -7,7 +7,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubItem,
   useSidebar,
-} from '@polar-sh/ui/components/atoms/Sidebar'
+} from '@outception-com/ui/components/atoms/Sidebar'
 import Link from 'next/link'
 import { ReactNode, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
@@ -25,18 +25,18 @@ type NavStyle = {
 const NAV_STYLES: Record<NavType, NavStyle> = {
   organization: {
     activeItem:
-      'dark:!bg-polar-900 dark:border-polar-800 border-gray-200 bg-white! text-black shadow-xs dark:text-white',
+      'dark:!bg-outception-900 dark:border-outception-800 border-gray-200 bg-white! text-black shadow-xs dark:text-white',
     activeIcon: 'text-black dark:text-white',
     subBase:
-      'dark:text-polar-500 ml-4 inline-flex flex-row items-center gap-x-2 text-sm font-medium text-gray-500 transition-colors hover:text-black dark:hover:text-white',
+      'dark:text-outception-500 ml-4 inline-flex flex-row items-center gap-x-2 text-sm font-medium text-gray-500 transition-colors hover:text-black dark:hover:text-white',
     activeSub: 'text-black dark:text-white',
   },
   account: {
     activeItem:
-      'dark:bg-polar-900 dark:border-polar-800 border-gray-200 bg-white text-black shadow-xs dark:text-white',
+      'dark:bg-outception-900 dark:border-outception-800 border-gray-200 bg-white text-black shadow-xs dark:text-white',
     activeIcon: 'text-blue-500 dark:text-white',
     subBase:
-      'dark:text-polar-500 ml-4 inline-flex flex-row items-center gap-x-2 text-sm font-medium text-gray-500',
+      'dark:text-outception-500 ml-4 inline-flex flex-row items-center gap-x-2 text-sm font-medium text-gray-500',
     activeSub: 'text-blue-500 dark:text-white',
   },
 }
@@ -78,8 +78,8 @@ export const NavList = ({
                 'flex flex-row items-center rounded-lg border border-transparent px-2 transition-colors dark:border-transparent',
                 route.isActive
                   ? style.activeItem
-                  : 'dark:text-polar-500 dark:hover:text-polar-200 text-gray-500 hover:text-black',
-                isCollapsed && '!dark:text-polar-600',
+                  : 'dark:text-outception-500 dark:hover:text-outception-200 text-gray-500 hover:text-black',
+                isCollapsed && '!dark:text-outception-600',
               )}
               href={route.link}
               onClick={(e) => {

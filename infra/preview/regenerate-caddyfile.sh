@@ -36,7 +36,7 @@ ERRORS
     echo ':8080 {'
     echo '	route {'
     cat <<'AUTH'
-		@no_token not header X-Preview-Token {$POLAR_PREVIEW_ACCESS_TOKEN}
+		@no_token not header X-Preview-Token {$OUTCEPTION_PREVIEW_ACCESS_TOKEN}
 		respond @no_token "Forbidden" 403
 AUTH
     for f in "$CADDY_PREVIEWS_DIR"/*.caddy; do

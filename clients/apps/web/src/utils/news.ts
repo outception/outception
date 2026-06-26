@@ -1,5 +1,5 @@
 import { api } from '@/utils/client'
-import { schemas, unwrap } from '@polar-sh/client'
+import { schemas, unwrap } from '@outception-com/client'
 
 export type NewsSourceMeta = schemas['SourceMeta']
 export type NewsSourceResponse = schemas['SourceResponse']

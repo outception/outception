@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from polar.kit.metadata import MetadataInputMixin
+from outception.kit.metadata import MetadataInputMixin
 
 
 class MetadataSchema(MetadataInputMixin): ...

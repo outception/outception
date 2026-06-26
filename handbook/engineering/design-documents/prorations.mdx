@@ -140,10 +140,10 @@ Credits customer’s balance | Deducted from next invoice
 B) Customer credit mechanism | Credits customer’s balance | ? we need a credit mechanism
 
 **AND** we need to display this correctly on next invoice |
-| **Monthly to yearly** |  | Would be a switch of products in Polar |  | Would be a switch of products in Polar |
+| **Monthly to yearly** |  | Would be a switch of products in Outception |  | Would be a switch of products in Outception |
 | **Yearly to monthly** | Sets billing anchor to “now” (when the downgrade happened) and starts the monthly subscription from then
 
-+ adds remaining amount to customer balance | Would be a switch of products in Polar |  | Would be a switch of products in Polar |
++ adds remaining amount to customer balance | Would be a switch of products in Outception |  | Would be a switch of products in Outception |
 | **Trial to paid** | Payment immediately |  | Payment immediately |  |
 | *within a single subscription cycle
 Downgrade from 10 to 7 units
@@ -173,7 +173,7 @@ Presumably a subscription cycle goes from e.g. July 17th 00:00 to August 17th 00
 
 # Data model
 
-Use existing `BillingEntry` data model as described in [polar#6118](https://github.com/polarsource/polar/issues/6118).
+Use existing `BillingEntry` data model as described in [outception#6118](https://github.com/outception/outception/issues/6118).
 
 All items billable in the future are stored in our data model `BillingEntry`.
 

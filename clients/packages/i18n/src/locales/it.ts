@@ -3,14 +3,14 @@ export default {
     footer: {
       poweredBy: 'Powered by',
       merchantOfRecord:
-        'Questo ordine è elaborato dal nostro rivenditore online e Merchant of Record, Polar, che gestisce anche le richieste relative agli ordini e i resi.',
+        'Questo ordine è elaborato dal nostro rivenditore online e Merchant of Record, Outception, che gestisce anche le richieste relative agli ordini e i resi.',
       mandateSubscriptionTrial:
-        "Facendo clic su \"{buttonLabel}\", autorizzi Polar Software, Inc., il nostro rivenditore online e merchant of record, ad addebitare sul metodo di pagamento selezionato l'importo indicato sopra al termine del periodo di prova e in ogni successiva data di fatturazione fino all'annullamento, e accetti i {buyerTermsLink}. Puoi annullare in qualsiasi momento prima della fine del periodo di prova per evitare l'addebito.",
+        "Facendo clic su \"{buttonLabel}\", autorizzi Outception Software, Inc., il nostro rivenditore online e merchant of record, ad addebitare sul metodo di pagamento selezionato l'importo indicato sopra al termine del periodo di prova e in ogni successiva data di fatturazione fino all'annullamento, e accetti i {buyerTermsLink}. Puoi annullare in qualsiasi momento prima della fine del periodo di prova per evitare l'addebito.",
       mandateSubscription:
-        'Facendo clic su "{buttonLabel}", autorizzi Polar Software, Inc., il nostro rivenditore online e merchant of record, ad addebitare immediatamente sul metodo di pagamento selezionato l\'importo indicato sopra e ad addebitare lo stesso importo in ogni successiva data di fatturazione fino all\'annullamento, e accetti i {buyerTermsLink}.',
+        'Facendo clic su "{buttonLabel}", autorizzi Outception Software, Inc., il nostro rivenditore online e merchant of record, ad addebitare immediatamente sul metodo di pagamento selezionato l\'importo indicato sopra e ad addebitare lo stesso importo in ogni successiva data di fatturazione fino all\'annullamento, e accetti i {buyerTermsLink}.',
       buyerTermsLink: 'Termini di acquisto',
       mandateOneTime:
-        'Cliccando su "{buttonLabel}", autorizzi Polar Software, Inc., il nostro rivenditore online e merchant of record, ad addebitare l\'importo sopra indicato sul metodo di pagamento selezionato e accetti i {buyerTermsLink}. Questo è un addebito unico.',
+        'Cliccando su "{buttonLabel}", autorizzi Outception Software, Inc., il nostro rivenditore online e merchant of record, ad addebitare l\'importo sopra indicato sul metodo di pagamento selezionato e accetti i {buyerTermsLink}. Questo è un addebito unico.',
     },
     form: {
       email: 'Email',

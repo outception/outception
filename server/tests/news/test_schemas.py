@@ -1,6 +1,6 @@
 import pytest
 
-from polar.news.schemas import NewsItem
+from outception.news.schemas import NewsItem
 
 
 class TestNewsItemUrlSafety:

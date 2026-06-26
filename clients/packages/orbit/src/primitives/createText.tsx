@@ -40,8 +40,8 @@ const textVariants = cva('', {
     },
     color: {
       default: 'text-black dark:text-white',
-      muted: 'text-gray-500 dark:text-polar-500',
-      disabled: 'text-gray-400 dark:text-polar-600',
+      muted: 'text-gray-500 dark:text-outception-500',
+      disabled: 'text-gray-400 dark:text-outception-600',
       accent: 'text-indigo-500 dark:text-indigo-500',
       danger: 'text-red-500 dark:text-red-500',
       error: 'text-red-500 dark:text-red-500',
@@ -220,7 +220,7 @@ type TextProps<E extends TextTag = 'p'> = TextStyleProps & {
 
 const HEADING_FONT_FEATURES = "'ss07' 1, 'ss08' 1, 'zero' 1, 'liga' 0"
 const SKELETON_CLASSES =
-  'dark:bg-polar-700 animate-pulse rounded-sm bg-gray-100'
+  'dark:bg-outception-700 animate-pulse rounded-sm bg-gray-100'
 
 const renderMultiLineSkeleton = (lines: number): ReactNode =>
   Array.from({ length: lines }, (_, i) => (

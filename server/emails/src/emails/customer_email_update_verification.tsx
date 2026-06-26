@@ -3,7 +3,7 @@ import {
   Footer,
   Intro,
   Text,
-  WrapperPolar,
+  WrapperOutception,
 } from '../components/foundation'
 import type { schemas } from '../types'
 
@@ -14,7 +14,7 @@ export function CustomerEmailUpdateVerification({
   url,
 }: schemas['CustomerEmailUpdateVerificationProps']) {
   return (
-    <WrapperPolar
+    <WrapperOutception
       preview={`Verify your new email address for ${organization_name}`}
     >
       <Intro>
@@ -29,7 +29,7 @@ export function CustomerEmailUpdateVerification({
       </Intro>
       <Button href={url}>Verify Email Address</Button>
       <Footer email={email} />
-    </WrapperPolar>
+    </WrapperOutception>
   )
 }
 
@@ -37,7 +37,7 @@ CustomerEmailUpdateVerification.PreviewProps = {
   email: 'new@example.com',
   organization_name: 'Acme Inc.',
   token_lifetime_minutes: 30,
-  url: 'https://polar.sh/acme-inc/portal/verify-email?token=polar_cev_abc123',
+  url: 'https://outception.com/acme-inc/portal/verify-email?token=outception_cev_abc123',
 }
 
 export default CustomerEmailUpdateVerification

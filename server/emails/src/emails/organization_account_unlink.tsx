@@ -1,4 +1,4 @@
-import { Footer, Intro, Text, WrapperPolar } from '../components/foundation'
+import { Footer, Intro, Text, WrapperOutception } from '../components/foundation'
 import AccountUnlinkDetails from '../components/AccountUnlinkDetails'
 import type { schemas } from '../types'
 
@@ -8,12 +8,12 @@ export function OrganizationAccountUnlink({
   organizations_unlinked,
 }: schemas['OrganizationAccountUnlinkProps']) {
   return (
-    <WrapperPolar
+    <WrapperOutception
       preview={`Important: Organization Account Update for ${organization_kept_name}`}
     >
       <Intro>
         We'd like to inform you that some of your Stripe payout accounts
-        associated with organizations in Polar have been detached. This update
+        associated with organizations in Outception have been detached. This update
         was made as part of our ongoing efforts to enhance security and ensure
         compliance, as sharing the same Stripe account across multiple
         organizations will no longer be permitted going forward.
@@ -38,7 +38,7 @@ export function OrganizationAccountUnlink({
         out to our support team.
       </Text>
       <Footer email={email} />
-    </WrapperPolar>
+    </WrapperOutception>
   )
 }
 

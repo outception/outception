@@ -8,7 +8,7 @@ const plugins = [
       image: './assets/images/splash-icon.png',
       imageWidth: 120,
       resizeMode: 'contain',
-      // eslint-disable-next-line @polar/no-hardcoded-colors
+      // eslint-disable-next-line @outception/no-hardcoded-colors
       backgroundColor: '#0D0E10',
     },
   ],
@@ -32,8 +32,8 @@ if (!IS_WIDGET_BUILD) {
     '@sentry/react-native/expo',
     {
       url: 'https://sentry.io/',
-      project: 'polar-app',
-      organization: 'polar-sh',
+      project: 'outception-app',
+      organization: 'outception-com',
     },
   ])
 }
@@ -42,19 +42,19 @@ plugins.push('@bacons/apple-targets')
 
 module.exports = {
   expo: {
-    name: 'Polar',
-    slug: 'Polar',
+    name: 'Outception',
+    slug: 'Outception',
     version: '1.5.0',
     orientation: 'portrait',
     icon: './assets/images/icon.png',
-    scheme: 'polar',
+    scheme: 'outception',
     userInterfaceStyle: 'dark',
     newArchEnabled: true,
-    owner: 'polar-sh',
+    owner: 'outception-com',
     ios: {
       appleTeamId: '55U3YA3QTA',
       supportsTablet: false,
-      bundleIdentifier: 'com.polarsource.Polar',
+      bundleIdentifier: 'com.outception.Outception',
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
       },
@@ -62,20 +62,20 @@ module.exports = {
       entitlements: {
         'com.apple.developer.applesignin': ['Default'],
         'com.apple.security.application-groups': [
-          'group.com.polarsource.Polar',
+          'group.com.outception.Outception',
         ],
       },
-      associatedDomains: ['applinks:polar.godetour.link'],
+      associatedDomains: ['applinks:outception.godetour.link'],
     },
     android: {
       adaptiveIcon: {
         foregroundImage: './assets/images/adaptive-icon.png',
         // Native build-time value — Expo config can't reference theme tokens.
-        // eslint-disable-next-line @polar/no-hardcoded-colors
+        // eslint-disable-next-line @outception/no-hardcoded-colors
         backgroundColor: '#0D0E10',
       },
-      package: 'com.polarsource.Polar',
-      scheme: 'polar',
+      package: 'com.outception.Outception',
+      scheme: 'outception',
       googleServicesFile: './google-services.json',
       intentFilters: [
         {
@@ -84,7 +84,7 @@ module.exports = {
           data: [
             {
               scheme: 'https',
-              host: 'polar.godetour.link',
+              host: 'outception.godetour.link',
               pathPrefix: '/baSjUTJtg8',
             },
           ],

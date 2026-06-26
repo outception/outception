@@ -3,7 +3,7 @@ Load test configuration.
 
 Environment variables:
 - LOAD_TEST_HOST: Base URL of the API (default: http://127.0.0.1:8000)
-- LOAD_TEST_API_TOKEN: Organization access token (polar_oat_*) for authenticated requests
+- LOAD_TEST_API_TOKEN: Organization access token (outception_oat_*) for authenticated requests
 - LOAD_TEST_PRODUCT_ID: Product ID for checkout tests
 - LOAD_TEST_EVENT_EXTERNAL_CUSTOMER_IDS: Comma-separated list of external customer IDs
 - LOAD_TEST_EVENT_BATCH_SIZE: Number of events per batch (default: 10)
@@ -30,7 +30,7 @@ class LoadTestConfig:
     api_token: str | None = os.getenv("LOAD_TEST_API_TOKEN")
     product_id: str | None = os.getenv("LOAD_TEST_PRODUCT_ID")
     customer_email: str = os.getenv(
-        "LOAD_TEST_CUSTOMER_EMAIL", "petru+loadtest@polar.sh"
+        "LOAD_TEST_CUSTOMER_EMAIL", "petru+loadtest@outception.com"
     )
 
     # Event Ingestion Configuration

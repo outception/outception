@@ -5,10 +5,10 @@ import {
   usePersonalAccessTokens,
 } from '@/hooks/queries'
 import { extractApiErrorMessage } from '@/utils/api/errors'
-import { schemas } from '@polar-sh/client'
-import { Button } from '@polar-sh/orbit'
-import FormattedDateTime from '@polar-sh/ui/components/atoms/FormattedDateTime'
-import { ListGroup } from '@polar-sh/orbit'
+import { schemas } from '@outception-com/client'
+import { Button } from '@outception-com/orbit'
+import FormattedDateTime from '@outception-com/ui/components/atoms/FormattedDateTime'
+import { ListGroup } from '@outception-com/orbit'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@polar-sh/ui/components/ui/alert-dialog'
+} from '@outception-com/ui/components/ui/alert-dialog'
 import { useCallback } from 'react'
 import { toast } from '../Toast/use-toast'
 
@@ -48,7 +48,7 @@ const AccessToken = (props: schemas['PersonalAccessToken']) => {
         <div className="flex flex-row">
           <div className="gap-y flex flex-col">
             <h3 className="text-md">{props.comment}</h3>
-            <p className="dark:text-polar-400 text-sm text-gray-500">
+            <p className="dark:text-outception-400 text-sm text-gray-500">
               {props.expires_at ? (
                 new Date(props.expires_at) < new Date() ? (
                   <span className="text-red-500 dark:text-red-400">
@@ -87,7 +87,7 @@ const AccessToken = (props: schemas['PersonalAccessToken']) => {
             </p>
           </div>
         </div>{' '}
-        <div className="dark:text-polar-400 flex flex-row items-center gap-x-4 space-x-4 text-gray-500">
+        <div className="dark:text-outception-400 flex flex-row items-center gap-x-4 space-x-4 text-gray-500">
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive">Revoke</Button>
@@ -121,7 +121,7 @@ const AccessTokensSettings = () => {
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className="dark:bg-polar-800 dark:text-polar-500 flex flex-col gap-2 rounded-2xl bg-gray-100 p-6 text-sm text-gray-500">
+      <div className="dark:bg-outception-800 dark:text-outception-500 flex flex-col gap-2 rounded-2xl bg-gray-100 p-6 text-sm text-gray-500">
         <h3 className="text-base font-medium text-black dark:text-white">
           Access tokens have moved
         </h3>
@@ -144,7 +144,7 @@ const AccessTokensSettings = () => {
           ))
         ) : (
           <ListGroup.Item>
-            <p className="dark:text-polar-400 text-sm text-gray-500">
+            <p className="dark:text-outception-400 text-sm text-gray-500">
               You don&apos;t have any active Personal Access Tokens.
             </p>
           </ListGroup.Item>

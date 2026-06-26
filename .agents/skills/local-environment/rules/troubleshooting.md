@@ -56,7 +56,7 @@ host port — reach it through `dev docker exec` or `docker exec polar-shared-<s
 **Check file mounting:**
 ```bash
 dev docker shell api
-ls -la /app/server/polar/
+ls -la /app/server/outception/
 ```
 
 **Restart the service:**

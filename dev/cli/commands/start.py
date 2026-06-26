@@ -8,7 +8,7 @@ import typer
 
 from shared import CLIENTS_DIR, ROOT_DIR, SERVER_DIR, console, run_command, step_spinner
 
-SESSION = "polar"
+SESSION = "outception"
 TMUX_CONF = Path.home() / ".tmux.conf"
 
 
@@ -78,7 +78,7 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
             console.print(f"[bold blue]Attaching to existing '{SESSION}' session[/bold blue]\n")
             os.execvp("tmux", ["tmux", "attach-session", "-t", SESSION])
 
-        console.print(f"[bold blue]Starting Polar in tmux session '{SESSION}'[/bold blue]\n")
+        console.print(f"[bold blue]Starting Outception in tmux session '{SESSION}'[/bold blue]\n")
 
         dev_bin = str(ROOT_DIR / "dev" / "cli" / "dev")
         server_dir = str(SERVER_DIR)

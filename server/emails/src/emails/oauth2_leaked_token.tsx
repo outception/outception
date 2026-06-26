@@ -4,7 +4,7 @@ import {
   Heading,
   List,
   Text,
-  WrapperPolar,
+  WrapperOutception,
 } from '../components/foundation'
 import InfoBox from '../components/InfoBox'
 import SecurityFaqNote from '../components/SecurityFaqNote'
@@ -17,7 +17,7 @@ export function OAuth2LeakedToken({
   client_name,
 }: schemas['OAuth2LeakedTokenProps']) {
   return (
-    <WrapperPolar preview="Important security notice: Your access or refresh token has been publicly leaked">
+    <WrapperOutception preview="Important security notice: Your access or refresh token has been publicly leaked">
       <Heading>Important security notice</Heading>
       <Text>
         We've been notified that one of your access or refresh token has been
@@ -46,7 +46,7 @@ export function OAuth2LeakedToken({
       </InfoBox>
       <SecurityFaqNote />
       <Footer email={email} />
-    </WrapperPolar>
+    </WrapperOutception>
   )
 }
 

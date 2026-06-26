@@ -3,10 +3,10 @@
 import { usePostHog } from '@/hooks/posthog'
 import { CONFIG } from '@/utils/config'
 import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight'
-import { Button } from '@polar-sh/orbit'
+import { Button } from '@outception-com/orbit'
 import { ComponentProps, FormEvent, useCallback, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
-import { Modal } from '@polar-sh/orbit'
+import { Modal } from '@outception-com/orbit'
 import { useModal } from '../Modal/useModal'
 import { AuthModal } from './AuthModal'
 
@@ -119,7 +119,7 @@ function GetStartedChoose({
     <div className="flex flex-col gap-y-12 p-12">
       <div className="flex flex-col gap-y-1">
         <h1 className="text-xl font-medium">Welcome to Outception</h1>
-        <p className="dark:text-polar-500 text-sm text-gray-500">
+        <p className="dark:text-outception-500 text-sm text-gray-500">
           A billing platform for the intelligence era.
         </p>
       </div>
@@ -129,20 +129,20 @@ function GetStartedChoose({
           <Button fullWidth onClick={onGetStarted}>
             Get started
           </Button>
-          <p className="dark:text-polar-500 mt-2 text-center text-xs text-gray-400">
+          <p className="dark:text-outception-500 mt-2 text-center text-xs text-gray-400">
             Create your organization and start accepting payments.
           </p>
         </div>
         <div className="flex w-full flex-row items-center gap-6">
-          <div className="dark:border-polar-700 grow border-t border-gray-200" />
+          <div className="dark:border-outception-700 grow border-t border-gray-200" />
           <div className="text-sm text-gray-500">or</div>
-          <div className="dark:border-polar-700 grow border-t border-gray-200" />
+          <div className="dark:border-outception-700 grow border-t border-gray-200" />
         </div>
         <div>
           <Button fullWidth variant="secondary" onClick={onSandbox}>
             Try the sandbox
           </Button>
-          <p className="dark:text-polar-500 mt-2 text-center text-xs text-gray-400">
+          <p className="dark:text-outception-500 mt-2 text-center text-xs text-gray-400">
             Test data and mock payments. No setup required.
           </p>
         </div>

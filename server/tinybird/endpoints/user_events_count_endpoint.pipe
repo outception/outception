@@ -1,6 +1,6 @@
 DESCRIPTION >
     Counts user events per organization within an ingested_at window,
-    excluding a given organization. Used by polar_self event ingestion tracking.
+    excluding a given organization. Used by outception_self event ingestion tracking.
 
 NODE user_events_count_query
 SQL >

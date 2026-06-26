@@ -1,4 +1,4 @@
-import { config } from '@polar-sh/eslint-config/base'
+import { config } from '@outception-com/eslint-config/base'
 
 /** @type {import("eslint").Linter.Config[]} */
 export default [

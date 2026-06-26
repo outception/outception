@@ -1,4 +1,4 @@
-# Development Dockerfile for Polar API and Worker services
+# Development Dockerfile for Outception API and Worker services
 # Optimized for hot-reloading with mounted source code
 
 FROM python:3.14-slim

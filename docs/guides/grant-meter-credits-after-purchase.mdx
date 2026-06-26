@@ -12,7 +12,7 @@ When building usage-based billing systems, you may want to give new customers an
 - Onboarding bonuses
 - Promotional credits for new signups or purchases
 
-There are two ways to grant initial meter credits in Polar:
+There are two ways to grant initial meter credits in Outception:
 
 1. **Meter Credits Benefit (Recommended)** - Automatically grant credits when a customer purchases a product
 2. **Webhook + Events API** - Programmatically grant credits for advanced use cases
@@ -54,7 +54,7 @@ Create a product and attach the Meter Credits benefit to it.
 
 <Steps>
   <Step title="Create a product">
-    Open [**Products → New Product**](https://polar.sh/to/dashboard/products/new) in the dashboard.
+    Open [**Products → New Product**](https://outception.com/to/dashboard/products/new) in the dashboard.
   </Step>
   <Step title="Configure the product">
     - Set a name and description
@@ -101,11 +101,11 @@ This approach involves:
 
 ### Prerequisites
 
-- A Polar account with an organization
+- A Outception account with an organization
 - A meter created with **Sum** aggregation
 - A product with the meter attached
 - Webhooks enabled
-- A Polar access token for API calls
+- A Outception access token for API calls
 
 ### Step 1: Create a Meter
 
@@ -113,7 +113,7 @@ First, create a meter that will track your customers' usage.
 
 <Steps>
   <Step title="Navigate to Meters">
-    Open [**Products → Meters**](https://polar.sh/to/dashboard/products/meters) in the dashboard.
+    Open [**Products → Meters**](https://outception.com/to/dashboard/products/meters) in the dashboard.
   </Step>
   <Step title="Create a new meter">
     Click **Create Meter** and configure:
@@ -201,7 +201,7 @@ Test that credits are properly granted when a customer makes a purchase.
 
 <Steps>
   <Step title="Use the sandbox environment">
-    Test your integration in Polar's [sandbox environment](/integrate/sandbox) to avoid affecting production data.
+    Test your integration in Outception's [sandbox environment](/integrate/sandbox) to avoid affecting production data.
   </Step>
   <Step title="Make a test purchase">
     Create a checkout session and complete a test purchase.

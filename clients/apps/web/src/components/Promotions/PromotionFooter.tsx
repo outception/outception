@@ -1,9 +1,8 @@
 'use client'
 
 import { useTopicPromotion } from '@/hooks/queries/promotions'
-import { promotionClickUrl, topicLabel } from '@/utils/promotions'
-import { Pill, Text } from '@polar-sh/orbit'
-import { Box } from '@polar-sh/orbit/Box'
+import { promotionClickUrl } from '@/utils/promotions'
+import { Box } from '@outception-com/orbit/Box'
 
 /**
  * The paid "in focus" promotion for a card's topic, pinned at the bottom of the
@@ -20,36 +19,19 @@ export const PromotionFooter = ({ topic }: { topic: string | null }) => {
   const body = (
     <Box
       flexDirection="column"
-      rowGap="xs"
-      padding="m"
+      rowGap="none"
+      alignItems="end"
+      padding="s"
       borderRadius="l"
       backgroundColor="background-card"
+      textAlign="right"
     >
-      <Box flexDirection="row" alignItems="center" columnGap="s">
-        <Pill color="blue">Promoted</Pill>
-        <Text variant="caption" color="muted">
-          {topicLabel(promotion.category)}
-        </Text>
-      </Box>
-      {promotion.image_url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={promotion.image_url}
-          alt=""
-          style={{
-            width: '100%',
-            height: 140,
-            objectFit: 'cover',
-            borderRadius: 12,
-          }}
-        />
-      ) : null}
-      <Text variant="body" as="h4">
+      <span className="line-clamp-1 text-xs font-medium text-black dark:text-white">
         {promotion.title}
-      </Text>
-      <Text color="muted" variant="caption">
+      </span>
+      <span className="line-clamp-1 text-xs text-gray-500 dark:text-neutral-400">
         {promotion.body}
-      </Text>
+      </span>
     </Box>
   )
 

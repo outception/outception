@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Box } from '@polar-sh/orbit/Box'
+import { Box } from '@outception-com/orbit/Box'
 import {
   Select,
   SelectContent,
@@ -11,7 +11,7 @@ import {
   SelectSeparator,
   SelectTrigger,
   SelectValue,
-} from '@polar-sh/orbit'
+} from '@outception-com/orbit'
 
 export function BasicDemo() {
   const [value, setValue] = useState<string>('')

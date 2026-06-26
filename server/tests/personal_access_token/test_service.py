@@ -4,20 +4,20 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
-from polar.auth.models import AuthSubject
-from polar.auth.scope import Scope
-from polar.config import settings
-from polar.email.schemas import PersonalAccessTokenLeakedEmail
-from polar.enums import TokenType
-from polar.exceptions import PolarRequestValidationError
-from polar.kit.crypto import get_token_hash
-from polar.kit.utils import utc_now
-from polar.models import PersonalAccessToken, User
-from polar.personal_access_token.schemas import PersonalAccessTokenCreate
-from polar.personal_access_token.service import (
+from outception.auth.models import AuthSubject
+from outception.auth.scope import Scope
+from outception.config import settings
+from outception.email.schemas import PersonalAccessTokenLeakedEmail
+from outception.enums import TokenType
+from outception.exceptions import OutceptionRequestValidationError
+from outception.kit.crypto import get_token_hash
+from outception.kit.utils import utc_now
+from outception.models import PersonalAccessToken, User
+from outception.personal_access_token.schemas import PersonalAccessTokenCreate
+from outception.personal_access_token.service import (
     personal_access_token as personal_access_token_service,
 )
-from polar.postgres import AsyncSession
+from outception.postgres import AsyncSession
 from tests.fixtures.database import SaveFixture
 
 
@@ -28,7 +28,7 @@ def _auth(user: User, scopes: set[Scope]) -> AuthSubject[User]:
 @pytest.fixture(autouse=True)
 def enqueue_email_mock(mocker: MockerFixture) -> MagicMock:
     return mocker.patch(
-        "polar.personal_access_token.service.enqueue_email_template", autospec=True
+        "outception.personal_access_token.service.enqueue_email_template", autospec=True
     )
 
 
@@ -39,7 +39,7 @@ class TestRevokeLeaked:
     ) -> None:
         result = await personal_access_token_service.revoke_leaked(
             session,
-            "polar_pat_123",
+            "outception_pat_123",
             TokenType.personal_access_token,
             notifier="github",
             url="https://github.com",
@@ -56,7 +56,7 @@ class TestRevokeLeaked:
         mocker: MockerFixture,
         enqueue_email_mock: MagicMock,
     ) -> None:
-        token_hash = get_token_hash("polar_pat_123", secret=settings.SECRET)
+        token_hash = get_token_hash("outception_pat_123", secret=settings.SECRET)
         personal_access_token = PersonalAccessToken(
             comment="Test",
             token=token_hash,
@@ -68,7 +68,7 @@ class TestRevokeLeaked:
 
         result = await personal_access_token_service.revoke_leaked(
             session,
-            "polar_pat_123",
+            "outception_pat_123",
             TokenType.personal_access_token,
             notifier="github",
             url="https://github.com",
@@ -97,7 +97,7 @@ class TestCreate:
             _auth(user, {Scope.user_read}),
             PersonalAccessTokenCreate(comment="ci", scopes=[Scope.user_read]),
         )
-        assert token.startswith("polar_pat_")
+        assert token.startswith("outception_pat_")
         # Only the hash is persisted; the raw token never is.
         assert pat.token == get_token_hash(token, secret=settings.SECRET)
         assert pat.token != token
@@ -110,7 +110,7 @@ class TestCreate:
         self, session: AsyncSession, user: User
     ) -> None:
         # A read-scoped caller must not mint a write-scoped token.
-        with pytest.raises(PolarRequestValidationError):
+        with pytest.raises(OutceptionRequestValidationError):
             await personal_access_token_service.create(
                 session,
                 _auth(user, {Scope.user_read}),

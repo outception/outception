@@ -19,7 +19,7 @@ Sentry.init({
   tracesSampleRate: 0.1,
 
   // Enable distributed tracing to API
-  tracePropagationTargets: [/^https:\/\/api\.polar\.sh/],
+  tracePropagationTargets: [/^https:\/\/api\.outception\.sh/],
 
   // Define how likely Replay events are sampled.
   // This sets the sample rate to be 10%. You may want this to be 100% while

@@ -3,7 +3,7 @@ import { twMerge } from 'tailwind-merge'
 export const SettingsGroup: React.FC<React.PropsWithChildren> = ({
   children,
 }) => (
-  <div className="dark:ring-polar-700 dark:bg-polar-900 dark:divide-polar-700 w-full flex-col divide-y divide-gray-200 overflow-hidden rounded-2xl bg-transparent ring-1 ring-gray-200 dark:ring-1">
+  <div className="dark:ring-outception-700 dark:bg-outception-900 dark:divide-outception-700 w-full flex-col divide-y divide-gray-200 overflow-hidden rounded-2xl bg-transparent ring-1 ring-gray-200 dark:ring-1">
     {children}
   </div>
 )
@@ -28,7 +28,7 @@ export const SettingsGroupItem: React.FC<
     <div className="flex w-full flex-col md:max-w-1/2">
       <h3 className="text-sm font-medium">{title}</h3>
       {description && (
-        <p className="dark:text-polar-500 text-xs text-gray-500">
+        <p className="dark:text-outception-500 text-xs text-gray-500">
           {description}
         </p>
       )}

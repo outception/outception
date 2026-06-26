@@ -1,5 +1,5 @@
-import { Status } from '@polar-sh/orbit'
-import { Box } from '@polar-sh/orbit/Box'
+import { Status } from '@outception-com/orbit'
+import { Box } from '@outception-com/orbit/Box'
 import type { PropRow } from '@/components/docs'
 import { Example, PageHeader, PropsTable, Section } from '@/components/docs'
 

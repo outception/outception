@@ -1,4 +1,4 @@
-import { config } from '@polar-sh/eslint-config/react-internal'
+import { config } from '@outception-com/eslint-config/react-internal'
 
 /** @type {import("eslint").Linter.Config[]} */
 export default [

@@ -3,7 +3,7 @@ const fs = require('fs')
 const path = require('path')
 const TEMP_FILE = path.join(__dirname, '.push-payload-temp.json')
 const payloads = require('./push-payload')
-const BUNDLE_ID = 'com.polarsource.Polar'
+const BUNDLE_ID = 'com.outception.Outception'
 
 // Update this with one of the push notification names in push-payload.js
 const SELECTED_PUSH_NOTIFICATION = 'newOrder'

@@ -26,11 +26,11 @@ from rich.console import Console
 from rich.table import Table
 from sqlalchemy import func, select, update
 
-from polar.config import settings
-from polar.kit.db.postgres import AsyncSession, create_async_sessionmaker
-from polar.models import Organization
-from polar.models.organization import STATUS_CAPABILITIES, OrganizationStatus
-from polar.postgres import create_async_engine
+from outception.config import settings
+from outception.kit.db.postgres import AsyncSession, create_async_sessionmaker
+from outception.models import Organization
+from outception.models.organization import STATUS_CAPABILITIES, OrganizationStatus
+from outception.postgres import create_async_engine
 from scripts.helper import (
     configure_script_console_logging,
     limit_bindparam,

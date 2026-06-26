@@ -1,6 +1,6 @@
 'use client'
 
-import type { schemas } from '@polar-sh/client'
+import type { schemas } from '@outception-com/client'
 import type { JsonType } from '@posthog/core'
 import type { CaptureOptions } from 'posthog-js'
 import { usePostHog as useOuterPostHog } from 'posthog-js/react'
@@ -57,7 +57,7 @@ type Verb =
 
 export type EventName = `${Surface}:${Category}:${Noun}:${Verb}`
 
-export interface PolarHog {
+export interface OutceptionHog {
   setPersistence: (
     persistence: 'localStorage' | 'sessionStorage' | 'cookie' | 'memory',
   ) => void
@@ -70,7 +70,7 @@ export interface PolarHog {
   logout: () => void
 }
 
-export const usePostHog = (): PolarHog => {
+export const usePostHog = (): OutceptionHog => {
   const posthog = useOuterPostHog()
 
   const setPersistence = useCallback(
@@ -80,7 +80,7 @@ export const usePostHog = (): PolarHog => {
     [posthog],
   )
 
-  const capture: PolarHog['capture'] = useCallback(
+  const capture: OutceptionHog['capture'] = useCallback(
     (event, properties, options) => {
       if (process.env.NODE_ENV === 'development') {
         console.debug(`[posthog] ${event}`, properties ?? {})
@@ -90,7 +90,7 @@ export const usePostHog = (): PolarHog => {
     [posthog],
   )
 
-  const identify: PolarHog['identify'] = useCallback(
+  const identify: OutceptionHog['identify'] = useCallback(
     (user) => {
       const posthogId = `user:${user.id}`
 
@@ -103,7 +103,7 @@ export const usePostHog = (): PolarHog => {
     [posthog],
   )
 
-  const logout: PolarHog['logout'] = useCallback(() => {
+  const logout: OutceptionHog['logout'] = useCallback(() => {
     capture('global:user:logout:done')
     posthog?.reset()
   }, [capture, posthog])

@@ -1,6 +1,6 @@
 services:
   - type: worker
-    name: polar-subnet-router
+    name: outception-subnet-router
     env: docker
     autoDeploy: false
     envVars:

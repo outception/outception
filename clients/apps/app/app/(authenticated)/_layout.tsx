@@ -2,7 +2,7 @@ import { ErrorFallback } from '@/components/Errors/Fallback'
 import { useTheme } from '@/design-system/useTheme'
 import { useAppOpenTracking } from '@/hooks/useAppOpenTracking'
 import DeepLinkProvider from '@/providers/DeepLinkProvider'
-import { PolarOrganizationProvider } from '@/providers/OrganizationProvider'
+import { OutceptionOrganizationProvider } from '@/providers/OrganizationProvider'
 import { useSession } from '@/providers/SessionProvider'
 import { ToastProvider } from '@/providers/ToastProvider'
 import { UserProvider } from '@/providers/UserProvider'
@@ -68,11 +68,11 @@ export default function Providers() {
       <DeepLinkProvider>
         <AuthenticatedErrorBoundary>
           <UserProvider>
-            <PolarOrganizationProvider>
+            <OutceptionOrganizationProvider>
               <ToastProvider>
                 <RootLayout />
               </ToastProvider>
-            </PolarOrganizationProvider>
+            </OutceptionOrganizationProvider>
           </UserProvider>
         </AuthenticatedErrorBoundary>
       </DeepLinkProvider>

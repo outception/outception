@@ -13,8 +13,8 @@ if [[ -z "$FILE_PATH" ]] || [[ -z "$CONTENT" ]]; then
   exit 0
 fi
 
-# Skip if not a Python file in server/polar/
-if [[ ! "$FILE_PATH" =~ server/polar/.* ]] || [[ ! "$FILE_PATH" =~ \.py$ ]]; then
+# Skip if not a Python file in server/outception/
+if [[ ! "$FILE_PATH" =~ server/outception/.* ]] || [[ ! "$FILE_PATH" =~ \.py$ ]]; then
   echo '{"decision": "approve"}'
   exit 0
 fi

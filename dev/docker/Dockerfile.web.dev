@@ -1,4 +1,4 @@
-# Development Dockerfile for Polar Web frontend
+# Development Dockerfile for Outception Web frontend
 # Optimized for hot-reloading with mounted source code
 
 FROM node:22-slim

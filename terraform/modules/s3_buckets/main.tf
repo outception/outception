@@ -32,14 +32,14 @@ variable "public_files_bucket_name" {
 }
 
 locals {
-  name_prefix         = (var.environment == "production" ? "polar" : "polar-${var.environment}")
-  full_name_prefix    = "polar-${var.environment}"
+  name_prefix         = (var.environment == "production" ? "outception" : "outception-${var.environment}")
+  full_name_prefix    = "outception-${var.environment}"
   public_files_bucket = coalesce(var.public_files_bucket_name, "${local.name_prefix}-public-files")
 }
 
 
 # resource "aws_s3_bucket" "backups" {
-#   bucket = "polar-sh-backups"
+#   bucket = "outception-com-backups"
 # }
 #
 # resource "aws_s3_bucket_lifecycle_configuration" "backups_lifecycle" {

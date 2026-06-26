@@ -222,14 +222,14 @@ describe('middleware function', () => {
     })
 
     const request = new NextRequest('https://example.com/dashboard')
-    request.cookies.set('polar_session', 'valid-session-token')
+    request.cookies.set('outception_session', 'valid-session-token')
 
     const response = await proxy(request)
 
     expect(response.status).toBe(200)
     // NextResponse.next({ request: { headers } }) communicates request-header
     // overrides to the server via `x-middleware-request-*`.
-    expect(response.headers.get('x-middleware-request-x-polar-user')).toBe(
+    expect(response.headers.get('x-middleware-request-x-outception-user')).toBe(
       Buffer.from(JSON.stringify(mockUser)).toString('base64'),
     )
   })
@@ -241,23 +241,23 @@ describe('middleware function', () => {
 
     expect(response.status).toBe(200)
     expect(
-      response.headers.get('x-middleware-request-x-polar-user'),
+      response.headers.get('x-middleware-request-x-outception-user'),
     ).toBeNull()
   })
 
-  it('should strip a forged x-polar-user header from an unauthenticated request', async () => {
+  it('should strip a forged x-outception-user header from an unauthenticated request', async () => {
     const forged = Buffer.from(
       JSON.stringify({ id: 'attacker', email: 'evil@example.com' }),
     ).toString('base64')
     const request = new NextRequest('https://example.com/', {
-      headers: { 'x-polar-user': forged },
+      headers: { 'x-outception-user': forged },
     })
 
     const response = await proxy(request)
 
     // The forged value must not survive to the server component.
     expect(
-      response.headers.get('x-middleware-request-x-polar-user'),
+      response.headers.get('x-middleware-request-x-outception-user'),
     ).toBeNull()
   })
 
@@ -287,7 +287,7 @@ describe('middleware function', () => {
     })
 
     const request = new NextRequest('https://example.com/dashboard')
-    request.cookies.set('polar_session', 'valid-session-token')
+    request.cookies.set('outception_session', 'valid-session-token')
 
     await expect(proxy(request)).rejects.toThrow(
       'Unexpected response status while fetching authenticated user',
@@ -304,7 +304,7 @@ describe('middleware function', () => {
     })
 
     const request = new NextRequest('https://example.com/dashboard')
-    request.cookies.set('polar_session', 'invalid-session-token')
+    request.cookies.set('outception_session', 'invalid-session-token')
 
     const response = await proxy(request)
 
@@ -325,7 +325,7 @@ describe('middleware function', () => {
     })
 
     const request = new NextRequest('https://example.com/dashboard')
-    request.cookies.set('polar_session', 'rate-limited-session-token')
+    request.cookies.set('outception_session', 'rate-limited-session-token')
 
     // Must not throw: a 429 should be treated as "couldn't determine the user"
     // and proceed as anonymous (protected route -> redirect to login).
@@ -353,35 +353,39 @@ describe('middleware function', () => {
 })
 
 describe('the /to/ dance', () => {
-  it('bounces /to/* to the sandbox host when polar_env cookie does not match the current env', async () => {
-    const request = new NextRequest('https://polar.sh/to/dashboard/products')
-    request.cookies.set('polar_env', 'sandbox')
+  it('bounces /to/* to the sandbox host when outception_env cookie does not match the current env', async () => {
+    const request = new NextRequest(
+      'https://outception.com/to/dashboard/products',
+    )
+    request.cookies.set('outception_env', 'sandbox')
 
     const response = await proxy(request)
 
     expect(response.status).toBe(307)
     expect(response.headers.get('location')).toBe(
-      'https://sandbox.polar.sh/to/dashboard/products',
+      'https://sandbox.outception.com/to/dashboard/products',
     )
   })
 
   it('preserves query string when bouncing /to/*', async () => {
     const request = new NextRequest(
-      'https://polar.sh/to/dashboard/products?foo=bar',
+      'https://outception.com/to/dashboard/products?foo=bar',
     )
-    request.cookies.set('polar_env', 'sandbox')
+    request.cookies.set('outception_env', 'sandbox')
 
     const response = await proxy(request)
 
     expect(response.status).toBe(307)
     expect(response.headers.get('location')).toBe(
-      'https://sandbox.polar.sh/to/dashboard/products?foo=bar',
+      'https://sandbox.outception.com/to/dashboard/products?foo=bar',
     )
   })
 
-  it('does not bounce when polar_env cookie matches the current env', async () => {
-    const request = new NextRequest('https://polar.sh/to/dashboard/products')
-    request.cookies.set('polar_env', 'production')
+  it('does not bounce when outception_env cookie matches the current env', async () => {
+    const request = new NextRequest(
+      'https://outception.com/to/dashboard/products',
+    )
+    request.cookies.set('outception_env', 'production')
 
     const response = await proxy(request)
 
@@ -389,9 +393,11 @@ describe('the /to/ dance', () => {
     expect(response.headers.get('location')).toContain('/auth')
   })
 
-  it('ignores invalid polar_env cookie values', async () => {
-    const request = new NextRequest('https://polar.sh/to/dashboard/products')
-    request.cookies.set('polar_env', 'narnia')
+  it('ignores invalid outception_env cookie values', async () => {
+    const request = new NextRequest(
+      'https://outception.com/to/dashboard/products',
+    )
+    request.cookies.set('outception_env', 'narnia')
 
     const response = await proxy(request)
 
@@ -400,8 +406,8 @@ describe('the /to/ dance', () => {
   })
 
   it('does not bounce non-/to/ paths even with a mismatching cookie', async () => {
-    const request = new NextRequest('https://polar.sh/dashboard')
-    request.cookies.set('polar_env', 'sandbox')
+    const request = new NextRequest('https://outception.com/dashboard')
+    request.cookies.set('outception_env', 'sandbox')
 
     const response = await proxy(request)
 

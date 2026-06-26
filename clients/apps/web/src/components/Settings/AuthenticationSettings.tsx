@@ -13,9 +13,9 @@ import {
 import AlternateEmailOutlined from '@mui/icons-material/AlternateEmailOutlined'
 import GitHub from '@mui/icons-material/GitHub'
 import Google from '@mui/icons-material/Google'
-import { schemas } from '@polar-sh/client'
-import { Button } from '@polar-sh/orbit'
-import { ListGroup } from '@polar-sh/orbit'
+import { schemas } from '@outception-com/client'
+import { Button } from '@outception-com/orbit'
+import { ListGroup } from '@outception-com/orbit'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import EmailUpdateForm from '../Form/EmailUpdateForm'
@@ -47,7 +47,7 @@ const AuthenticationMethod = ({
         {!hideTitle && (
           <div className="grow">
             <div className="font-medium">{title}</div>
-            <div className="dark:text-polar-500 text-sm text-gray-500">
+            <div className="dark:text-outception-500 text-sm text-gray-500">
               {subtitle}
             </div>
           </div>
@@ -212,7 +212,7 @@ const AuthenticationSettings = () => {
       />
     ),
     request: (
-      <div className="dark:text-polar-300 dark:bg-polar-600 flex h-10 items-center justify-center rounded-lg bg-gray-100 text-center text-sm text-gray-500">
+      <div className="dark:text-outception-300 dark:bg-outception-600 flex h-10 items-center justify-center rounded-lg bg-gray-100 text-center text-sm text-gray-500">
         A verification email was sent to this address.
       </div>
     ),

@@ -13,7 +13,7 @@ from urllib.parse import urlparse
 import psycopg2
 import typer
 
-DEFAULT_PREVIEW_BASE_DOMAIN = "preview.polar.sh"
+DEFAULT_PREVIEW_BASE_DOMAIN = "preview.outception.com"
 MAX_PREVIEW_ID_LENGTH = 63
 MAX_POSTGRES_IDENTIFIER_LENGTH = 63
 DEFAULT_POSTGRES_PORT = 5432
@@ -185,7 +185,7 @@ def resolve_preview_id(
 
 def get_preview_base_domain() -> str:
     return (
-        os.getenv("POLAR_PREVIEW_BASE_DOMAIN") or DEFAULT_PREVIEW_BASE_DOMAIN
+        os.getenv("OUTCEPTION_PREVIEW_BASE_DOMAIN") or DEFAULT_PREVIEW_BASE_DOMAIN
     ).strip()
 
 
@@ -342,35 +342,35 @@ def validate_safe_postgres_identifier(value: str, *, env_name: str) -> str:
 
 
 def load_preview_postgres_admin_config() -> PreviewPostgresAdminConfig:
-    admin_dsn = os.getenv("POLAR_PREVIEW_POSTGRES_ADMIN_DSN")
+    admin_dsn = os.getenv("OUTCEPTION_PREVIEW_POSTGRES_ADMIN_DSN")
     if not admin_dsn:
-        raise RuntimeError("POLAR_PREVIEW_POSTGRES_ADMIN_DSN is required")
+        raise RuntimeError("OUTCEPTION_PREVIEW_POSTGRES_ADMIN_DSN is required")
 
     parsed_admin_dsn = urlparse(admin_dsn)
     if not parsed_admin_dsn.scheme or parsed_admin_dsn.hostname is None:
         raise RuntimeError(
-            "POLAR_PREVIEW_POSTGRES_ADMIN_DSN must be a valid Postgres DSN"
+            "OUTCEPTION_PREVIEW_POSTGRES_ADMIN_DSN must be a valid Postgres DSN"
         )
 
-    app_host_override = os.getenv("POLAR_PREVIEW_POSTGRES_APP_HOST")
+    app_host_override = os.getenv("OUTCEPTION_PREVIEW_POSTGRES_APP_HOST")
     app_host = (app_host_override or parsed_admin_dsn.hostname or "").strip()
     if not app_host:
         raise RuntimeError("Could not resolve the preview Postgres host")
 
-    app_port_raw = (os.getenv("POLAR_PREVIEW_POSTGRES_APP_PORT") or "").strip()
+    app_port_raw = (os.getenv("OUTCEPTION_PREVIEW_POSTGRES_APP_PORT") or "").strip()
     if not app_port_raw:
         app_port = parsed_admin_dsn.port or DEFAULT_POSTGRES_PORT
     else:
         app_port = int(app_port_raw)
 
     template_database_raw = (
-        os.getenv("POLAR_PREVIEW_POSTGRES_TEMPLATE_DATABASE") or ""
+        os.getenv("OUTCEPTION_PREVIEW_POSTGRES_TEMPLATE_DATABASE") or ""
     ).strip()
     template_database: str | None
     if template_database_raw:
         template_database = validate_safe_postgres_identifier(
             template_database_raw,
-            env_name="POLAR_PREVIEW_POSTGRES_TEMPLATE_DATABASE",
+            env_name="OUTCEPTION_PREVIEW_POSTGRES_TEMPLATE_DATABASE",
         )
     else:
         template_database = None
@@ -396,24 +396,24 @@ def parse_env_bool(value: str | None) -> bool:
 
 
 def load_preview_tinybird_admin_config() -> PreviewTinybirdAdminConfig:
-    api_url = (os.getenv("POLAR_PREVIEW_TINYBIRD_API_URL") or "").strip()
+    api_url = (os.getenv("OUTCEPTION_PREVIEW_TINYBIRD_API_URL") or "").strip()
     if not api_url:
-        raise RuntimeError("POLAR_PREVIEW_TINYBIRD_API_URL is required")
+        raise RuntimeError("OUTCEPTION_PREVIEW_TINYBIRD_API_URL is required")
 
-    admin_token = (os.getenv("POLAR_PREVIEW_TINYBIRD_ADMIN_TOKEN") or "").strip()
+    admin_token = (os.getenv("OUTCEPTION_PREVIEW_TINYBIRD_ADMIN_TOKEN") or "").strip()
     if not admin_token:
-        raise RuntimeError("POLAR_PREVIEW_TINYBIRD_ADMIN_TOKEN is required")
+        raise RuntimeError("OUTCEPTION_PREVIEW_TINYBIRD_ADMIN_TOKEN is required")
 
-    workspace_name = (os.getenv("POLAR_PREVIEW_TINYBIRD_WORKSPACE") or "").strip()
+    workspace_name = (os.getenv("OUTCEPTION_PREVIEW_TINYBIRD_WORKSPACE") or "").strip()
     if not workspace_name:
-        raise RuntimeError("POLAR_PREVIEW_TINYBIRD_WORKSPACE is required")
+        raise RuntimeError("OUTCEPTION_PREVIEW_TINYBIRD_WORKSPACE is required")
 
     config = PreviewTinybirdAdminConfig(
         api_url=api_url,
         admin_token=admin_token,
         workspace_name=workspace_name,
         last_partition=parse_env_bool(
-            os.getenv("POLAR_PREVIEW_TINYBIRD_LAST_PARTITION")
+            os.getenv("OUTCEPTION_PREVIEW_TINYBIRD_LAST_PARTITION")
         ),
     )
     log_preview(
@@ -442,11 +442,11 @@ def build_preview_postgres_env(
     password: str,
 ) -> dict[str, str]:
     return {
-        "POLAR_POSTGRES_DATABASE": database_name,
-        "POLAR_POSTGRES_HOST": config.app_host,
-        "POLAR_POSTGRES_PORT": str(config.app_port),
-        "POLAR_POSTGRES_PWD": password,
-        "POLAR_POSTGRES_USER": role_name,
+        "OUTCEPTION_POSTGRES_DATABASE": database_name,
+        "OUTCEPTION_POSTGRES_HOST": config.app_host,
+        "OUTCEPTION_POSTGRES_PORT": str(config.app_port),
+        "OUTCEPTION_POSTGRES_PWD": password,
+        "OUTCEPTION_POSTGRES_USER": role_name,
     }
 
 

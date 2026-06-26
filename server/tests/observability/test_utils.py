@@ -1,10 +1,10 @@
 from unittest.mock import MagicMock
 
-from polar.observability.http_metrics import (
+from outception.observability.http_metrics import (
     METRICS_EXCLUDED_APPS,
     exclude_app_from_metrics,
 )
-from polar.observability.utils import get_path_template
+from outception.observability.utils import get_path_template
 
 
 class TestGetPathTemplate:

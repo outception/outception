@@ -22,5 +22,5 @@ export function getGeneratedProps(slug: string): Map<string, GeneratedProp> {
 }
 
 export function propSourceUrl(source: { path: string; line: number }): string {
-  return `https://github.com/polarsource/polar/blob/main/${source.path}#L${source.line}`
+  return `https://github.com/outception/outception/blob/main/${source.path}#L${source.line}`
 }

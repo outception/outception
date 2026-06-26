@@ -5,16 +5,18 @@ import { getDistinctId } from '@/experiments/distinct-id'
 import { ExperimentProvider } from '@/experiments/ExperimentProvider'
 import { getExperiments } from '@/experiments/server'
 import { UserContextProvider } from '@/providers/auth'
+import { LocaleProvider } from '@/providers/locale'
 import { CONFIG } from '@/utils/config'
+import { resolveLocale } from '@/utils/i18n'
 import { getAuthenticatedUser, getUserOrganizations } from '@/utils/user'
-import { schemas } from '@polar-sh/client'
+import { schemas } from '@outception-com/client'
 import { PHASE_PRODUCTION_BUILD } from 'next/constants'
 import { Viewport } from 'next/types'
 import {
   NavigationHistoryProvider,
-  PolarNuqsProvider,
-  PolarPostHogProvider,
-  PolarQueryClientProvider,
+  OutceptionNuqsProvider,
+  OutceptionPostHogProvider,
+  OutceptionQueryClientProvider,
 } from './providers'
 
 export const viewport: Viewport = {
@@ -43,6 +45,7 @@ export default async function RootLayout({
   const experimentVariants = await getExperiments(getExperimentNames(), {
     distinctId,
   })
+  const locale = await resolveLocale()
 
   return (
     <html lang="en" suppressHydrationWarning className="antialiased">
@@ -81,15 +84,15 @@ export default async function RootLayout({
             user={authenticatedUser}
             userOrganizations={userOrganizations}
           >
-            <PolarPostHogProvider>
-              <PolarQueryClientProvider>
-                <PolarNuqsProvider>
+            <OutceptionPostHogProvider>
+              <OutceptionQueryClientProvider>
+                <OutceptionNuqsProvider>
                   <NavigationHistoryProvider>
-                    {children}
+                    <LocaleProvider locale={locale}>{children}</LocaleProvider>
                   </NavigationHistoryProvider>
-                </PolarNuqsProvider>
-              </PolarQueryClientProvider>
-            </PolarPostHogProvider>
+                </OutceptionNuqsProvider>
+              </OutceptionQueryClientProvider>
+            </OutceptionPostHogProvider>
           </UserContextProvider>
         </ExperimentProvider>
       </body>

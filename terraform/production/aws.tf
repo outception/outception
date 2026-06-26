@@ -5,8 +5,8 @@
 # Variable for user-to-permission-set assignments
 # Configure this in Terraform Cloud as a list of objects:
 # [
-#   { email = "admin@polar.sh", permission_set = "admin" },
-#   { email = "dev@polar.sh", permission_set = "s3_full_access" }
+#   { email = "admin@outception.com", permission_set = "admin" },
+#   { email = "dev@outception.com", permission_set = "s3_full_access" }
 # ]
 variable "aws_sso_user_assignments" {
   description = "List of user assignments with email and permission set name"
@@ -189,7 +189,7 @@ data "aws_iam_policy_document" "lambda_worker_ecr_push" {
       "ecr:UploadLayerPart",
     ]
     resources = [
-      "arn:aws:ecr:us-east-2:${data.aws_caller_identity.current.account_id}:repository/polar-test-lambda-worker",
+      "arn:aws:ecr:us-east-2:${data.aws_caller_identity.current.account_id}:repository/outception-test-lambda-worker",
     ]
   }
 }
@@ -208,9 +208,9 @@ data "aws_iam_policy_document" "lambda_worker_deploy" {
       "lambda:UpdateFunctionCode",
     ]
     resources = [
-      "arn:aws:lambda:us-east-2:${data.aws_caller_identity.current.account_id}:function:polar-test-lambda-worker*",
-      "arn:aws:lambda:us-east-2:${data.aws_caller_identity.current.account_id}:function:polar-sandbox-lambda-worker*",
-      "arn:aws:lambda:us-east-2:${data.aws_caller_identity.current.account_id}:function:polar-production-lambda-worker*",
+      "arn:aws:lambda:us-east-2:${data.aws_caller_identity.current.account_id}:function:outception-test-lambda-worker*",
+      "arn:aws:lambda:us-east-2:${data.aws_caller_identity.current.account_id}:function:outception-sandbox-lambda-worker*",
+      "arn:aws:lambda:us-east-2:${data.aws_caller_identity.current.account_id}:function:outception-production-lambda-worker*",
     ]
   }
 }
@@ -259,7 +259,7 @@ data "aws_caller_identity" "current" {}
 module "s3_buckets" {
   source          = "../modules/s3_buckets"
   environment     = "production"
-  allowed_origins = ["https://polar.sh"]
+  allowed_origins = ["https://outception.com"]
 }
 
 # =============================================================================
@@ -268,7 +268,7 @@ module "s3_buckets" {
 
 resource "aws_s3_bucket" "lambda_artifacts" {
   provider = aws.us_east_1
-  bucket   = "polar-lambda-artifacts"
+  bucket   = "outception-lambda-artifacts"
 }
 
 resource "aws_s3_bucket_versioning" "lambda_artifacts" {
@@ -295,7 +295,7 @@ module "image_resizer" {
     aws = aws.us_east_1
   }
 
-  function_name     = "polar-image-resizer"
+  function_name     = "outception-image-resizer"
   s3_bucket         = aws_s3_bucket.lambda_artifacts.id
   s3_key            = data.aws_s3_object.image_resizer_package.key
   s3_object_version = data.aws_s3_object.image_resizer_package.version_id
@@ -314,13 +314,13 @@ module "cloudfront_public_assets" {
     aws.us_east_1 = aws.us_east_1
   }
 
-  name                           = "polar-public-files"
-  domain                         = "uploads.polar.sh"
+  name                           = "outception-public-files"
+  domain                         = "uploads.outception.com"
   cloudflare_zone_id             = "22bcd1b07ec25452aab472486bc8df94"
   s3_bucket_id                   = module.s3_buckets.public_files_bucket_id
   s3_bucket_regional_domain_name = module.s3_buckets.public_files_bucket_regional_domain_name
   s3_bucket_arn                  = module.s3_buckets.public_files_bucket_arn
-  cors_allowed_origins           = ["https://polar.sh", "https://trace.playwright.dev"]
+  cors_allowed_origins           = ["https://outception.com", "https://trace.playwright.dev"]
 
   lambda_function_associations = [
     {
@@ -341,13 +341,13 @@ module "cloudfront_cdn" {
     aws.us_east_1 = aws.us_east_1
   }
 
-  name                           = "polar-cdn"
-  domain                         = "cdn.polar.sh"
+  name                           = "outception-cdn"
+  domain                         = "cdn.outception.com"
   cloudflare_zone_id             = "22bcd1b07ec25452aab472486bc8df94"
   s3_bucket_id                   = module.s3_buckets.public_assets_bucket_id
   s3_bucket_regional_domain_name = module.s3_buckets.public_assets_bucket_regional_domain_name
   s3_bucket_arn                  = module.s3_buckets.public_assets_bucket_arn
-  cors_allowed_origins           = ["https://polar.sh"]
+  cors_allowed_origins           = ["https://outception.com"]
 }
 
 # =============================================================================
@@ -397,14 +397,14 @@ module "github_oidc_backup" {
   source = "../modules/github_oidc"
 
   role_name   = "github-actions-backup"
-  github_org  = "polarsource"
-  github_repo = "polar"
+  github_org  = "outception"
+  github_repo = "outception"
   github_subjects = [
     "ref:refs/heads/main",
     "pull_request",
   ]
   policy_arns = {
-    backups          = aws_iam_policy.polar_sh_backups.arn
+    backups          = aws_iam_policy.outception_sh_backups.arn
     lambda_deploy    = aws_iam_policy.lambda_worker_deploy.arn
     lambda_ecr       = aws_iam_policy.lambda_worker_ecr_push.arn
     lambda_artifacts = aws_iam_policy.lambda_artifacts_upload.arn
@@ -412,8 +412,8 @@ module "github_oidc_backup" {
   }
 }
 
-resource "aws_iam_policy" "polar_sh_backups" {
-  name = "polar-sh-backups"
+resource "aws_iam_policy" "outception_sh_backups" {
+  name = "outception-com-backups"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -441,21 +441,21 @@ resource "aws_iam_policy" "polar_sh_backups" {
 
 module "application_access_production" {
   source   = "../modules/application_access"
-  username = "polar-production-files"
+  username = "outception-production-files"
   buckets = {
-    customer_invoices = { name = "polar-customer-invoices" }
-    customer_receipts = { name = "polar-customer-receipts" }
-    payout_invoices   = { name = "polar-payout-invoices" }
-    files             = { name = "polar-production-files", description = "Policy used by our app for downloadable benefits. Keep permissions to a bare minimum." }
-    public_files      = { name = "polar-public-files", description = "Policy used by our app for public uploads -products medias and such-. Keep permissions to a bare minimum." }
-    logs              = { name = "polar-production-logs", description = "Policy used by our app to write OpenTelemetry spans to S3 for long-term backup." }
+    customer_invoices = { name = "outception-customer-invoices" }
+    customer_receipts = { name = "outception-customer-receipts" }
+    payout_invoices   = { name = "outception-payout-invoices" }
+    files             = { name = "outception-production-files", description = "Policy used by our app for downloadable benefits. Keep permissions to a bare minimum." }
+    public_files      = { name = "outception-public-files", description = "Policy used by our app for public uploads -products medias and such-. Keep permissions to a bare minimum." }
+    logs              = { name = "outception-production-logs", description = "Policy used by our app to write OpenTelemetry spans to S3 for long-term backup." }
   }
 }
 
 # Adopt the IAM user that already exists in AWS (console-created).
 import {
   to = module.application_access_production.aws_iam_user.this
-  id = "polar-production-files"
+  id = "outception-production-files"
 }
 
 # =============================================================================
@@ -465,7 +465,7 @@ import {
 module "athena_spans" {
   source           = "../modules/athena_spans"
   environment      = "production"
-  logs_bucket_name = "polar-production-logs"
+  logs_bucket_name = "outception-production-logs"
 }
 
 # =============================================================================
@@ -473,7 +473,7 @@ module "athena_spans" {
 # =============================================================================
 
 resource "aws_s3_bucket" "backups" {
-  bucket = "polar-sh-backups"
+  bucket = "outception-com-backups"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "backups_lifecycle" {

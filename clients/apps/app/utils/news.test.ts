@@ -1,4 +1,4 @@
-import type { Client } from '@polar-sh/client'
+import type { Client } from '@outception-com/client'
 import { Linking } from 'react-native'
 import { newsApi, openExternalUrl } from './news'
 

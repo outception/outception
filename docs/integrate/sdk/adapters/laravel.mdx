@@ -3,10 +3,10 @@ title: "Laravel"
 description: "Payments and Checkouts made dead simple with Laravel"
 ---
 
-Seamlessly integrate Polar.sh subscriptions and payments into your Laravel application. This package provides an elegant way to handle subscriptions, manage recurring payments, and interact with Polar's API. With built-in support for webhooks, subscription management, and a fluent API, you can focus on building your application while we handle the complexities of subscription billing.
+Seamlessly integrate Outception.sh subscriptions and payments into your Laravel application. This package provides an elegant way to handle subscriptions, manage recurring payments, and interact with Outception's API. With built-in support for webhooks, subscription management, and a fluent API, you can focus on building your application while we handle the complexities of subscription billing.
 
 <Note>
-This provider is not maintained or officially supported by Polar. Use at your own discretion. If you have questions about the provider, please contact the project maintainer.
+This provider is not maintained or officially supported by Outception. Use at your own discretion. If you have questions about the provider, please contact the project maintainer.
 </Note>
 
 ## Installation
@@ -119,10 +119,10 @@ return [
 
 ### Access Token
 
-Configure your access token. Create a new token in the Polar Dashboard > Settings > Developers and paste it in the `.env` file.
+Configure your access token. Create a new token in the Outception Dashboard > Settings > Developers and paste it in the `.env` file.
 
-- https://sandbox.polar.sh/dashboard/ORG_SLUG/settings (Sandbox)
-- https://polar.sh/dashboard/ORG_SLUG/settings (Production)
+- https://sandbox.outception.com/dashboard/ORG_SLUG/settings (Sandbox)
+- https://outception.com/dashboard/ORG_SLUG/settings (Production)
 
 ```bash Terminal
 POLAR_ACCESS_TOKEN="<your_access_token>"
@@ -130,10 +130,10 @@ POLAR_ACCESS_TOKEN="<your_access_token>"
 
 ### Webhook Secret
 
-Configure your webhook secret. Create a new webhook in the Polar Dashboard > Settings > Webhooks.
+Configure your webhook secret. Create a new webhook in the Outception Dashboard > Settings > Webhooks.
 
-- https://sandbox.polar.sh/dashboard/ORG_SLUG/settings/webhooks (Sandbox)
-- https://polar.sh/dashboard/ORG_SLUG/settings/webhooks (Production)
+- https://sandbox.outception.com/dashboard/ORG_SLUG/settings/webhooks (Sandbox)
+- https://outception.com/dashboard/ORG_SLUG/settings/webhooks (Production)
 
 Configure the webhook for the following events that this package supports:
 
@@ -169,9 +169,9 @@ class User extends Authenticatable
 
 Now the user model will have access to the methods provided by the package. You can make any model billable by adding the trait to it, not just the User model.
 
-### Polar Script
+### Outception Script
 
-Polar includes a JavaScript script that you can use to initialize the [Polar Embedded Checkout](https://polar.sh/docs/features/checkout/embed). If you going to use this functionality, you can use the `@polarEmbedScript` directive to include the script in your views inside the `<head>` tag.
+Outception includes a JavaScript script that you can use to initialize the [Outception Embedded Checkout](https://outception.com/docs/features/checkout/embed). If you going to use this functionality, you can use the `@polarEmbedScript` directive to include the script in your views inside the `<head>` tag.
 
 ```blade
 <head>
@@ -183,7 +183,7 @@ Polar includes a JavaScript script that you can use to initialize the [Polar Emb
 
 ### Webhooks
 
-This package includes a webhook handler that will handle the webhooks from Polar.
+This package includes a webhook handler that will handle the webhooks from Outception.
 
 #### Webhooks & CSRF Protection
 
@@ -207,7 +207,7 @@ Or if you're using Laravel v11 and up, you should exclude `polar/*` in your appl
 
 ### Commands
 
-This package includes a list of commands that you can use to retrieve information about your Polar account.
+This package includes a list of commands that you can use to retrieve information about your Outception account.
 
 | Command                      | Description                                |
 | ---------------------------- | ------------------------------------------ |
@@ -339,7 +339,7 @@ Using any of these will result in an exception being thrown.
 
 #### Customer Portal
 
-Customers can update their personal information (e.g., name, email address) by accessing their [self-service customer portal](https://polar.sh/docs/features/customer-portal). To redirect customers to this portal, call the `redirectToCustomerPortal()` method on your billable model (e.g., the User model).
+Customers can update their personal information (e.g., name, email address) by accessing their [self-service customer portal](https://outception.com/docs/features/customer-portal). To redirect customers to this portal, call the `redirectToCustomerPortal()` method on your billable model (e.g., the User model).
 
 ```php
 use Illuminate\Http\Request;
@@ -623,7 +623,7 @@ if ($user->subscription()->onGracePeriod()) {
 }
 ```
 
-Polar does not offer immediate cancellation. To resume a subscription while it is still in its grace period, use the resume method.
+Outception does not offer immediate cancellation. To resume a subscription while it is still in its grace period, use the resume method.
 
 ```php
 $user->subscription()->resume();
@@ -633,7 +633,7 @@ When a cancelled subscription approaches the end of its grace period, it becomes
 
 ### Handling Webhooks
 
-Polar can send webhooks to your app, allowing you to react. By default, this package handles the majority of the work for you. If you have properly configured webhooks, it will listen for incoming events and update your database accordingly. We recommend activating all event kinds so you may easily upgrade in the future.
+Outception can send webhooks to your app, allowing you to react. By default, this package handles the majority of the work for you. If you have properly configured webhooks, it will listen for incoming events and update your database accordingly. We recommend activating all event kinds so you may easily upgrade in the future.
 
 #### Webhook Events
 
@@ -673,7 +673,7 @@ class PolarEventListener
 }
 ```
 
-The [Polar documentation](https://polar.sh/docs/integrate/webhooks/events) includes an example payload.
+The [Outception documentation](https://outception.com/docs/integrate/webhooks/events) includes an example payload.
 
 Laravel v11 and up will automatically discover the listener. If you're using Laravel v10 or lower, you should configure it in your app's `EventServiceProvider`:
 
@@ -704,8 +704,8 @@ composer test
 
 ## Changelog
 
-Please see [CHANGELOG](https://github.com/danestves/laravel-polar/blob/main/CHANGELOG.md) for more information on what has changed recently.
+Please see [CHANGELOG](https://github.com/danestves/laravel-outception/blob/main/CHANGELOG.md) for more information on what has changed recently.
 
 ## License
 
-The MIT License (MIT). Please see [License File](https://github.com/danestves/laravel-polar/blob/main/LICENSE.md) for more information.
+The MIT License (MIT). Please see [License File](https://github.com/danestves/laravel-outception/blob/main/LICENSE.md) for more information.

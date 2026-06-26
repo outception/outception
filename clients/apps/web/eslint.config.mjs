@@ -1,12 +1,12 @@
-import { nextJsConfig } from '@polar-sh/eslint-config/next-js'
-import polarPlugin from './eslint-rules/index.mjs'
+import { nextJsConfig } from '@outception-com/eslint-config/next-js'
+import outceptionPlugin from './eslint-rules/index.mjs'
 
 /** @type {import("eslint").Linter.Config} */
 export default [
   ...nextJsConfig,
   {
     plugins: {
-      polar: polarPlugin,
+      outception: outceptionPlugin,
     },
     languageOptions: {
       parserOptions: {
@@ -38,7 +38,7 @@ export default [
       'react-hooks/preserve-manual-memoization': 'warn',
       'react-hooks/immutability': 'warn',
       'react-hooks/purity': 'warn',
-      'polar/no-toast-error-detail': 'error',
+      'outception/no-toast-error-detail': 'error',
     },
   },
   {
@@ -47,11 +47,11 @@ export default [
       'react/no-danger': 'error',
       'react/self-closing-comp': 'warn',
       'react/jsx-no-useless-fragment': 'warn',
-      'polar/no-classname-box': 'error',
-      'polar/no-classname-text': 'error',
-      'polar/no-style-box': 'error',
-      'polar/no-style-text': 'error',
-      'polar/no-next-image': 'error',
+      'outception/no-classname-box': 'error',
+      'outception/no-classname-text': 'error',
+      'outception/no-style-box': 'error',
+      'outception/no-style-text': 'error',
+      'outception/no-next-image': 'error',
     },
   },
   {
@@ -60,8 +60,8 @@ export default [
       'src/app/**/portal/**/*.{ts,tsx}',
     ],
     rules: {
-      'polar/no-merchant-queries-in-customer-portal': 'error',
-      'polar/no-merchant-api-calls-in-customer-portal': 'error',
+      'outception/no-merchant-queries-in-customer-portal': 'error',
+      'outception/no-merchant-api-calls-in-customer-portal': 'error',
     },
   },
   {
@@ -74,7 +74,7 @@ export default [
       'src/app/**/portal/claim/page.tsx',
     ],
     rules: {
-      'polar/require-customer-portal-page': 'error',
+      'outception/require-customer-portal-page': 'error',
     },
   },
   {
@@ -83,7 +83,7 @@ export default [
       'src/components/Onboarding/**/*.tsx',
     ],
     rules: {
-      'polar/no-raw-html-layout': 'error',
+      'outception/no-raw-html-layout': 'error',
     },
   },
   {

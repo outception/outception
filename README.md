@@ -43,7 +43,7 @@ Monorepo:
 
 | Path | Stack | What |
 | --- | --- | --- |
-| `server/` | Python 3.14 / FastAPI | API (`polar` package), SQLAlchemy, Alembic, Dramatiq workers, Redis |
+| `server/` | Python 3.14 / FastAPI | API (`outception` package), SQLAlchemy, Alembic, Dramatiq workers, Redis |
 | `clients/apps/web/` | Next.js | News wall (public home) + promoter dashboard |
 | `clients/apps/app/` | Expo / React Native | News feed + promote + analytics (iOS/Android) |
 | `clients/packages/client/` | TypeScript | API client generated from the backend OpenAPI |
@@ -79,14 +79,14 @@ there only — never committed):
 
 ```bash
 # Promotions via polar.sh (external)
-POLAR_PROMOTION_PRODUCT_ID=""          # pay-what-you-want product on your polar.sh org
-POLAR_PAYMENT_GATEWAY_BASE_URL="https://api.polar.sh"
-POLAR_PAYMENT_GATEWAY_ACCESS_TOKEN=""
-POLAR_PAYMENT_GATEWAY_WEBHOOK_SECRET=""
+OUTCEPTION_PROMOTION_PRODUCT_ID=""          # pay-what-you-want product on your polar.sh org
+OUTCEPTION_PAYMENT_GATEWAY_BASE_URL="https://api.polar.sh"
+OUTCEPTION_PAYMENT_GATEWAY_ACCESS_TOKEN=""
+OUTCEPTION_PAYMENT_GATEWAY_WEBHOOK_SECRET=""
 
 # Optional: Tinybird analytics pipeline
-POLAR_TINYBIRD_API_URL=""
-POLAR_TINYBIRD_API_TOKEN=""
+OUTCEPTION_TINYBIRD_API_URL=""
+OUTCEPTION_TINYBIRD_API_TOKEN=""
 ```
 
 Without these, the news wall still works and promotion checkout is disabled by

@@ -7,7 +7,7 @@ import {
   PROMOTION_TOPICS,
   useCreatePromotion,
   usePromotionPricing,
-} from '@/hooks/polar/promotions'
+} from '@/hooks/outception/promotions'
 import { isOptionalHttpUrl } from '@/utils/promotions'
 import { useTheme } from '@/design-system/useTheme'
 import { useSession } from '@/providers/SessionProvider'
@@ -69,7 +69,7 @@ export default function Promote() {
         <Text variant="titleLarge">Promote a post</Text>
         <Text variant="body" color="subtext">
           Rent a topic&apos;s featured slot. Payment is handled securely by
-          Polar.sh.
+          Outception.sh.
         </Text>
 
         <Box gap="spacing-8">

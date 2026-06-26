@@ -1,8 +1,8 @@
 'use client'
 
 import { getServerURL } from '@/utils/api'
-import { schemas } from '@polar-sh/client'
-import { Avatar, Button } from '@polar-sh/orbit'
+import { schemas } from '@outception-com/client'
+import { Avatar, Button } from '@outception-com/orbit'
 import Link from 'next/link'
 import SharedLayout from './components/SharedLayout'
 
@@ -36,14 +36,14 @@ const OrganizationSelectionPage = ({
         client={client}
         introduction={
           <>
-            <span className="dark:text-polar-200 font-medium text-gray-700">
+            <span className="dark:text-outception-200 font-medium text-gray-700">
               {clientName}
             </span>{' '}
             wants to access one of your organizations.
           </>
         }
       >
-        <div className="dark:text-polar-400 text-center text-sm text-gray-500">
+        <div className="dark:text-outception-400 text-center text-sm text-gray-500">
           You don&apos;t have an organization yet. Create one from your
           dashboard, then return to authorize this app.
         </div>
@@ -56,7 +56,7 @@ const OrganizationSelectionPage = ({
       client={client}
       introduction={
         <>
-          <span className="dark:text-polar-200 font-medium text-gray-700">
+          <span className="dark:text-outception-200 font-medium text-gray-700">
             {clientName}
           </span>{' '}
           wants to access one of your organizations. Select one:
@@ -70,7 +70,7 @@ const OrganizationSelectionPage = ({
               key={organization.id}
               href={buildOrganizationSelectionURL(organization)}
             >
-              <div className="dark:bg-polar-700 dark:hover:bg-polar-600 flex w-full flex-row items-center gap-2 rounded-2xl border border-gray-200 bg-white px-2.5 py-3 text-sm transition-colors hover:border-gray-300 dark:border-white/5 dark:hover:border-white/5">
+              <div className="dark:bg-outception-700 dark:hover:bg-outception-600 flex w-full flex-row items-center gap-2 rounded-2xl border border-gray-200 bg-white px-2.5 py-3 text-sm transition-colors hover:border-gray-300 dark:border-white/5 dark:hover:border-white/5">
                 <Avatar
                   className="h-8 w-8"
                   avatar_url={organization.avatar_url}
@@ -97,7 +97,7 @@ const OrganizationSelectionPage = ({
             Before using this app, you can review {clientName}&apos;s{' '}
             {client.tos_uri && (
               <a
-                className="dark:text-polar-300 text-gray-700"
+                className="dark:text-outception-300 text-gray-700"
                 href={client.tos_uri}
               >
                 Terms of Service
@@ -106,7 +106,7 @@ const OrganizationSelectionPage = ({
             {client.tos_uri && client.policy_uri && ' and '}
             {client.policy_uri && (
               <a
-                className="dark:text-polar-300 text-gray-700"
+                className="dark:text-outception-300 text-gray-700"
                 href={client.policy_uri}
               >
                 Privacy Policy

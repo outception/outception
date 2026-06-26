@@ -1,30 +1,30 @@
 ---
-title: "Integrate Polar with Laravel"
+title: "Integrate Outception with Laravel"
 sidebarTitle: "Laravel"
-description: "In this guide, we'll show you how to integrate Polar with Laravel."
+description: "In this guide, we'll show you how to integrate Outception with Laravel."
 ---
 
 <img src="/assets/guides/laravel/hero.jpeg" />
 
-Consider following this guide while using the Polar Sandbox Environment. This will allow you to test your integration without affecting your production data.
+Consider following this guide while using the Outception Sandbox Environment. This will allow you to test your integration without affecting your production data.
 
-Polar Laravel Example App
+Outception Laravel Example App
 --------------------------------
 
 We've created a simple example Laravel application that you can use as a reference.
 
-[View Code on GitHub](https://github.com/polarsource/polar-laravel)
+[View Code on GitHub](https://github.com/outception/outception-laravel)
 
 Setting up environment variables
 ---------------------------------------
 
-### Polar API Key
+### Outception API Key
 
-To authenticate with Polar, you need to create an access token, and supply it to Laravel using a `POLAR_API_KEY` environment variable.
+To authenticate with Outception, you need to create an access token, and supply it to Laravel using a `POLAR_API_KEY` environment variable.
 
 You can create an organization access token from your organization settings.
 
-Fetching Polar Products for display
+Fetching Outception Products for display
 ------------------------------------------
 
 ### Creating the Products Controller
@@ -84,10 +84,10 @@ Notice that we create a link to `/checkout` with a query parameter `productId`. 
 
 That's it for the products page. You can now display the products to your users, and they will be able to buy them. Let's now create the checkout endpoint.
 
-Generating Polar Checkout Sessions
+Generating Outception Checkout Sessions
 -----------------------------------------
 
-This endpoint will be responsible for creating a new checkout session, redirecting the user to the Polar Checkout page & redirect back to a configured confirmation page.
+This endpoint will be responsible for creating a new checkout session, redirecting the user to the Outception Checkout page & redirect back to a configured confirmation page.
 
 Go ahead and create a new entry in your `routes/web.php` file:
 
@@ -184,10 +184,10 @@ class ConfirmationController extends Controller
 
 The checkout is not considered "successful" yet however. It's initially marked as `confirmed` until you've received a webhook event `checkout.updated` with a status set to `succeeded`. We'll cover this in the next section.
 
-Handling Polar Webhooks
+Handling Outception Webhooks
 ------------------------------
 
-Polar can send you events about various things happening in your organization. This is very useful for keeping your database in sync with Polar checkouts, orders, subscriptions, etc.
+Outception can send you events about various things happening in your organization. This is very useful for keeping your database in sync with Outception checkouts, orders, subscriptions, etc.
 
 Configuring a webhook is simple. Head over to your organization's settings page and click on the "Add Endpoint" button to create a new webhook.
 
@@ -203,9 +203,9 @@ ngrok http 3000
 
 ### Add Webhook Endpoint
 
-1. Point the Webhook to `your-app.com/api/webhook/polar`. This must be an absolute URL which Polar can reach. If you use ngrok, the URL will look something like this: `https://<your-ngrok-id>.ngrok-free.app/api/webhook/polar`.
+1. Point the Webhook to `your-app.com/api/webhook/polar`. This must be an absolute URL which Outception can reach. If you use ngrok, the URL will look something like this: `https://<your-ngrok-id>.ngrok-free.app/api/webhook/polar`.
 2. Select which events you want to be notified about. You can read more about the available events in the [Events section](/api-reference#webhooks).
-3. Generate a secret key to sign the requests. This will allow you to verify that the requests are truly coming from Polar.
+3. Generate a secret key to sign the requests. This will allow you to verify that the requests are truly coming from Outception.
 4. Add the secret key to your environment variables.
 
 ```bash Terminal
@@ -365,10 +365,10 @@ Let’s create our jobs table by running php artisan queue:table and then run th
 
 The next thing we do is to create a folder named Handler inside the app folder. Then inside this app/Handler, create two files which are
 
-* PolarSignature.php
+* OutceptionSignature.php
 * ProcessWebhook.php
 
-Inside app/Handler/PolarSignature.php, what we want to do is to validate that the request came from Polar. Add the code to that file.
+Inside app/Handler/OutceptionSignature.php, what we want to do is to validate that the request came from Outception. Add the code to that file.
 
 ```php
 // app/Handler/PolarSignature.php
@@ -476,10 +476,10 @@ Notifying the client about the event
 
 If you're building a real-time application, you might want to notify the client about the event. On the confirmation-page, you can listen for the `checkout.updated` event and update the UI accordingly when it reaches the succeeded status.
 
-Polar Laravel Example App
+Outception Laravel Example App
 --------------------------------
 
 We've created a simple example Laravel application that you can use as a reference
 
-[View Code on GitHub](https://github.com/polarsource/polar-laravel)
+[View Code on GitHub](https://github.com/outception/outception-laravel)
 

@@ -4,14 +4,14 @@ import pytest
 from httpx import AsyncClient
 from pytest_mock import MockerFixture
 
-from polar.auth.scope import Scope
-from polar.config import settings
-from polar.models import User
-from polar.models.promotion import Promotion, PromotionStatus
-from polar.postgres import AsyncSession
-from polar.promotion.repository import PromotionRepository
-from polar.promotion.service import PRICE_CENTS_PER_BLOCK
-from polar.promotion.service import promotion as promotion_service
+from outception.auth.scope import Scope
+from outception.config import settings
+from outception.models import User
+from outception.models.promotion import Promotion, PromotionStatus
+from outception.postgres import AsyncSession
+from outception.promotion.repository import PromotionRepository
+from outception.promotion.service import PRICE_CENTS_PER_BLOCK
+from outception.promotion.service import promotion as promotion_service
 from tests.fixtures.auth import AuthSubjectFixture
 
 
@@ -70,7 +70,7 @@ class TestCreatePromotion:
     ) -> None:
         mocker.patch.object(settings, "PROMOTION_PRODUCT_ID", "prod_123")
         checkout_mock = mocker.patch(
-            "polar.billing.service.payment_gateway_client.create_checkout",
+            "outception.billing.service.payment_gateway_client.create_checkout",
             new=AsyncMock(return_value="https://checkout.example/abc"),
         )
 
@@ -146,7 +146,7 @@ class TestCreatePromotion:
     ) -> None:
         mocker.patch.object(settings, "PROMOTION_PRODUCT_ID", "prod_123")
         mocker.patch(
-            "polar.billing.service.payment_gateway_client.create_checkout",
+            "outception.billing.service.payment_gateway_client.create_checkout",
             new=AsyncMock(return_value="https://checkout.example/abc"),
         )
         response = await client.post(

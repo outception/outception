@@ -5,14 +5,14 @@ import httpx
 import pytest
 from pytest_mock import MockerFixture
 
-from polar.config import settings
-from polar.kit.utils import utc_now
-from polar.models import User
-from polar.models.promotion import Promotion, PromotionStatus
-from polar.postgres import AsyncSession
-from polar.promotion.repository import PromotionRepository
-from polar.promotion.service import promotion as promotion_service
-from polar.redis import Redis
+from outception.config import settings
+from outception.kit.utils import utc_now
+from outception.models import User
+from outception.models.promotion import Promotion, PromotionStatus
+from outception.postgres import AsyncSession
+from outception.promotion.repository import PromotionRepository
+from outception.promotion.service import promotion as promotion_service
+from outception.redis import Redis
 
 
 async def _make_pending(
@@ -200,7 +200,7 @@ class TestTinybirdEmission:
         self, mocker: MockerFixture, session: AsyncSession, user: User
     ) -> None:
         mocker.patch.object(settings, "is_tinybird_configured", return_value=True)
-        enqueue_mock = mocker.patch("polar.promotion.events.enqueue_job")
+        enqueue_mock = mocker.patch("outception.promotion.events.enqueue_job")
 
         promotion = await _make_pending(session, user)
         await promotion_service.activate_paid(
@@ -219,7 +219,7 @@ class TestTinybirdEmission:
     async def test_no_events_when_no_active_promotions(
         self, mocker: MockerFixture, session: AsyncSession
     ) -> None:
-        enqueue_mock = mocker.patch("polar.promotion.events.enqueue_job")
+        enqueue_mock = mocker.patch("outception.promotion.events.enqueue_job")
         await promotion_service.get_featured(session, ["tech"])
         enqueue_mock.assert_not_called()
 
@@ -227,7 +227,7 @@ class TestTinybirdEmission:
         self, mocker: MockerFixture, session: AsyncSession, user: User
     ) -> None:
         mocker.patch.object(settings, "is_tinybird_configured", return_value=False)
-        enqueue_mock = mocker.patch("polar.promotion.events.enqueue_job")
+        enqueue_mock = mocker.patch("outception.promotion.events.enqueue_job")
 
         promotion = await _make_pending(session, user)
         await promotion_service.activate_paid(
@@ -267,7 +267,7 @@ class TestTinybirdAnalyticsRead:
             }
         ]
         query_mock = mocker.patch(
-            "polar.promotion.service.tinybird_client.query_pipe",
+            "outception.promotion.service.tinybird_client.query_pipe",
             new=AsyncMock(return_value=rows),
         )
         result = await promotion_service.analytics_timeseries_tinybird(
@@ -283,7 +283,7 @@ class TestTinybirdAnalyticsRead:
     async def test_returns_none_on_query_error(self, mocker: MockerFixture) -> None:
         mocker.patch.object(settings, "is_tinybird_configured", return_value=True)
         mocker.patch(
-            "polar.promotion.service.tinybird_client.query_pipe",
+            "outception.promotion.service.tinybird_client.query_pipe",
             new=AsyncMock(side_effect=httpx.HTTPError("boom")),
         )
         result = await promotion_service.analytics_timeseries_tinybird(
@@ -306,7 +306,7 @@ class TestLifecycleNotifications:
     async def test_activation_notifies_author(
         self, mocker: MockerFixture, session: AsyncSession, user: User
     ) -> None:
-        enqueue_mock = mocker.patch("polar.promotion.notifications.enqueue_job")
+        enqueue_mock = mocker.patch("outception.promotion.notifications.enqueue_job")
         promotion = await _make_pending(session, user)
         await promotion_service.activate_paid(
             session, promotion.id, external_ref="order:notify"
@@ -324,7 +324,7 @@ class TestLifecycleNotifications:
         )  # empty category → active, occupies the slot
 
         second = await _make_pending(session, user)
-        enqueue_mock = mocker.patch("polar.promotion.notifications.enqueue_job")
+        enqueue_mock = mocker.patch("outception.promotion.notifications.enqueue_job")
         await promotion_service.activate_paid(
             session, second.id, external_ref="order:second"
         )
@@ -337,7 +337,7 @@ class TestLifecycleNotifications:
     ) -> None:
         from datetime import timedelta
 
-        from polar.kit.utils import utc_now
+        from outception.kit.utils import utc_now
 
         promotion = await _make_pending(session, user)
         await promotion_service.activate_paid(
@@ -350,7 +350,7 @@ class TestLifecycleNotifications:
         await session.flush()
 
         # Mock only now so we capture the expiry notification, not activation.
-        enqueue_mock = mocker.patch("polar.promotion.notifications.enqueue_job")
+        enqueue_mock = mocker.patch("outception.promotion.notifications.enqueue_job")
         await promotion_service.get_featured(session, ["tech"])
         assert "expired" in self._kinds_for(enqueue_mock, promotion.id)
 

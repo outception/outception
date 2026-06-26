@@ -7,8 +7,8 @@ import {
 } from '@/hooks/queries/promotions'
 import { extractApiErrorMessage } from '@/utils/api/errors'
 import { isOptionalHttpUrl, PROMOTION_TOPICS } from '@/utils/promotions'
-import { Button, Input, Modal, Text, TextArea } from '@polar-sh/orbit'
-import { Box } from '@polar-sh/orbit/Box'
+import { Button, Input, Modal, Text, TextArea } from '@outception-com/orbit'
+import { Box } from '@outception-com/orbit/Box'
 import { useState } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 
@@ -21,7 +21,6 @@ interface ComposeForm {
   title: string
   body: string
   link: string
-  image_url: string
   blocks: number
 }
 
@@ -38,7 +37,6 @@ const ComposePromotionForm = ({ hide }: { hide: () => void }) => {
       title: '',
       body: '',
       link: '',
-      image_url: '',
       blocks: 1,
     },
   })
@@ -55,7 +53,6 @@ const ComposePromotionForm = ({ hide }: { hide: () => void }) => {
         title: data.title,
         body: data.body,
         link: data.link || null,
-        image_url: data.image_url || null,
         blocks: Number(data.blocks) || 1,
       },
       {
@@ -83,7 +80,7 @@ const ComposePromotionForm = ({ hide }: { hide: () => void }) => {
       </Text>
       <Text color="muted">
         Rent the featured slot for a topic. Payment is handled securely by
-        Polar.sh.
+        Outception.sh.
       </Text>
 
       <Box flexDirection="column" rowGap="s">
@@ -94,7 +91,7 @@ const ComposePromotionForm = ({ hide }: { hide: () => void }) => {
           render={({ field }) => (
             <select
               {...field}
-              className="dark:border-polar-700 dark:bg-polar-800 h-10 rounded-xl border border-gray-200 bg-white px-3 text-sm dark:text-white"
+              className="dark:border-outception-700 dark:bg-outception-800 h-10 rounded-xl border border-gray-200 bg-white px-3 text-sm dark:text-white"
             >
               {PROMOTION_TOPICS.map((t) => (
                 <option key={t.id} value={t.id}>
@@ -151,28 +148,6 @@ const ComposePromotionForm = ({ hide }: { hide: () => void }) => {
         ) : null}
       </Box>
 
-      <Box flexDirection="column" rowGap="s">
-        <Text variant="caption">Image URL (optional)</Text>
-        <Controller
-          control={control}
-          name="image_url"
-          rules={{ validate: (v) => isOptionalHttpUrl(v) || URL_ERROR }}
-          render={({ field }) => (
-            <Input
-              {...field}
-              placeholder="https://…/image.png"
-              type="url"
-              maxLength={2048}
-            />
-          )}
-        />
-        {errors.image_url ? (
-          <Text variant="caption" color="danger">
-            {errors.image_url.message}
-          </Text>
-        ) : null}
-      </Box>
-
       <Box flexDirection="row" columnGap="m" alignItems="end">
         <Box flexDirection="column" rowGap="s">
           <Text variant="caption">Blocks ({blockMinutes} min each)</Text>
@@ -207,12 +182,22 @@ const ComposePromotionForm = ({ hide }: { hide: () => void }) => {
   )
 }
 
-/** "Promote" entry point: a button that opens the compose form in a modal. */
-export const ComposePromotionDialog = () => {
+/** "Promote" entry point: opens the compose form in a modal. Pass `trigger` to
+ * render a custom opener (e.g. the navbar's "Promo" pill); defaults to a
+ * standard "Promote" button. */
+export const ComposePromotionDialog = ({
+  trigger,
+}: {
+  trigger?: (open: () => void) => React.ReactNode
+}) => {
   const [open, setOpen] = useState(false)
   return (
     <>
-      <Button onClick={() => setOpen(true)}>Promote</Button>
+      {trigger ? (
+        trigger(() => setOpen(true))
+      ) : (
+        <Button onClick={() => setOpen(true)}>Promote</Button>
+      )}
       <Modal
         isShown={open}
         hide={() => setOpen(false)}

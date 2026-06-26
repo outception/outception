@@ -76,7 +76,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "(sum(rate(polar_checkout_created_total{env=\"$env\"}[5m])) * 60) / clamp_min(avg_over_time((sum(rate(polar_checkout_created_total{env=\"$env\"}[5m])) * 60)[7d:1h]), 0.001)",
+          "expr": "(sum(rate(outception_checkout_created_total{env=\"$env\"}[5m])) * 60) / clamp_min(avg_over_time((sum(rate(outception_checkout_created_total{env=\"$env\"}[5m])) * 60)[7d:1h]), 0.001)",
           "legendFormat": "",
           "refId": "A"
         }
@@ -152,7 +152,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "(sum(rate(polar_checkout_succeeded_total{env=\"$env\"}[5m])) * 60) / clamp_min(avg_over_time((sum(rate(polar_checkout_succeeded_total{env=\"$env\"}[5m])) * 60)[7d:1h]), 0.001)",
+          "expr": "(sum(rate(outception_checkout_succeeded_total{env=\"$env\"}[5m])) * 60) / clamp_min(avg_over_time((sum(rate(outception_checkout_succeeded_total{env=\"$env\"}[5m])) * 60)[7d:1h]), 0.001)",
           "legendFormat": "",
           "refId": "A"
         }
@@ -228,7 +228,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "(sum(rate(polar_checkout_succeeded_total{env=\"$env\"}[1h])) / clamp_min(sum(rate(polar_checkout_created_total{env=\"$env\"}[1h])), 0.001)) / clamp_min(avg_over_time((sum(rate(polar_checkout_succeeded_total{env=\"$env\"}[1h])) / clamp_min(sum(rate(polar_checkout_created_total{env=\"$env\"}[1h])), 0.001))[7d:1h]), 0.001)",
+          "expr": "(sum(rate(outception_checkout_succeeded_total{env=\"$env\"}[1h])) / clamp_min(sum(rate(outception_checkout_created_total{env=\"$env\"}[1h])), 0.001)) / clamp_min(avg_over_time((sum(rate(outception_checkout_succeeded_total{env=\"$env\"}[1h])) / clamp_min(sum(rate(outception_checkout_created_total{env=\"$env\"}[1h])), 0.001))[7d:1h]), 0.001)",
           "legendFormat": "",
           "refId": "A"
         }
@@ -354,7 +354,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(rate(polar_checkout_created_total{env=\"$env\"}[5m])) * 60",
+          "expr": "sum(rate(outception_checkout_created_total{env=\"$env\"}[5m])) * 60",
           "legendFormat": "Current",
           "refId": "A"
         },
@@ -363,7 +363,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "avg_over_time((sum(rate(polar_checkout_created_total{env=\"$env\"}[5m])) * 60)[7d:1h])",
+          "expr": "avg_over_time((sum(rate(outception_checkout_created_total{env=\"$env\"}[5m])) * 60)[7d:1h])",
           "legendFormat": "7d avg",
           "refId": "B"
         }
@@ -476,7 +476,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(rate(polar_checkout_succeeded_total{env=\"$env\"}[5m])) * 60",
+          "expr": "sum(rate(outception_checkout_succeeded_total{env=\"$env\"}[5m])) * 60",
           "legendFormat": "Current",
           "refId": "A"
         },
@@ -485,7 +485,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "avg_over_time((sum(rate(polar_checkout_succeeded_total{env=\"$env\"}[5m])) * 60)[7d:1h])",
+          "expr": "avg_over_time((sum(rate(outception_checkout_succeeded_total{env=\"$env\"}[5m])) * 60)[7d:1h])",
           "legendFormat": "7d avg",
           "refId": "B"
         }
@@ -590,7 +590,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "100 * (sum(rate(polar_checkout_succeeded_total{env=\"$env\"}[15m])) / clamp_min(sum(rate(polar_checkout_created_total{env=\"$env\"}[15m])), 0.001))",
+          "expr": "100 * (sum(rate(outception_checkout_succeeded_total{env=\"$env\"}[15m])) / clamp_min(sum(rate(outception_checkout_created_total{env=\"$env\"}[15m])), 0.001))",
           "legendFormat": "Conversion Rate",
           "refId": "A"
         }
@@ -711,7 +711,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(polar_checkout_created_total{env=\"$env\"}[1h]))",
+          "expr": "sum(increase(outception_checkout_created_total{env=\"$env\"}[1h]))",
           "legendFormat": "Created",
           "refId": "A"
         },
@@ -720,7 +720,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(polar_checkout_succeeded_total{env=\"$env\"}[1h]))",
+          "expr": "sum(increase(outception_checkout_succeeded_total{env=\"$env\"}[1h]))",
           "legendFormat": "Succeeded",
           "refId": "B"
         }
@@ -836,7 +836,7 @@
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "(sum(rate(polar_checkout_created_total{env=\"$env\"}[5m])) * 60) / clamp_min(avg_over_time((sum(rate(polar_checkout_created_total{env=\"$env\"}[5m])) * 60)[7d:1h]), 0.001)",
+              "expr": "(sum(rate(outception_checkout_created_total{env=\"$env\"}[5m])) * 60) / clamp_min(avg_over_time((sum(rate(outception_checkout_created_total{env=\"$env\"}[5m])) * 60)[7d:1h]), 0.001)",
               "legendFormat": "Creation Rate Ratio",
               "refId": "A"
             }
@@ -942,7 +942,7 @@
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "(sum(rate(polar_checkout_succeeded_total{env=\"$env\"}[5m])) * 60) / clamp_min(avg_over_time((sum(rate(polar_checkout_succeeded_total{env=\"$env\"}[5m])) * 60)[7d:1h]), 0.001)",
+              "expr": "(sum(rate(outception_checkout_succeeded_total{env=\"$env\"}[5m])) * 60) / clamp_min(avg_over_time((sum(rate(outception_checkout_succeeded_total{env=\"$env\"}[5m])) * 60)[7d:1h]), 0.001)",
               "legendFormat": "Success Rate Ratio",
               "refId": "A"
             }
@@ -957,7 +957,7 @@
   ],
   "refresh": "30s",
   "schemaVersion": 39,
-  "tags": ["polar", "checkout", "business", "payment"],
+  "tags": ["outception", "checkout", "business", "payment"],
   "templating": {
     "list": [
       {
@@ -989,7 +989,7 @@
           "type": "prometheus",
           "uid": "${datasource}"
         },
-        "definition": "label_values(polar_checkout_created_total, env)",
+        "definition": "label_values(outception_checkout_created_total, env)",
         "hide": 0,
         "includeAll": false,
         "label": "Environment",
@@ -998,7 +998,7 @@
         "options": [],
         "query": {
           "qryType": 1,
-          "query": "label_values(polar_checkout_created_total, env)",
+          "query": "label_values(outception_checkout_created_total, env)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 2,
@@ -1015,8 +1015,8 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "Polar Business Metrics",
-  "uid": "polar-business",
+  "title": "Outception Business Metrics",
+  "uid": "outception-business",
   "version": 1,
   "weekStart": ""
 }

@@ -1,5 +1,5 @@
 import { api } from '@/utils/client'
-import { schemas, unwrap } from '@polar-sh/client'
+import { schemas, unwrap } from '@outception-com/client'
 
 export type Promotion = schemas['PromotionRead']
 export type PromotionPricing = schemas['PromotionPricing']

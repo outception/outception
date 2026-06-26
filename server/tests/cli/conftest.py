@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 import pytest
 import pytest_asyncio
 
-from polar.kit.db.postgres import AsyncSession
+from outception.kit.db.postgres import AsyncSession
 
 
 @pytest_asyncio.fixture(scope="session", loop_scope="session", autouse=True)

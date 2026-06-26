@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "maple",
-  "name": "Polar Handbook",
+  "name": "Outception Handbook",
   "favicon": "/images/favicon.png",
   "logo": {
     "light": "/images/light.png",
@@ -27,16 +27,16 @@
     "groups": [
       {
         "group": "Company",
-        "pages": ["company/about-polar"]
+        "pages": ["company/about-outception"]
       },
       {
-        "group": "Working at Polar",
+        "group": "Working at Outception",
         "pages": [
-          "working-at-polar/introduction",
-          "working-at-polar/onboarding",
-          "working-at-polar/how-we-work",
-          "working-at-polar/project-management-workflow",
-          "working-at-polar/recruitment-process"
+          "working-at-outception/introduction",
+          "working-at-outception/onboarding",
+          "working-at-outception/how-we-work",
+          "working-at-outception/project-management-workflow",
+          "working-at-outception/recruitment-process"
         ]
       },
       {
@@ -86,7 +86,7 @@
               "engineering/design-documents/event-storage",
               "engineering/design-documents/platform-api",
               "engineering/design-documents/rbac",
-              "engineering/design-documents/polar-for-polar",
+              "engineering/design-documents/outception-for-outception",
               "engineering/design-documents/api-versioning",
               "engineering/design-documents/payout-reviews"
             ]

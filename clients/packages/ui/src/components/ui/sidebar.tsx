@@ -5,8 +5,8 @@ import { cva } from 'class-variance-authority'
 import { PanelLeft } from 'lucide-react'
 import * as React from 'react'
 
-import { Button } from '@polar-sh/orbit/ui/button'
-import { Input } from '@polar-sh/orbit/ui/input'
+import { Button } from '@outception-com/orbit/ui/button'
+import { Input } from '@outception-com/orbit/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import {

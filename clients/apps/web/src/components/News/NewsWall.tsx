@@ -1,130 +1,57 @@
 'use client'
 
-import { useAuth } from '@/hooks'
 import { useNewsSources } from '@/hooks/queries/news'
 import type { NewsSourceMeta } from '@/utils/news'
-import { Button, Grid, Input, Spinner, Text } from '@polar-sh/orbit'
-import { Box } from '@polar-sh/orbit/Box'
-import { useMemo, useState } from 'react'
-import { ComposePromotionDialog } from '../Promotions/ComposePromotionDialog'
-import { FollowingFeed } from './FollowingFeed'
-import { NewsSearchResults } from './NewsSearchResults'
-import { NewsSourceCard } from './NewsSourceCard'
+import { Spinner } from '@outception-com/orbit'
+import { Box } from '@outception-com/orbit/Box'
+import { useEffect, useMemo, useRef } from 'react'
+import { useNewsColumn } from './NewsColumnContext'
+import { NewsDeck } from './NewsDeck'
+import { NewsSearchDialog } from './NewsSearchDialog'
 
-const MAX_CARDS = 12
-
-/** The public news wall: pick a topic column, see its sources' headlines, with
- * paid promotions woven in per topic. */
+/** The public news wall body: a swipe deck of either your followed sources
+ * ("Your deck") or every source ("Trending"). The tabs, "More" palette and
+ * theme-toggle logo live in the top navbar (see LandingLayout). */
 export const NewsWall = () => {
+  const { tab, focused, setSearchOpen, isFailed } = useNewsColumn()
   const { data: sources, isLoading } = useNewsSources()
-  const { currentUser } = useAuth()
-  const [column, setColumn] = useState<string | null>(null)
-  const [following, setFollowing] = useState(false)
-  const [query, setQuery] = useState('')
-  const searching = query.trim().length >= 2
 
-  const columns = useMemo(() => {
-    const set = new Set<string>()
-    for (const s of sources ?? []) {
-      if (s.column) set.add(s.column)
-    }
-    return Array.from(set).sort()
-  }, [sources])
+  const all: NewsSourceMeta[] = useMemo(
+    () => (sources ?? []).filter((s) => !s.redirect && !isFailed(s.id)),
+    [sources, isFailed],
+  )
 
   const visible: NewsSourceMeta[] = useMemo(() => {
-    const list = (sources ?? []).filter((s) => !s.redirect)
-    const filtered = column ? list.filter((s) => s.column === column) : list
-    return filtered.slice(0, MAX_CARDS)
-  }, [sources, column])
+    if (tab !== 'focus') return all
+    const focusedSet = new Set(focused)
+    return all.filter((s) => focusedSet.has(s.id))
+  }, [tab, all, focused])
+
+  // When "Your deck" is empty, open the source palette automatically (once) so
+  // the user can fill it — no empty-state message.
+  const autoOpened = useRef(false)
+  useEffect(() => {
+    if (tab === 'focus' && !isLoading && visible.length === 0) {
+      if (!autoOpened.current) {
+        autoOpened.current = true
+        setSearchOpen(true)
+      }
+    } else {
+      autoOpened.current = false
+    }
+  }, [tab, isLoading, visible.length, setSearchOpen])
 
   return (
-    <Box flexDirection="column" rowGap="xl" padding="xl">
-      <Box
-        flexDirection="row"
-        justifyContent="between"
-        alignItems="center"
-        flexWrap="wrap"
-        rowGap="m"
-      >
-        <Box flexDirection="column" rowGap="xs">
-          <Text variant="heading-s" as="h1">
-            The Wall
-          </Text>
-          <Text color="muted">Live headlines · promote what matters</Text>
+    <Box flexDirection="column" rowGap="xl" paddingVertical="xl">
+      {isLoading ? (
+        <Box justifyContent="center" padding="xl">
+          <Spinner />
         </Box>
-        <ComposePromotionDialog />
-      </Box>
-
-      <Input
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search headlines and sources…"
-      />
-
-      {searching ? (
-        <NewsSearchResults query={query} />
-      ) : (
-        <>
-          <Box flexDirection="row" columnGap="s" flexWrap="wrap" rowGap="s">
-            <Button
-              variant={!following && column === null ? 'default' : 'secondary'}
-              size="sm"
-              onClick={() => {
-                setFollowing(false)
-                setColumn(null)
-              }}
-            >
-              All
-            </Button>
-            {currentUser && (
-              <Button
-                variant={following ? 'default' : 'secondary'}
-                size="sm"
-                onClick={() => {
-                  setFollowing(true)
-                  setColumn(null)
-                }}
-              >
-                ★ Following
-              </Button>
-            )}
-            {columns.map((c) => (
-              <Button
-                key={c}
-                variant={!following && column === c ? 'default' : 'secondary'}
-                size="sm"
-                onClick={() => {
-                  setFollowing(false)
-                  setColumn(c)
-                }}
-              >
-                {c}
-              </Button>
-            ))}
-          </Box>
-
-          {following ? (
-            <FollowingFeed />
-          ) : isLoading ? (
-            <Box justifyContent="center" padding="xl">
-              <Spinner />
-            </Box>
-          ) : (
-            <Grid
-              templateColumns={{
-                base: '1fr',
-                md: 'repeat(2, 1fr)',
-                lg: 'repeat(3, 1fr)',
-              }}
-              gap="l"
-            >
-              {visible.map((source) => (
-                <NewsSourceCard key={source.id} source={source} />
-              ))}
-            </Grid>
-          )}
-        </>
+      ) : tab === 'focus' && visible.length === 0 ? null : (
+        <NewsDeck sources={visible} column={tab} />
       )}
+
+      <NewsSearchDialog />
     </Box>
   )
 }

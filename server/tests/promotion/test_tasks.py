@@ -3,10 +3,10 @@ from typing import Any
 import pytest
 from pytest_mock import MockerFixture
 
-from polar.models import User
-from polar.postgres import AsyncSession
-from polar.promotion.service import promotion as promotion_service
-from polar.promotion.tasks import promotion_send_lifecycle_email
+from outception.models import User
+from outception.postgres import AsyncSession
+from outception.promotion.service import promotion as promotion_service
+from outception.promotion.tasks import promotion_send_lifecycle_email
 
 
 class _FakeSessionMaker:
@@ -43,10 +43,10 @@ class TestSendLifecycleEmail:
     ) -> None:
         promotion = await _make_pending(session, user)
         mocker.patch(
-            "polar.promotion.tasks.AsyncSessionMaker",
+            "outception.promotion.tasks.AsyncSessionMaker",
             return_value=_FakeSessionMaker(session),
         )
-        enqueue = mocker.patch("polar.promotion.tasks.enqueue_job")
+        enqueue = mocker.patch("outception.promotion.tasks.enqueue_job")
 
         await promotion_send_lifecycle_email(str(promotion.id), "activated")
 
@@ -65,10 +65,10 @@ class TestSendLifecycleEmail:
         await session.flush()
         promotion = await _make_pending(session, user)
         mocker.patch(
-            "polar.promotion.tasks.AsyncSessionMaker",
+            "outception.promotion.tasks.AsyncSessionMaker",
             return_value=_FakeSessionMaker(session),
         )
-        enqueue = mocker.patch("polar.promotion.tasks.enqueue_job")
+        enqueue = mocker.patch("outception.promotion.tasks.enqueue_job")
 
         await promotion_send_lifecycle_email(str(promotion.id), "activated")
         enqueue.assert_not_called()
@@ -86,10 +86,10 @@ class TestSendLifecycleEmail:
         )  # queued behind first
 
         mocker.patch(
-            "polar.promotion.tasks.AsyncSessionMaker",
+            "outception.promotion.tasks.AsyncSessionMaker",
             return_value=_FakeSessionMaker(session),
         )
-        enqueue = mocker.patch("polar.promotion.tasks.enqueue_job")
+        enqueue = mocker.patch("outception.promotion.tasks.enqueue_job")
 
         await promotion_send_lifecycle_email(str(second.id), "queued")
 
@@ -104,10 +104,10 @@ class TestSendLifecycleEmail:
         from uuid import uuid4
 
         mocker.patch(
-            "polar.promotion.tasks.AsyncSessionMaker",
+            "outception.promotion.tasks.AsyncSessionMaker",
             return_value=_FakeSessionMaker(session),
         )
-        enqueue = mocker.patch("polar.promotion.tasks.enqueue_job")
+        enqueue = mocker.patch("outception.promotion.tasks.enqueue_job")
 
         await promotion_send_lifecycle_email(str(uuid4()), "activated")
         enqueue.assert_not_called()

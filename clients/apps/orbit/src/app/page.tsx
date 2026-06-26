@@ -1,5 +1,5 @@
-import { Box } from '@polar-sh/orbit/Box'
-import { Grid, GridItem, Text } from '@polar-sh/orbit'
+import { Box } from '@outception-com/orbit/Box'
+import { Grid, GridItem, Text } from '@outception-com/orbit'
 import { ArrowUpRight } from 'lucide-react'
 import Link from 'next/link'
 import { OrbitingSpheres } from '@/components/OrbitingSpheres'
@@ -9,7 +9,7 @@ const PRINCIPLES = [
   {
     title: 'Design by subtraction',
     lead: 'Start with everything. Remove until only what is necessary remains. Then remove one more thing. What survives is the design.',
-    body: 'Orbit ships one spacing scale, a handful of radii, and a small set of semantic colors. The constraint is the feature. Fewer choices means fewer ways to drift, so every surface in Polar reads as one system.',
+    body: 'Orbit ships one spacing scale, a handful of radii, and a small set of semantic colors. The constraint is the feature. Fewer choices means fewer ways to drift, so every surface in Outception reads as one system.',
   },
   {
     title: 'Derived, not decorated',
@@ -19,7 +19,7 @@ const PRINCIPLES = [
   {
     title: 'Precision as respect',
     lead: 'An imprecise pixel, word, or interaction signals that we do not understand the people we build for. Precision is not a quality bar, it is a form of respect.',
-    body: 'Polar builds for a technical audience. Box makes precision the default by removing arbitrary values: typed props take tokens, never raw pixels, so the easy path and the correct path are the same.',
+    body: 'Outception builds for a technical audience. Box makes precision the default by removing arbitrary values: typed props take tokens, never raw pixels, so the easy path and the correct path are the same.',
   },
 ]
 
@@ -131,7 +131,7 @@ export default function HomePage() {
         </Box>
         <Box maxWidth={560}>
           <Text variant="heading-xxs">
-            The foundation behind every Polar surface
+            The foundation behind every Outception surface
           </Text>
         </Box>
       </Box>

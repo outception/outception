@@ -1,4 +1,4 @@
-import { Text } from '@polar-sh/orbit'
+import { Text } from '@outception-com/orbit'
 import {
   Example,
   PageHeader,
@@ -22,8 +22,8 @@ const variantCode = `<Text variant="heading-l">Page title</Text>
 <Text variant="label">Field label</Text>`
 
 const monospaceCode = `<Text variant="heading-s" monospace>404</Text>
-<Text variant="body" monospace>npm install @polar-sh/orbit</Text>
-<Text variant="label" monospace>POLAR_TOKEN</Text>`
+<Text variant="body" monospace>npm install @outception-com/orbit</Text>
+<Text variant="label" monospace>OUTCEPTION_TOKEN</Text>`
 
 const numberCode = `<Text variant="heading-s" formatter="number">{3290033}</Text>
 <Text variant="body" formatter="compact">{3290033}</Text>

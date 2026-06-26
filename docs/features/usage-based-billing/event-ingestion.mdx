@@ -7,9 +7,9 @@ import Events from "/snippets/usage/events.mdx";
 
 <Events />
 
-## Ingest events using the Polar SDK
+## Ingest events using the Outception SDK
 
-To ingest events, you can use the Polar SDKs.
+To ingest events, you can use the Outception SDKs.
 
 ### TypeScript Example
 
@@ -55,7 +55,7 @@ Once an event is ingested, it cannot be changed, nor can it be deleted.
 
 You can set the `timestamp` field on an event to any point in the past — useful for batched ingestion or replaying from your own queue. The timestamp does not need to be part of the current billing cycle.
 
-Polar attributes events to billing periods based on **when they were received by Polar**, not the supplied `timestamp`. An event ingested today with a `timestamp` from a previous billing period is included on the **current cycle** — it is not added to the already-closed invoice for the period it logically belongs to. Polar never issues retroactive invoices or credits for late events.
+Outception attributes events to billing periods based on **when they were received by Outception**, not the supplied `timestamp`. An event ingested today with a `timestamp` from a previous billing period is included on the **current cycle** — it is not added to the already-closed invoice for the period it logically belongs to. Outception never issues retroactive invoices or credits for late events.
 
 The supplied `timestamp` is still used to:
 

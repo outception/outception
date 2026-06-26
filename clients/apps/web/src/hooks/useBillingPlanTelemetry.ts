@@ -21,7 +21,7 @@ interface UseBillingPlanTelemetryOptions {
 }
 
 /**
- * For components that initiate a Polar billing-plan checkout redirect.
+ * For components that initiate a Outception billing-plan checkout redirect.
  * Returns a builder for the success/return URLs (UTM + attribution baked
  * in), and silently listens on the current page for the cancellation
  * return — firing `dashboard:subscriptions:checkout:cancel` and stripping
@@ -74,7 +74,7 @@ interface UseBillingPlanCompleteListenerOptions {
 }
 
 /**
- * For the page hit by `success_url` after a Polar billing-plan checkout.
+ * For the page hit by `success_url` after a Outception billing-plan checkout.
  * Fires `dashboard:subscriptions:checkout:complete` only when both
  * `checkout_success=true` AND `utm_source` are present. Runs `onComplete`
  * for any side-effect (cache invalidation), then strips the params via

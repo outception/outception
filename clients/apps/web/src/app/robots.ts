@@ -17,6 +17,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/dashboard/', '/auth/', '/verify-email/'],
     },
-    sitemap: 'https://polar.sh/sitemap.xml',
+    sitemap: 'https://outception.com/sitemap.xml',
   }
 }

@@ -16,8 +16,8 @@ provider "vercel" {
 module "s3_buckets" {
   source                   = "../modules/s3_buckets"
   environment              = "sandbox"
-  allowed_origins          = ["https://sandbox.polar.sh"]
-  public_files_bucket_name = "polar-public-sandbox-files"
+  allowed_origins          = ["https://sandbox.outception.com"]
+  public_files_bucket_name = "outception-public-sandbox-files"
 }
 
 import {
@@ -107,20 +107,20 @@ import {
 
 import {
   to = module.s3_buckets.aws_s3_bucket.public_files
-  id = "polar-public-sandbox-files"
+  id = "outception-public-sandbox-files"
 }
 
 import {
   to = module.s3_buckets.aws_s3_bucket_cors_configuration.public_files
-  id = "polar-public-sandbox-files"
+  id = "outception-public-sandbox-files"
 }
 
 import {
   to = module.s3_buckets.aws_s3_bucket_policy.public_files
-  id = "polar-public-sandbox-files"
+  id = "outception-public-sandbox-files"
 }
 
 import {
   to = module.s3_buckets.aws_s3_bucket_public_access_block.public_files
-  id = "polar-public-sandbox-files"
+  id = "outception-public-sandbox-files"
 }

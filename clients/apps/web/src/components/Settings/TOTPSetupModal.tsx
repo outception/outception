@@ -1,17 +1,17 @@
 'use client'
 
-import { Modal, Text } from '@polar-sh/orbit'
+import { Modal, Text } from '@outception-com/orbit'
 import { useTOTPEnroll, useTOTPEnable } from '@/hooks/auth'
-import { schemas } from '@polar-sh/client'
-import { Button } from '@polar-sh/orbit'
+import { schemas } from '@outception-com/client'
+import { Button } from '@outception-com/orbit'
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
-} from '@polar-sh/ui/components/atoms/InputOTP'
+} from '@outception-com/ui/components/atoms/InputOTP'
 import QRCode from 'react-qr-code'
 import { useState } from 'react'
-import CopyToClipboardInput from '@polar-sh/ui/components/atoms/CopyToClipboardInput'
+import CopyToClipboardInput from '@outception-com/ui/components/atoms/CopyToClipboardInput'
 import { toast } from '../Toast/use-toast'
 
 export interface TOTPSetupModalProps {
@@ -37,7 +37,7 @@ const TOTPSetupContent = ({ onEnabled }: { onEnabled: () => void }) => {
     if (!enrollment) {
       return (
         <div className="flex flex-col gap-6 p-8">
-          <p className="dark:text-polar-400 text-sm text-gray-600">
+          <p className="dark:text-outception-400 text-sm text-gray-600">
             To set this up, you&rsquo;ll need an authenticator app like Google
             Authenticator or a password manager that supports TOTP.
           </p>
@@ -53,7 +53,7 @@ const TOTPSetupContent = ({ onEnabled }: { onEnabled: () => void }) => {
 
     return (
       <div className="flex flex-col gap-6 p-8">
-        <p className="dark:text-polar-400 text-sm text-gray-600">
+        <p className="dark:text-outception-400 text-sm text-gray-600">
           Scan this QR code with your authenticator app, then enter the 6-digit
           code it generates.
         </p>
@@ -64,7 +64,7 @@ const TOTPSetupContent = ({ onEnabled }: { onEnabled: () => void }) => {
           </div>
 
           <button
-            className="dark:text-polar-500 dark:hover:text-polar-400 mx-auto cursor-pointer appearance-none p-2 text-center text-xs text-gray-500 hover:text-gray-700"
+            className="dark:text-outception-500 dark:hover:text-outception-400 mx-auto cursor-pointer appearance-none p-2 text-center text-xs text-gray-500 hover:text-gray-700"
             onClick={() => setManualEntryMode(!manualEntryMode)}
           >
             Can&rsquo;t scan?{' '}
@@ -84,7 +84,7 @@ const TOTPSetupContent = ({ onEnabled }: { onEnabled: () => void }) => {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="dark:text-polar-300 text-center text-sm font-medium text-gray-700">
+          <label className="dark:text-outception-300 text-center text-sm font-medium text-gray-700">
             Enter the 6-digit code from your app
           </label>
           <div className="flex flex-col items-center gap-4">
@@ -103,7 +103,7 @@ const TOTPSetupContent = ({ onEnabled }: { onEnabled: () => void }) => {
                   <InputOTPSlot
                     key={index}
                     index={index}
-                    className="dark:border-polar-600 h-12 w-12 border-gray-300 text-xl"
+                    className="dark:border-outception-600 h-12 w-12 border-gray-300 text-xl"
                   />
                 ))}
               </InputOTPGroup>

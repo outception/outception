@@ -1,22 +1,22 @@
 ---
-title: "Integrate Polar with Encore"
+title: "Integrate Outception with Encore"
 sidebarTitle: "Encore"
-description: "In this guide, we'll show you how to integrate Polar with Encore."
+description: "In this guide, we'll show you how to integrate Outception with Encore."
 ---
 
 [Encore](https://encore.dev) is an open source backend framework for TypeScript with built-in infrastructure automation and observability. When you define services, databases, and APIs in code, Encore automatically provisions and manages the underlying infrastructure, both locally and in the cloud.
 
-Because Encore defines infrastructure in code and provides built-in distributed tracing, AI coding assistants can both build and debug your backend end-to-end, including your Polar integration. They can read the code to understand the full system, then inspect traces to diagnose exactly what happened when a checkout completes or a webhook arrives.
+Because Encore defines infrastructure in code and provides built-in distributed tracing, AI coding assistants can both build and debug your backend end-to-end, including your Outception integration. They can read the code to understand the full system, then inspect traces to diagnose exactly what happened when a checkout completes or a webhook arrives.
 
-Consider following this guide while using the Polar Sandbox Environment. This will allow you to test your integration without affecting your production data.
+Consider following this guide while using the Outception Sandbox Environment. This will allow you to test your integration without affecting your production data.
 
 ## Examples
 
-- [With Encore](https://github.com/polarsource/examples/tree/main/with-encore)
+- [With Encore](https://github.com/outception/examples/tree/main/with-encore)
 
-## Install the Polar JavaScript SDK
+## Install the Outception JavaScript SDK
 
-To get started, install the Polar JavaScript SDK and the webhook verification library:
+To get started, install the Outception JavaScript SDK and the webhook verification library:
 
 ```bash Terminal
 npm install @polar-sh/sdk standardwebhooks
@@ -26,9 +26,9 @@ npm install @polar-sh/sdk standardwebhooks
 
 Encore has built-in secrets management that works consistently across local development and cloud environments.
 
-### Polar Access Token and Mode
+### Outception Access Token and Mode
 
-To authenticate with Polar, you need to create an access token and specify if it's production or sandbox mode. You can create an [organization access token from your organization settings](/integrate/oat).
+To authenticate with Outception, you need to create an access token and specify if it's production or sandbox mode. You can create an [organization access token from your organization settings](/integrate/oat).
 
 Add it to Encore using the secrets manager:
 
@@ -37,7 +37,7 @@ encore secret set --type local POLAR_ACCESS_TOKEN
 encore secret set --type local POLAR_MODE
 ```
 
-### Polar Webhook Secret
+### Outception Webhook Secret
 
 You'll need a webhook secret to verify incoming webhook events. We'll set this up in the webhook section below.
 
@@ -47,9 +47,9 @@ encore secret set --type local POLAR_WEBHOOK_SECRET
 
 When deploying to Encore Cloud, you'll set production secrets through the dashboard or CI/CD pipeline.
 
-## Configuring a Polar API Client
+## Configuring a Outception API Client
 
-To interact with the Polar API, create a new instance of the `Polar` class using Encore's secret management.
+To interact with the Outception API, create a new instance of the `Polar` class using Encore's secret management.
 
 ```tsx title="payments/polar.ts"
 import { Polar } from "@polar-sh/sdk";
@@ -66,9 +66,9 @@ export const polar = new Polar({
 
 Remember to set `POLAR_MODE` as `production` when you're ready to switch to the production environment.
 
-## Generating Polar Checkout Sessions
+## Generating Outception Checkout Sessions
 
-Create a checkout endpoint that creates a Polar checkout session and redirects the user.
+Create a checkout endpoint that creates a Outception checkout session and redirects the user.
 
 ```tsx title="payments/payments.ts"
 import { api, APIError } from "encore.dev/api";
@@ -105,15 +105,15 @@ export const checkout = api.raw(
 
 You can now create a checkout session by visiting `/checkout?product=YOUR_PRODUCT_ID`.
 
-## Handling Polar Webhooks
+## Handling Outception Webhooks
 
-Polar can send you events about various things happening in your organization. This is useful for keeping your database in sync with Polar checkouts, orders, subscriptions, etc.
+Outception can send you events about various things happening in your organization. This is useful for keeping your database in sync with Outception checkouts, orders, subscriptions, etc.
 
 Configuring a webhook is simple. Head over to your organization's settings page and click on the "Add Endpoint" button to create a new webhook.
 
 ### Tunneling webhook events to your local development environment
 
-Encore runs your app locally with full infrastructure support. To receive webhooks during local development, you can use the [Polar CLI](https://polar.sh/docs/integrate/webhooks/locally) to tunnel webhook events to your local environment.
+Encore runs your app locally with full infrastructure support. To receive webhooks during local development, you can use the [Outception CLI](https://outception.com/docs/integrate/webhooks/locally) to tunnel webhook events to your local environment.
 
 ```bash Terminal
 polar listen http://localhost:4000/webhooks/polar
@@ -127,9 +127,9 @@ encore secret set --type local POLAR_WEBHOOK_SECRET
 
 ### Add Webhook Endpoint
 
-1. Point the Webhook to `your-app.com/webhooks/polar`. This must be an absolute URL which Polar can reach. If you use the Polar CLI tunnel, it will handle this for you.
+1. Point the Webhook to `your-app.com/webhooks/polar`. This must be an absolute URL which Outception can reach. If you use the Outception CLI tunnel, it will handle this for you.
 2. Select which events you want to be notified about. You can read more about the available events in the [Events section](/api-reference#webhooks).
-3. Generate a secret key to sign the requests. This will allow you to verify that the requests are truly coming from Polar.
+3. Generate a secret key to sign the requests. This will allow you to verify that the requests are truly coming from Outception.
 4. Add the secret key to Encore:
 
 ```bash Terminal
@@ -204,7 +204,7 @@ export const webhooks = api.raw(
 ```
 
 <Warning>
-  The `standardwebhooks` library expects the secret to be base64-encoded. Polar provides a raw string (starting with `polar_whs_`), so you must base64-encode the entire secret before passing it to `new Webhook()`.
+  The `standardwebhooks` library expects the secret to be base64-encoded. Outception provides a raw string (starting with `polar_whs_`), so you must base64-encode the entire secret before passing it to `new Webhook()`.
 </Warning>
 
 ## Local Development
@@ -235,6 +235,6 @@ git push encore
 Encore automatically provisions all the infrastructure your app needs. Remember to:
 
 1. Set production secrets in the Encore Cloud dashboard
-2. Update the `server` parameter from `"sandbox"` to `"production"` in your Polar client
-3. Update your webhook URL in Polar to point to your production domain
+2. Update the `server` parameter from `"sandbox"` to `"production"` in your Outception client
+3. Update your webhook URL in Outception to point to your production domain
 4. Update `successUrl` to your production URL

@@ -9,10 +9,10 @@ from rich.progress import Progress
 from sqlalchemy import func, select, text
 from sqlalchemy.orm import attributes
 
-from polar.config import settings
-from polar.kit.db.postgres import AsyncSession, create_async_sessionmaker
-from polar.kit.db.postgres import create_async_engine as _create_async_engine
-from polar.models.organization import Organization, OrganizationSocials
+from outception.config import settings
+from outception.kit.db.postgres import AsyncSession, create_async_sessionmaker
+from outception.kit.db.postgres import create_async_engine as _create_async_engine
+from outception.models.organization import Organization, OrganizationSocials
 
 cli = typer.Typer()
 

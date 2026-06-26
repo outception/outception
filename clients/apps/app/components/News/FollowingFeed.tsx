@@ -2,7 +2,7 @@ import { Box } from '@/components/Shared/Box'
 import { Text } from '@/components/Shared/Text'
 import { Touchable } from '@/components/Shared/Touchable'
 import { useTheme } from '@/design-system/useTheme'
-import { useFollowedFeed } from '@/hooks/polar/news'
+import { useFollowedFeed } from '@/hooks/outception/news'
 import { openExternalUrl } from '@/utils/news'
 import { ActivityIndicator, ScrollView } from 'react-native'
 

@@ -7,8 +7,8 @@ import {
   useTOTPDelete,
 } from '@/hooks'
 import { extractApiErrorMessage } from '@/utils/api/errors'
-import { Button } from '@polar-sh/orbit'
-import { ListGroup } from '@polar-sh/orbit'
+import { Button } from '@outception-com/orbit'
+import { ListGroup } from '@outception-com/orbit'
 import { ConfirmModal } from '@/components/Modal/ConfirmModal'
 import { useModal } from '@/components/Modal/useModal'
 import { useState } from 'react'
@@ -35,7 +35,7 @@ const AuthenticationMethod = ({
         <div className="self-start">{icon}</div>
         <div className="grow">
           <div className="font-medium">{title}</div>
-          <div className="dark:text-polar-500 text-sm text-gray-500">
+          <div className="dark:text-outception-500 text-sm text-gray-500">
             {subtitle}
           </div>
         </div>

@@ -1,5 +1,5 @@
 import typer
-from polar.models.discount import DiscountFixed
+from outception.models.discount import DiscountFixed
 from sqlalchemy import func, select, update
 
 from scripts.helper import (

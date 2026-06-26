@@ -1,4 +1,4 @@
-from polar.integrations.aws.s3.schemas import get_downloadable_content_disposition
+from outception.integrations.aws.s3.schemas import get_downloadable_content_disposition
 
 
 class TestGetDownloadableContentDisposition:

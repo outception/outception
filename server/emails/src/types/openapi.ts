@@ -660,7 +660,7 @@ export interface components {
       /**
        * Repository Owner
        * @description The owner of the repository.
-       * @example polarsource
+       * @example outception
        */
       repository_owner: string
       /**
@@ -902,7 +902,7 @@ export interface components {
       /**
        * Slack Integration Id
        * Format: uuid4
-       * @description Polar Slack integration linked to this benefit.
+       * @description Outception Slack integration linked to this benefit.
        */
       slack_integration_id: string
       /**
@@ -2169,18 +2169,18 @@ export interface components {
       /** Url */
       url: string
     }
-    /** PolarSelfStartupProgramWelcomeEmail */
-    PolarSelfStartupProgramWelcomeEmail: {
+    /** OutceptionSelfStartupProgramWelcomeEmail */
+    OutceptionSelfStartupProgramWelcomeEmail: {
       /**
        * Template
-       * @default polar_self_startup_program_welcome
+       * @default outception_self_startup_program_welcome
        * @constant
        */
-      template: 'polar_self_startup_program_welcome'
-      props: components['schemas']['PolarSelfStartupProgramWelcomeProps']
+      template: 'outception_self_startup_program_welcome'
+      props: components['schemas']['OutceptionSelfStartupProgramWelcomeProps']
     }
-    /** PolarSelfStartupProgramWelcomeProps */
-    PolarSelfStartupProgramWelcomeProps: {
+    /** OutceptionSelfStartupProgramWelcomeProps */
+    OutceptionSelfStartupProgramWelcomeProps: {
       /** Email */
       email: string
       /** Organization Name */
@@ -2188,35 +2188,35 @@ export interface components {
       /** Billing Url */
       billing_url: string
     }
-    /** PolarSelfSubscriptionConfirmationEmail */
-    PolarSelfSubscriptionConfirmationEmail: {
+    /** OutceptionSelfSubscriptionConfirmationEmail */
+    OutceptionSelfSubscriptionConfirmationEmail: {
       /**
        * Template
-       * @default polar_self_subscription_confirmation
+       * @default outception_self_subscription_confirmation
        * @constant
        */
-      template: 'polar_self_subscription_confirmation'
-      props: components['schemas']['PolarSelfSubscriptionConfirmationProps']
+      template: 'outception_self_subscription_confirmation'
+      props: components['schemas']['OutceptionSelfSubscriptionConfirmationProps']
     }
-    /** PolarSelfSubscriptionConfirmationProps */
-    PolarSelfSubscriptionConfirmationProps: {
+    /** OutceptionSelfSubscriptionConfirmationProps */
+    OutceptionSelfSubscriptionConfirmationProps: {
       /** Email */
       email: string
       /** Product Name */
       product_name: string
     }
-    /** PolarSelfSubscriptionCycledEmail */
-    PolarSelfSubscriptionCycledEmail: {
+    /** OutceptionSelfSubscriptionCycledEmail */
+    OutceptionSelfSubscriptionCycledEmail: {
       /**
        * Template
-       * @default polar_self_subscription_cycled
+       * @default outception_self_subscription_cycled
        * @constant
        */
-      template: 'polar_self_subscription_cycled'
-      props: components['schemas']['PolarSelfSubscriptionCycledProps']
+      template: 'outception_self_subscription_cycled'
+      props: components['schemas']['OutceptionSelfSubscriptionCycledProps']
     }
-    /** PolarSelfSubscriptionCycledProps */
-    PolarSelfSubscriptionCycledProps: {
+    /** OutceptionSelfSubscriptionCycledProps */
+    OutceptionSelfSubscriptionCycledProps: {
       /** Email */
       email: string
       /** Product Name */

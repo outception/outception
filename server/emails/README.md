@@ -20,10 +20,10 @@ This will start a development server at [http://localhost:3000](http://localhost
 
 ## How to create a new email?
 
-1. On Python's side, in `server/polar/email/schemas.py`, add a new item to `EmailTemplate` and implement a Pydantic schema to describe the props of the email.
+1. On Python's side, in `server/outception/email/schemas.py`, add a new item to `EmailTemplate` and implement a Pydantic schema to describe the props of the email.
 
 ```python
-# server/polar/email/schemas.py
+# server/outception/email/schemas.py
 
 class EmailTemplate(StrEnum):
     # ...
@@ -55,8 +55,8 @@ uv run task emails
 Then, use `enqueue_email_template` to send the email via the background worker. This serializes the template data and enqueues a job — rendering happens in the worker, keeping the API request fast.
 
 ```python
-from polar.email.schemas import CustomerGreetingsEmail, CustomerGreetingsProps
-from polar.email.sender import enqueue_email_template
+from outception.email.schemas import CustomerGreetingsEmail, CustomerGreetingsProps
+from outception.email.sender import enqueue_email_template
 
 enqueue_email_template(
     CustomerGreetingsEmail(
@@ -74,7 +74,7 @@ enqueue_email_template(
 If you need to render synchronously (e.g. in scripts or workers that already run outside the event loop), you can use `render_email_template` directly:
 
 ```python
-from polar.email.react import render_email_template
+from outception.email.react import render_email_template
 
 body = render_email_template(email)
 ```

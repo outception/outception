@@ -1,11 +1,11 @@
 ---
-title: "Polar Cycle"
-description: "How to configure Polar Cycle, the Slack bot that announces PRs and rotates the primary reviewer"
+title: "Outception Cycle"
+description: "How to configure Outception Cycle, the Slack bot that announces PRs and rotates the primary reviewer"
 ---
 
-Polar Cycle is the small Slack bot that posts PR threads in `#pull-requests` and picks a primary reviewer whenever a team is requested for review. It runs on Vercel at [polar-cycle.vercel.app](https://polar-cycle.vercel.app), with a tiny admin UI for the bits we need to tweak day to day.
+Outception Cycle is the small Slack bot that posts PR threads in `#pull-requests` and picks a primary reviewer whenever a team is requested for review. It runs on Vercel at [outception-cycle.vercel.app](https://outception-cycle.vercel.app), with a tiny admin UI for the bits we need to tweak day to day.
 
-This guide covers what the admin panel does and the most common tasks you will run from it. The implementation lives in [`polarsource/cycle`](https://github.com/polarsource/cycle).
+This guide covers what the admin panel does and the most common tasks you will run from it. The implementation lives in [`polarsource/cycle`](https://github.com/outception/cycle).
 
 ## What Cycle does
 
@@ -34,7 +34,7 @@ Cycle stores its state in Upstash Redis. There is no Postgres, no migrations —
 
 ### Open the admin
 
-Go to [polar-cycle.vercel.app/admin](https://polar-cycle.vercel.app/admin).
+Go to [outception-cycle.vercel.app/admin](https://outception-cycle.vercel.app/admin).
 
 ### Sign in with GitHub
 
@@ -60,7 +60,7 @@ A newline-separated list of `owner/repo` slugs that Cycle should listen to (e.g.
 
 <Note>
   Webhooks are configured at the GitHub App level (separately from this panel). If you add a
-  brand-new repo and Cycle is not posting anything, double-check that the **Polar Cycle** GitHub App
+  brand-new repo and Cycle is not posting anything, double-check that the **Outception Cycle** GitHub App
   is installed on it. The repo list here is a filter, not a subscription.
 </Note>
 
@@ -100,7 +100,7 @@ While excluded, the user will not be picked as primary reviewer for any PR. They
 
 ### Adding a new repo to the rotation
 
-1. Make sure the **Polar Cycle** GitHub App is installed on the repo (org admins can do this).
+1. Make sure the **Outception Cycle** GitHub App is installed on the repo (org admins can do this).
 2. Open the admin panel and add `owner/repo` on a new line under **Repositories**.
 3. Save. The next opened PR in that repo should produce a Slack thread.
 
@@ -123,7 +123,7 @@ They are missing from the **GitHub → Slack mapping** table, or the mapped Slac
 
 ## Reference
 
-- Source: [`polarsource/cycle`](https://github.com/polarsource/cycle)
-- Admin URL: https://polar-cycle.vercel.app/admin
+- Source: [`polarsource/cycle`](https://github.com/outception/cycle)
+- Admin URL: https://outception-cycle.vercel.app/admin
 - Storage: Upstash Redis (configured via Vercel env vars)
 - Auth: GitHub OAuth, restricted to `@polarsource` org members, signed-cookie sessions (7-day TTL)

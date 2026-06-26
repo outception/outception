@@ -1,5 +1,5 @@
-import { Text } from '@polar-sh/orbit'
-import { PolarLogotype } from '../Layout/Public/PolarLogotype'
+import { Text } from '@outception-com/orbit'
+import { OutceptionLogotype } from '../Layout/Public/OutceptionLogotype'
 import { SectionLayout } from './SectionLayout'
 import { ShaderCanvas } from './ShaderCanvas'
 import { CIRCLES_GLSL } from './shaders/geometry/circles'
@@ -33,13 +33,15 @@ export function MissionSection() {
             className="aspect-square"
           >
             <div className="flex flex-col items-center gap-8 md:gap-12">
-              <PolarLogotype logoVariant="icon" size={64} />
+              <OutceptionLogotype logoVariant="icon" size={64} />
               <Text as="h3" variant="heading-m" align="center" wrap="pretty">
                 From prompt to revenue.
                 <br />
                 Automatically.
               </Text>
-              <span className="font-louize text-xl md:text-4xl">polar.sh</span>
+              <span className="font-louize text-xl md:text-4xl">
+                outception.com
+              </span>
             </div>
           </ShaderCanvas>
           <ShaderCanvas
@@ -48,13 +50,15 @@ export function MissionSection() {
             className="aspect-square"
           >
             <div className="flex flex-col items-center gap-8 md:gap-12">
-              <PolarLogotype logoVariant="icon" size={64} />
+              <OutceptionLogotype logoVariant="icon" size={64} />
               <Text as="h3" variant="heading-m" align="center" wrap="pretty">
                 We count tokens.
                 <br />
                 So you don&apos;t have to.
               </Text>
-              <span className="font-louize text-xl md:text-4xl">polar.sh</span>
+              <span className="font-louize text-xl md:text-4xl">
+                outception.com
+              </span>
             </div>
           </ShaderCanvas>
         </div>

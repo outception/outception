@@ -1,4 +1,4 @@
-import { Box } from '@polar-sh/orbit/Box'
+import { Box } from '@outception-com/orbit/Box'
 import {
   PageHeader,
   Section,
@@ -7,7 +7,7 @@ import {
   PropsTable,
 } from '@/components/docs'
 import type { PropRow } from '@/components/docs'
-import { Text } from '@polar-sh/orbit'
+import { Text } from '@outception-com/orbit'
 
 const DURATIONS: PropRow[] = [
   {

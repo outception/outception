@@ -1,8 +1,9 @@
 import { CookieConsent } from '@/components/Privacy/CookieConsent'
+import { SpectraBackground } from '@/components/Layout/SpectraBackground'
 import { CONFIG } from '@/utils/config'
 import { headers } from 'next/headers'
 import { Metadata } from 'next/types'
-import { PolarThemeProvider } from '../providers'
+import { OutceptionThemeProvider } from '../providers'
 
 export async function generateMetadata(): Promise<Metadata> {
   const baseMetadata: Metadata = {
@@ -70,7 +71,8 @@ export default async function MainLayout({
   const countryCode = headersList.get('x-vercel-ip-country')
 
   return (
-    <PolarThemeProvider>
+    <OutceptionThemeProvider>
+      <SpectraBackground />
       <link
         rel="preload"
         href="/fonts/Inter-Light.woff2"
@@ -141,10 +143,10 @@ export default async function MainLayout({
         type="font/woff2"
         crossOrigin=""
       />
-      <div className="dark:bg-polar-950 h-full bg-white dark:text-white">
+      <div className="h-full bg-transparent dark:text-white">
         {children}
         <CookieConsent countryCode={countryCode} />
       </div>
-    </PolarThemeProvider>
+    </OutceptionThemeProvider>
   )
 }

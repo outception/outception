@@ -1,4 +1,4 @@
-from polar.kit.html import dangerously_strip_tags
+from outception.kit.html import dangerously_strip_tags
 
 
 def test_get_safe_return_url() -> None:

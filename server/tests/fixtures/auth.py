@@ -2,9 +2,9 @@ from typing import Any, Literal
 
 import pytest
 
-from polar.auth.models import Anonymous, AuthSubject, Subject
-from polar.auth.scope import Scope
-from polar.models import Organization, User
+from outception.auth.models import Anonymous, AuthSubject, Subject
+from outception.auth.scope import Scope
+from outception.models import Organization, User
 
 
 class AuthSubjectFixture:
@@ -69,7 +69,7 @@ def auth_subject(
     if isinstance(subject, User):
         from unittest.mock import MagicMock
 
-        from polar.models import UserSession
+        from outception.models import UserSession
 
         session = MagicMock(spec=UserSession)
 

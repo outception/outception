@@ -1,5 +1,5 @@
 # =============================================================================
-# Vercel — Production frontend (polar.sh)
+# Vercel — Production frontend (outception.com)
 # =============================================================================
 #
 # Terraform manages only the env vars declared below;
@@ -11,62 +11,62 @@ import {
 }
 
 import {
-  to = module.vercel.vercel_project_domain.this["polar.sh"]
-  id = "prj_9YDPCLXAX2w3RJqbXV7F1c3cZi9F/polar.sh"
+  to = module.vercel.vercel_project_domain.this["outception.com"]
+  id = "prj_9YDPCLXAX2w3RJqbXV7F1c3cZi9F/outception.com"
 }
 
 import {
-  to = module.vercel.vercel_project_domain.this["dashboard.polar.sh"]
-  id = "prj_9YDPCLXAX2w3RJqbXV7F1c3cZi9F/dashboard.polar.sh"
+  to = module.vercel.vercel_project_domain.this["dashboard.outception.com"]
+  id = "prj_9YDPCLXAX2w3RJqbXV7F1c3cZi9F/dashboard.outception.com"
 }
 
 import {
-  to = module.vercel.vercel_project_domain.this["blog.polar.sh"]
-  id = "prj_9YDPCLXAX2w3RJqbXV7F1c3cZi9F/blog.polar.sh"
+  to = module.vercel.vercel_project_domain.this["blog.outception.com"]
+  id = "prj_9YDPCLXAX2w3RJqbXV7F1c3cZi9F/blog.outception.com"
 }
 
 import {
-  to = module.vercel.vercel_project_domain.this["www.polar.sh"]
-  id = "prj_9YDPCLXAX2w3RJqbXV7F1c3cZi9F/www.polar.sh"
+  to = module.vercel.vercel_project_domain.this["www.outception.com"]
+  id = "prj_9YDPCLXAX2w3RJqbXV7F1c3cZi9F/www.outception.com"
 }
 
 import {
-  to = module.vercel.vercel_project_domain.this["polar.new"]
-  id = "prj_9YDPCLXAX2w3RJqbXV7F1c3cZi9F/polar.new"
+  to = module.vercel.vercel_project_domain.this["outception.new"]
+  id = "prj_9YDPCLXAX2w3RJqbXV7F1c3cZi9F/outception.new"
 }
 
 import {
-  to = module.vercel.vercel_project_domain.this["www.polar.new"]
-  id = "prj_9YDPCLXAX2w3RJqbXV7F1c3cZi9F/www.polar.new"
+  to = module.vercel.vercel_project_domain.this["www.outception.new"]
+  id = "prj_9YDPCLXAX2w3RJqbXV7F1c3cZi9F/www.outception.new"
 }
 
 # --- Cloudflare DNS records (adopt existing live records) ---
 
 import {
-  to = module.vercel.cloudflare_dns_record.this["polar.sh"]
+  to = module.vercel.cloudflare_dns_record.this["outception.com"]
   id = "22bcd1b07ec25452aab472486bc8df94/8b0ceddb75258af3fa49fd7846655535"
 }
 
 import {
-  to = module.vercel.cloudflare_dns_record.this["www.polar.sh"]
+  to = module.vercel.cloudflare_dns_record.this["www.outception.com"]
   id = "22bcd1b07ec25452aab472486bc8df94/1ab226a5a0bb731e56a95fb994eeb51f"
 }
 
 import {
-  to = module.vercel.cloudflare_dns_record.this["dashboard.polar.sh"]
+  to = module.vercel.cloudflare_dns_record.this["dashboard.outception.com"]
   id = "22bcd1b07ec25452aab472486bc8df94/ff92f83787a1c170bd97c43107ca233f"
 }
 
 import {
-  to = module.vercel.cloudflare_dns_record.this["blog.polar.sh"]
+  to = module.vercel.cloudflare_dns_record.this["blog.outception.com"]
   id = "22bcd1b07ec25452aab472486bc8df94/68e8b181600e850ab36dfcb9ebf414b0"
 }
 
 module "vercel" {
   source = "../modules/vercel"
 
-  name     = "polar"
-  git_repo = "polarsource/polar"
+  name     = "outception"
+  git_repo = "outception/outception"
 
   # Production runs functions in cle1 (sandbox uses the module default, iad1).
   resource_config = {
@@ -75,7 +75,7 @@ module "vercel" {
 
   domains = [
     {
-      name = "polar.sh"
+      name = "outception.com"
       dns = {
         zone_id = "22bcd1b07ec25452aab472486bc8df94"
         type    = "A"
@@ -84,8 +84,8 @@ module "vercel" {
       }
     },
     {
-      name                 = "www.polar.sh"
-      redirect             = "polar.sh"
+      name                 = "www.outception.com"
+      redirect             = "outception.com"
       redirect_status_code = 308
       dns = {
         zone_id = "22bcd1b07ec25452aab472486bc8df94"
@@ -94,7 +94,7 @@ module "vercel" {
       }
     },
     {
-      name = "dashboard.polar.sh"
+      name = "dashboard.outception.com"
       dns = {
         zone_id = "22bcd1b07ec25452aab472486bc8df94"
         content = "582a8a8790ca4ebf.vercel-dns-016.com"
@@ -102,33 +102,33 @@ module "vercel" {
       }
     },
     {
-      name = "blog.polar.sh"
+      name = "blog.outception.com"
       dns = {
         zone_id = "22bcd1b07ec25452aab472486bc8df94"
         content = "582a8a8790ca4ebf.vercel-dns-016.com"
         ttl     = 600
       }
     },
-    # polar.new and www.polar.new live in a separate zone and are managed separately.
-    { name = "polar.new" },
-    { name = "www.polar.new", redirect = "polar.new", redirect_status_code = 308 },
+    # outception.new and www.outception.new live in a separate zone and are managed separately.
+    { name = "outception.new" },
+    { name = "www.outception.new", redirect = "outception.new", redirect_status_code = 308 },
   ]
 
   config = {
-    next_public_api_url                             = "https://api.polar.sh"
-    next_public_backoffice_url                      = "https://backoffice.polar.sh"
+    next_public_api_url                             = "https://api.outception.com"
+    next_public_backoffice_url                      = "https://backoffice.outception.com"
     next_public_sentry_dsn                          = var.next_public_sentry_dsn
     next_public_posthog_token                       = var.next_public_posthog_token
     next_public_apple_domain_association            = var.next_public_apple_domain_association
-    next_public_checkout_embed_script_src           = "https://cdn.jsdelivr.net/npm/@polar-sh/checkout@0.1/dist/embed.global.js"
+    next_public_checkout_embed_script_src           = "https://cdn.jsdelivr.net/npm/@outception-com/checkout@0.1/dist/embed.global.js"
     next_public_stripe_payment_method_configuration = var.next_public_stripe_payment_method_configuration
     s3_public_images_bucket_protocol                = "https"
-    s3_public_images_bucket_hostname                = "polar-public-files.s3.amazonaws.com"
+    s3_public_images_bucket_hostname                = "outception-public-files.s3.amazonaws.com"
     s3_public_images_bucket_port                    = null
     s3_public_images_bucket_pathname                = "/product_media/**"
-    s3_upload_origins                               = "https://polar-production-files.s3.amazonaws.com https://polar-public-files.s3.amazonaws.com"
-    polar_checkout_embed_script_allowed_origins     = "https://polar.sh,https://sandbox.polar.sh"
-    polar_openapi_schema_url                        = "https://api.polar.sh/openapi.json"
+    s3_upload_origins                               = "https://outception-production-files.s3.amazonaws.com https://outception-public-files.s3.amazonaws.com"
+    outception_checkout_embed_script_allowed_origins     = "https://outception.com,https://sandbox.outception.com"
+    outception_openapi_schema_url                        = "https://api.outception.com/openapi.json"
     enable_experimental_corepack                    = "1"
   }
 
@@ -137,18 +137,18 @@ module "vercel" {
     mintlify_assistant_api_key  = var.mintlify_assistant_api_key
     gram_api_key                = var.gram_api_key
     sentry_auth_token           = var.sentry_auth_token
-    polar_preview_access_token  = var.polar_preview_access_token
+    outception_preview_access_token  = var.outception_preview_access_token
   }
 
   # Environment-specific or target-varies-by-env.
   environment_variables = [
-    { key = "NEXT_PUBLIC_FRONTEND_BASE_URL", value = "https://polar.sh", target = ["production"] },
-    { key = "NEXT_PUBLIC_SANDBOX_FRONTEND_BASE_URL", value = "https://sandbox.polar.sh" },
-    { key = "NEXT_PUBLIC_PRODUCT_LINK_BASE_URL", value = "https://buy.polar.sh/", target = ["production"] },
-    { key = "NEXT_PUBLIC_POSTHOG_HOST", value = "https://polar.sh/ingest" },
+    { key = "NEXT_PUBLIC_FRONTEND_BASE_URL", value = "https://outception.com", target = ["production"] },
+    { key = "NEXT_PUBLIC_SANDBOX_FRONTEND_BASE_URL", value = "https://sandbox.outception.com" },
+    { key = "NEXT_PUBLIC_PRODUCT_LINK_BASE_URL", value = "https://buy.outception.com/", target = ["production"] },
+    { key = "NEXT_PUBLIC_POSTHOG_HOST", value = "https://outception.com/ingest" },
     { key = "NEXT_PUBLIC_SENTRY_ENABLED", value = "true" },
     { key = "NEXT_PUBLIC_GOOGLE_ANALYTICS_ID", value = "G-MBYW1QZFHE" },
-    { key = "NEXT_PUBLIC_GITHUB_INSTALLATION_URL", value = "https://github.com/apps/polar-sh/installations/new" },
+    { key = "NEXT_PUBLIC_GITHUB_INSTALLATION_URL", value = "https://github.com/apps/outception-com/installations/new" },
     { key = "NEXT_PUBLIC_STRIPE_KEY", value = var.stripe_publishable_key },
     { key = "MCP_OAUTH2_CLIENT_ID", value = var.mcp_oauth2_client_id, target = ["production", "preview"] },
     { key = "MCP_OAUTH2_CLIENT_SECRET", value = var.mcp_oauth2_client_secret, target = ["production", "preview"] },

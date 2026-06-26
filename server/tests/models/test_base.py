@@ -1,6 +1,6 @@
 import pytest
 
-from polar.models import User
+from outception.models import User
 
 
 @pytest.mark.asyncio

@@ -4,11 +4,11 @@ import { Pill } from '@/components/Shared/Pill'
 import { Text } from '@/components/Shared/Text'
 import { Touchable } from '@/components/Shared/Touchable'
 import { useTheme } from '@/design-system/useTheme'
-import { topicLabel, useTopicPromotion } from '@/hooks/polar/promotions'
+import { topicLabel, useTopicPromotion } from '@/hooks/outception/promotions'
 import { Linking } from 'react-native'
 
 const SERVER_URL =
-  process.env.EXPO_PUBLIC_POLAR_SERVER_URL ?? 'https://api.polar.sh'
+  process.env.EXPO_PUBLIC_OUTCEPTION_SERVER_URL ?? 'https://api.outception.com'
 
 /** The paid promotion for a card's topic, pinned at the bottom. Clicks go
  * through the backend redirect so they're counted for analytics. */

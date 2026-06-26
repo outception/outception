@@ -1,7 +1,7 @@
 """
-Main Locust load test file for Polar API.
+Main Locust load test file for Outception API.
 
-This file imports load test scenarios for testing the Polar payment infrastructure.
+This file imports load test scenarios for testing the Outception payment infrastructure.
 
 Usage:
     # Interactive mode with web UI

@@ -3,7 +3,7 @@ import {
   createClient as baseCreateClient,
   Client,
   Middleware,
-} from '@polar-sh/client'
+} from '@outception-com/client'
 import { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies'
 import { NextRequest } from 'next/server'
 
@@ -17,7 +17,7 @@ const errorMiddleware: Middleware = {
 }
 
 const CLIENT_VERSION_HEADERS = {
-  'X-Polar-Client-Version': `web/${
+  'X-outception-Client-Version': `web/${
     process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA?.slice(0, 8) ?? 'dev'
   }`,
 }
@@ -37,8 +37,8 @@ export const api = createClientSideAPI()
 export const getSSRHeaders = (): Record<string, string> => {
   const headers: Record<string, string> = { ...CLIENT_VERSION_HEADERS }
 
-  if (process.env.POLAR_PREVIEW_ACCESS_TOKEN) {
-    headers['X-Preview-Token'] = process.env.POLAR_PREVIEW_ACCESS_TOKEN
+  if (process.env.OUTCEPTION_PREVIEW_ACCESS_TOKEN) {
+    headers['X-Preview-Token'] = process.env.OUTCEPTION_PREVIEW_ACCESS_TOKEN
   }
 
   return headers
@@ -66,17 +66,18 @@ export const createServerSideAPI = async (
   }
 
   // Preview environments: include access token so SSR calls pass through the funnel gate
-  if (process.env.POLAR_PREVIEW_ACCESS_TOKEN) {
+  if (process.env.OUTCEPTION_PREVIEW_ACCESS_TOKEN) {
     apiHeaders = {
       ...apiHeaders,
-      'X-Preview-Token': process.env.POLAR_PREVIEW_ACCESS_TOKEN,
+      'X-Preview-Token': process.env.OUTCEPTION_PREVIEW_ACCESS_TOKEN,
     }
   }
 
-  // Use POLAR_API_URL for server-side requests (e.g., in Docker containers)
+  // Use OUTCEPTION_API_URL for server-side requests (e.g., in Docker containers)
   // Fall back to NEXT_PUBLIC_API_URL for local development
   const apiUrl =
-    process.env.POLAR_API_URL || (process.env.NEXT_PUBLIC_API_URL as string)
+    process.env.OUTCEPTION_API_URL ||
+    (process.env.NEXT_PUBLIC_API_URL as string)
 
   const client = baseCreateClient(apiUrl, token, apiHeaders)
 

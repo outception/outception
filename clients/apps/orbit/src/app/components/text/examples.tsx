@@ -1,5 +1,5 @@
-import { Box } from '@polar-sh/orbit/Box'
-import { Text, type TextColor, type TextVariant } from '@polar-sh/orbit'
+import { Box } from '@outception-com/orbit/Box'
+import { Text, type TextColor, type TextVariant } from '@outception-com/orbit'
 
 const variants: TextVariant[] = [
   'heading-2xl',
@@ -75,7 +75,7 @@ export function MonospaceSamples() {
             variant=&quot;{variant}&quot; monospace
           </Text>
           <Text variant={variant} monospace>
-            npm install @polar-sh/orbit
+            npm install @outception-com/orbit
           </Text>
         </Box>
       ))}
@@ -117,7 +117,7 @@ export function NumberSamples() {
 }
 
 const truncateSentence =
-  'Orbit is the Polar design system: tokens, primitives and components for building product interfaces quickly and consistently.'
+  'Orbit is the Outception design system: tokens, primitives and components for building product interfaces quickly and consistently.'
 
 export function TruncateSamples() {
   return (

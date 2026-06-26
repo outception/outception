@@ -12,8 +12,8 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
-import polar.worker._health as health_module
-from polar.worker._health import (
+import outception.worker._health as health_module
+from outception.worker._health import (
     handle_server_error,
     health,
 )
@@ -85,8 +85,8 @@ class TestHealth:
 
 class TestIsSchedulerHealthy:
     def test_healthy_before_first_heartbeat(self) -> None:
-        import polar.worker.scheduler as scheduler_module
-        from polar.worker.scheduler import _is_scheduler_healthy
+        import outception.worker.scheduler as scheduler_module
+        from outception.worker.scheduler import _is_scheduler_healthy
 
         original = scheduler_module._last_heartbeat
         scheduler_module._last_heartbeat = 0.0
@@ -96,8 +96,8 @@ class TestIsSchedulerHealthy:
             scheduler_module._last_heartbeat = original
 
     def test_healthy_with_recent_heartbeat(self) -> None:
-        import polar.worker.scheduler as scheduler_module
-        from polar.worker.scheduler import _is_scheduler_healthy
+        import outception.worker.scheduler as scheduler_module
+        from outception.worker.scheduler import _is_scheduler_healthy
 
         original = scheduler_module._last_heartbeat
         scheduler_module._last_heartbeat = time.monotonic()
@@ -107,8 +107,8 @@ class TestIsSchedulerHealthy:
             scheduler_module._last_heartbeat = original
 
     def test_unhealthy_with_stale_heartbeat(self) -> None:
-        import polar.worker.scheduler as scheduler_module
-        from polar.worker.scheduler import (
+        import outception.worker.scheduler as scheduler_module
+        from outception.worker.scheduler import (
             HEARTBEAT_STALENESS_SECONDS,
             _is_scheduler_healthy,
         )

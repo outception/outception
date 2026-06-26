@@ -1,8 +1,8 @@
-# Polar Infrastructure as Code (IaC)
+# Outception Infrastructure as Code (IaC)
 
 We use Terraform to manage and provision our cloud infrastructure. This repository contains the necessary configuration files to set up and maintain our infrastructure in a consistent and repeatable manner.
 
-State, Secrets and Runs are directly managed on [HCP Terraform Cloud](https://app.terraform.io/app/polar-sh/workspaces/polar).
+State, Secrets and Runs are directly managed on [HCP Terraform Cloud](https://app.terraform.io/app/outception-com/workspaces/outception).
 
 ## Infrastructure overview
 
@@ -43,7 +43,7 @@ resource "render_env_group" "backend_production" {
   # ...
   env_vars = {
     # ...
-    POLAR_MY_VARIABLE = { value = var.my_variable }
+    OUTCEPTION_MY_VARIABLE = { value = var.my_variable }
   }
   # ...
 }

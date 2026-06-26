@@ -9,8 +9,8 @@ from minio import Minio
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 
-from polar.config import settings
-from polar.observability.s3_span_exporter import REDACTED, S3SpanExporter
+from outception.config import settings
+from outception.observability.s3_span_exporter import REDACTED, S3SpanExporter
 
 BUCKET_NAME = "testing-s3-span-exporter"
 
@@ -95,7 +95,7 @@ def test_export_writes_jsonl_to_s3(
 
 @pytest.fixture
 def scrubbing_exporter() -> S3SpanExporter:
-    with patch("polar.observability.s3_span_exporter.boto3"):
+    with patch("outception.observability.s3_span_exporter.boto3"):
         return S3SpanExporter(
             bucket_name="unused",
             service_name="test",
@@ -171,7 +171,7 @@ class TestScrubbing:
         assert result["attributes"]["USERNAME"] == REDACTED
 
     def test_no_scrubbing_without_patterns(self) -> None:
-        with patch("polar.observability.s3_span_exporter.boto3"):
+        with patch("outception.observability.s3_span_exporter.boto3"):
             exporter = S3SpanExporter(
                 bucket_name="unused",
                 service_name="test",

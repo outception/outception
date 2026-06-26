@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
-from polar.cli.listener import LISTENER_KEY_PREFIX, has_active_listener
-from polar.redis import Redis
+from outception.cli.listener import LISTENER_KEY_PREFIX, has_active_listener
+from outception.redis import Redis
 
 
 @pytest.fixture
@@ -22,7 +22,7 @@ def mock_organization_service(mocker: MockerFixture, org_id: uuid.UUID) -> Magic
     mock_org = MagicMock()
     mock_org.id = org_id
     return mocker.patch(
-        "polar.cli.endpoints.organization_service.get",
+        "outception.cli.endpoints.organization_service.get",
         return_value=mock_org,
     )
 
@@ -43,7 +43,7 @@ def mock_subscribe(mocker: MockerFixture) -> MagicMock:
         yield json.dumps({"key": "some.event", "payload": {}})
 
     return mocker.patch(
-        "polar.cli.endpoints.subscribe",
+        "outception.cli.endpoints.subscribe",
         side_effect=fake_subscribe,
     )
 
@@ -71,7 +71,7 @@ class TestListenEndpoint:
         mock_request: AsyncMock,
     ) -> None:
         """mark_active is called immediately when listen() is invoked."""
-        from polar.cli.endpoints import listen
+        from outception.cli.endpoints import listen
 
         response = await listen(
             id=org_id,
@@ -98,7 +98,7 @@ class TestListenEndpoint:
         mock_request: AsyncMock,
     ) -> None:
         """mark_inactive is called when the stream generator finishes."""
-        from polar.cli.endpoints import listen
+        from outception.cli.endpoints import listen
 
         response = await listen(
             id=org_id,
@@ -136,11 +136,11 @@ class TestListenEndpoint:
             raise ConnectionError("connection lost")
 
         mocker.patch(
-            "polar.cli.endpoints.subscribe",
+            "outception.cli.endpoints.subscribe",
             side_effect=error_subscribe,
         )
 
-        from polar.cli.endpoints import listen
+        from outception.cli.endpoints import listen
 
         response = await listen(
             id=org_id,
@@ -183,11 +183,11 @@ class TestListenEndpoint:
             yield  # make it an async generator
 
         mocker.patch(
-            "polar.cli.endpoints.subscribe",
+            "outception.cli.endpoints.subscribe",
             side_effect=capturing_subscribe,
         )
 
-        from polar.cli.endpoints import listen
+        from outception.cli.endpoints import listen
 
         response = await listen(
             id=org_id,
@@ -223,7 +223,7 @@ class TestListenEndpoint:
         mock_request: AsyncMock,
     ) -> None:
         """First SSE event is a 'connected' event with the secret."""
-        from polar.cli.endpoints import listen
+        from outception.cli.endpoints import listen
 
         response = await listen(
             id=org_id,

@@ -4,7 +4,7 @@ import pytest
 from typer.testing import CliRunner
 
 import scripts.tinybird as tinybird_script
-from polar.config import settings
+from outception.config import settings
 from scripts.tinybird import build_tb_command, cli, validate_tinybird_target
 
 runner = CliRunner()
@@ -43,7 +43,7 @@ class TestValidateTinybirdTarget:
         self,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        monkeypatch.setattr(settings, "TINYBIRD_WORKSPACE", "polar")
+        monkeypatch.setattr(settings, "TINYBIRD_WORKSPACE", "outception")
         monkeypatch.setattr(settings, "TINYBIRD_BRANCH", None)
         monkeypatch.setattr(
             tinybird_script,
@@ -56,7 +56,7 @@ class TestValidateTinybirdTarget:
 
         with pytest.raises(
             RuntimeError,
-            match="expected polar, got other",
+            match="expected outception, got other",
         ):
             validate_tinybird_target(".")
 
@@ -64,13 +64,13 @@ class TestValidateTinybirdTarget:
         self,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        monkeypatch.setattr(settings, "TINYBIRD_WORKSPACE", "polar")
+        monkeypatch.setattr(settings, "TINYBIRD_WORKSPACE", "outception")
         monkeypatch.setattr(settings, "TINYBIRD_BRANCH", "preview_pr_123")
         monkeypatch.setattr(
             tinybird_script,
             "get_tinybird_info",
             lambda cwd: {
-                "cloud": {"workspace_name": "polar"},
+                "cloud": {"workspace_name": "outception"},
                 "branches": {"current": "main", "items": []},
             },
         )
@@ -104,7 +104,7 @@ class TestTinybirdCLI:
         validate_calls: list[str] = []
 
         monkeypatch.setattr(settings, "TINYBIRD_API_TOKEN", "tb-admin-token")
-        monkeypatch.setattr(settings, "TINYBIRD_WORKSPACE", "polar")
+        monkeypatch.setattr(settings, "TINYBIRD_WORKSPACE", "outception")
         monkeypatch.setattr(settings, "TINYBIRD_BRANCH", "preview_pr_123")
         monkeypatch.setattr(settings, "TINYBIRD_API_URL", "https://api.tinybird.co")
         monkeypatch.setattr(
@@ -150,4 +150,7 @@ class TestTinybirdCLI:
                 False,
             ),
         ]
-        assert "Deploying to workspace polar branch preview_pr_123..." in result.stdout
+        assert (
+            "Deploying to workspace outception branch preview_pr_123..."
+            in result.stdout
+        )

@@ -1,4 +1,4 @@
-import { Text } from '@polar-sh/orbit'
+import { Text } from '@outception-com/orbit'
 import {
   Example,
   PageHeader,

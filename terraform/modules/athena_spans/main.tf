@@ -10,7 +10,7 @@ terraform {
 }
 
 locals {
-  full_name_prefix = "polar-${var.environment}"
+  full_name_prefix = "outception-${var.environment}"
 }
 
 # =============================================================================

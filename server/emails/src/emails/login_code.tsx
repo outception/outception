@@ -1,5 +1,5 @@
 import { BRAND_NAME } from '../components/brand'
-import { Footer, Intro, Text, WrapperPolar } from '../components/foundation'
+import { Footer, Intro, Text, WrapperOutception } from '../components/foundation'
 import OTPCode from '../components/OTPCode'
 import type { schemas } from '../types'
 
@@ -10,7 +10,7 @@ export function LoginCode({
   domain,
 }: schemas['LoginCodeProps']) {
   return (
-    <WrapperPolar
+    <WrapperOutception
       preview={`Your code to sign in is ${code}. It is valid for the next ${code_lifetime_minutes.toFixed()} minutes.`}
     >
       <Intro>
@@ -24,7 +24,7 @@ export function LoginCode({
         If you didn't request this email, you can safely ignore it.
       </Text>
       <Footer email={email} />
-    </WrapperPolar>
+    </WrapperOutception>
   )
 }
 
@@ -32,7 +32,7 @@ LoginCode.PreviewProps = {
   email: 'john@example.com',
   code: 'ABC123',
   code_lifetime_minutes: 30,
-  domain: 'polar.sh',
+  domain: 'outception.com',
 }
 
 export default LoginCode

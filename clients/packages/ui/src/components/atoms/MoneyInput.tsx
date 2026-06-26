@@ -1,7 +1,7 @@
-import { getCurrencyDecimalFactor, isDecimalCurrency } from '@polar-sh/currency'
+import { getCurrencyDecimalFactor, isDecimalCurrency } from '@outception-com/currency'
 import { ChangeEvent, FocusEvent, useCallback, useMemo, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
-import { Input } from '@polar-sh/orbit'
+import { Input } from '@outception-com/orbit'
 
 interface Props {
   name: string
@@ -258,7 +258,7 @@ const MoneyInput = (props: Props) => {
   )
 
   const currencyLabel = (
-    <span className="dark:text-polar-500 text-sm font-medium text-gray-500">
+    <span className="dark:text-outception-500 text-sm font-medium text-gray-500">
       {currency.toUpperCase()}
     </span>
   )
@@ -278,7 +278,7 @@ const MoneyInput = (props: Props) => {
       id={id}
       name={name}
       className={twMerge(
-        'dark:placeholder:text-polar-500 block w-full px-4 pl-14 text-base font-normal placeholder:text-gray-400',
+        'dark:placeholder:text-outception-500 block w-full px-4 pl-14 text-base font-normal placeholder:text-gray-400',
         props.className ?? '',
       )}
       value={internalValue}

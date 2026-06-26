@@ -1,6 +1,6 @@
 # Load Testing Infrastructure
 
-Comprehensive load testing suite for Polar's payment infrastructure, focusing on checkout flows, webhook processing, and background job performance.
+Comprehensive load testing suite for Outception's payment infrastructure, focusing on checkout flows, webhook processing, and background job performance.
 
 ## Table of Contents
 
@@ -21,7 +21,7 @@ Comprehensive load testing suite for Polar's payment infrastructure, focusing on
 ### Prerequisites
 
 - Python 3.14+ with uv
-- Running Polar API server (or staging environment)
+- Running Outception API server (or staging environment)
 - Test data (products, organizations)
 
 ### Installation
@@ -111,7 +111,7 @@ Each HTTP request sends a batch of events (default: 7 events per request).
 
 **Required Environment Variables:**
 ```bash
-LOAD_TEST_API_TOKEN=polar_oat_...                           # Organization access token (required)
+LOAD_TEST_API_TOKEN=outception_oat_...                           # Organization access token (required)
 LOAD_TEST_EVENT_EXTERNAL_CUSTOMER_IDS=id1,id2,id3,...       # External customer IDs (required, comma-separated)
 LOAD_TEST_EVENT_BATCH_SIZE=7                                # Events per batch (optional, default: 7)
 ```
@@ -122,7 +122,7 @@ LOAD_TEST_EVENT_BATCH_SIZE=7                                # Events per batch (
 
 # Interactive mode
 LOAD_TEST_EVENT_EXTERNAL_CUSTOMER_IDS="id1,id2,id3" \
-LOAD_TEST_API_TOKEN="polar_oat_..." \
+LOAD_TEST_API_TOKEN="outception_oat_..." \
 uv run task loadtest
 
 # Select "EventIngestionUser" in the web UI
@@ -142,8 +142,8 @@ All configuration is managed via environment variables. See `load_tests/config.p
 #### Required (for non-local testing)
 
 ```bash
-LOAD_TEST_HOST=https://staging.polar.sh
-LOAD_TEST_API_TOKEN=polar_pat_...          # Personal access token
+LOAD_TEST_HOST=https://staging.outception.com
+LOAD_TEST_API_TOKEN=outception_pat_...          # Personal access token
 LOAD_TEST_PRODUCT_ID=uuid-here             # Product for checkout tests
 ```
 

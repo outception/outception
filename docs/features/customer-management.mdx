@@ -15,15 +15,15 @@ description: "Get insights on your customers and sales"
 
 ## Managing Customers
 
-Polar has a built in feature to view and manage your Customers.
+Outception has a built in feature to view and manage your Customers.
 
 Everyone who has ever purchased something from you will be recorded as a Customer to your Organization. You’re able to see past orders and their ongoing subscriptions, as well as some additional metrics.
 
 ## External ID
 
-Quite often, you'll have our own users management system in your application, where your customer already have an ID. To ease reconciliation between Polar and your system, we have a dedicated [`external_id`](/api-reference/customers/get-external#response-external-id) field on Customers. It's unique across your organization and can't be changed once set.
+Quite often, you'll have our own users management system in your application, where your customer already have an ID. To ease reconciliation between Outception and your system, we have a dedicated [`external_id`](/api-reference/customers/get-external#response-external-id) field on Customers. It's unique across your organization and can't be changed once set.
 
-We have dedicated API endpoints that work with the `external_id` field, so you don't even have to store the internal Polar ID in your system.
+We have dedicated API endpoints that work with the `external_id` field, so you don't even have to store the internal Outception ID in your system.
 
 <Card
   title="Get Customer by External ID"

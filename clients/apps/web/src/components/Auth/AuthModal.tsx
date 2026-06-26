@@ -1,5 +1,5 @@
 import Auth from '@/components/Auth/Auth'
-import { type schemas } from '@polar-sh/client'
+import { type schemas } from '@outception-com/client'
 
 interface AuthModalProps {
   returnTo?: string
@@ -11,7 +11,7 @@ export const AuthModal = ({ returnTo, signup }: AuthModalProps) => {
 
   const lastLoginMethod =
     typeof document !== 'undefined'
-      ? ((document.cookie.match(/polar_last_login_method=(\w+)/)?.[1] ??
+      ? ((document.cookie.match(/outception_last_login_method=(\w+)/)?.[1] ??
           null) as schemas['Factor'])
       : null
 
@@ -21,7 +21,7 @@ export const AuthModal = ({ returnTo, signup }: AuthModalProps) => {
         {isSignup && (
           <div className="flex flex-col gap-y-1">
             <h1 className="text-xl font-medium">Welcome to Outception</h1>
-            <p className="dark:text-polar-500 text-sm text-gray-500">
+            <p className="dark:text-outception-500 text-sm text-gray-500">
               A billing platform for the intelligence era.
             </p>
           </div>

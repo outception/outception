@@ -8,7 +8,7 @@ Create Date: 2026-06-22 23:20:46.163394
 
 from alembic import op
 
-# Polar Custom Imports
+# Outception Custom Imports
 
 # revision identifiers, used by Alembic.
 revision = "f92ebdfbe7b0"

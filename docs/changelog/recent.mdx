@@ -1,7 +1,7 @@
 ---
 rss: true
 title: Product Updates
-description: Stay up to date with the latest changes and improvements to Polar.
+description: Stay up to date with the latest changes and improvements to Outception.
 ---
 
 <Update label="2026-04-22">
@@ -98,7 +98,7 @@ Checkout, customer portal, and emails are now fully translated into Italian and 
 
 ## Feature Flag Benefit
 
-A new Feature Flag benefit type is available for SaaS merchants. Grant it to customers when they should unlock something in your product, then check entitlements through the Polar API or webhooks. JSON metadata stays invisible to the customer, keeping the experience clean for pure software subscriptions.
+A new Feature Flag benefit type is available for SaaS merchants. Grant it to customers when they should unlock something in your product, then check entitlements through the Outception API or webhooks. JSON metadata stays invisible to the customer, keeping the experience clean for pure software subscriptions.
 
 ## Faster Wallet and Card Checkout
 
@@ -301,7 +301,7 @@ Better webhook health tracking:
 * Fixed product empty state flashing
 * Fixed notifications on iOS simulator
 * Fixed Switch rendering on Android
-* Fixed Polar logo not linking to home
+* Fixed Outception logo not linking to home
 * Fixed image duplication on product creation
 * Handle null Stripe refund reasons
 * Fixed subscription fields in system events
@@ -347,7 +347,7 @@ Added Android support:
 
 ## Email Improvements
 
-* Updated Polar logo in all emails
+* Updated Outception logo in all emails
 * Better email DNS validation
 * Fixed invalid email domain issues
 
@@ -363,7 +363,7 @@ Better task prioritization:
 <Update label="2025-11-28">
 ## Downloads Page
 
-New dedicated downloads page at polar.sh/downloads for easy access to desktop and mobile apps.
+New dedicated downloads page at outception.com/downloads for easy access to desktop and mobile apps.
 
 ## Customer Balance Refunds
 
@@ -556,7 +556,7 @@ New event types system for better organization and analytics:
 
 ## Mobile App (Beta)
 
-Polar mobile app added to the monorepo:
+Outception mobile app added to the monorepo:
 
 * React Native implementation with Expo
 * Expo workflow for development and builds
@@ -881,7 +881,7 @@ First payments after a trial period now include "TRIAL OVER" in the statement de
 <Update label="2025-10-17">
   ## Ability to update subscription to an updated price of the product
 
-  Merchants can now [update existing subscriptions](https://polar.sh/docs/api-reference/subscriptions/update#subscriptionupdateproduct) from archived pricing schemes to current ones within the same product.
+  Merchants can now [update existing subscriptions](https://outception.com/docs/api-reference/subscriptions/update#subscriptionupdateproduct) from archived pricing schemes to current ones within the same product.
   - Enables migration from grandfathered pricing to current pricing schemes
   - Prorations calculated using active subscription prices
   - In the dashboard, a small badge **Upgrade pricing** will indicate that you can update to the same product, but with the new pricing scheme.
@@ -889,24 +889,24 @@ First payments after a trial period now include "TRIAL OVER" in the statement de
 
   ## New IP ranges
 
-  From **October 27th, 2025**, [new IP ranges](https://polar.sh/docs/integrate/webhooks/delivery#ip-allowlist) will be added.
+  From **October 27th, 2025**, [new IP ranges](https://outception.com/docs/integrate/webhooks/delivery#ip-allowlist) will be added.
 
   ## Improved Subscription Cancellation Flow
 
-  [Benefits](https://polar.sh/docs/features/benefits/introduction) attached to the subscription [are now automatically revoked](https://github.com/polarsource/polar/pull/7271) when the subscription is canceled.
+  [Benefits](https://outception.com/docs/features/benefits/introduction) attached to the subscription [are now automatically revoked](https://github.com/outception/outception/pull/7271) when the subscription is canceled.
 
   ## Ability to specify External ID
 
-  [External ID can now be specified](https://github.com/polarsource/polar/pull/7275) during creation of a customer via the dashboard.
+  [External ID can now be specified](https://github.com/outception/outception/pull/7275) during creation of a customer via the dashboard.
   <img class="border rounded" src="/assets/changelog/2025-10-17/create-customer.png" />
 
   ## Ability to set Return URL for Checkouts and Customer Portal
 
-  A Return URL can now be set while generating a [checkout session](https://polar.sh/docs/api-reference/checkouts/create-session#body-return-url-one-of-0) or a [customer portal session](https://polar.sh/docs/api-reference/customer-portal/sessions/create#body-one-of-0-return-url-one-of-0). This allows you to preserve the context for the end users who visit either if they wish to go back to the application.
+  A Return URL can now be set while generating a [checkout session](https://outception.com/docs/api-reference/checkouts/create-session#body-return-url-one-of-0) or a [customer portal session](https://outception.com/docs/api-reference/customer-portal/sessions/create#body-one-of-0-return-url-one-of-0). This allows you to preserve the context for the end users who visit either if they wish to go back to the application.
 
   ## Ability to search Customers via their External ID
 
-  The [List Customers API](https://polar.sh/docs/api-reference/customers/list) now accepts Customer's External ID [in the **query** parameter](https://polar.sh/docs/api-reference/customers/list#parameter-one-of-0).
+  The [List Customers API](https://outception.com/docs/api-reference/customers/list) now accepts Customer's External ID [in the **query** parameter](https://outception.com/docs/api-reference/customers/list#parameter-one-of-0).
 
   ## Ability to disable automatic customer emails
 
@@ -921,7 +921,7 @@ First payments after a trial period now include "TRIAL OVER" in the statement de
 
 <img src="/assets/changelog/2025-10-10/launched-merchant-support.jpg" />
 
-We're excited to introduce a chat widget to the Polar dashboard, making it easier than ever for merchants to get help directly within the product.
+We're excited to introduce a chat widget to the Outception dashboard, making it easier than ever for merchants to get help directly within the product.
 
   ## Improved Checkout Flow for Invalid Discount Code
 
@@ -988,7 +988,7 @@ We've added detailed cancellation metrics, giving you clearer insights into subs
 <Update label="2025-09-12">
   ## Webhooks payload now includes timestamp
 
-We've updated our webhooks server implementation to [include a timestamp in each payload](https://github.com/polarsource/polar/pull/6770), in line with the Standard Webhooks specification.
+We've updated our webhooks server implementation to [include a timestamp in each payload](https://github.com/outception/outception/pull/6770), in line with the Standard Webhooks specification.
 
 This change ensures that every webhook payload contains precise event timing, making it easier to trace and debug webhook deliveries, and to meet integration requirements for external platforms.
 
@@ -1011,7 +1011,7 @@ Now, only successfully paid and refunded orders are included in metrics calculat
 
 We've improved the branding of emails sent to your customers by using organization-specific 'From' and 'Reply-to' addresses.
 
-Customer emails now appear to come from your organization (e.g., "YourOrg (via Polar)") with replies directed to your organization's email address, providing a more professional and branded experience for your customers.
+Customer emails now appear to come from your organization (e.g., "YourOrg (via Outception)") with replies directed to your organization's email address, providing a more professional and branded experience for your customers.
 
 </Update>
 
@@ -1072,12 +1072,12 @@ Besides, we've also added new analytics around checkouts: total number of checko
 <Update label="2025-03-11">
   ## Zapier integration officially launched
 
-We're excited to announce the official launch of our [Zapier integration](https://zapier.com/apps/polar/integrations)! Get started now and connect Polar to 2,000+ other web services.
+We're excited to announce the official launch of our [Zapier integration](https://zapier.com/apps/outception/integrations)! Get started now and connect Outception to 2,000+ other web services.
 
 <Note>
-  We've focused on **triggers** (webhooks) for now, so you can react to events in Polar and trigger actions in other apps.
+  We've focused on **triggers** (webhooks) for now, so you can react to events in Outception and trigger actions in other apps.
 
-Need to perform actions in Polar? Tell us about your use case [here](https://github.com/orgs/polarsource/discussions/new?category=integrations&labels=integrations%2Fzapier) and we'll consider adding more actions in the future.
+Need to perform actions in Outception? Tell us about your use case [here](https://github.com/orgs/outception/discussions/new?category=integrations&labels=integrations%2Fzapier) and we'll consider adding more actions in the future.
 
 </Note>
 
@@ -1103,7 +1103,7 @@ Integrating authentication and billing for your users has never been easier.
 
 [Better Auth](https://www.better-auth.com/) is an open source authentication framework for
 TypeScript that is quickly becoming a favorite amongst developers. Today, we're
-thrilled to have shipped a Polar plugin for Better Auth - in collaboration with them.
+thrilled to have shipped a Outception plugin for Better Auth - in collaboration with them.
 
 Checkout our [integration guide](/integrate/sdk/adapters/better-auth).
 
@@ -1112,18 +1112,18 @@ Checkout our [integration guide](/integrate/sdk/adapters/better-auth).
 <Update label="2025-02-27">
   ## Customer External ID
 
-We've added support for an `external_id` field on Customers. We believe this will greatly simplify the reconciliation process between your system and Polar.
+We've added support for an `external_id` field on Customers. We believe this will greatly simplify the reconciliation process between your system and Outception.
 
 Previously, the recommended way to reconcile with your users was to use `metadata`. However, this was not always the most convenient method, especially if you needed to fetch a Customer from our API.
 
-With `external_id`, you can now fetch a Customer directly by their external ID through dedicated `GET`, `PATCH`, and `DELETE` endpoints. You don't even need to store Polar's internal ID in your system anymore! [Read more](/features/customer-management#external-id)
+With `external_id`, you can now fetch a Customer directly by their external ID through dedicated `GET`, `PATCH`, and `DELETE` endpoints. You don't even need to store Outception's internal ID in your system anymore! [Read more](/features/customer-management#external-id)
 
 Of course, you can also directly preset `external_customer_id` when creating a Checkout Session, and it will automatically be set on the newly created Customer after a successful checkout. [Read more](/features/checkout/session#external-customer-id)
 
 </Update>
 
 <Update label="2025-02-19">
-  ## Polar's take on Product variants
+  ## Outception's take on Product variants
 
 We've released big changes to how we handle products and pricing, allowing us to support a unique approach to what the industry typically calls **variants** 🔥
 

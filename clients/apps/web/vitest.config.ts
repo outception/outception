@@ -8,8 +8,8 @@ export default defineConfig({
     environment: 'jsdom',
     exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**'],
     env: {
-      NEXT_PUBLIC_FRONTEND_BASE_URL: 'https://polar.sh',
-      NEXT_PUBLIC_SANDBOX_FRONTEND_BASE_URL: 'https://sandbox.polar.sh',
+      NEXT_PUBLIC_FRONTEND_BASE_URL: 'https://outception.com',
+      NEXT_PUBLIC_SANDBOX_FRONTEND_BASE_URL: 'https://sandbox.outception.com',
     },
   },
 })

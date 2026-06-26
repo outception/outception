@@ -1,6 +1,6 @@
 ---
 title: "Platform API"
-description: "Proposal for a Platform API to enable partners to create and manage Polar Organizations on behalf of their users."
+description: "Proposal for a Platform API to enable partners to create and manage Outception Organizations on behalf of their users."
 ---
 
 <Info>
@@ -14,7 +14,7 @@ description: "Proposal for a Platform API to enable partners to create and manag
 
 # Overview
 
-The Platform API enables partners to create and manage Polar Organizations on behalf of their users, allowing seamless integration of monetization features into third-party platforms. This document outlines the technical architecture, authentication flow, and claim process for the Platform API.
+The Platform API enables partners to create and manage Outception Organizations on behalf of their users, allowing seamless integration of monetization features into third-party platforms. This document outlines the technical architecture, authentication flow, and claim process for the Platform API.
 
 # Core Entities
 
@@ -47,9 +47,9 @@ The Platform API uses an OIDC approach with JWT tokens for authentication:
 
 1. **Platform Setup**: Partner exposes JWKS at a public URL
 2. **JWT Creation**: Platform creates a JWT signed with their private key
-3. **Token Exchange**: JWT is sent to Polar's OAuth2 token endpoint
-4. **Validation**: Polar validates the JWT using the platform's public key
-5. **Access Token**: Polar returns an Organization Access Token
+3. **Token Exchange**: JWT is sent to Outception's OAuth2 token endpoint
+4. **Validation**: Outception validates the JWT using the platform's public key
+5. **Access Token**: Outception returns an Organization Access Token
 
 ## JWT Structure
 
@@ -128,17 +128,17 @@ The claim flow allows a User to take ownership of an Organization created via th
 
 1. **Claim Token Generation**:
    - Platform calls `/api/platform/organizations/{platform_external_id}/claim_token`
-   - Polar generates a short-lived, single-use claim token
+   - Outception generates a short-lived, single-use claim token
    - Token contains: `organization_id`, `platform_id`, expiration
 
 2. **User Onboarding**:
    - Platform presents claim token to their user
-   - User visits Polar's onboarding flow with claim token
-   - User creates Polar account (or logs in)
+   - User visits Outception's onboarding flow with claim token
+   - User creates Outception account (or logs in)
 
 3. **Organization Claiming**:
    - User submits claim token during onboarding
-   - Polar validates token and links User to Organization
+   - Outception validates token and links User to Organization
 
 4. **Post-Claim Process**:
    - User completes KYC verification
@@ -209,8 +209,8 @@ curl -X POST https://api.polar.sh/v1/oauth2/token \
 
 ## Organization Management (Organization Access)
 
-- Standard Polar API endpoints (products, customers, subscriptions, etc.)
+- Standard Outception API endpoints (products, customers, subscriptions, etc.)
 
 # Appendix: Sandbox as a Platform
 
-Maybe a crazy idea, but we could consider the Polar Sandbox as a Platform on the Production environment. This would enable us to implement processes to automatically create an Organization in Production from a Sandbox!
+Maybe a crazy idea, but we could consider the Outception Sandbox as a Platform on the Production environment. This would enable us to implement processes to automatically create an Organization in Production from a Sandbox!

@@ -1,8 +1,8 @@
 'use client'
 
 import type { PromotionAnalytics } from '@/utils/promotions'
-import { Text } from '@polar-sh/orbit'
-import { Box } from '@polar-sh/orbit/Box'
+import { Text } from '@outception-com/orbit'
+import { Box } from '@outception-com/orbit/Box'
 import {
   Bar,
   CartesianGrid,

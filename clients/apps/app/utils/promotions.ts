@@ -1,5 +1,5 @@
-import type { Client, schemas } from '@polar-sh/client'
-import { unwrap } from '@polar-sh/client'
+import type { Client, schemas } from '@outception-com/client'
+import { unwrap } from '@outception-com/client'
 
 export type Promotion = schemas['PromotionRead']
 export type PromotionPricing = schemas['PromotionPricing']
@@ -28,25 +28,27 @@ export const topicLabel = (id: string): string =>
 export const isOptionalHttpUrl = (value: string): boolean =>
   value === '' || /^https?:\/\/\S+$/i.test(value)
 
-export const promotionsApi = (polar: Client) => ({
-  pricing: () => unwrap(polar.GET('/v1/promotions/pricing')),
+export const promotionsApi = (outception: Client) => ({
+  pricing: () => unwrap(outception.GET('/v1/promotions/pricing')),
   featured: (topic: string) =>
     unwrap(
-      polar.GET('/v1/promotions/featured', {
+      outception.GET('/v1/promotions/featured', {
         params: { query: { categories: topic } },
       }),
     ),
-  mine: () => unwrap(polar.GET('/v1/promotions/mine')),
+  mine: () => unwrap(outception.GET('/v1/promotions/mine')),
   analytics: (days: number) =>
     unwrap(
-      polar.GET('/v1/promotions/analytics', { params: { query: { days } } }),
+      outception.GET('/v1/promotions/analytics', {
+        params: { query: { days } },
+      }),
     ),
   create: (body: PromotionCreate) =>
-    unwrap(polar.POST('/v1/promotions/', { body })),
-  preferences: () => unwrap(polar.GET('/v1/promotions/preferences')),
+    unwrap(outception.POST('/v1/promotions/', { body })),
+  preferences: () => unwrap(outception.GET('/v1/promotions/preferences')),
   updatePreferences: (promotion_emails_enabled: boolean) =>
     unwrap(
-      polar.PATCH('/v1/promotions/preferences', {
+      outception.PATCH('/v1/promotions/preferences', {
         body: { promotion_emails_enabled },
       }),
     ),

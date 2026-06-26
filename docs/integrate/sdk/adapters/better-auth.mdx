@@ -5,7 +5,7 @@ description: "Payments and Checkouts made dead simple with BetterAuth"
 
 ## @polar-sh/better-auth
 
-A [Better Auth](https://github.com/better-auth/better-auth) plugin for integrating [Polar](https://polar.sh) payments and subscriptions into your authentication flow.
+A [Better Auth](https://github.com/better-auth/better-auth) plugin for integrating [Outception](https://outception.com) payments and subscriptions into your authentication flow.
 
 ### Features
 
@@ -14,16 +14,16 @@ A [Better Auth](https://github.com/better-auth/better-auth) plugin for integrati
 - [Reference System to associate purchases with organizations](#3-2-orders)
 - [Checkout Integration](#checkout-plugin)
 - [Event Ingestion & Customer Meters for flexible Usage Based Billing](#usage-plugin)
-- [Handle Polar Webhooks securely with signature verification](#webhooks-plugin)
+- [Handle Outception Webhooks securely with signature verification](#webhooks-plugin)
 - [Customer Portal](#portal-plugin)
 
 ## Examples
 
-- [With Next.js, Better Auth and Cloudflare Workers](https://github.com/polarsource/examples/tree/main/with-nextjs-better-auth-cloudflare-workers)
+- [With Next.js, Better Auth and Cloudflare Workers](https://github.com/outception/examples/tree/main/with-nextjs-better-auth-cloudflare-workers)
 
 ## Installation
 
-Install the required Better Auth and Polar packages using the following command:
+Install the required Better Auth and Outception packages using the following command:
 
 <Tabs>
   <Tab title="npm">
@@ -48,11 +48,11 @@ Install the required Better Auth and Polar packages using the following command:
   </Tab>
 </Tabs>
 
-## Integrate Polar with BetterAuth
+## Integrate Outception with BetterAuth
 
 <Steps>
-  <Step title="Configure Polar Access Token">
-    Go to your Polar Organization Settings, create an Organization Access Token, and add it to the environment variables of your application.
+  <Step title="Configure Outception Access Token">
+    Go to your Outception Organization Settings, create an Organization Access Token, and add it to the environment variables of your application.
 
     ```bash .env
     POLAR_ACCESS_TOKEN=...
@@ -60,12 +60,12 @@ Install the required Better Auth and Polar packages using the following command:
 
   </Step>
   <Step title="Configure BetterAuth Server">
-    The Polar plugin comes with it's own set of plugins to add functionality to your stack:
+    The Outception plugin comes with it's own set of plugins to add functionality to your stack:
 
     - **checkout** - Enable seamless checkout integration
     - **portal** - Make it possible for your customers to manage their orders, subscriptions & benefits
     - **usage** - List customer meters & ingest events for Usage Based Billing
-    - **webhooks** - Listen for relevant Polar webhooks
+    - **webhooks** - Listen for relevant Outception webhooks
 
     ```typescript icon="square-js" auth.ts
     import { betterAuth } from "better-auth";
@@ -112,7 +112,7 @@ Install the required Better Auth and Polar packages using the following command:
     });
     ```
 
-    #### Polar Plugin Configuration Options
+    #### Outception Plugin Configuration Options
 
     ```typescript
     // ...
@@ -136,14 +136,14 @@ Install the required Better Auth and Polar packages using the following command:
     });
     ```
 
-    - `client` (required): Polar SDK client instance
-    - `createCustomerOnSignUp` (optional): Automatically create a Polar customer when a user signs up
+    - `client` (required): Outception SDK client instance
+    - `createCustomerOnSignUp` (optional): Automatically create a Outception customer when a user signs up
     - `getCustomerCreateParams` (optional): Custom function to provide additional customer creation metadata
-    - `use` (optional): Array of Polar plugins to enable specific functionality (checkout, portal, usage, and webhooks)
+    - `use` (optional): Array of Outception plugins to enable specific functionality (checkout, portal, usage, and webhooks)
 
   </Step>
   <Step title="Configure BetterAuth Client">
-    You will be using the BetterAuth Client to interact with the Polar functionalities.
+    You will be using the BetterAuth Client to interact with the Outception functionalities.
 
     ```typescript icon="square-js" auth-client.ts
     import { createAuthClient } from "better-auth/react";
@@ -161,13 +161,13 @@ Install the required Better Auth and Polar packages using the following command:
 
 ## Automatic Customer creation on signup
 
-Enable the `createCustomerOnSignUp` [Polar plugin configuration option](#polar-plugin-configuration-options) to automatically create a new Polar Customer when a new User is added in the BetterAuth database.
+Enable the `createCustomerOnSignUp` [Outception plugin configuration option](#outception-plugin-configuration-options) to automatically create a new Outception Customer when a new User is added in the BetterAuth database.
 
-All new customers are created with an associated `externalId`, i.e. the ID of your User in the Database. This skips any Polar to User mapping in your database.
+All new customers are created with an associated `externalId`, i.e. the ID of your User in the Database. This skips any Outception to User mapping in your database.
 
 ## Sync Customer deletion
 
-To add user deletion logic with external Polar customer deletion in BetterAuth, extend the user config of your betterAuth setup with the deleteUser option and an afterDelete hook. Here’s how to integrate this alongside your Polar plugin and automatic customer creation:
+To add user deletion logic with external Outception customer deletion in BetterAuth, extend the user config of your betterAuth setup with the deleteUser option and an afterDelete hook. Here’s how to integrate this alongside your Outception plugin and automatic customer creation:
 
 ```typescript icon="square-js" Customer Deletion Example
 const auth = betterAuth({
@@ -190,7 +190,7 @@ const auth = betterAuth({
 
 ## Checkout Plugin
 
-[Source code](https://github.com/polarsource/polar-adapters/blob/main/packages/polar-betterauth/src/plugins/checkout.ts)
+[Source code](https://github.com/outception/outception-adapters/blob/main/packages/outception-betterauth/src/plugins/checkout.ts)
 
 To support [checkouts](/features/checkout/links) in your app, you would pass the `checkout` plugin in the `use` property.
 
@@ -204,7 +204,7 @@ The checkout plugin accepts the following configuration options:
 
 <Steps>
   <Step title="Use Checkout Plugin">
-    Update the `use` property of the Polar plugin for BetterAuth client to have the `checkout` plugin.
+    Update the `use` property of the Outception plugin for BetterAuth client to have the `checkout` plugin.
 
     ```typescript icon="square-js" Checkout Plugin Example
     import {
@@ -240,7 +240,7 @@ The checkout plugin accepts the following configuration options:
 
     The `checkout` method accepts the following properties:
 
-    - **`products`** (optional): An array of Polar Product IDs.
+    - **`products`** (optional): An array of Outception Product IDs.
     - **`slug`** (optional): A string that can be used as a reference to the `products` defined in the Checkout config
     - **`referenceId`** (optional): An identifier that will be saved in the metadata of the checkout, order & subscription object
 
@@ -274,7 +274,7 @@ The checkout plugin accepts the following configuration options:
 
 ## Usage Plugin
 
-[Source code](https://github.com/polarsource/polar-adapters/blob/main/packages/polar-betterauth/src/plugins/usage.ts)
+[Source code](https://github.com/outception/outception-adapters/blob/main/packages/outception-betterauth/src/plugins/usage.ts)
 
 A plugin for Usage Based Billing that allows you to [ingest events](#event-ingestion) from your application and list the [authenticated user's Usage Meter](#customer-meters).
 
@@ -303,15 +303,15 @@ const auth = betterAuth({
 
 ### 1. Event Ingestion
 
-Polar's Usage Based Billing builds entirely on event ingestion. Ingest events from your application, create Meters to represent that usage, and add metered prices to Products to charge for it.
+Outception's Usage Based Billing builds entirely on event ingestion. Ingest events from your application, create Meters to represent that usage, and add metered prices to Products to charge for it.
 
 <Warning>
   **Ingest events from your server, not from the browser.** Events drive billing, so the client must never be trusted to decide what is consumed. Always ingest from the same server-side handler that performs the metered action (e.g. the route that generated the AI video, processed the upload, etc.) so that the recorded usage cannot be forged or bypassed.
 </Warning>
 
-Because `createCustomerOnSignUp: true` sets the Polar customer's `externalId` to the BetterAuth user ID, you can pass `externalCustomerId: session.user.id` when ingesting — no extra lookup is needed.
+Because `createCustomerOnSignUp: true` sets the Outception customer's `externalId` to the BetterAuth user ID, you can pass `externalCustomerId: session.user.id` when ingesting — no extra lookup is needed.
 
-The example below uses the Polar SDK directly from a server route handler. The same `polarClient` instance you configured in `auth.ts` is reused:
+The example below uses the Outception SDK directly from a server route handler. The same `polarClient` instance you configured in `auth.ts` is reused:
 
 ```typescript icon="square-js" app/api/ai/video/route.ts (Next.js App Router)
 import { auth } from "@/lib/auth";
@@ -353,7 +353,7 @@ The `events.ingest` method accepts:
 
 #### Client-side ingestion endpoint
 
-The `usage` plugin also registers a BetterAuth endpoint that is callable from the client as `authClient.usage.ingestion(...)`. It forwards to Polar from the BetterAuth server and attaches the authenticated user automatically:
+The `usage` plugin also registers a BetterAuth endpoint that is callable from the client as `authClient.usage.ingestion(...)`. It forwards to Outception from the BetterAuth server and attaches the authenticated user automatically:
 
 ```typescript icon="square-js" auth-client.ts
 const { data: ingested } = await authClient.usage.ingestion({
@@ -398,15 +398,15 @@ The `meters` method returns the following fields in the response object:
 
 ## Webhooks Plugin
 
-[Source code](https://github.com/polarsource/polar-adapters/blob/main/packages/polar-betterauth/src/plugins/webhooks.ts)
+[Source code](https://github.com/outception/outception-adapters/blob/main/packages/outception-betterauth/src/plugins/webhooks.ts)
 
-The `webhooks` plugin can be used to capture incoming events from your Polar organization.
+The `webhooks` plugin can be used to capture incoming events from your Outception organization.
 
-To set up the Polar `webhooks` plugin with the BetterAuth client, follow the steps below:
+To set up the Outception `webhooks` plugin with the BetterAuth client, follow the steps below:
 
 <Steps>
-  <Step title="Configure Webhook Endpoints in Polar">
-    Configure a Webhook endpoint in your Polar Organization Settings page by following [this guide](/integrate/webhooks/endpoints). Webhook endpoint is configured at `/api/auth/polar/webhooks`.
+  <Step title="Configure Webhook Endpoints in Outception">
+    Configure a Webhook endpoint in your Outception Organization Settings page by following [this guide](/integrate/webhooks/endpoints). Webhook endpoint is configured at `/api/auth/polar/webhooks`.
   </Step>
   <Step title="Add the Webhook Secret">
     Add the obtained webhook secret to your application environment as an environment variable (to be used as `process.env.POLAR_WEBHOOK_SECRET`):
@@ -446,7 +446,7 @@ To set up the Polar `webhooks` plugin with the BetterAuth client, follow the ste
   </Step>
 </Steps>
 
-The `webhooks` plugin allows you to invoke handlers for all Polar webhook events:
+The `webhooks` plugin allows you to invoke handlers for all Outception webhook events:
 
 - `onPayload` - Catch-all handler for any incoming Webhook event
 - `onCheckoutCreated` - Triggered when a checkout is created
@@ -477,7 +477,7 @@ The `webhooks` plugin allows you to invoke handlers for all Polar webhook events
 
 ## Portal Plugin
 
-[Source code](https://github.com/polarsource/polar-adapters/blob/main/packages/polar-betterauth/src/plugins/portal.ts)
+[Source code](https://github.com/outception/outception-adapters/blob/main/packages/outception-betterauth/src/plugins/portal.ts)
 
 A plugin which enables customer management of their purchases, orders and subscriptions.
 
@@ -507,7 +507,7 @@ The `portal` plugin gives the BetterAuth Client a set of customer management met
 
 ### 1. Customer Portal Management
 
-The following method will redirect the user to the Polar Customer Portal, where they can see their orders, purchases, subscriptions, benefits, etc.
+The following method will redirect the user to the Outception Customer Portal, where they can see their orders, purchases, subscriptions, benefits, etc.
 
 ```typescript icon="square-js" Open Customer Portal Example
 await authClient.customer.portal();
@@ -534,7 +534,7 @@ The customer state object contains:
 
 Using the customer state object, you can determine whether to provision access for the user to your service.
 
-Learn more about the Polar Customer State [in the Polar Docs](https://polar.sh/docs/integrate/customer-state).
+Learn more about the Outception Customer State [in the Outception Docs](https://outception.com/docs/integrate/customer-state).
 
 ### 3. Benefits, Orders & Subscriptions
 

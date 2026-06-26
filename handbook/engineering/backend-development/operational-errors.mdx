@@ -1,6 +1,6 @@
 ---
 title: "Operational Errors"
-description: "Understanding and handling operational errors in Polar backend development"
+description: "Understanding and handling operational errors in Outception backend development"
 ---
 
 Operational errors are a category of errors that represent transient or expected failure conditions in distributed systems. Unlike bugs or unexpected failures, operational errors are conditions that can occur during normal operation and should be handled gracefully by the system.
@@ -20,7 +20,7 @@ Operational errors should be used to categorize and handle:
 
 To add a new operational error type:
 
-1. **Create a matcher function** in `server/polar/operational_errors.py`:
+1. **Create a matcher function** in `server/outception/operational_errors.py`:
 
 ```python
 def _my_operational_error_matcher(exc: BaseException) -> bool:
@@ -41,8 +41,8 @@ _operation_error_matchers: dict[str, OperationalErrorMatcher] = {
 
 The system automatically handles operational errors through middleware:
 
-- **API requests**: `OperationalErrorMiddleware` in `server/polar/middlewares.py`
-- **Background jobs**: `OperationalErrorMiddleware` in `server/polar/worker/_broker.py`
+- **API requests**: `OperationalErrorMiddleware` in `server/outception/middlewares.py`
+- **Background jobs**: `OperationalErrorMiddleware` in `server/outception/worker/_broker.py`
 
 When an operational error is detected:
 

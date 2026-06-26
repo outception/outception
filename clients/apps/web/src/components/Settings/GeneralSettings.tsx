@@ -1,14 +1,14 @@
 'use client'
 
 import ExpandMoreOutlined from '@mui/icons-material/ExpandMoreOutlined'
-import { Button } from '@polar-sh/orbit'
-import { ListGroup } from '@polar-sh/orbit'
+import { Button } from '@outception-com/orbit'
+import { ListGroup } from '@outception-com/orbit'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@polar-sh/ui/components/ui/dropdown-menu'
+} from '@outception-com/ui/components/ui/dropdown-menu'
 import { useCallback, useState } from 'react'
 
 export type Theme = 'system' | 'light' | 'dark'
@@ -59,7 +59,7 @@ const GeneralSettings: React.FC<GeneralSettingsProps> = () => {
         <div className="flex flex-row items-start justify-between">
           <div className="flex flex-col gap-y-1">
             <h3>Theme</h3>
-            <p className="dark:text-polar-500 text-sm text-gray-400">
+            <p className="dark:text-outception-500 text-sm text-gray-400">
               Override your browser&apos;s preferred theme settings
             </p>
           </div>
@@ -71,7 +71,7 @@ const GeneralSettings: React.FC<GeneralSettingsProps> = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
-              className="dark:bg-polar-800 bg-gray-50 shadow-lg"
+              className="dark:bg-outception-800 bg-gray-50 shadow-lg"
               align="end"
             >
               <DropdownMenuItem onClick={handleThemeChange('system')}>

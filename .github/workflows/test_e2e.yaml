@@ -71,9 +71,9 @@ jobs:
         if: inputs.preview_url
         uses: tailscale/github-action@v4
         with:
-          oauth-client-id: ${{ secrets.POLAR_TAILSCALE_OAUTH_CLIENT_ID }}
-          oauth-secret: ${{ secrets.POLAR_TAILSCALE_OAUTH_SECRET }}
-          tags: ${{ vars.POLAR_PREVIEW_TAILSCALE_TAGS || 'tag:ci' }}
+          oauth-client-id: ${{ secrets.OUTCEPTION_TAILSCALE_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.OUTCEPTION_TAILSCALE_OAUTH_SECRET }}
+          tags: ${{ vars.OUTCEPTION_PREVIEW_TAILSCALE_TAGS || 'tag:ci' }}
 
       - name: Run E2E tests
         id: e2e
@@ -132,14 +132,14 @@ jobs:
         run: |
           DATE=$(date -u +%Y-%m-%d)
           RUN_ID=${{ github.run_id }}
-          S3_PATH="s3://polar-public-files/e2e-artifacts/${DATE}-${RUN_ID}"
+          S3_PATH="s3://outception-public-files/e2e-artifacts/${DATE}-${RUN_ID}"
           TRACE_URLS=""
 
           for trace in test-results/*/trace.zip; do
             if [ -f "$trace" ]; then
               DIR_NAME=$(basename $(dirname "$trace"))
               aws s3 cp "$trace" "${S3_PATH}/${DIR_NAME}/trace.zip" --no-progress
-              PUBLIC_URL="https://uploads.polar.sh/e2e-artifacts/${DATE}-${RUN_ID}/${DIR_NAME}/trace.zip"
+              PUBLIC_URL="https://uploads.outception.com/e2e-artifacts/${DATE}-${RUN_ID}/${DIR_NAME}/trace.zip"
               ENCODED_URL=$(python3 -c "import urllib.parse; print(urllib.parse.quote('${PUBLIC_URL}', safe=''))")
               TRACE_URL="https://trace.playwright.dev/?trace=${ENCODED_URL}"
               # Extract test name and retry suffix

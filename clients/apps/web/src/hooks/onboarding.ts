@@ -2,11 +2,11 @@
 
 import { useExperiment } from '@/experiments/client'
 import { CONFIG } from '@/utils/config'
-import { schemas } from '@polar-sh/client'
+import { schemas } from '@outception-com/client'
 import { usePostHog } from 'posthog-js/react'
 import { useCallback, useMemo } from 'react'
 
-const ONBOARDING_COOKIE_NAME = 'polar_onboarding_session'
+const ONBOARDING_COOKIE_NAME = 'outception_onboarding_session'
 const SESSION_TIMEOUT_HOURS = 24
 
 export type OnboardingStep =

@@ -41,7 +41,7 @@ SeatInvitation.PreviewProps = {
   organization,
   product_name: 'Premium Plan',
   billing_manager_email: 'admin@acme.com',
-  claim_url: 'https://polar.sh/acme-inc/portal/seats/claim?token=abc123',
+  claim_url: 'https://outception.com/acme-inc/portal/seats/claim?token=abc123',
 }
 
 export default SeatInvitation

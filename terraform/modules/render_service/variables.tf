@@ -25,15 +25,15 @@ variable "registry_credential_id" {
 variable "api_service_config" {
   description = "API service configuration"
   type = object({
-    allowed_hosts          = string # "[\"polar.sh\", \"backoffice.polar.sh\"]"
-    cors_origins           = string # "[\"https://polar.sh\", \"https://github.com\", \"https://docs.polar.sh\"]"
+    allowed_hosts          = string # "[\"outception.com\", \"backoffice.outception.com\"]"
+    cors_origins           = string # "[\"https://outception.com\", \"https://github.com\", \"https://docs.outception.com\"]"
     custom_domains         = list(object({ name = string }))
-    image_url              = optional(string, "ghcr.io/polarsource/polar")
+    image_url              = optional(string, "ghcr.io/outception/outception")
     web_concurrency        = optional(string, "2")
     forwarded_allow_ips    = optional(string, "*")
     database_pool_size     = optional(string, "10")
-    postgres_database      = optional(string, "polar_cpit")
-    postgres_read_database = optional(string, "polar_cpit")
+    postgres_database      = optional(string, "outception_cpit")
+    postgres_read_database = optional(string, "outception_cpit")
     redis_db               = optional(string, "0")
     plan                   = optional(string, "standard")
   })
@@ -43,7 +43,7 @@ variable "workers" {
   description = "Map of worker configurations"
   type = map(object({
     start_command      = string
-    image_url          = optional(string, "ghcr.io/polarsource/polar")
+    image_url          = optional(string, "ghcr.io/outception/outception")
     custom_domains     = optional(list(object({ name = string })), [])
     dramatiq_prom_port = optional(string, "10000")
     plan               = optional(string, "pro")
@@ -107,24 +107,24 @@ variable "backend_config" {
   description = "Backend environment configuration (non-sensitive)"
   type = object({
     environment                          = optional(string, null) # Default to the environment variable
-    base_url                             = string                 # "https://api.polar.sh"
-    backoffice_host                      = optional(string, null) # "backoffice.polar.sh"
-    checkout_link_host                   = optional(string, null) # "buy.polar.sh"
-    user_session_cookie_domain           = string                 # "polar.sh"
+    base_url                             = string                 # "https://api.outception.com"
+    backoffice_host                      = optional(string, null) # "backoffice.outception.com"
+    checkout_link_host                   = optional(string, null) # "buy.outception.com"
+    user_session_cookie_domain           = string                 # "outception.com"
     user_session_cookie_key              = optional(string, "")
-    authentication_session_cookie_domain = string               # "polar.sh"
-    oauth2_session_state_cookie_domain   = string               # "polar.sh"
+    authentication_session_cookie_domain = string               # "outception.com"
+    oauth2_session_state_cookie_domain   = string               # "outception.com"
     debug                                = string               # "0"
     email_sender                         = string               # "resend"
-    email_from_name                      = string               # "Polar"
-    email_from_domain                    = string               # "notifications.polar.sh"
-    frontend_base_url                    = string               # "https://polar.sh"
-    checkout_base_url                    = string               # "https://buy.polar.sh/{client_secret}"
+    email_from_name                      = string               # "Outception"
+    email_from_domain                    = string               # "notifications.outception.com"
+    frontend_base_url                    = string               # "https://outception.com"
+    checkout_base_url                    = string               # "https://buy.outception.com/{client_secret}"
     jwks_path                            = string               # "/etc/secrets/jwks.json"
     log_level                            = string               # "INFO"
     testing                              = string               # "0"
-    auth_cookie_domain                   = string               # "polar.sh"
-    auth_cookie_key                      = optional(string, "") # "polar.sh"
+    auth_cookie_domain                   = string               # "outception.com"
+    auth_cookie_key                      = optional(string, "") # "outception.com"
     invoices_additional_info             = optional(string, "")
     invoices_vat_numbers                 = optional(string, "{}") # JSON dict of country code -> VAT number
     tax_processors                       = optional(string, "[\"stripe\"]")
@@ -169,11 +169,11 @@ variable "aws_s3_config" {
     region                        = string # "us-east-2"
     signature_version             = string # "v4"
     files_presign_ttl             = string # "600"
-    files_public_bucket_name      = string # "polar-public-files"
-    customer_invoices_bucket_name = string # "polar-customer-invoices"
-    customer_receipts_bucket_name = string # "polar-customer-receipts"
-    payout_invoices_bucket_name   = string # "polar-payout-invoices"
-    logs_bucket_name              = string # "polar-logs"
+    files_public_bucket_name      = string # "outception-public-files"
+    customer_invoices_bucket_name = string # "outception-customer-invoices"
+    customer_receipts_bucket_name = string # "outception-customer-receipts"
+    payout_invoices_bucket_name   = string # "outception-payout-invoices"
+    logs_bucket_name              = string # "outception-logs"
   })
 }
 
@@ -215,7 +215,7 @@ variable "stripe_secrets" {
 variable "logfire_config" {
   description = "Logfire configuration (optional)"
   type = object({
-    project_name = optional(string, "polar")
+    project_name = optional(string, "outception")
     token        = string
   })
   default   = null
@@ -263,8 +263,8 @@ variable "memory_profile_config" {
   default = null
 }
 
-variable "polar_self_config" {
-  description = "Polar self-billing integration"
+variable "outception_self_config" {
+  description = "Outception self-billing integration"
   type = object({
     access_token     = string
     webhook_secret   = string

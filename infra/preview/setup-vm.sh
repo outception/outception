@@ -89,23 +89,23 @@ mkdir -p /etc/caddy/previews /etc/preview-secrets
 if [[ ! -f /etc/caddy/env ]]; then
     PREVIEW_ACCESS_TOKEN=$(openssl rand -hex 32)
     cat > /etc/caddy/env <<ENVFILE
-POLAR_PREVIEW_ACCESS_TOKEN=${PREVIEW_ACCESS_TOKEN}
+OUTCEPTION_PREVIEW_ACCESS_TOKEN=${PREVIEW_ACCESS_TOKEN}
 VERCEL_BYPASS_SECRET=${VERCEL_BYPASS_SECRET}
 ENVFILE
     cat > /etc/preview-secrets/stripe.env <<ENVFILE
-POLAR_STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
-POLAR_STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+OUTCEPTION_STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+OUTCEPTION_STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
 ENVFILE
     cat > /etc/preview-secrets/pydantic_ai.env <<ENVFILE
-POLAR_PYDANTIC_AI_GATEWAY_API_KEY=${PYDANTIC_AI_GATEWAY_API_KEY}
+OUTCEPTION_PYDANTIC_AI_GATEWAY_API_KEY=${PYDANTIC_AI_GATEWAY_API_KEY}
 ENVFILE
     chmod 600 /etc/preview-secrets/stripe.env
     chmod 600 /etc/preview-secrets/pydantic_ai.env
     chmod 600 /etc/caddy/env
     echo ""
     echo "Generated preview access token: ${PREVIEW_ACCESS_TOKEN}"
-    echo "Add to GitHub secrets: POLAR_PREVIEW_ACCESS_TOKEN"
-    echo "Add to Vercel env vars: POLAR_PREVIEW_ACCESS_TOKEN"
+    echo "Add to GitHub secrets: OUTCEPTION_PREVIEW_ACCESS_TOKEN"
+    echo "Add to Vercel env vars: OUTCEPTION_PREVIEW_ACCESS_TOKEN"
     echo ""
 else
     if ! grep -q VERCEL_BYPASS_SECRET /etc/caddy/env; then
@@ -115,15 +115,15 @@ fi
 
 if [[ ! -f /etc/preview-secrets/stripe.env ]]; then
     cat > /etc/preview-secrets/stripe.env <<ENVFILE
-POLAR_STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
-POLAR_STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+OUTCEPTION_STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+OUTCEPTION_STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
 ENVFILE
     chmod 600 /etc/preview-secrets/stripe.env
 fi
 
 if [[ ! -f /etc/preview-secrets/pydantic_ai.env ]]; then
     cat > /etc/preview-secrets/pydantic_ai.env <<ENVFILE
-POLAR_PYDANTIC_AI_GATEWAY_API_KEY=${PYDANTIC_AI_GATEWAY_API_KEY}
+OUTCEPTION_PYDANTIC_AI_GATEWAY_API_KEY=${PYDANTIC_AI_GATEWAY_API_KEY}
 ENVFILE
     chmod 600 /etc/preview-secrets/pydantic_ai.env
 fi
@@ -134,7 +134,7 @@ cat > /etc/caddy/Caddyfile <<'CADDYFILE'
 }
 :8080 {
 	route {
-		@no_token not header X-Preview-Token {$POLAR_PREVIEW_ACCESS_TOKEN}
+		@no_token not header X-Preview-Token {$OUTCEPTION_PREVIEW_ACCESS_TOKEN}
 		respond @no_token "Forbidden" 403
 		import /etc/caddy/previews/*.caddy
 	}
@@ -191,7 +191,7 @@ if ! tailscale status &>/dev/null; then
     tailscale up \
         --auth-key="$TAILSCALE_AUTH_KEY" \
         --advertise-tags="$TAILSCALE_TAGS" \
-        --hostname="polar-preview-vm"
+        --hostname="outception-preview-vm"
 else
     echo "Tailscale already connected"
 fi
@@ -216,14 +216,14 @@ KEY_FILE="${SSH_DIR}/preview_deploy_key"
 mkdir -p "$SSH_DIR"
 
 if [[ ! -f "$KEY_FILE" ]]; then
-    ssh-keygen -t ed25519 -f "$KEY_FILE" -N "" -C "polar-preview-deploy"
+    ssh-keygen -t ed25519 -f "$KEY_FILE" -N "" -C "outception-preview-deploy"
     cat "$KEY_FILE.pub" >> "${SSH_DIR}/authorized_keys"
 fi
 chmod 700 "$SSH_DIR"
 chmod 600 "${SSH_DIR}/authorized_keys" "$KEY_FILE"
 chown -R "${DEPLOY_USER}:${DEPLOY_USER}" "$SSH_DIR"
 
-rm -f /etc/sudoers.d/polar-preview
+rm -f /etc/sudoers.d/outception-preview
 
 # --- Preview tools and directories ---
 echo "[8/8] Setting up preview tools and directories..."
@@ -237,16 +237,16 @@ for f in deploy.sh run-preview-backend.sh caddy-preview.template log-viewer.py r
     fi
 done
 
-for f in polar-preview-backend@.service polar-preview-frontend@.service polar-preview-logs.service polar-preview-infra.path polar-preview-infra.service polar-preview-hibernate.service polar-preview-hibernate.timer; do
+for f in outception-preview-backend@.service outception-preview-frontend@.service outception-preview-logs.service outception-preview-infra.path outception-preview-infra.service outception-preview-hibernate.service outception-preview-hibernate.timer; do
     if [[ -f "${SCRIPT_DIR}/${f}" ]]; then
         cp "${SCRIPT_DIR}/${f}" "/etc/systemd/system/${f}"
     fi
 done
 systemctl daemon-reload
-systemctl enable polar-preview-logs polar-preview-infra.path polar-preview-hibernate.timer
-systemctl start polar-preview-logs 2>/dev/null || true
-systemctl start polar-preview-infra.path
-systemctl start polar-preview-hibernate.timer
+systemctl enable outception-preview-logs outception-preview-infra.path outception-preview-hibernate.timer
+systemctl start outception-preview-logs 2>/dev/null || true
+systemctl start outception-preview-infra.path
+systemctl start outception-preview-hibernate.timer
 
 mkdir -p /srv/preview-triggers
 chown "${DEPLOY_USER}:${DEPLOY_USER}" /srv/preview-triggers
@@ -261,15 +261,15 @@ echo ""
 echo "Tailscale hostname: ${TS_HOSTNAME}"
 echo ""
 echo "Add to GitHub secrets:"
-echo "  POLAR_PREVIEW_HOST = $(tailscale ip -4)"
-echo "  POLAR_PREVIEW_SSH_KEY = (contents below)"
+echo "  OUTCEPTION_PREVIEW_HOST = $(tailscale ip -4)"
+echo "  OUTCEPTION_PREVIEW_SSH_KEY = (contents below)"
 echo ""
-echo "--- Private key (add as POLAR_PREVIEW_SSH_KEY) ---"
+echo "--- Private key (add as OUTCEPTION_PREVIEW_SSH_KEY) ---"
 cat "$KEY_FILE"
 echo ""
 echo "--- Public key (already in authorized_keys) ---"
 cat "${KEY_FILE}.pub"
 echo ""
 echo "Add to GitHub variables:"
-echo "  POLAR_PREVIEW_USER = ${DEPLOY_USER}"
+echo "  OUTCEPTION_PREVIEW_USER = ${DEPLOY_USER}"
 echo ""

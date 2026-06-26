@@ -1,10 +1,10 @@
-# Shared Polar dev infrastructure
+# Shared Outception dev infrastructure
 # One copy of postgres/redis/minio/tinybird (and optional prometheus/grafana)
 # is brought up per machine, regardless of how many app instances run on top.
 # Auto-started by `dev docker up` when not already running.
 #
 # Per-instance app stacks (api/worker/web) live in docker-compose.dev.yml and
-# attach to the external `polar-shared` network created here, so they reach
+# attach to the external `outception-comared` network created here, so they reach
 # infra by container name (db, redis, minio, tinybird). No host ports — use
 # `dev docker exec <service>` to run psql/redis-cli/etc. on the shared infra.
 
@@ -13,20 +13,20 @@ services:
     image: postgres:15.1-bullseye
     command: ["postgres", "-c", "max_locks_per_transaction=256"]
     environment:
-      POSTGRES_USER: polar
-      POSTGRES_PASSWORD: polar
-      POSTGRES_DB: polar
-      POLAR_READ_USER: polar_read
-      POLAR_READ_PASSWORD: polar
+      POSTGRES_USER: outception
+      POSTGRES_PASSWORD: outception
+      POSTGRES_DB: outception
+      OUTCEPTION_READ_USER: outception_read
+      OUTCEPTION_READ_PASSWORD: outception
     volumes:
       - postgres_data:/var/lib/postgresql/data/
       - ../../server/init-readonly-user.sql:/docker-entrypoint-initdb.d/init-readonly-user.sql:ro
     expose:
       - "5432"
     networks:
-      - polar-shared
+      - outception-comared
     healthcheck:
-      test: ["CMD", "pg_isready", "-q", "-d", "polar", "-U", "polar"]
+      test: ["CMD", "pg_isready", "-q", "-d", "outception", "-U", "outception"]
       timeout: 40s
       interval: 2s
       retries: 20
@@ -39,7 +39,7 @@ services:
     expose:
       - "6379"
     networks:
-      - polar-shared
+      - outception-comared
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 2s
@@ -54,10 +54,10 @@ services:
     volumes:
       - minio_data:/minio
     environment:
-      MINIO_ROOT_USER: polar-development
-      MINIO_ROOT_PASSWORD: polar123456789
+      MINIO_ROOT_USER: outception-development
+      MINIO_ROOT_PASSWORD: outception123456789
     networks:
-      - polar-shared
+      - outception-comared
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 5s
@@ -73,16 +73,16 @@ services:
       - ../../server/.minio:/tmp/config:ro
     environment:
       MINIO_HOST: minio
-      MINIO_ROOT_USER: polar-development
-      MINIO_ROOT_PASSWORD: polar123456789
-      BUCKET_NAME: polar-s3
-      PUBLIC_BUCKET_NAME: polar-s3-public
-      BUCKET_TESTING_NAME: testing-polar-s3
+      MINIO_ROOT_USER: outception-development
+      MINIO_ROOT_PASSWORD: outception123456789
+      BUCKET_NAME: outception-s3
+      PUBLIC_BUCKET_NAME: outception-s3-public
+      BUCKET_TESTING_NAME: testing-outception-s3
       POLICY_FILE: /tmp/config/policy.json
-      ACCESS_KEY: polar-development
-      SECRET_ACCESS_KEY: polar123456789
+      ACCESS_KEY: outception-development
+      SECRET_ACCESS_KEY: outception123456789
     networks:
-      - polar-shared
+      - outception-comared
     entrypoint:
       ["bash", "-c", "bash /tmp/config/local.sh /tmp/config/configure.sh"]
 
@@ -96,7 +96,7 @@ services:
       - ../../server/tinybird:/tinybird:ro
       - ./scripts/tinybird-setup.sh:/scripts/tinybird-setup.sh:ro
     networks:
-      - polar-shared
+      - outception-comared
     command: ["bash", "/scripts/tinybird-setup.sh"]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:7181/"]
@@ -114,7 +114,7 @@ services:
       - ../../server/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     networks:
-      - polar-shared
+      - outception-comared
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
@@ -133,18 +133,18 @@ services:
       - ../../server/monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
       - grafana_data:/var/lib/grafana
     environment:
-      - GF_SECURITY_ADMIN_USER=polar
-      - GF_SECURITY_ADMIN_PASSWORD=polar
+      - GF_SECURITY_ADMIN_USER=outception
+      - GF_SECURITY_ADMIN_PASSWORD=outception
       - GF_USERS_ALLOW_SIGN_UP=false
     depends_on:
       - prometheus
     networks:
-      - polar-shared
+      - outception-comared
     profiles:
       - monitoring
 
 networks:
-  polar-shared:
+  outception-comared:
     external: true
 
 volumes:

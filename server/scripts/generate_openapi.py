@@ -6,7 +6,7 @@ import sys
 # package, so the OpenAPI timezone enum is identical across CI and dev machines.
 os.environ["PYTHONTZPATH"] = ""
 
-from polar.app import create_app
+from outception.app import create_app
 
 if __name__ == "__main__":
     schema = create_app().openapi()

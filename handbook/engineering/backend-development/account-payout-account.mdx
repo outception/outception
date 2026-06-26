@@ -1,11 +1,11 @@
 ---
 title: "Account & Payout Account"
-description: "How Polar's financial ledger entities work: Account (transaction ledger) and PayoutAccount (payout processor configuration)."
+description: "How Outception's financial ledger entities work: Account (transaction ledger) and PayoutAccount (payout processor configuration)."
 ---
 
 ## Overview
 
-Polar's financial architecture is split across two distinct entities:
+Outception's financial architecture is split across two distinct entities:
 
 | Entity          | Table             | Purpose                                                            | Required?                                                            |
 | --------------- | ----------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------- |
@@ -56,12 +56,12 @@ erDiagram
 This separation means:
 
 - **Transaction history is never lost** when a merchant changes their payout processor.
-- **Multiple organisations** can share a single `PayoutAccount` (e.g. a company with several Polar orgs pointing to one Stripe Connect account).
+- **Multiple organisations** can share a single `PayoutAccount` (e.g. a company with several Outception orgs pointing to one Stripe Connect account).
 - **Accounts are created immediately** on org creation — no held balances, no pending state.
 
 ## `Account` Model
 
-**`server/polar/models/account.py` · table `accounts`**
+**`server/outception/models/account.py` · table `accounts`**
 
 The `Account` is a pure financial ledger. It has no Stripe credentials and no payout configuration. Its only job is to track money flowing in and out.
 
@@ -97,7 +97,7 @@ Falls back to `settings.PLATFORM_FEE_BASIS_POINTS` / `settings.PLATFORM_FEE_FIXE
 
 ### Credit balance
 
-`credit_balance` is **not** the merchant's earned revenue balance. It tracks **promotional fee credits** explicitly granted by Polar (manually by an admin, or via a campaign). Each credit is stored as an `AccountCredit` row; `credit_balance` is a denormalized running sum for fast reads.
+`credit_balance` is **not** the merchant's earned revenue balance. It tracks **promotional fee credits** explicitly granted by Outception (manually by an admin, or via a campaign). Each credit is stored as an `AccountCredit` row; `credit_balance` is a denormalized running sum for fast reads.
 
 Credits are consumed against **platform fees at payment time** (not at payout):
 
@@ -128,7 +128,7 @@ Credits are reduced in two cases:
 
 ## `PayoutAccount` Model
 
-**`server/polar/models/payout_account.py` · table `payout_accounts`**
+**`server/outception/models/payout_account.py` · table `payout_accounts`**
 
 The `PayoutAccount` holds all payout processor configuration. It is decoupled from the financial ledger so it can be swapped independently.
 
@@ -174,7 +174,7 @@ Manual accounts are always ready. Stripe accounts require `is_payouts_enabled=Tr
 
 ## `Organization` Relationships
 
-**`server/polar/models/organization.py`**
+**`server/outception/models/organization.py`**
 
 ```python
 # Mandatory — set at org creation, never NULL
@@ -195,7 +195,7 @@ payout_account_id: UUID | None = mapped_column(
 
 ## `Transaction` Model
 
-**`server/polar/models/transaction.py` · table `transactions`**
+**`server/outception/models/transaction.py` · table `transactions`**
 
 ```python
 account_id: UUID | None    # NULL → Polar's own transaction; NOT NULL → merchant/seller
@@ -203,11 +203,11 @@ payout_id: UUID | None     # Set when this transaction is swept in a Payout
 ```
 
 - `account_id IS NOT NULL` → transaction belongs to a specific merchant `Account`
-- `account_id IS NULL` → transaction is Polar's own (e.g. collected fees, outgoing transfers)
+- `account_id IS NULL` → transaction is Outception's own (e.g. collected fees, outgoing transfers)
 
 **Transaction types:** `payment`, `processor_fee`, `refund`, `refund_reversal`, `dispute`, `dispute_reversal`, `balance`, `payout`, `payout_reversal`
 
-The future goal is to extend `Account` to represent customers and Polar subsidiaries too, enabling the full money trail to be traced in a single table:
+The future goal is to extend `Account` to represent customers and Outception subsidiaries too, enabling the full money trail to be traced in a single table:
 
 ```mermaid
 flowchart LR
@@ -219,7 +219,7 @@ flowchart LR
 
 ## `Payout` Model
 
-**`server/polar/models/payout.py` · table `payouts`**
+**`server/outception/models/payout.py` · table `payouts`**
 
 A `Payout` links both entities, representing the transfer of funds from the merchant's ledger to their payout processor.
 

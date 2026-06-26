@@ -1,8 +1,8 @@
 import { Check } from 'lucide-react'
 import { useState } from 'react'
 import { twMerge } from 'tailwind-merge'
-import { Button } from '@polar-sh/orbit'
-import { Input } from '@polar-sh/orbit'
+import { Button } from '@outception-com/orbit'
+import { Input } from '@outception-com/orbit'
 
 const CopyToClipboardInput = ({
   value,
@@ -38,13 +38,13 @@ const CopyToClipboardInput = ({
   return (
     <div
       className={twMerge(
-        'dark:border-polar-700 dark:bg-polar-800 flex w-full flex-row items-center overflow-hidden rounded-xl border bg-white shadow-xs',
+        'dark:border-outception-700 dark:bg-outception-800 flex w-full flex-row items-center overflow-hidden rounded-xl border bg-white shadow-xs',
         className,
       )}
     >
       <Input
         className={twMerge(
-          'dark:text-polar-400 !focus:border-transparent !focus:ring-transparent !dark:focus:border-transparent !dark:focus:ring-transparent w-full grow border-none bg-transparent text-gray-600 shadow-none! focus-visible:ring-transparent dark:bg-transparent dark:focus-visible:ring-transparent',
+          'dark:text-outception-400 !focus:border-transparent !focus:ring-transparent !dark:focus:border-transparent !dark:focus:ring-transparent w-full grow border-none bg-transparent text-gray-600 shadow-none! focus-visible:ring-transparent dark:bg-transparent dark:focus-visible:ring-transparent',
           variant === 'mono' ? 'font-mono text-sm' : '',
         )}
         value={value}

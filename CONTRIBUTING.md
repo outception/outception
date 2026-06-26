@@ -1,6 +1,6 @@
-# Contributing to Polar
+# Contributing to Outception
 
-Thank you for your interest in contributing to Polar! This document provides guidelines and information for contributing to our open-source project.
+Thank you for your interest in contributing to Outception! This document provides guidelines and information for contributing to our open-source project.
 
 ## 🚨 Important: Issue Assignment Required
 
@@ -76,7 +76,7 @@ Before contributing, set up your local development environment following the ins
 
 - **Linting**: Run `uv run task lint && uv run task lint_types`
 - **Testing**: Run `uv run task test`
-- **Structure**: Follow the modular structure in `server/polar/`
+- **Structure**: Follow the modular structure in `server/outception/`
 - **Imports**: Place all imports at the top of files
 - **Async**: Use proper async/await patterns
 
@@ -118,7 +118,7 @@ We welcome various types of contributions:
 
 ## 📄 License
 
-By contributing to Polar, you agree that your contributions will be licensed under the same license as the project.
+By contributing to Outception, you agree that your contributions will be licensed under the same license as the project.
 
 ---
 

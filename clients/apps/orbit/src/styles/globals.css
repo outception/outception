@@ -163,17 +163,17 @@
   --color-gray-900: oklch(0.21 0.034 264.665);
   --color-gray-950: oklch(0.13 0.028 261.692);
 
-  --color-polar-50: hsl(233, 4%, 85%);
-  --color-polar-100: hsl(233, 4%, 79%);
-  --color-polar-200: hsl(233, 4%, 68%);
-  --color-polar-300: hsl(233, 4%, 62%);
-  --color-polar-400: hsl(233, 4%, 52%);
-  --color-polar-500: hsl(233, 4%, 46%);
-  --color-polar-600: hsl(233, 4%, 16%);
-  --color-polar-700: hsl(233, 4%, 12%);
-  --color-polar-800: hsl(233, 4%, 9.5%);
-  --color-polar-900: hsl(233, 4%, 6.5%);
-  --color-polar-950: hsl(233, 4%, 3.5%);
+  --color-outception-50: hsl(233, 4%, 85%);
+  --color-outception-100: hsl(233, 4%, 79%);
+  --color-outception-200: hsl(233, 4%, 68%);
+  --color-outception-300: hsl(233, 4%, 62%);
+  --color-outception-400: hsl(233, 4%, 52%);
+  --color-outception-500: hsl(233, 4%, 46%);
+  --color-outception-600: hsl(233, 4%, 16%);
+  --color-outception-700: hsl(233, 4%, 12%);
+  --color-outception-800: hsl(233, 4%, 9.5%);
+  --color-outception-900: hsl(233, 4%, 6.5%);
+  --color-outception-950: hsl(233, 4%, 3.5%);
 
   /* shadcn */
   --color-border: var(--border);
@@ -303,40 +303,40 @@
   }
 
   :root.dark {
-    --background: var(--color-polar-900);
-    --foreground: var(--color-polar-500);
+    --background: var(--color-outception-900);
+    --foreground: var(--color-outception-500);
 
-    --card: var(--color-polar-800);
-    --card-foreground: var(--color-polar-50);
+    --card: var(--color-outception-800);
+    --card-foreground: var(--color-outception-50);
 
-    --popover: var(--color-polar-900);
-    --popover-foreground: var(--color-polar-50);
+    --popover: var(--color-outception-900);
+    --popover-foreground: var(--color-outception-50);
 
     --primary: var(--color-blue);
-    --primary-foreground: var(--color-polar-50);
+    --primary-foreground: var(--color-outception-50);
 
-    --secondary: var(--color-polar-900);
-    --secondary-foreground: var(--color-polar-50);
+    --secondary: var(--color-outception-900);
+    --secondary-foreground: var(--color-outception-50);
 
-    --muted: var(--color-polar-700);
-    --muted-foreground: var(--color-polar-500);
+    --muted: var(--color-outception-700);
+    --muted-foreground: var(--color-outception-500);
 
     --accent: var(--color-blue);
-    --accent-foreground: var(--color-polar-50);
+    --accent-foreground: var(--color-outception-50);
 
     --destructive: var(--color-red-500);
     --destructive-foreground: var(--color-red-500);
 
-    --border: var(--color-polar-700);
-    --input: var(--color-polar-700);
-    --ring: var(--color-polar-700);
+    --border: var(--color-outception-700);
+    --input: var(--color-outception-700);
+    --ring: var(--color-outception-700);
 
-    --sidebar-background: var(--color-polar-950);
-    --sidebar-foreground: var(--color-polar-50);
-    --sidebar-accent: var(--color-polar-800);
-    --sidebar-accent-foreground: var(--color-polar-50);
-    --sidebar-border: var(--color-polar-700);
-    --sidebar-ring: var(--color-polar-700);
+    --sidebar-background: var(--color-outception-950);
+    --sidebar-foreground: var(--color-outception-50);
+    --sidebar-accent: var(--color-outception-800);
+    --sidebar-accent-foreground: var(--color-outception-50);
+    --sidebar-border: var(--color-outception-700);
+    --sidebar-ring: var(--color-outception-700);
   }
 }
 

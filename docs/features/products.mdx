@@ -1,12 +1,12 @@
 ---
 title: "Products"
-description: "Start selling digital products on Polar in minutes."
+description: "Start selling digital products on Outception in minutes."
 ---
 
 <Info>
 **Everything is a product**
 
-Subscriptions and one-time purchases are both products in Polar — same API, same data model, just different pricing and billing logic. They live together in the Products dashboard, filterable by pricing model.
+Subscriptions and one-time purchases are both products in Outception — same API, same data model, just different pricing and billing logic. They live together in the Products dashboard, filterable by pricing model.
 </Info>
 
 ## Billing cycle
@@ -17,7 +17,7 @@ The billing cycle and recurring interval are locked in at creation. If you need 
 
 ## Pricing
 
-Polar supports several pricing models, and you pick one per product:
+Outception supports several pricing models, and you pick one per product:
 
 - **Fixed price.** Set an amount and that's what customers pay.
 - **Pay what you want.** Customers choose the amount. You can set a minimum and a default that's pre-filled at checkout.
@@ -29,22 +29,22 @@ Metered prices stack on top of the others. You can pair one with a fixed base fe
 
 Pricing type is locked in at creation, but for fixed-price products you can change the amount at any time. Existing subscribers are **grandfathered** onto the price they signed up at, so a price change only affects new purchases. If you do want to migrate someone onto the new price, you can do it [per subscription](/features/subscriptions/manage) from the dashboard or the API.
 
-Whether the amount you enter includes tax or has tax added on top depends on your tax behavior setting. By default, Polar picks the convention that matches the customer's country (inclusive in most of the world, exclusive in the US, Canada, and India). You can set your own default under **Settings**. See [Tax Inclusive Pricing](/features/tax-inclusive-pricing) for how the amount you set translates to what customers actually pay.
+Whether the amount you enter includes tax or has tax added on top depends on your tax behavior setting. By default, Outception picks the convention that matches the customer's country (inclusive in most of the world, exclusive in the US, Canada, and India). You can set your own default under **Settings**. See [Tax Inclusive Pricing](/features/tax-inclusive-pricing) for how the amount you set translates to what customers actually pay.
 
 ### Multiple payment currencies
 
 Products can be priced in several currencies at once so customers pay in their local currency. Your organization has a default payment currency that acts as the fallback, and you can add more on top. The price structure (price type, metered prices, etc.) must match across every currency you enable.
 
-Polar picks the currency based on the customer's geolocation at checkout. If their currency isn't enabled on the product, it falls back to your organization's default.
+Outception picks the currency based on the customer's geolocation at checkout. If their currency isn't enabled on the product, it falls back to your organization's default.
 
 <Warning>
-**Creating checkout sessions from a backend or proxy?** Polar reads the customer's geolocation from the IP address of the request that creates the session. If you create sessions server-side (an API, a Cloudflare Worker, etc.), Polar sees *your server's* IP and may pick the wrong currency.
+**Creating checkout sessions from a backend or proxy?** Outception reads the customer's geolocation from the IP address of the request that creates the session. If you create sessions server-side (an API, a Cloudflare Worker, etc.), Outception sees *your server's* IP and may pick the wrong currency.
 
 Forward the customer's IP as [`customer_ip_address`](/features/checkout/session#customer-ip-address) when creating the session.
 </Warning>
 
 <Accordion title="Supported currencies">
-Polar supports 130+ currencies for product pricing:
+Outception supports 130+ currencies for product pricing:
 
 | Code | Currency |
 | --- | --- |
@@ -178,19 +178,19 @@ Polar supports 130+ currencies for product pricing:
 
 ## Trial period
 
-For recurring products, toggle **Enable trial period** to give customers a window where they aren't charged. Pick a number and a unit (days, weeks, months, or years) and Polar handles the rest.
+For recurring products, toggle **Enable trial period** to give customers a window where they aren't charged. Pick a number and a unit (days, weeks, months, or years) and Outception handles the rest.
 
 [Learn more about trials](/features/subscriptions/trials).
 
 ## Metadata
 
-You can attach arbitrary key–value metadata to a product. It's not shown to customers, but it travels along on every order, subscription, and webhook tied to the product, which makes it useful for keeping track of internal IDs or categories that live outside Polar.
+You can attach arbitrary key–value metadata to a product. It's not shown to customers, but it travels along on every order, subscription, and webhook tied to the product, which makes it useful for keeping track of internal IDs or categories that live outside Outception.
 
 ## Automated Benefits
 
 Benefits are what your customers actually get when they buy: license keys, Discord roles, GitHub repository access, file downloads, feature flags, or a custom benefit you wire up yourself.
 
-Polar grants and revokes benefits automatically as customers purchase, renew, or cancel. [Learn more about benefits](/features/benefits/introduction).
+Outception grants and revokes benefits automatically as customers purchase, renew, or cancel. [Learn more about benefits](/features/benefits/introduction).
 
 ## Checkout Page
 
@@ -236,7 +236,7 @@ Existing customers keep their access, and active subscriptions keep renewing. Yo
 
 <AccordionGroup>
   <Accordion title="What about variants? Can I sell a monthly and a yearly version of the same product?">
-    Polar takes a different approach to what the industry typically calls **variants**. Each product has a single pricing model, and instead of bolting variants onto one product, you create one product per pricing model and showcase them together at checkout.
+    Outception takes a different approach to what the industry typically calls **variants**. Each product has a single pricing model, and instead of bolting variants onto one product, you create one product per pricing model and showcase them together at checkout.
 
     So a "monthly" and "yearly" plan are two products, each with their own pricing and benefits, presented side-by-side via [Checkout Links](/features/checkout/links) or the [Checkout Session API](/features/checkout/session). It keeps the API and the data model clean, and gives you full freedom over what each option includes.
   </Accordion>
@@ -254,7 +254,7 @@ Existing customers keep their access, and active subscriptions keep renewing. Yo
   </Accordion>
 
   <Accordion title="Will customers see prices in their local currency?">
-    If you've enabled additional payment currencies on the product, yes — Polar matches the customer's geolocation to one of the enabled currencies. If there's no match, it falls back to your organization's default. See [Multiple payment currencies](#multiple-payment-currencies) above.
+    If you've enabled additional payment currencies on the product, yes — Outception matches the customer's geolocation to one of the enabled currencies. If there's no match, it falls back to your organization's default. See [Multiple payment currencies](#multiple-payment-currencies) above.
   </Accordion>
 
   <Accordion title="Can I duplicate a product?">

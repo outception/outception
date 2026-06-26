@@ -1,7 +1,7 @@
 'use client'
 
-import { enums, schemas } from '@polar-sh/client'
-import { Combobox } from '@polar-sh/ui/components/atoms/Combobox'
+import { enums, schemas } from '@outception-com/client'
+import { Combobox } from '@outception-com/ui/components/atoms/Combobox'
 import { useCallback, useMemo, useState } from 'react'
 
 interface CurrencySelectorProps {

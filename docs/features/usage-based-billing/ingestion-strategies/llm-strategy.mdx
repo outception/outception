@@ -71,7 +71,7 @@ export async function POST(req: Request) {
 
 ## Python SDK
 
-Our Python SDK includes an ingestion helper and strategies for common use cases. It's installed as part of the Polar SDK.
+Our Python SDK includes an ingestion helper and strategies for common use cases. It's installed as part of the Outception SDK.
 
 <CodeGroup>
 
@@ -87,7 +87,7 @@ uv add polar-sdk
 
 ### Ingestion helper
 
-The ingestion helper is a simple wrapper around the Polar events ingestion API. It takes care of batching and sending events to Polar in the background, without blocking your main thread.
+The ingestion helper is a simple wrapper around the Outception events ingestion API. It takes care of batching and sending events to Outception in the background, without blocking your main thread.
 
 ```python
 import os
@@ -108,7 +108,7 @@ ingestion.ingest({
 
 [PydanticAI](https://ai.pydantic.dev) is an AI agent framework for Python. A common use-case with AI applications is to track the usage of LLMs, like the number of input and output tokens, and bill the customer accordingly.
 
-With our PydanticAI strategy, you can easily track the usage of LLMs and send the data to Polar for billing.
+With our PydanticAI strategy, you can easily track the usage of LLMs and send the data to Outception for billing.
 
 ```python
 import os

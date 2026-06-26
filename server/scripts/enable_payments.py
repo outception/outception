@@ -4,19 +4,19 @@ import asyncio
 
 import dramatiq
 import typer
-from polar.models.organization_review import OrganizationReview
+from outception.models.organization_review import OrganizationReview
 from sqlalchemy import select
 
-import polar.tasks  # noqa: F401
-from polar.kit.db.postgres import create_async_sessionmaker
-from polar.kit.utils import utc_now
-from polar.models.organization import Organization, OrganizationStatus
-from polar.models.user import IdentityVerificationStatus
-from polar.models.user_organization import UserOrganization
-from polar.postgres import create_async_engine
-from polar.redis import create_redis
-from polar.user.repository import UserRepository
-from polar.worker import JobQueueManager
+import outception.tasks  # noqa: F401
+from outception.kit.db.postgres import create_async_sessionmaker
+from outception.kit.utils import utc_now
+from outception.models.organization import Organization, OrganizationStatus
+from outception.models.user import IdentityVerificationStatus
+from outception.models.user_organization import UserOrganization
+from outception.postgres import create_async_engine
+from outception.redis import create_redis
+from outception.user.repository import UserRepository
+from outception.worker import JobQueueManager
 
 cli = typer.Typer()
 

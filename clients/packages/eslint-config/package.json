@@ -1,5 +1,5 @@
 {
-  "name": "@polar-sh/eslint-config",
+  "name": "@outception-com/eslint-config",
   "version": "0.0.0",
   "type": "module",
   "private": true,

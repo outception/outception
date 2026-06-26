@@ -2,8 +2,8 @@
 
 import { useNewsSearch } from '@/hooks/queries/news'
 import { safeExternalHref } from '@/utils/news'
-import { Pill, Spinner, Text } from '@polar-sh/orbit'
-import { Box } from '@polar-sh/orbit/Box'
+import { Pill, Spinner, Text } from '@outception-com/orbit'
+import { Box } from '@outception-com/orbit/Box'
 
 export const NewsSearchResults = ({ query }: { query: string }) => {
   const { data, isLoading } = useNewsSearch(query)

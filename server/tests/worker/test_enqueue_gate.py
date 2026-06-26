@@ -4,11 +4,11 @@ import dramatiq
 import pytest
 from pytest_mock import MockerFixture
 
-import polar.tasks  # noqa: F401  (registers actors with the broker)
-from polar.config import settings
-from polar.logging import CorrelationID
-from polar.redis import Redis
-from polar.worker import JobQueueManager
+import outception.tasks  # noqa: F401  (registers actors with the broker)
+from outception.config import settings
+from outception.logging import CorrelationID
+from outception.redis import Redis
+from outception.worker import JobQueueManager
 
 
 @pytest.mark.asyncio
@@ -16,7 +16,7 @@ class TestFlushGate:
     async def test_disabled_routes_everything_to_redis(
         self, redis: Redis, mocker: MockerFixture
     ) -> None:
-        send_jobs = mocker.patch("polar.worker._enqueue._sqs.send_jobs")
+        send_jobs = mocker.patch("outception.worker._enqueue._sqs.send_jobs")
 
         CorrelationID.set()
         jqm = JobQueueManager()
@@ -31,7 +31,7 @@ class TestFlushGate:
     ) -> None:
         mocker.patch.object(settings, "WORKER_SQS_ENABLED", True)
         mocker.patch.object(settings, "WORKER_SQS_ACTORS", {"email.send"})
-        send_jobs = mocker.patch("polar.worker._enqueue._sqs.send_jobs")
+        send_jobs = mocker.patch("outception.worker._enqueue._sqs.send_jobs")
 
         CorrelationID.set()
         customer_id = uuid4()

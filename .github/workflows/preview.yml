@@ -73,24 +73,24 @@ jobs:
       - name: Connect to Tailscale
         uses: tailscale/github-action@v4
         with:
-          oauth-client-id: ${{ secrets.POLAR_TAILSCALE_OAUTH_CLIENT_ID }}
-          oauth-secret: ${{ secrets.POLAR_TAILSCALE_OAUTH_SECRET }}
-          tags: ${{ vars.POLAR_PREVIEW_TAILSCALE_TAGS || 'tag:ci' }}
+          oauth-client-id: ${{ secrets.OUTCEPTION_TAILSCALE_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.OUTCEPTION_TAILSCALE_OAUTH_SECRET }}
+          tags: ${{ vars.OUTCEPTION_PREVIEW_TAILSCALE_TAGS || 'tag:ci' }}
 
       - name: Provision preview resources
         if: steps.action.outputs.action == 'deploy'
         id: provision
         working-directory: ./server
         env:
-          POLAR_PREVIEW_BASE_DOMAIN: ${{ vars.POLAR_PREVIEW_BASE_DOMAIN }}
-          POLAR_PREVIEW_POSTGRES_ADMIN_DSN: ${{ secrets.POLAR_PREVIEW_POSTGRES_ADMIN_DSN }}
-          POLAR_PREVIEW_POSTGRES_APP_HOST: ${{ vars.POLAR_PREVIEW_POSTGRES_APP_HOST }}
-          POLAR_PREVIEW_POSTGRES_APP_PORT: ${{ vars.POLAR_PREVIEW_POSTGRES_APP_PORT }}
-          POLAR_PREVIEW_POSTGRES_TEMPLATE_DATABASE: ${{ vars.POLAR_PREVIEW_POSTGRES_TEMPLATE_DATABASE }}
-          POLAR_PREVIEW_TINYBIRD_API_URL: ${{ vars.POLAR_PREVIEW_TINYBIRD_API_URL }}
-          POLAR_PREVIEW_TINYBIRD_ADMIN_TOKEN: ${{ secrets.POLAR_PREVIEW_TINYBIRD_ADMIN_TOKEN }}
-          POLAR_PREVIEW_TINYBIRD_WORKSPACE: ${{ vars.POLAR_PREVIEW_TINYBIRD_WORKSPACE }}
-          POLAR_PREVIEW_TINYBIRD_LAST_PARTITION: ${{ vars.POLAR_PREVIEW_TINYBIRD_LAST_PARTITION || 'false' }}
+          OUTCEPTION_PREVIEW_BASE_DOMAIN: ${{ vars.OUTCEPTION_PREVIEW_BASE_DOMAIN }}
+          OUTCEPTION_PREVIEW_POSTGRES_ADMIN_DSN: ${{ secrets.OUTCEPTION_PREVIEW_POSTGRES_ADMIN_DSN }}
+          OUTCEPTION_PREVIEW_POSTGRES_APP_HOST: ${{ vars.OUTCEPTION_PREVIEW_POSTGRES_APP_HOST }}
+          OUTCEPTION_PREVIEW_POSTGRES_APP_PORT: ${{ vars.OUTCEPTION_PREVIEW_POSTGRES_APP_PORT }}
+          OUTCEPTION_PREVIEW_POSTGRES_TEMPLATE_DATABASE: ${{ vars.OUTCEPTION_PREVIEW_POSTGRES_TEMPLATE_DATABASE }}
+          OUTCEPTION_PREVIEW_TINYBIRD_API_URL: ${{ vars.OUTCEPTION_PREVIEW_TINYBIRD_API_URL }}
+          OUTCEPTION_PREVIEW_TINYBIRD_ADMIN_TOKEN: ${{ secrets.OUTCEPTION_PREVIEW_TINYBIRD_ADMIN_TOKEN }}
+          OUTCEPTION_PREVIEW_TINYBIRD_WORKSPACE: ${{ vars.OUTCEPTION_PREVIEW_TINYBIRD_WORKSPACE }}
+          OUTCEPTION_PREVIEW_TINYBIRD_LAST_PARTITION: ${{ vars.OUTCEPTION_PREVIEW_TINYBIRD_LAST_PARTITION || 'false' }}
         run: |
           set -euo pipefail
           uv run python -m scripts.preview create-or-update \
@@ -106,8 +106,8 @@ jobs:
           set -euo pipefail
           ENV_JSON=$(jq -n \
             --arg pg_db "${{ steps.provision.outputs.preview_postgres_database }}" \
-            --arg pg_host "${{ fromJson(steps.provision.outputs.preview_postgres_env_json).POLAR_POSTGRES_HOST }}" \
-            --arg pg_port "${{ fromJson(steps.provision.outputs.preview_postgres_env_json).POLAR_POSTGRES_PORT }}" \
+            --arg pg_host "${{ fromJson(steps.provision.outputs.preview_postgres_env_json).OUTCEPTION_POSTGRES_HOST }}" \
+            --arg pg_port "${{ fromJson(steps.provision.outputs.preview_postgres_env_json).OUTCEPTION_POSTGRES_PORT }}" \
             --arg pg_user "${{ steps.provision.outputs.preview_postgres_user }}" \
             --arg pg_pwd "${{ steps.provision.outputs.preview_postgres_password }}" \
             --arg tb_token "${{ steps.provision.outputs.preview_tinybird_token }}" \
@@ -116,19 +116,19 @@ jobs:
             --arg tb_branch "${{ steps.provision.outputs.preview_tinybird_branch }}" \
             --arg tb_workspace "${{ steps.provision.outputs.preview_tinybird_workspace }}" \
             '{
-              POLAR_POSTGRES_DATABASE: $pg_db,
-              POLAR_POSTGRES_HOST: $pg_host,
-              POLAR_POSTGRES_PORT: $pg_port,
-              POLAR_POSTGRES_USER: $pg_user,
-              POLAR_POSTGRES_PWD: $pg_pwd,
-              POLAR_TINYBIRD_API_TOKEN: $tb_token,
-              POLAR_TINYBIRD_API_URL: $tb_url,
-              POLAR_TINYBIRD_BRANCH: $tb_branch,
-              POLAR_TINYBIRD_READ_TOKEN: $tb_token,
-              POLAR_TINYBIRD_WORKSPACE: $tb_workspace,
-              POLAR_TINYBIRD_CLICKHOUSE_URL: $tb_ch_url,
-              POLAR_TINYBIRD_CLICKHOUSE_USERNAME: $tb_workspace,
-              POLAR_TINYBIRD_CLICKHOUSE_TOKEN: $tb_token
+              OUTCEPTION_POSTGRES_DATABASE: $pg_db,
+              OUTCEPTION_POSTGRES_HOST: $pg_host,
+              OUTCEPTION_POSTGRES_PORT: $pg_port,
+              OUTCEPTION_POSTGRES_USER: $pg_user,
+              OUTCEPTION_POSTGRES_PWD: $pg_pwd,
+              OUTCEPTION_TINYBIRD_API_TOKEN: $tb_token,
+              OUTCEPTION_TINYBIRD_API_URL: $tb_url,
+              OUTCEPTION_TINYBIRD_BRANCH: $tb_branch,
+              OUTCEPTION_TINYBIRD_READ_TOKEN: $tb_token,
+              OUTCEPTION_TINYBIRD_WORKSPACE: $tb_workspace,
+              OUTCEPTION_TINYBIRD_CLICKHOUSE_URL: $tb_ch_url,
+              OUTCEPTION_TINYBIRD_CLICKHOUSE_USERNAME: $tb_workspace,
+              OUTCEPTION_TINYBIRD_CLICKHOUSE_TOKEN: $tb_token
             }')
           echo "$ENV_JSON" > /tmp/env.json
 
@@ -137,8 +137,8 @@ jobs:
         id: vercel_url
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_PROJECT: polar-sandbox
-          VERCEL_TEAM: polar-sh
+          VERCEL_PROJECT: outception-sandbox
+          VERCEL_TEAM: outception-com
         run: |
           set -euo pipefail
           DEPLOY_UID=""
@@ -171,9 +171,9 @@ jobs:
         id: deploy
         if: steps.action.outputs.action == 'deploy'
         env:
-          SSH_KEY: ${{ secrets.POLAR_PREVIEW_SSH_KEY }}
-          PREVIEW_HOST: ${{ secrets.POLAR_PREVIEW_HOST }}
-          PREVIEW_USER: ${{ vars.POLAR_PREVIEW_USER || 'deploy' }}
+          SSH_KEY: ${{ secrets.OUTCEPTION_PREVIEW_SSH_KEY }}
+          PREVIEW_HOST: ${{ secrets.OUTCEPTION_PREVIEW_HOST }}
+          PREVIEW_USER: ${{ vars.OUTCEPTION_PREVIEW_USER || 'deploy' }}
         run: |
           set -euo pipefail
           mkdir -p ~/.ssh
@@ -224,9 +224,9 @@ jobs:
         if: steps.action.outputs.action == 'destroy'
         continue-on-error: true
         env:
-          SSH_KEY: ${{ secrets.POLAR_PREVIEW_SSH_KEY }}
-          PREVIEW_HOST: ${{ secrets.POLAR_PREVIEW_HOST }}
-          PREVIEW_USER: ${{ vars.POLAR_PREVIEW_USER || 'deploy' }}
+          SSH_KEY: ${{ secrets.OUTCEPTION_PREVIEW_SSH_KEY }}
+          PREVIEW_HOST: ${{ secrets.OUTCEPTION_PREVIEW_HOST }}
+          PREVIEW_USER: ${{ vars.OUTCEPTION_PREVIEW_USER || 'deploy' }}
         run: |
           set -euo pipefail
           mkdir -p ~/.ssh
@@ -242,15 +242,15 @@ jobs:
         if: always() && steps.action.outputs.action == 'destroy'
         working-directory: ./server
         env:
-          POLAR_PREVIEW_BASE_DOMAIN: ${{ vars.POLAR_PREVIEW_BASE_DOMAIN }}
-          POLAR_PREVIEW_POSTGRES_ADMIN_DSN: ${{ secrets.POLAR_PREVIEW_POSTGRES_ADMIN_DSN }}
-          POLAR_PREVIEW_POSTGRES_APP_HOST: ${{ vars.POLAR_PREVIEW_POSTGRES_APP_HOST }}
-          POLAR_PREVIEW_POSTGRES_APP_PORT: ${{ vars.POLAR_PREVIEW_POSTGRES_APP_PORT }}
-          POLAR_PREVIEW_POSTGRES_TEMPLATE_DATABASE: ${{ vars.POLAR_PREVIEW_POSTGRES_TEMPLATE_DATABASE }}
-          POLAR_PREVIEW_TINYBIRD_API_URL: ${{ vars.POLAR_PREVIEW_TINYBIRD_API_URL }}
-          POLAR_PREVIEW_TINYBIRD_ADMIN_TOKEN: ${{ secrets.POLAR_PREVIEW_TINYBIRD_ADMIN_TOKEN }}
-          POLAR_PREVIEW_TINYBIRD_WORKSPACE: ${{ vars.POLAR_PREVIEW_TINYBIRD_WORKSPACE }}
-          POLAR_PREVIEW_TINYBIRD_LAST_PARTITION: ${{ vars.POLAR_PREVIEW_TINYBIRD_LAST_PARTITION || 'false' }}
+          OUTCEPTION_PREVIEW_BASE_DOMAIN: ${{ vars.OUTCEPTION_PREVIEW_BASE_DOMAIN }}
+          OUTCEPTION_PREVIEW_POSTGRES_ADMIN_DSN: ${{ secrets.OUTCEPTION_PREVIEW_POSTGRES_ADMIN_DSN }}
+          OUTCEPTION_PREVIEW_POSTGRES_APP_HOST: ${{ vars.OUTCEPTION_PREVIEW_POSTGRES_APP_HOST }}
+          OUTCEPTION_PREVIEW_POSTGRES_APP_PORT: ${{ vars.OUTCEPTION_PREVIEW_POSTGRES_APP_PORT }}
+          OUTCEPTION_PREVIEW_POSTGRES_TEMPLATE_DATABASE: ${{ vars.OUTCEPTION_PREVIEW_POSTGRES_TEMPLATE_DATABASE }}
+          OUTCEPTION_PREVIEW_TINYBIRD_API_URL: ${{ vars.OUTCEPTION_PREVIEW_TINYBIRD_API_URL }}
+          OUTCEPTION_PREVIEW_TINYBIRD_ADMIN_TOKEN: ${{ secrets.OUTCEPTION_PREVIEW_TINYBIRD_ADMIN_TOKEN }}
+          OUTCEPTION_PREVIEW_TINYBIRD_WORKSPACE: ${{ vars.OUTCEPTION_PREVIEW_TINYBIRD_WORKSPACE }}
+          OUTCEPTION_PREVIEW_TINYBIRD_LAST_PARTITION: ${{ vars.OUTCEPTION_PREVIEW_TINYBIRD_LAST_PARTITION || 'false' }}
         run: |
           set -euo pipefail
           uv run python -m scripts.preview destroy \

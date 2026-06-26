@@ -14,13 +14,13 @@ on analytics and other feature requests.
 
 ## Briefing
 
-In this new era of AI-based apps, usage-based billing is becoming the new standard business model. Previously, we added support for usage-based billing in Polar, using a event-based system to track usage and bill customers accordingly. The usage is accrued over the subscription cycle and billed at the end of the cycle.
+In this new era of AI-based apps, usage-based billing is becoming the new standard business model. Previously, we added support for usage-based billing in Outception, using a event-based system to track usage and bill customers accordingly. The usage is accrued over the subscription cycle and billed at the end of the cycle.
 
 While this approach is working well technically, we haven't seen lot of adoption for pure usage based vs. using meters as subscription credits (popular). Especially from startups and small business. The main drawback is that "pure" usage-based billing can be frightening and unpredictable for the customer. Internet is full of stories of customers being surprised by a crazy high bill at the end of the month. Besides, it can also be a risk for merchants, as a customer could accrue a large amount of usage in a cycle, and then not being able to pay the invoice, leading to a loss of revenue.
 
 That's why lot of businesses, including AI leaders like OpenAI and Anthropic, are proposing a cash balance approach: customers pre-pay to top-up their balance, and then the usage is deducted from the balance. This way, customers can control their spending and avoid surprises. It also reduces the risk for merchants, as they get paid upfront.
 
-In this document, we'll explore how we can implement a cash balance system in Polar, and how it can complement our existing usage-based billing system. We call that **Wallets**.
+In this document, we'll explore how we can implement a cash balance system in Outception, and how it can complement our existing usage-based billing system. We call that **Wallets**.
 
 ## Goals
 
@@ -43,11 +43,11 @@ This opens up the possibility to handle complex pricing schemes, like a fixed pr
 
 ### Customer
 
-A customer signs up on a merchant's app. Using the API, the merchant creates a Customer on Polar and creates a subscription for their usage-based product. A new Wallet is created for the Customer, with a 0 balance.
+A customer signs up on a merchant's app. Using the API, the merchant creates a Customer on Outception and creates a subscription for their usage-based product. A new Wallet is created for the Customer, with a 0 balance.
 
-To top-up the Wallet, the merchant redirects the Customer to the Polar's Customer Portal. From there, the Customer can add a payment method and top-up their Wallet with a desired amount of money. The Customer can top-up as many times as they want, and the balance is cumulative. Each top-up creates an Order in the merchant's Organization, and the funds are transferred to the Organization's Account, minus Polar fees.
+To top-up the Wallet, the merchant redirects the Customer to the Outception's Customer Portal. From there, the Customer can add a payment method and top-up their Wallet with a desired amount of money. The Customer can top-up as many times as they want, and the balance is cumulative. Each top-up creates an Order in the merchant's Organization, and the funds are transferred to the Organization's Account, minus Outception fees.
 
-When the Customer uses the merchant's app, the app tracks the usage and reports it to Polar using the Event Ingestion API. Polar deducts the cost of the usage from the Customer's Wallet balance.
+When the Customer uses the merchant's app, the app tracks the usage and reports it to Outception using the Event Ingestion API. Outception deducts the cost of the usage from the Customer's Wallet balance.
 
 We don't try to have any kind of blocking in case of low balance. It's up to the merchant to decide how to handle that, by estimating the cost of the usage before reporting it and compare it with the balance.
 

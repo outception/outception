@@ -47,7 +47,7 @@ SubscriptionCancellation.PreviewProps = {
   subscription: {
     ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
   },
-  url: 'https://polar.sh/acme-inc/portal/subscriptions/12345',
+  url: 'https://outception.com/acme-inc/portal/subscriptions/12345',
 }
 
 export default SubscriptionCancellation

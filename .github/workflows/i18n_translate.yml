@@ -45,7 +45,7 @@ jobs:
       - name: Generate translations
         env:
           PYDANTIC_AI_GATEWAY_API_KEY: ${{ secrets.PYDANTIC_AI_GATEWAY_API_KEY }}
-        run: pnpm --filter @polar-sh/i18n translate
+        run: pnpm --filter @outception-com/i18n translate
 
       - name: Commit translations
         run: |

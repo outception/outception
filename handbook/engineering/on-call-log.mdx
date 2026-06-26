@@ -40,12 +40,12 @@ We now have alerts and a status page configured for the sandbox environment.
 
 #### 2025-11-14
 
-Running out of memory continuously on the workers, causing a crash loop after getting an influx of exceptions in the processing of them. [Read more discussion](https://polar-olw4768.slack.com/archives/C09T5UDPF2Q). Potentially related to the Sentry integration in Dramatiq being reenabled. We have now disabled it again which can be monitored if this continues to happen or if it stops now.
+Running out of memory continuously on the workers, causing a crash loop after getting an influx of exceptions in the processing of them. [Read more discussion](https://outception-olw4768.slack.com/archives/C09T5UDPF2Q). Potentially related to the Sentry integration in Dramatiq being reenabled. We have now disabled it again which can be monitored if this continues to happen or if it stops now.
 
 
 #### 2025-11-15
 
-Webhooks were slow to process. Most likely due to an overload of other events causing a delay in processing. [Read more details](https://polar-olw4768.slack.com/archives/C093CJXJXPT/p1763221839002159).
+Webhooks were slow to process. Most likely due to an overload of other events causing a delay in processing. [Read more details](https://outception-olw4768.slack.com/archives/C093CJXJXPT/p1763221839002159).
 
 
 ### Maintenance
@@ -88,13 +88,13 @@ The root cause is similar to the one of the previous incident: a big spike of ta
 
 **Reference links**
 
-- `benefit.grant` spike: https://logfire-us.pydantic.dev/polar/production-worker?q=attributes-%3E%3E%27actor%27+%3D+%27benefit.grant%27+AND+attributes-%3E%27message%27-%3E%27kwargs%27-%3E%3E%27benefit_id%27+%3D+%27b6c1005f-cf98-4f3d-8fee-05498ce5fffe%27&since=2025-10-14T12%3A06%3A29.521Z&until=2025-10-14T12%3A18%3A14.482Z
-- High priority tasks being processed during the event: https://logfire-us.pydantic.dev/polar/production-worker?q=attributes-%3E%27message%27-%3E%3E%27queue_name%27+%3D+%27high_priority%27+AND+attributes-%3E%3E%27actor%27+%21%3D+%27eventstream.publish%27&since=2025-10-14T12%3A06%3A29.521Z&until=2025-10-14T12%3A18%3A14.482Z
+- `benefit.grant` spike: https://logfire-us.pydantic.dev/outception/production-worker?q=attributes-%3E%3E%27actor%27+%3D+%27benefit.grant%27+AND+attributes-%3E%27message%27-%3E%27kwargs%27-%3E%3E%27benefit_id%27+%3D+%27b6c1005f-cf98-4f3d-8fee-05498ce5fffe%27&since=2025-10-14T12%3A06%3A29.521Z&until=2025-10-14T12%3A18%3A14.482Z
+- High priority tasks being processed during the event: https://logfire-us.pydantic.dev/outception/production-worker?q=attributes-%3E%27message%27-%3E%3E%27queue_name%27+%3D+%27high_priority%27+AND+attributes-%3E%3E%27actor%27+%21%3D+%27eventstream.publish%27&since=2025-10-14T12%3A06%3A29.521Z&until=2025-10-14T12%3A18%3A14.482Z
 
 ### Maintenance
 
 - Migrated the backend to Python 3.14 and updated dependencies accordingly.
-  - Free-threading is however not ready yet: https://github.com/polarsource/polar/issues/7342
+  - Free-threading is however not ready yet: https://github.com/outception/outception/issues/7342
 
 ## Week of 2025-10-06
 
@@ -128,8 +128,8 @@ No orders or other data was lost.
 - 19:48: Outgoing webhooks start to fail to deliver, triggers monitoring
 - 20:05: Worker is restarted with no effect
 - 20:16: Problem is pinpointed to peak in `customer_meter.update_customer` jobs
-- 20:18: [Number of processes/threads of the worker increased](https://github.com/polarsource/polar/commit/61e5f973ab46c55b1c11a9da744695b760884ad5) with no effect
-- 20:32: [Patch deployed for task `customer_meter.update_customer` to skips retries and exits early if lock is occupied](https://github.com/polarsource/polar/commit/a67530c3d169920fdbad7fc9437bea94d88b9b96)
+- 20:18: [Number of processes/threads of the worker increased](https://github.com/outception/outception/commit/61e5f973ab46c55b1c11a9da744695b760884ad5) with no effect
+- 20:32: [Patch deployed for task `customer_meter.update_customer` to skips retries and exits early if lock is occupied](https://github.com/outception/outception/commit/a67530c3d169920fdbad7fc9437bea94d88b9b96)
 - 20:38: Worker queue starts to decrease
 - 21:00: Incident over, backlog processed
 
@@ -143,9 +143,9 @@ This impact was further amplified by the fact that the worker priority queue's i
 
 200-250 event ingestion calls per minute are reasonable, so we should support that.
 
-As an immediate fix for the issue: [we're updating our logic so that frequent `customer_meter.update_customer` calls are deduped](https://github.com/polarsource/polar/issues/7146).
+As an immediate fix for the issue: [we're updating our logic so that frequent `customer_meter.update_customer` calls are deduped](https://github.com/outception/outception/issues/7146).
 
-We are also looking into another way to set up a [high-priority queue](https://github.com/polarsource/polar/issues/7149) now that we've learned that Dramatiq's built-in priority does nothing on Redis.
+We are also looking into another way to set up a [high-priority queue](https://github.com/outception/outception/issues/7149) now that we've learned that Dramatiq's built-in priority does nothing on Redis.
 
 ### Ongoing issues
 

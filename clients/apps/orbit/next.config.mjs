@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['@polar-sh/orbit', 'shiki'],
+  transpilePackages: ['@outception-com/orbit', 'shiki'],
 }
 
 export default nextConfig

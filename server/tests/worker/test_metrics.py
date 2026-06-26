@@ -6,7 +6,7 @@ from dramatiq import Worker
 from dramatiq.brokers.stub import StubBroker
 from pytest_mock import MockerFixture
 
-from polar.worker._metrics import PrometheusMiddleware
+from outception.worker._metrics import PrometheusMiddleware
 
 
 @pytest.fixture
@@ -33,8 +33,8 @@ class TestPrometheusMiddlewareWithStubBroker:
         self, stub_broker: StubBroker, stub_worker: Worker, mocker: MockerFixture
     ) -> None:
         """Test that middleware is properly integrated with the broker."""
-        mock_executions = mocker.patch("polar.worker._metrics.TASK_EXECUTIONS")
-        mock_duration = mocker.patch("polar.worker._metrics.TASK_DURATION")
+        mock_executions = mocker.patch("outception.worker._metrics.TASK_EXECUTIONS")
+        mock_duration = mocker.patch("outception.worker._metrics.TASK_DURATION")
 
         @dramatiq.actor(broker=stub_broker)
         def simple_task() -> str:
@@ -56,7 +56,7 @@ class TestPrometheusMiddlewareWithStubBroker:
         self, stub_broker: StubBroker, stub_worker: Worker, mocker: MockerFixture
     ) -> None:
         """Test that middleware records failure when task raises exception."""
-        mock_executions = mocker.patch("polar.worker._metrics.TASK_EXECUTIONS")
+        mock_executions = mocker.patch("outception.worker._metrics.TASK_EXECUTIONS")
 
         @dramatiq.actor(broker=stub_broker, max_retries=0)
         def failing_task() -> None:
@@ -76,8 +76,8 @@ class TestPrometheusMiddlewareWithStubBroker:
         self, stub_broker: StubBroker, stub_worker: Worker, mocker: MockerFixture
     ) -> None:
         """Test that middleware records retry count."""
-        mock_retries = mocker.patch("polar.worker._metrics.TASK_RETRIES")
-        mock_executions = mocker.patch("polar.worker._metrics.TASK_EXECUTIONS")
+        mock_retries = mocker.patch("outception.worker._metrics.TASK_RETRIES")
+        mock_executions = mocker.patch("outception.worker._metrics.TASK_EXECUTIONS")
 
         call_count = 0
 
@@ -103,7 +103,7 @@ class TestPrometheusMiddlewareWithStubBroker:
         self, stub_broker: StubBroker, stub_worker: Worker, mocker: MockerFixture
     ) -> None:
         """Test that middleware measures task duration."""
-        mock_duration = mocker.patch("polar.worker._metrics.TASK_DURATION")
+        mock_duration = mocker.patch("outception.worker._metrics.TASK_DURATION")
 
         import time
 
@@ -161,7 +161,7 @@ class TestPrometheusMiddlewareDirectCalls:
         mocker: MockerFixture,
     ) -> None:
         """Test that before_process_message increments retry counter on retries."""
-        mock_retries = mocker.patch("polar.worker._metrics.TASK_RETRIES")
+        mock_retries = mocker.patch("outception.worker._metrics.TASK_RETRIES")
 
         message.options["retries"] = 2
         middleware = PrometheusMiddleware()
@@ -179,7 +179,7 @@ class TestPrometheusMiddlewareDirectCalls:
         mocker: MockerFixture,
     ) -> None:
         """Test that before_process_message doesn't increment retries on first attempt."""
-        mock_retries = mocker.patch("polar.worker._metrics.TASK_RETRIES")
+        mock_retries = mocker.patch("outception.worker._metrics.TASK_RETRIES")
 
         message.options["retries"] = 0
         middleware = PrometheusMiddleware()
@@ -194,8 +194,8 @@ class TestPrometheusMiddlewareDirectCalls:
         mocker: MockerFixture,
     ) -> None:
         """Test that after_process_message records success metrics."""
-        mock_duration = mocker.patch("polar.worker._metrics.TASK_DURATION")
-        mock_executions = mocker.patch("polar.worker._metrics.TASK_EXECUTIONS")
+        mock_duration = mocker.patch("outception.worker._metrics.TASK_DURATION")
+        mock_executions = mocker.patch("outception.worker._metrics.TASK_EXECUTIONS")
 
         message.options["prometheus_start_time"] = 0.0
         mocker.patch("time.perf_counter", return_value=1.5)
@@ -220,8 +220,8 @@ class TestPrometheusMiddlewareDirectCalls:
         mocker: MockerFixture,
     ) -> None:
         """Test that after_process_message records failure metrics."""
-        mock_executions = mocker.patch("polar.worker._metrics.TASK_EXECUTIONS")
-        mocker.patch("polar.worker._metrics.TASK_DURATION")
+        mock_executions = mocker.patch("outception.worker._metrics.TASK_EXECUTIONS")
+        mocker.patch("outception.worker._metrics.TASK_DURATION")
 
         message.options["prometheus_start_time"] = 0.0
 
@@ -242,8 +242,8 @@ class TestPrometheusMiddlewareDirectCalls:
         mocker: MockerFixture,
     ) -> None:
         """Test that after_process_message removes start time from options."""
-        mocker.patch("polar.worker._metrics.TASK_DURATION")
-        mocker.patch("polar.worker._metrics.TASK_EXECUTIONS")
+        mocker.patch("outception.worker._metrics.TASK_DURATION")
+        mocker.patch("outception.worker._metrics.TASK_EXECUTIONS")
 
         message.options["prometheus_start_time"] = 0.0
 
@@ -259,8 +259,8 @@ class TestPrometheusMiddlewareDirectCalls:
         mocker: MockerFixture,
     ) -> None:
         """Test that after_skip_message records skipped status."""
-        mock_executions = mocker.patch("polar.worker._metrics.TASK_EXECUTIONS")
-        mocker.patch("polar.worker._metrics.TASK_DURATION")
+        mock_executions = mocker.patch("outception.worker._metrics.TASK_EXECUTIONS")
+        mocker.patch("outception.worker._metrics.TASK_DURATION")
 
         message.options["prometheus_start_time"] = 0.0
 

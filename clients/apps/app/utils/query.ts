@@ -1,4 +1,4 @@
-import { ClientResponseError, isValidationError } from '@polar-sh/client'
+import { ClientResponseError, isValidationError } from '@outception-com/client'
 import { QueryClient } from '@tanstack/react-query'
 
 export { QueryClient, QueryClientProvider } from '@tanstack/react-query'

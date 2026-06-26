@@ -29,29 +29,31 @@ from collections.abc import Sequence
 
 import structlog
 import typer
-from polar.models.organization_review import OrganizationReview
-from polar.models.organization_review_feedback import OrganizationReviewFeedback
-from polar.models.support_case import (
+from outception.models.organization_review import OrganizationReview
+from outception.models.organization_review_feedback import OrganizationReviewFeedback
+from outception.models.support_case import (
     ReviewAppealSupportCase,
     SupportCase,
     SupportCaseMessageAuthorKind,
     SupportCaseType,
 )
-from polar.organization_review.appeal_case import appeal_case as appeal_case_service
-from polar.organization_review.schemas import (
+from outception.organization_review.appeal_case import (
+    appeal_case as appeal_case_service,
+)
+from outception.organization_review.schemas import (
     ActorType,
     DecisionType,
     ReviewContext,
 )
-from polar.support_case.repository import SupportCaseMessageRepository
-from polar.support_case.service import support_case as support_case_service
+from outception.support_case.repository import SupportCaseMessageRepository
+from outception.support_case.service import support_case as support_case_service
 from rich.console import Console
 from rich.table import Table
 from sqlalchemy import Select, select
 
-from polar.kit.db.postgres import create_async_sessionmaker
-from polar.models import Organization
-from polar.postgres import create_async_engine
+from outception.kit.db.postgres import create_async_sessionmaker
+from outception.models import Organization
+from outception.postgres import create_async_engine
 from scripts.helper import configure_script_console_logging, typer_async
 
 cli = typer.Typer()

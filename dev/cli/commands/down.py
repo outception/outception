@@ -15,7 +15,7 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
         ] = False,
     ) -> None:
         """Stop infrastructure and clean up."""
-        console.print("\n[bold blue]Stopping Polar development environment[/bold blue]\n")
+        console.print("\n[bold blue]Stopping Outception development environment[/bold blue]\n")
 
         remove_volumes = volumes
         if not volumes:

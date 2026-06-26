@@ -22,21 +22,21 @@
 
 #### Workflow A: Public Checkout (B2C - Current)
 1. Customer visits merchant site, clicks checkout link
-2. Polar Checkout: Buyer enters email + card
-3. Polar auto-creates individual customer
+2. Outception Checkout: Buyer enters email + card
+3. Outception auto-creates individual customer
 4. Post-purchase: Customer manages subscription via Customer Portal
 
 #### Workflow B: Public Checkout (B2B - Current seats flow)
 1. Customer visits merchant site, clicks checkout link
-2. Polar Checkout: Buyer enters email + card
-3. Polar auto-creates billing manager
+2. Outception Checkout: Buyer enters email + card
+3. Outception auto-creates billing manager
 4. Post-purchase: Buyer invites team members, manages via Customer Portal
 
 #### Workflow C: Checkout Sessions (API-driven)
 1. Merchant app creates customer and business in their system
-2. Merchant creates Polar customer + business inside Polar via API
+2. Merchant creates Outception customer + business inside Outception via API
 3. Billing manager clicks checkout in merchant app
-4. Polar Checkout: Pre-filled information, enters card
+4. Outception Checkout: Pre-filled information, enters card
 5. Returns to merchant app (optional: Customer Portal access)
 
 ---
@@ -57,7 +57,7 @@ These tenets guide our decision-making, weighted by importance:
 2. **Backward Compatibility** (weight: 6) - Existing B2C and B2B customers continue working unchanged.
 3. **Simplicity** (weight: 5) - Seamless checkout, straightforward queries, simple event ingestion
 4. **Minimal Changes for B2B** (weight: 4) - Merchants make minimal changes when adding B2B
-5. **Polar Developer Experience** (weight: 3) - Avoid excessive filtering or complex queries
+5. **Outception Developer Experience** (weight: 3) - Avoid excessive filtering or complex queries
 6. **WorkOS/Auth0 Integration** (weight: 2) - Support enterprise identity providers
 
 Scale: 🔴 1 (poor) | 🟡 2 (acceptable) | 🟢 3 (excellent)
@@ -110,7 +110,7 @@ Customer (Lolo Inc)
 | Backward Compatibility  | 🔴 1  | Current integration with B2B requires migration |
 | Simplicity              | 🟢 3  | Uniform 1:N model, no type discrimination, no special cases |
 | Minimal B2B Changes     | 🟢 3  | Just add members, existing customer_id queries work |
-| Polar Dev Experience    | 🟢 3  | Clean queries, no type filtering, clear separation |
+| Outception Dev Experience    | 🟢 3  | Clean queries, no type filtering, clear separation |
 | WorkOS Integration      | 🟢 3  | Members map directly to WorkOS users/members |
 | **Weighted Total**      | **69** | |
 
@@ -163,7 +163,7 @@ Member (business_customer_id, individual_customer_id, role)
 | Backward Compatibility  | 🟢 3  | Zero breaking changes, additive-only schema |
 | Simplicity              | 🟡 2  | Single entity concept, but polymorphism adds query complexity |
 | Minimal B2B Changes     | 🟡 2  | Just add `type` parameter, similar code patterns |
-| Polar Dev Experience    | 🟡 2  | Requires type filtering, mitigated by SQLAlchemy polymorphism |
+| Outception Dev Experience    | 🟡 2  | Requires type filtering, mitigated by SQLAlchemy polymorphism |
 | WorkOS Integration      | 🟢 3  | Individual customers map cleanly to WorkOS users |
 | **Weighted Total**      | **62** | |
 
@@ -190,7 +190,7 @@ Scale: 🔴 1 (poor) | 🟡 2 (acceptable) | 🟢 3 (excellent)
 | Backward compatibility  | 6      | 🔴 3 (6)               | 🟢 3 (18)              |
 | Simplicity              | 5      | 🟢 3 (15)              | 🟡 2 (10)              |
 | Minimal changes for B2B | 4      | 🟢 3 (12)              | 🟡 2 (8)               |
-| Polar dev experience    | 3      | 🟢 3 (9)               | 🟡 2 (6)               |
+| Outception dev experience    | 3      | 🟢 3 (9)               | 🟡 2 (6)               |
 | WorkOS Integration      | 2      | 🟢 3 (6)               | 🟢 3 (6)               |
 | **Total Score**         | -      | **69**                 | **62**                 |
 
@@ -380,7 +380,7 @@ During the migration period, if a bug is found or a merchant complaint, disable 
 
 #### What is Changing?
 
-We're introducing a new **Member** entity to improve how Polar handles team subscriptions and usage-based billing. This change provides:
+We're introducing a new **Member** entity to improve how Outception handles team subscriptions and usage-based billing. This change provides:
 
 1. **Better billing accuracy**: Clear separation between who pays (Customer) and who uses the product (Member)
 2. **Multi-company support**: Users can be members of multiple companies without confusion
@@ -407,7 +407,7 @@ Customer (billing manager) ─┬─ Member (billing manager)
 
 #### Why This Change?
 
-**Problem we're solving**: When a user (e.g., Alice) works for multiple companies (Acme Corp and Slack Inc), and both companies purchase your product, Polar doesn't know which company to bill when Alice generates usage events. This causes billing ambiguity. This will allow other futures in the comming weeks, like better analytics and insights.
+**Problem we're solving**: When a user (e.g., Alice) works for multiple companies (Acme Corp and Slack Inc), and both companies purchase your product, Outception doesn't know which company to bill when Alice generates usage events. This causes billing ambiguity. This will allow other futures in the comming weeks, like better analytics and insights.
 
 **Solution**: The Member model ensures every action is attributed to a specific member of a specific customer, eliminating ambiguity.
 
@@ -592,7 +592,7 @@ Use this checklist to ensure your integration is updated:
 | **Week -2** | Migration announcement email sent | Review this guide, plan updates |
 | **Week -1** | Staging environment updated | Test your integration in staging |
 | **Week 0** | Production migration begins | Deploy updated code, monitor |
-| **Week 1-2** | One-on-one migration support | Work with Polar team if issues arise |
+| **Week 1-2** | One-on-one migration support | Work with Outception team if issues arise |
 
 ---
 
@@ -601,14 +601,14 @@ Use this checklist to ensure your integration is updated:
 **Before migration**:
 - Review the [updated API documentation](#) (link to come)
 - Test in staging environment (feature flag enabled for your org)
-- Email support@polar.sh with questions
+- Email support@outception.com with questions
 
 **During migration**:
 - Schedule 1-on-1 call if needed.
 
 **After migration**:
-- Report issues immediately: support@polar.sh
-- Check status page: status.polar.sh
+- Report issues immediately: support@outception.com
+- Check status page: status.outception.com
 
 
 #### Webhook Changes
@@ -883,7 +883,7 @@ Merchants can then prompt the user or maintain context in their app to track whi
 
 ### Appendix H: Complete Integration Flows (Side-by-Side Comparison)
 
-This appendix shows how merchants integrate with Polar for common workflows, comparing **Option 1 (Member Model)** vs **Option 2 (Customer Type + Member)** side-by-side.
+This appendix shows how merchants integrate with Outception for common workflows, comparing **Option 1 (Member Model)** vs **Option 2 (Customer Type + Member)** side-by-side.
 
 ---
 
@@ -1893,7 +1893,7 @@ Authorization: Bearer polar_secret_...
 ```
 
 **What happens:**
-- Polar checks if cust_alice_123 is a member of any businesses
+- Outception checks if cust_alice_123 is a member of any businesses
 - Finds member record: business_customer_id = cust_acme_456
 - If Alice is member of ONLY ONE business and doesn't have a subscription, we will bill that business
 
@@ -1930,7 +1930,7 @@ POST https://api.polar.sh/v1/events
 
 #### Flow 10: Customer Portal Login
 
-The user access: https://polar.sh/petru-test/portal/request
+The user access: https://outception.com/petru-test/portal/request
 
 ##### Flow 10.a: B2C login
 

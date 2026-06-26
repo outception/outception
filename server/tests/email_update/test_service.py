@@ -2,13 +2,13 @@ from datetime import timedelta
 
 import pytest
 
-from polar.auth.models import AuthSubject
-from polar.email_update.service import InvalidEmailUpdate
-from polar.email_update.service import email_update as email_update_service
-from polar.exceptions import PolarRequestValidationError
-from polar.kit.utils import utc_now
-from polar.models import User
-from polar.postgres import AsyncSession
+from outception.auth.models import AuthSubject
+from outception.email_update.service import InvalidEmailUpdate
+from outception.email_update.service import email_update as email_update_service
+from outception.exceptions import OutceptionRequestValidationError
+from outception.kit.utils import utc_now
+from outception.models import User
+from outception.postgres import AsyncSession
 
 
 def _auth(user: User) -> AuthSubject[User]:
@@ -20,7 +20,7 @@ class TestRequestEmailUpdate:
     async def test_rejects_email_used_by_another_user(
         self, session: AsyncSession, user: User, user_second: User
     ) -> None:
-        with pytest.raises(PolarRequestValidationError):
+        with pytest.raises(OutceptionRequestValidationError):
             await email_update_service.request_email_update(
                 user_second.email, session, _auth(user)
             )
@@ -78,4 +78,4 @@ class TestVerify:
         self, session: AsyncSession, user: User
     ) -> None:
         with pytest.raises(InvalidEmailUpdate):
-            await email_update_service.verify(session, "polar_ev_nonsense", user)
+            await email_update_service.verify(session, "outception_ev_nonsense", user)

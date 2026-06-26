@@ -1,7 +1,7 @@
 import { Box } from '@/components/Shared/Box'
 import theme from '@/design-system/theme'
-import { PolarClientProvider } from '@/providers/PolarClientProvider'
-import { PolarQueryClientProvider } from '@/providers/PolarQueryClientProvider'
+import { OutceptionClientProvider } from '@/providers/OutceptionClientProvider'
+import { OutceptionQueryClientProvider } from '@/providers/OutceptionQueryClientProvider'
 import { SessionProvider } from '@/providers/SessionProvider'
 import { ExtensionStorage } from '@bacons/apple-targets'
 import { InstrumentSerif_400Regular } from '@expo-google-fonts/instrument-serif/400Regular'
@@ -101,8 +101,8 @@ export default Sentry.wrap(function RootLayout() {
       <SafeAreaProvider>
         <ThemeProvider theme={theme}>
           <SessionProvider>
-            <PolarClientProvider>
-              <PolarQueryClientProvider>
+            <OutceptionClientProvider>
+              <OutceptionQueryClientProvider>
                 <Box
                   flex={1}
                   backgroundColor="background"
@@ -110,8 +110,8 @@ export default Sentry.wrap(function RootLayout() {
                 >
                   <Slot />
                 </Box>
-              </PolarQueryClientProvider>
-            </PolarClientProvider>
+              </OutceptionQueryClientProvider>
+            </OutceptionClientProvider>
           </SessionProvider>
         </ThemeProvider>
       </SafeAreaProvider>

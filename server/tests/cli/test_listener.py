@@ -2,14 +2,14 @@ import uuid
 
 import pytest
 
-from polar.cli.listener import (
+from outception.cli.listener import (
     LISTENER_KEY_PREFIX,
     LISTENER_TTL_SECONDS,
     has_active_listener,
     mark_active,
     mark_inactive,
 )
-from polar.redis import Redis
+from outception.redis import Redis
 
 
 @pytest.mark.asyncio

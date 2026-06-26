@@ -6,7 +6,7 @@ description: "Sell license key access to your service, software or APIs with eas
 
 <img src="/assets/features/benefits/license-keys/hero.jpeg" />
 
-You can easily sell software license keys with Polar without having to deal with sales tax or hosting an API to validate them in real-time. License keys with Polar come with a lot of powerful features built-in.
+You can easily sell software license keys with Outception without having to deal with sales tax or hosting an API to validate them in real-time. License keys with Outception come with a lot of powerful features built-in.
 
 * Brandable prefixes, e.g `POLAR_*****`
 * Automatic expiration after `N` days, months or years
@@ -18,7 +18,7 @@ You can easily sell software license keys with Polar without having to deal with
 Create License Key Benefit
 ---------------------------------
 
-1. Go to [`Benefits`](https://polar.sh/to/dashboard/products/benefits)
+1. Go to [`Benefits`](https://outception.com/to/dashboard/products/benefits)
 2. Click `+ New Benefit` to create a new benefit
 3. Choose `License Keys` as the `Type`
 
@@ -34,7 +34,7 @@ Want license keys to expire automatically after a certain time period from when 
 
 You can require license keys to be activated before future validation. A great feature in case you want to limit license key usage to a certain number of devices, IPs or other conditions.
 
-**Enable user to deactivate instances via Polar.** Instead of building your own custom admin for customers to manage their activation instances - leave it to Polar instead.
+**Enable user to deactivate instances via Outception.** Instead of building your own custom admin for customers to manage their activation instances - leave it to Outception instead.
 
 ### Usage Limit
 
@@ -55,7 +55,7 @@ Customers can:
 Integrate API
 --------------------
 
-It's super easy and straightforward to integrate Polar license keys into your application, library or API.
+It's super easy and straightforward to integrate Outception license keys into your application, library or API.
 
 ### Activate License Keys (Optional)
 
@@ -193,4 +193,4 @@ curl -X POST https://api.polar.sh/v1/customer-portal/license-keys/validate
 
 Validate `benefit_id` in case of multiple license keys
 
-We require `organization_id` to be provided to avoid cases of Polar license keys being used across Polar organizations erroneously. Otherwise, a valid license key for one organization could be used on another.However, you are required to validate and scope license keys more narrowly within your organization if necessary. Offering more than one type of license key? Be sure to validate their unique benefit\_id in the responses.
+We require `organization_id` to be provided to avoid cases of Outception license keys being used across Outception organizations erroneously. Otherwise, a valid license key for one organization could be used on another.However, you are required to validate and scope license keys more narrowly within your organization if necessary. Offering more than one type of license key? Be sure to validate their unique benefit\_id in the responses.

@@ -1,9 +1,9 @@
 import pytest
 
-from polar.models import Promotion, User
-from polar.postgres import AsyncSession
-from polar.promotion.notifications import build_email
-from polar.promotion.service import promotion as promotion_service
+from outception.models import Promotion, User
+from outception.postgres import AsyncSession
+from outception.promotion.notifications import build_email
+from outception.promotion.service import promotion as promotion_service
 
 
 async def _make_pending(

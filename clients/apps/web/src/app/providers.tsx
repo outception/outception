@@ -31,7 +31,7 @@ if (typeof window !== 'undefined' && CONFIG.POSTHOG_TOKEN) {
   })
 }
 
-export function PolarPostHogProvider({
+export function OutceptionPostHogProvider({
   children,
 }: {
   children: React.ReactNode
@@ -41,13 +41,14 @@ export function PolarPostHogProvider({
 
 const FORCED_DARK_PREFIXES = ['/legal']
 
+// Note: the home page ('/') is intentionally NOT forced — the landing logo
+// toggles light/dark, and that choice must persist across every page.
 const isForcedDarkPath = (pathname: string): boolean =>
-  pathname === '/' ||
   FORCED_DARK_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   )
 
-export function PolarThemeProvider({
+export function OutceptionThemeProvider({
   children,
   forceTheme,
 }: {
@@ -72,7 +73,7 @@ export function PolarThemeProvider({
   )
 }
 
-export function PolarQueryClientProvider({
+export function OutceptionQueryClientProvider({
   children,
 }: {
   children: React.ReactNode
@@ -84,6 +85,6 @@ export function PolarQueryClientProvider({
   )
 }
 
-export function PolarNuqsProvider({ children }: PropsWithChildren) {
+export function OutceptionNuqsProvider({ children }: PropsWithChildren) {
   return <NuqsAdapter>{children}</NuqsAdapter>
 }

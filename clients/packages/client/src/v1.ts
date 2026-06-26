@@ -70,7 +70,7 @@ export interface paths {
      * Disconnect Oauth Account
      * @description Disconnect an OAuth account (GitHub or Google) from the authenticated user.
      *
-     *     This allows users to unlink their OAuth provider while keeping their Polar account.
+     *     This allows users to unlink their OAuth provider while keeping their Outception account.
      *     They can still authenticate using other methods (email magic link or other OAuth providers).
      *
      *     Note: You cannot disconnect your last authentication method if your email is not verified.
@@ -2541,7 +2541,7 @@ export interface components {
       /**
        * Intended Use
        * @deprecated
-       * @description How the organization will integrate and use Polar.
+       * @description How the organization will integrate and use Outception.
        */
       intended_use?: string | null
       /**
@@ -2642,7 +2642,7 @@ export interface components {
      * OrganizationFeatureSettingsUpdate
      * @description Feature settings that organizations can update themselves.
      *
-     *     Other feature settings are managed by Polar staff: they're ignored if
+     *     Other feature settings are managed by Outception staff: they're ignored if
      *     provided and keep their current value.
      */
     OrganizationFeatureSettingsUpdate: {
@@ -2774,7 +2774,7 @@ export interface components {
        * @description Links to social profiles.
        */
       socials?: components['schemas']['OrganizationSocialLink'][] | null
-      /** @description Additional, private, business details Polar needs about active organizations for compliance (KYC). */
+      /** @description Additional, private, business details Outception needs about active organizations for compliance (KYC). */
       details?: components['schemas']['OrganizationDetails'] | null
       /** @description Two-letter country code (ISO 3166-1 alpha-2). */
       country?:

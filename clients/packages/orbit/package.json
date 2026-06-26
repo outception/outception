@@ -1,14 +1,14 @@
 {
-  "name": "@polar-sh/orbit",
+  "name": "@outception-com/orbit",
   "version": "0.1.0",
-  "description": "Orbit — Design system for Polar",
-  "author": "Polar",
+  "description": "Orbit — Design system for Outception",
+  "author": "Outception",
   "license": "Apache-2.0",
   "type": "module",
   "private": true,
   "repository": {
     "type": "git",
-    "url": "https://github.com/polarsource/polar.git",
+    "url": "https://github.com/outception/outception.git",
     "directory": "clients/packages/orbit"
   },
   "main": "./dist/index.cjs",
@@ -54,8 +54,8 @@
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
-    "@polar-sh/eslint-config": "workspace:*",
-    "@polar-sh/typescript-config": "workspace:*",
+    "@outception-com/eslint-config": "workspace:*",
+    "@outception-com/typescript-config": "workspace:*",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "@vitest/coverage-v8": "^3.2.4",

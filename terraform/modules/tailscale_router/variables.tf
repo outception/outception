@@ -22,7 +22,7 @@ variable "registry_credential_id" {
 variable "image_url" {
   description = "Docker image URL for the Tailscale router"
   type        = string
-  default     = "ghcr.io/polarsource/polar-tailscale"
+  default     = "ghcr.io/outception/outception-tailscale"
 }
 
 variable "image_tag" {

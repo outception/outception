@@ -10,9 +10,9 @@ import noToastErrorDetail from './no-toast-error-detail.mjs'
 import requireCustomerPortalPage from './require-customer-portal-page.mjs'
 
 /** @type {import('eslint').ESLint.Plugin} */
-const polarPlugin = {
+const outceptionPlugin = {
   meta: {
-    name: 'polar',
+    name: 'outception',
   },
   rules: {
     'no-classname-box': noClassnameBox,
@@ -29,4 +29,4 @@ const polarPlugin = {
   },
 }
 
-export default polarPlugin
+export default outceptionPlugin

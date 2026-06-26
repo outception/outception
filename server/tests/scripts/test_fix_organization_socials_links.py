@@ -1,9 +1,9 @@
 import pytest
 from sqlalchemy import func, select, text
 
-from polar.kit.db.postgres import AsyncSession
-from polar.models import Organization
-from polar.models.organization import OrganizationSocials
+from outception.kit.db.postgres import AsyncSession
+from outception.models import Organization
+from outception.models.organization import OrganizationSocials
 from scripts.fix_organizations_socials_links import fix_links
 from tests.fixtures.database import SaveFixture
 

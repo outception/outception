@@ -1,4 +1,4 @@
-import Paginator from '@polar-sh/ui/components/atoms/Paginator'
+import Paginator from '@outception-com/ui/components/atoms/Paginator'
 import { ReadonlyURLSearchParams } from 'next/navigation'
 import { PropsWithChildren } from 'react'
 

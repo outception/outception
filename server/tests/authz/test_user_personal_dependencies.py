@@ -9,11 +9,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from polar.auth.models import AuthSubject
-from polar.auth.scope import READ_ONLY_SCOPES, Scope
-from polar.authz.dependencies import WebUserAuthorizer
-from polar.models import User, UserSession
-from polar.oauth2.exceptions import InsufficientScopeError
+from outception.auth.models import AuthSubject
+from outception.auth.scope import READ_ONLY_SCOPES, Scope
+from outception.authz.dependencies import WebUserAuthorizer
+from outception.models import User, UserSession
+from outception.oauth2.exceptions import InsufficientScopeError
 
 
 def _auth_subject(scopes: set[Scope]) -> AuthSubject[User]:

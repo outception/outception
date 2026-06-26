@@ -7,7 +7,7 @@ from typing import Any
 
 import typer
 
-from polar.config import settings
+from outception.config import settings
 
 cli = typer.Typer()
 

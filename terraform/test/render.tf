@@ -20,8 +20,8 @@ resource "render_registry_credential" "ghcr" {
 # =============================================================================
 
 data "tfe_outputs" "production" {
-  organization = "polar-sh"
-  workspace    = "polar"
+  organization = "outception-com"
+  workspace    = "outception"
 }
 
 locals {
@@ -36,8 +36,8 @@ locals {
 resource "render_postgres" "db" {
   environment_id = local.environment_id
   name           = "db-test"
-  database_name  = "polar_cpit"
-  database_user  = "polar_cpit_user"
+  database_name  = "outception_cpit"
+  database_user  = "outception_cpit_user"
   plan           = "pro_4gb"
   region         = "ohio"
   version        = "15"
@@ -46,7 +46,7 @@ resource "render_postgres" "db" {
   high_availability_enabled = true
 
   read_replicas = [
-    { name = "polar-read-test" },
+    { name = "outception-read-test" },
   ]
 
   lifecycle {
@@ -91,7 +91,7 @@ locals {
   db_name = regex("[^/]+$", render_postgres.db.connection_info.internal_connection_string)
 
   # Read replica connection info
-  read_replica = [for r in render_postgres.db.read_replicas : r if r.name == "polar-read-test"][0]
+  read_replica = [for r in render_postgres.db.read_replicas : r if r.name == "outception-read-test"][0]
 
   # Redis connection info
   redis_host = local.test_enabled ? render_redis.redis[0].id : ""
@@ -129,9 +129,9 @@ module "test" {
   }
 
   api_service_config = {
-    allowed_hosts          = "[\"test.polar.sh\"]"
-    cors_origins           = "[\"https://test.polar.sh\", \"https://github.com\", \"https://docs.polar.sh\"]"
-    custom_domains         = [{ name = "test-api.polar.sh" }]
+    allowed_hosts          = "[\"test.outception.com\"]"
+    cors_origins           = "[\"https://test.outception.com\", \"https://github.com\", \"https://docs.outception.com\"]"
+    custom_domains         = [{ name = "test-api.outception.com" }]
     web_concurrency        = "2"
     forwarded_allow_ips    = "*"
     database_pool_size     = "10"
@@ -143,7 +143,7 @@ module "test" {
 
   workers = {
     worker-test = {
-      start_command      = "uv run dramatiq -p 2 -t 4 -f polar.worker.scheduler:start polar.worker.run"
+      start_command      = "uv run dramatiq -p 2 -t 4 -f outception.worker.scheduler:start outception.worker.run"
       dramatiq_prom_port = "10000"
     }
   }
@@ -163,21 +163,21 @@ module "test" {
 
   backend_config = {
     environment                          = "test"
-    base_url                             = "https://test-api.polar.sh"
-    user_session_cookie_domain           = "polar.sh"
-    user_session_cookie_key              = "polar_test_session"
-    authentication_session_cookie_domain = "polar.sh"
-    oauth2_session_state_cookie_domain   = "polar.sh"
+    base_url                             = "https://test-api.outception.com"
+    user_session_cookie_domain           = "outception.com"
+    user_session_cookie_key              = "outception_test_session"
+    authentication_session_cookie_domain = "outception.com"
+    oauth2_session_state_cookie_domain   = "outception.com"
     debug                                = "0"
     email_sender                         = "resend"
-    email_from_name                      = "[TEST] Polar"
-    email_from_domain                    = "notifications.test.polar.sh"
-    frontend_base_url                    = "https://test.polar.sh"
-    checkout_base_url                    = "https://test-api.polar.sh/v1/checkout-links/{client_secret}/redirect"
+    email_from_name                      = "[TEST] Outception"
+    email_from_domain                    = "notifications.test.outception.com"
+    frontend_base_url                    = "https://test.outception.com"
+    checkout_base_url                    = "https://test-api.outception.com/v1/checkout-links/{client_secret}/redirect"
     jwks_path                            = "/etc/secrets/jwks.json"
     log_level                            = "INFO"
     testing                              = "0"
-    auth_cookie_domain                   = "test.polar.sh"
+    auth_cookie_domain                   = "test.outception.com"
     tax_processors                       = "[\"numeral\",\"stripe\"]"
     tax_record_processor                 = "numeral"
     customer_portal_url_overrides        = var.customer_portal_url_overrides
@@ -205,11 +205,11 @@ module "test" {
     region                        = "us-east-2"
     signature_version             = "v4"
     files_presign_ttl             = "600"
-    files_public_bucket_name      = "polar-test-public-files"
-    customer_invoices_bucket_name = "polar-test-customer-invoices"
-    customer_receipts_bucket_name = "polar-test-customer-receipts"
-    payout_invoices_bucket_name   = "polar-test-payout-invoices"
-    logs_bucket_name              = "polar-test-logs"
+    files_public_bucket_name      = "outception-test-public-files"
+    customer_invoices_bucket_name = "outception-test-customer-invoices"
+    customer_receipts_bucket_name = "outception-test-customer-receipts"
+    payout_invoices_bucket_name   = "outception-test-payout-invoices"
+    logs_bucket_name              = "outception-test-logs"
   }
 
   aws_s3_secrets = {
@@ -252,13 +252,13 @@ module "test" {
     password = var.grafana_cloud_prometheus_password
   }
 
-  polar_self_config = {
-    access_token     = var.polar_access_token
-    webhook_secret   = var.polar_webhook_secret
-    organization_id  = var.polar_organization_id
-    free_product_id  = var.polar_free_product_id
-    scale_product_id = var.polar_scale_product_id
-    api_url          = "https://test-api.polar.sh"
+  outception_self_config = {
+    access_token     = var.outception_access_token
+    webhook_secret   = var.outception_webhook_secret
+    organization_id  = var.outception_organization_id
+    free_product_id  = var.outception_free_product_id
+    scale_product_id = var.outception_scale_product_id
+    api_url          = "https://test-api.outception.com"
   }
 
   tinybird_config = {
@@ -281,7 +281,7 @@ module "test" {
 resource "cloudflare_dns_record" "test_api" {
   count   = local.test_enabled ? 1 : 0
   zone_id = "22bcd1b07ec25452aab472486bc8df94"
-  name    = "test-api.polar.sh"
+  name    = "test-api.outception.com"
   type    = "CNAME"
   content = replace(module.test[0].api_service_url, "https://", "")
   proxied = true

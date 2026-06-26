@@ -1,12 +1,12 @@
 'use client'
 
-import { Box } from '@polar-sh/orbit/Box'
-import { Text } from '@polar-sh/orbit'
+import { Box } from '@outception-com/orbit/Box'
+import { Text } from '@outception-com/orbit'
 import { Github } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 
 const REPO_BASE =
-  'https://github.com/polarsource/polar/blob/main/clients/packages/orbit/src/'
+  'https://github.com/outception/outception/blob/main/clients/packages/orbit/src/'
 
 // Maps a route slug to the file (relative to packages/orbit/src) that defines
 // the documented component or tokens. Props all live in the component file, so

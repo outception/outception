@@ -36,7 +36,7 @@ export function VoiceSection() {
               <span className="text-5xl font-light tracking-tighter md:text-9xl">
                 {item.trait}
               </span>
-              <p className="dark:text-polar-500 max-w-xl text-base leading-relaxed text-neutral-500 md:text-2xl">
+              <p className="dark:text-outception-500 max-w-xl text-base leading-relaxed text-neutral-500 md:text-2xl">
                 {item.description}
               </p>
             </div>

@@ -66,10 +66,10 @@ importers:
       '@gorhom/bottom-sheet':
         specifier: ^5.2.8
         version: 5.2.8(@types/react@19.2.13)(react-native-gesture-handler@2.28.0(react-native@0.81.5(@babel/core@7.29.0)(@react-native-community/cli@20.1.2(typescript@5.9.3))(@types/react@19.2.13)(react@19.1.0))(react@19.1.0))(react-native-reanimated@4.1.6(@babel/core@7.29.0)(react-native-worklets@0.5.1(@babel/core@7.29.0)(react-native@0.81.5(@babel/core@7.29.0)(@react-native-community/cli@20.1.2(typescript@5.9.3))(@types/react@19.2.13)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.29.0)(@react-native-community/cli@20.1.2(typescript@5.9.3))(@types/react@19.2.13)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.29.0)(@react-native-community/cli@20.1.2(typescript@5.9.3))(@types/react@19.2.13)(react@19.1.0))(react@19.1.0)
-      '@polar-sh/client':
+      '@outception-com/client':
         specifier: workspace:*
         version: link:../../packages/client
-      '@polar-sh/currency':
+      '@outception-com/currency':
         specifier: workspace:^
         version: link:../../packages/currency
       '@react-native-async-storage/async-storage':
@@ -259,10 +259,10 @@ importers:
 
   apps/orbit:
     dependencies:
-      '@polar-sh/orbit':
+      '@outception-com/orbit':
         specifier: workspace:*
         version: link:../../packages/orbit
-      '@polar-sh/ui':
+      '@outception-com/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       '@stylexjs/stylex':
@@ -287,10 +287,10 @@ importers:
         specifier: ^3.23.0
         version: 3.23.0
     devDependencies:
-      '@polar-sh/eslint-config':
+      '@outception-com/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
-      '@polar-sh/typescript-config':
+      '@outception-com/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
       '@stylexjs/babel-plugin':
@@ -362,22 +362,19 @@ importers:
       '@next/third-parties':
         specifier: ^16.2.4
         version: 16.2.4(next@16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(@playwright/test@1.59.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react@19.2.5)
-      '@polar-sh/client':
+      '@outception-com/client':
         specifier: workspace:*
         version: link:../../packages/client
-      '@polar-sh/currency':
+      '@outception-com/currency':
         specifier: workspace:^
         version: link:../../packages/currency
-      '@polar-sh/i18n':
+      '@outception-com/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
-      '@polar-sh/orbit':
+      '@outception-com/orbit':
         specifier: workspace:*
         version: link:../../packages/orbit
-      '@polar-sh/sdk':
-        specifier: ^0.46.1
-        version: 0.46.1
-      '@polar-sh/ui':
+      '@outception-com/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       '@posthog/ai':
@@ -543,15 +540,15 @@ importers:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
+      '@outception-com/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@outception-com/typescript-config':
+        specifier: workspace:*
+        version: link:../../packages/typescript-config
       '@playwright/test':
         specifier: ^1.59.1
         version: 1.59.1
-      '@polar-sh/eslint-config':
-        specifier: workspace:*
-        version: link:../../packages/eslint-config
-      '@polar-sh/typescript-config':
-        specifier: workspace:*
-        version: link:../../packages/typescript-config
       '@stylexjs/babel-plugin':
         specifier: ^0.18.2
         version: 0.18.2
@@ -628,10 +625,10 @@ importers:
         specifier: ^0.0.15
         version: 0.0.15
     devDependencies:
-      '@polar-sh/eslint-config':
+      '@outception-com/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@polar-sh/typescript-config':
+      '@outception-com/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
       openapi-typescript:
@@ -646,10 +643,10 @@ importers:
 
   packages/currency:
     devDependencies:
-      '@polar-sh/eslint-config':
+      '@outception-com/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@polar-sh/typescript-config':
+      '@outception-com/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
       tsup:
@@ -697,10 +694,10 @@ importers:
       '@ai-sdk/openai':
         specifier: ^3.0.53
         version: 3.0.53(zod@4.4.3)
-      '@polar-sh/eslint-config':
+      '@outception-com/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@polar-sh/typescript-config':
+      '@outception-com/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
       '@types/react':
@@ -776,10 +773,10 @@ importers:
         specifier: ^3.5.0
         version: 3.5.0
     devDependencies:
-      '@polar-sh/eslint-config':
+      '@outception-com/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@polar-sh/typescript-config':
+      '@outception-com/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
       '@types/react':
@@ -805,10 +802,10 @@ importers:
 
   packages/ui:
     dependencies:
-      '@polar-sh/currency':
+      '@outception-com/currency':
         specifier: workspace:^
         version: link:../currency
-      '@polar-sh/orbit':
+      '@outception-com/orbit':
         specifier: workspace:*
         version: link:../orbit
       '@radix-ui/react-accordion':
@@ -890,10 +887,10 @@ importers:
         specifier: ^3.5.0
         version: 3.5.0
     devDependencies:
-      '@polar-sh/eslint-config':
+      '@outception-com/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@polar-sh/typescript-config':
+      '@outception-com/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
       '@stripe/stripe-js':
@@ -3245,9 +3242,6 @@ packages:
     resolution: {integrity: sha512-h104Kh26rR8tm+a3Qkc5S4VLYint3FE48as7+/5oCEcKR2idC/pF1G6AhIXKI+eHPJa/3J9i5z0Al47IeGHPkA==}
     engines: {node: '>=12'}
 
-  '@polar-sh/sdk@0.46.1':
-    resolution: {integrity: sha512-bFoEX2wxa5rWe2jTrJrf2Knelf/3zW1O2wGoqYoJfuRVvUgGSml1TB1v6NO+tDkT5d1bMfUFXBKxFYnuegG1iw==}
-
   '@polka/url@1.0.0-next.29':
     resolution: {integrity: sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww==}
 
@@ -4515,9 +4509,6 @@ packages:
 
   '@sinonjs/fake-timers@10.3.0':
     resolution: {integrity: sha512-V4BG07kuYSUkTCSBHG8G8TNhM+F19jXFWnQtzj+we8DrkpSBCee9Z3Ms8yiGer/dlmhe35/Xdgyo3/0rQKg7YA==}
-
-  '@stablelib/base64@1.0.1':
-    resolution: {integrity: sha512-1bnPQqSxSuc3Ii6MhBysoWCg58j97aUjuCSZrGSmDxNqtytIi0k8utUenAwTZN4V5mXXYGsVUI9zeBqy+jBOSQ==}
 
   '@standard-schema/spec@1.0.0':
     resolution: {integrity: sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA==}
@@ -7158,9 +7149,6 @@ packages:
 
   fast-levenshtein@2.0.6:
     resolution: {integrity: sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==}
-
-  fast-sha256@1.3.0:
-    resolution: {integrity: sha512-n11RGP/lrWEFI/bWdygLxhI+pVeo1ZYIVwvvPkW7azl/rOy+F3HYRZ2K5zeE9mmkhQppyv9sQFx0JM9UabnpPQ==}
 
   fast-uri@3.1.0:
     resolution: {integrity: sha512-iPeeDKJSWf4IEOasVVrknXpaBV0IApz/gp7S2bb7Z4Lljbl2MGJRqInZiUrQwV16cpzw/D3S5j5Julj/gT52AA==}
@@ -10714,9 +10702,6 @@ packages:
   stacktrace-parser@0.1.11:
     resolution: {integrity: sha512-WjlahMgHmCJpqzU8bIBy4qtsZdU9lRlcZE3Lvyej6t4tuOuv1vk57OW3MBrj6hXBFx/nNoC9MPMTcr5YA7NQbg==}
     engines: {node: '>=6'}
-
-  standardwebhooks@1.0.0:
-    resolution: {integrity: sha512-BbHGOQK9olHPMvQNHWul6MYlrRTAOKn03rOe4A8O3CLWhNf4YHBqq2HJKKC+sfqpxiBY52pNeesD6jIiLDz8jg==}
 
   statuses@1.5.0:
     resolution: {integrity: sha512-OpZ3zP+jT1PI7I8nemJX4AKmAX070ZkYPVWV/AaKTJl+tXCTGyVdC1a4SL8RUQYEwk/f34ZX8UTykN68FwrqAA==}
@@ -14672,11 +14657,6 @@ snapshots:
       '@pnpm/network.ca-file': 1.0.2
       config-chain: 1.1.13
 
-  '@polar-sh/sdk@0.46.1':
-    dependencies:
-      standardwebhooks: 1.0.0
-      zod: 4.3.6
-
   '@polka/url@1.0.0-next.29': {}
 
   '@popperjs/core@2.11.8': {}
@@ -16331,8 +16311,6 @@ snapshots:
   '@sinonjs/fake-timers@10.3.0':
     dependencies:
       '@sinonjs/commons': 3.0.1
-
-  '@stablelib/base64@1.0.1': {}
 
   '@standard-schema/spec@1.0.0': {}
 
@@ -19438,8 +19416,6 @@ snapshots:
   fast-json-stable-stringify@2.1.0: {}
 
   fast-levenshtein@2.0.6: {}
-
-  fast-sha256@1.3.0: {}
 
   fast-uri@3.1.0: {}
 
@@ -24102,11 +24078,6 @@ snapshots:
   stacktrace-parser@0.1.11:
     dependencies:
       type-fest: 0.7.1
-
-  standardwebhooks@1.0.0:
-    dependencies:
-      '@stablelib/base64': 1.0.1
-      fast-sha256: 1.3.0
 
   statuses@1.5.0: {}
 

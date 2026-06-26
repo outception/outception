@@ -152,18 +152,18 @@ const USER_SELECT: Record<string, string> = {
 
 const COLOR_PAIRS: Record<string, Record<string, string>> = {
   backgroundColor: {
-    'bg-white|dark:bg-polar-950': 'background-primary',
-    'bg-white|dark:bg-polar-900': 'background-primary',
-    'bg-gray-50|dark:bg-polar-900': 'background-secondary',
-    'bg-white|dark:bg-polar-800': 'background-card',
+    'bg-white|dark:bg-outception-950': 'background-primary',
+    'bg-white|dark:bg-outception-900': 'background-primary',
+    'bg-gray-50|dark:bg-outception-900': 'background-secondary',
+    'bg-white|dark:bg-outception-800': 'background-card',
   },
   color: {
     'text-gray-900|dark:text-white': 'text-primary',
-    'text-gray-500|dark:text-polar-400': 'text-secondary',
-    'text-gray-400|dark:text-polar-500': 'text-tertiary',
+    'text-gray-500|dark:text-outception-400': 'text-secondary',
+    'text-gray-400|dark:text-outception-500': 'text-tertiary',
   },
   borderColor: {
-    'border-gray-200|dark:border-polar-700': 'border-primary',
+    'border-gray-200|dark:border-outception-700': 'border-primary',
   },
 }
 

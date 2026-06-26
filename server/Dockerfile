@@ -24,12 +24,12 @@ ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 WORKDIR /app
 
-COPY ./polar/backoffice/pnpm-lock.yaml .
-COPY ./polar/backoffice/package.json .
-COPY ./polar/backoffice/pnpm-workspace.yaml .
+COPY ./outception/backoffice/pnpm-lock.yaml .
+COPY ./outception/backoffice/package.json .
+COPY ./outception/backoffice/pnpm-workspace.yaml .
 RUN pnpm install --frozen-lockfile
 
-COPY ./polar/backoffice/ .
+COPY ./outception/backoffice/ .
 
 RUN pnpm run build
 
@@ -80,8 +80,8 @@ EOF
 
 # Stage 5: Final production image
 FROM --platform=$BUILDPLATFORM python:3.14-slim AS production
-LABEL org.opencontainers.image.source=https://github.com/polarsource/polar
-LABEL org.opencontainers.image.description="Polar"
+LABEL org.opencontainers.image.source=https://github.com/outception/outception
+LABEL org.opencontainers.image.description="Outception"
 LABEL org.opencontainers.image.licenses=Apache-2.0
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
@@ -108,21 +108,21 @@ RUN --mount=type=bind,source=uv.lock,target=uv.lock \
 ADD . /app/server/
 
 COPY --from=build-emails-bin /app/bin/react-email-pkg /app/server/
-ENV POLAR_EMAIL_RENDERER_BINARY_PATH=/app/server/react-email-pkg
+ENV OUTCEPTION_EMAIL_RENDERER_BINARY_PATH=/app/server/react-email-pkg
 
-COPY --from=build-backoffice /app/static /app/server/polar/backoffice/static
-RUN ls -la /app/server/polar/backoffice/static
+COPY --from=build-backoffice /app/static /app/server/outception/backoffice/static
+RUN ls -la /app/server/outception/backoffice/static
 
 COPY --from=download-ipinfo /data /data
-ENV POLAR_IP_GEOLOCATION_DATABASE_DIRECTORY_PATH=/data
-ENV POLAR_IP_GEOLOCATION_DATABASE_NAME=country_asn.mmdb
+ENV OUTCEPTION_IP_GEOLOCATION_DATABASE_DIRECTORY_PATH=/data
+ENV OUTCEPTION_IP_GEOLOCATION_DATABASE_NAME=country_asn.mmdb
 
-COPY --from=download-cjk-fonts /fonts/ /app/server/polar/invoice/fonts/
+COPY --from=download-cjk-fonts /fonts/ /app/server/outception/invoice/fonts/
 
 ARG RELEASE_VERSION
 ENV RELEASE_VERSION=${RELEASE_VERSION}
 
-CMD ["uv", "run", "uvicorn", "polar.app:app", "--host", "0.0.0.0", "--port", "10000", "--limit-max-requests", "50000", "--limit-max-requests-jitter", "10000", "--timeout-graceful-shutdown", "30"]
+CMD ["uv", "run", "uvicorn", "outception.app:app", "--host", "0.0.0.0", "--port", "10000", "--limit-max-requests", "50000", "--limit-max-requests-jitter", "10000", "--timeout-graceful-shutdown", "30"]
 
 # Stage 6: Playwright image (for browser automation workers)
 FROM production AS playwright
@@ -135,4 +135,4 @@ FROM production AS lambda
 RUN uv pip install awslambdaric
 
 ENTRYPOINT ["uv", "run", "python", "-m", "awslambdaric"]
-CMD ["polar.worker.aws_lambda.handler"]
+CMD ["outception.worker.aws_lambda.handler"]

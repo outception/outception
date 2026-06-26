@@ -25,7 +25,7 @@ From the Customer Portal, your customers can:
 
 The Customer Portal isn't just a convenience feature — it's a critical piece of your billing stack:
 
-- **Failed payment recovery.** When a subscription renewal fails, the portal is where customers update their card so they don't lose access. Because Polar is PCI-compliant, you never have to handle card details yourself.
+- **Failed payment recovery.** When a subscription renewal fails, the portal is where customers update their card so they don't lose access. Because Outception is PCI-compliant, you never have to handle card details yourself.
 - **Self-service cancellations.** Some jurisdictions (notably California under the [Automatic Renewal Law](https://oag.ca.gov/consumers/auto-renewing-subscriptions)) legally require customers to be able to cancel a subscription the same way they signed up. The Customer Portal satisfies that requirement out of the box.
 - **Invoice and receipt access.** Customers retrieve and edit their invoices, and download a receipt for any paid order, without pulling you into a support thread.
 
@@ -38,7 +38,7 @@ The Customer Portal isn't just a convenience feature — it's a critical piece o
     href="/features/customer-portal/navigate-customers"
   >
     Use the default portal URL, generate authenticated links, or rely on the
-    emails Polar already sends.
+    emails Outception already sends.
   </Card>
   <Card
     title="Customer portal settings"
@@ -80,7 +80,7 @@ The Customer Portal isn't just a convenience feature — it's a critical piece o
   </Accordion>
   <Accordion title="Can I customize the look and feel of the Customer Portal?">
     Not the hosted portal at `polar.sh/<your-org-slug>/portal` — it's
-    intentionally consistent across all Polar organizations.
+    intentionally consistent across all Outception organizations.
 
     If you need a branded experience, you can build your own portal on top of
     the [Customer Portal API](/api-reference/customer-portal/get-customer),
@@ -98,14 +98,14 @@ The Customer Portal isn't just a convenience feature — it's a critical piece o
   </Accordion>
   <Accordion title="How do customers sign in to the portal?">
     By default, customers authenticate with the email address they used to
-    purchase or subscribe — Polar emails them a one-time code to confirm.
+    purchase or subscribe — Outception emails them a one-time code to confirm.
 
     You can also skip the email step entirely by generating a pre-authenticated
     link from your own application. See [Navigate customers to the portal](/features/customer-portal/navigate-customers)
     for details.
   </Accordion>
   <Accordion title="Do I need to send customers a link to the portal myself?">
-    You don't have to. Polar already includes a link to the Customer Portal in
+    You don't have to. Outception already includes a link to the Customer Portal in
     the transactional emails it sends — order confirmations, subscription
     renewal notices, failed payment alerts, and more.
 
@@ -113,9 +113,9 @@ The Customer Portal isn't just a convenience feature — it's a critical piece o
     it's not required for customers to be able to reach it.
   </Accordion>
   <Accordion title="What happens if a customer's payment method fails?">
-    The customer receives an email from Polar letting them know, with a link to
+    The customer receives an email from Outception letting them know, with a link to
     the Customer Portal where they can update their default payment method.
-    Once they do, Polar automatically retries the charge.
+    Once they do, Outception automatically retries the charge.
 
     This self-service flow is the primary way customers recover from failed
     renewals — keep it in mind when you're thinking about churn.

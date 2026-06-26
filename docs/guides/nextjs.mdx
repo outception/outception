@@ -1,7 +1,7 @@
 ---
-title: "Integrate Polar with Next.js"
+title: "Integrate Outception with Next.js"
 sidebarTitle: "Next.js"
-description: "In this guide, we'll show you how to integrate Polar with Next.js."
+description: "In this guide, we'll show you how to integrate Outception with Next.js."
 ---
 
 Feel free to use our quick-start script to get started inside a new Next.js project:
@@ -11,13 +11,13 @@ Feel free to use our quick-start script to get started inside a new Next.js proj
 npx polar-init
 ```
 
-Consider following this guide while using the Polar Sandbox Environment. This will allow you to test your integration without affecting your production data.
+Consider following this guide while using the Outception Sandbox Environment. This will allow you to test your integration without affecting your production data.
 
-[A complete code-example of this guide can be found on GitHub](https://github.com/polarsource/polar-next).
+[A complete code-example of this guide can be found on GitHub](https://github.com/outception/outception-next).
 
-## Install the Polar JavaScript SDK
+## Install the Outception JavaScript SDK
 
-To get started, you need to install the Polar JavaScript SDK and the Polar Nextjs helper package. You can do this by running the following command:
+To get started, you need to install the Outception JavaScript SDK and the Outception Nextjs helper package. You can do this by running the following command:
 
 ```bash Terminal
 pnpm install @polar-sh/sdk @polar-sh/nextjs
@@ -25,15 +25,15 @@ pnpm install @polar-sh/sdk @polar-sh/nextjs
 
 ## Setting up environment variables
 
-### Polar Access Token
+### Outception Access Token
 
-To authenticate with Polar, you need to create an access token, and supply it to Next.js using a `POLAR_ACCESS_TOKEN` environment variable.
+To authenticate with Outception, you need to create an access token, and supply it to Next.js using a `POLAR_ACCESS_TOKEN` environment variable.
 
 You can create an organization access token from your organization settings.
 
-## Configuring a Polar API Client
+## Configuring a Outception API Client
 
-To interact with the Polar API, you need to create a new instance of the `Polar` class. This class uses the provided access token to authenticate with the Polar API.
+To interact with the Outception API, you need to create a new instance of the `Polar` class. This class uses the provided access token to authenticate with the Outception API.
 
 ```typescript
 // src/polar.ts
@@ -47,7 +47,7 @@ export const api = new Polar({
 
 Remember to replace `sandbox` with `production` when you're ready to switch to the production environment.
 
-## Generating Polar Checkout Sessions
+## Generating Outception Checkout Sessions
 
 Next up, we need to create a checkout endpoint to handle the creation of checkout sessions.
 
@@ -64,9 +64,9 @@ export const GET = Checkout({
 });
 ```
 
-## Handling Polar Webhooks
+## Handling Outception Webhooks
 
-Polar can send you events about various things happening in your organization. This is very useful for keeping your database in sync with Polar checkouts, orders, subscriptions, etc.
+Outception can send you events about various things happening in your organization. This is very useful for keeping your database in sync with Outception checkouts, orders, subscriptions, etc.
 
 Configuring a webhook is simple. Head over to your organization's settings page and click on the "Add Endpoint" button to create a new webhook.
 
@@ -82,9 +82,9 @@ ngrok http 3000
 
 ### Add Webhook Endpoint
 
-1. Point the Webhook to `your-app.com/api/webhook/polar`. This must be an absolute URL which Polar can reach. If you use ngrok, the URL will look something like this: `https://<your-ngrok-id>.ngrok-free.app/api/webhook/polar`.
+1. Point the Webhook to `your-app.com/api/webhook/polar`. This must be an absolute URL which Outception can reach. If you use ngrok, the URL will look something like this: `https://<your-ngrok-id>.ngrok-free.app/api/webhook/polar`.
 2. Select which events you want to be notified about. You can read more about the available events in the [Events section](/api-reference#webhooks).
-3. Generate a secret key to sign the requests. This will allow you to verify that the requests are truly coming from Polar.
+3. Generate a secret key to sign the requests. This will allow you to verify that the requests are truly coming from Outception.
 4. Add the secret key to your environment variables.
 
 ```bash Terminal

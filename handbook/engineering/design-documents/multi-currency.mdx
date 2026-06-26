@@ -7,11 +7,11 @@
 
 </Info>
 
-# Multi-Currency Support in Polar
+# Multi-Currency Support in Outception
 
 ## Problem Statement
 
-Historically, Polar has operated using a single base currency (USD) for all transactions and accounting. However, as our user base expands globally, there is a growing need to support multiple currencies natively within the platform. This design document will explore the requirements, challenges, and proposed solutions for implementing multi-currency support in Polar.
+Historically, Outception has operated using a single base currency (USD) for all transactions and accounting. However, as our user base expands globally, there is a growing need to support multiple currencies natively within the platform. This design document will explore the requirements, challenges, and proposed solutions for implementing multi-currency support in Outception.
 
 ## Background
 
@@ -27,7 +27,7 @@ Currently, we only support USD as **presentment** and **settlement** currency. W
 
 ### Comparison with Stripe
 
-Stripe has both the concepts of Presentment and Settlement currencies, with the following capabilities, given that Polar runs a **Stripe US account**.
+Stripe has both the concepts of Presentment and Settlement currencies, with the following capabilities, given that Outception runs a **Stripe US account**.
 
 #### Presentment Currency: 135+ currencies supported
 
@@ -88,7 +88,7 @@ In this scenario, we would allow merchants to set prices in multiple currencies,
 Similar to Scenario 1, but with the ability to set an Organization's settlement currency.
 
 - Add `currency` field to Organization model.
-  - Only currencies supported by Stripe for settlement can be chosen here (for US-based accounts: USD, CAD, EUR, GBP); provided Polar has enabled the settlement currency in Stripe account (with a proper bank account attached).
+  - Only currencies supported by Stripe for settlement can be chosen here (for US-based accounts: USD, CAD, EUR, GBP); provided Outception has enabled the settlement currency in Stripe account (with a proper bank account attached).
 - Allow to set other presentment currencies than `usd` when creating products (only a validation constraint to change).
 
 **Implementation A**
@@ -118,7 +118,7 @@ In this scenario, we would allow merchants to choose a single presentment and se
 This is somehow a generalization of our current single-currency model.
 
 - Add `currency` field to Organization model.
-  - Only currencies supported by Stripe for settlement can be chosen here (for US-based accounts: USD, CAD, EUR, GBP); provided Polar has enabled the settlement currency in Stripe account (with a proper bank account attached).
+  - Only currencies supported by Stripe for settlement can be chosen here (for US-based accounts: USD, CAD, EUR, GBP); provided Outception has enabled the settlement currency in Stripe account (with a proper bank account attached).
 
 ### Scenario 4: Multiple Presentment and Settlement Currencies
 
@@ -129,7 +129,7 @@ In this scenario, we would allow merchants to set prices in multiple currencies,
 This is the most complex scenario, as it requires significant changes to our data model and business logic. In particular, an Organization should be able to have several Account (one per settlement currency). It means then we'll need to extract the payout logic from that (since merchants will still likely want to have a single bank account for payouts, regardless of settlement currency).
 
 - Allow to create multiple Account in different settlement currencies for an Organization.
-  - Only currencies supported by Stripe for settlement can be chosen here (for US-based accounts: USD, CAD, EUR, GBP); provided Polar has enabled the settlement currency in Stripe account (with a proper bank account attached).
+  - Only currencies supported by Stripe for settlement can be chosen here (for US-based accounts: USD, CAD, EUR, GBP); provided Outception has enabled the settlement currency in Stripe account (with a proper bank account attached).
 - Create a new PayoutAccount entity that'll hold all the payout information (Stripe Connect). Payout entity will be linked to this new PayoutAccount entity as well.
 - Add a mandatory `currency` parameter when computing metrics _or_ generate metrics in every enabled settlement currency.
 - Allow to set other presentment currencies than `usd` when creating products (only a validation constraint to change).
@@ -189,7 +189,7 @@ From a technical standpoint, I would recommend to go with **Implementation B**. 
 
 ## Technical Considerations and Open Questions
 
-### Polar fees
+### Outception fees
 
 Our fees is a percentage + fixed amount per payment. We should define if we want to compute it:
 

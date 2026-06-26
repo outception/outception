@@ -2,8 +2,8 @@
 
 import { useFollowedFeed } from '@/hooks/queries/news'
 import { safeExternalHref } from '@/utils/news'
-import { Spinner, Text } from '@polar-sh/orbit'
-import { Box } from '@polar-sh/orbit/Box'
+import { Spinner, Text } from '@outception-com/orbit'
+import { Box } from '@outception-com/orbit/Box'
 
 export const FollowingFeed = () => {
   const { data, isLoading } = useFollowedFeed()

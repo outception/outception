@@ -25,9 +25,9 @@ from rich.table import Table
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from polar.kit.db.postgres import AsyncSession, create_async_sessionmaker
-from polar.models.organization import STATUS_CAPABILITIES, OrganizationStatus
-from polar.postgres import create_async_engine
+from outception.kit.db.postgres import AsyncSession, create_async_sessionmaker
+from outception.models.organization import STATUS_CAPABILITIES, OrganizationStatus
+from outception.postgres import create_async_engine
 from scripts.helper import configure_script_console_logging, typer_async
 
 cli = typer.Typer()

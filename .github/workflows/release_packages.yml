@@ -49,4 +49,4 @@ jobs:
           cwd: ${{ github.workspace }}/clients
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          POLAR_CHECKOUT_EMBED_SCRIPT_ALLOWED_ORIGINS: "https://polar.sh,https://sandbox.polar.sh"
+          OUTCEPTION_CHECKOUT_EMBED_SCRIPT_ALLOWED_ORIGINS: "https://outception.com,https://sandbox.outception.com"

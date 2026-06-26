@@ -1,6 +1,6 @@
 terraform {
   cloud {
-    organization = "polar-sh"
+    organization = "outception-com"
     workspaces {
       name = "global"
     }

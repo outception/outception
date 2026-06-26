@@ -1,4 +1,4 @@
-# Polar Vercel project setup
+# Outception Vercel project setup
 #
 # One Vercel project per environment (production, sandbox), its custom domains
 # and its environment variables. Env vars are managed via the dedicated
@@ -37,7 +37,7 @@ resource "vercel_project" "this" {
 locals {
   # Identical across all environments (same key, value and target everywhere).
   shared_environment_variables = [
-    { key = "SENTRY_ORG", value = "polar-sh", target = ["production", "preview"] },
+    { key = "SENTRY_ORG", value = "outception-com", target = ["production", "preview"] },
     { key = "SENTRY_PROJECT", value = "dashboard", target = ["production", "preview"] },
   ]
 
@@ -55,8 +55,8 @@ locals {
     { key = "S3_PUBLIC_IMAGES_BUCKET_PORT", value = var.config.s3_public_images_bucket_port },
     { key = "S3_PUBLIC_IMAGES_BUCKET_PATHNAME", value = var.config.s3_public_images_bucket_pathname },
     { key = "S3_UPLOAD_ORIGINS", value = var.config.s3_upload_origins },
-    { key = "POLAR_CHECKOUT_EMBED_SCRIPT_ALLOWED_ORIGINS", value = var.config.polar_checkout_embed_script_allowed_origins },
-    { key = "POLAR_OPENAPI_SCHEMA_URL", value = var.config.polar_openapi_schema_url },
+    { key = "OUTCEPTION_CHECKOUT_EMBED_SCRIPT_ALLOWED_ORIGINS", value = var.config.outception_checkout_embed_script_allowed_origins },
+    { key = "OUTCEPTION_OPENAPI_SCHEMA_URL", value = var.config.outception_openapi_schema_url },
     { key = "ENABLE_EXPERIMENTAL_COREPACK", value = var.config.enable_experimental_corepack },
   ]
 
@@ -66,7 +66,7 @@ locals {
     { key = "MINTLIFY_ASSISTANT_API_KEY", value = var.secrets.mintlify_assistant_api_key, target = ["production", "preview"], sensitive = true },
     { key = "GRAM_API_KEY", value = var.secrets.gram_api_key, target = ["production", "preview"], sensitive = false },
     { key = "SENTRY_AUTH_TOKEN", value = var.secrets.sentry_auth_token, target = ["production", "preview"], sensitive = false },
-    { key = "POLAR_PREVIEW_ACCESS_TOKEN", value = var.secrets.polar_preview_access_token, target = ["preview"], sensitive = true },
+    { key = "OUTCEPTION_PREVIEW_ACCESS_TOKEN", value = var.secrets.outception_preview_access_token, target = ["preview"], sensitive = true },
   ]
 
   managed_environment_variables = concat(

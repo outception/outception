@@ -1,10 +1,10 @@
 import pytest
 
-from polar.models import Organization, User, UserOrganization
-from polar.models.user_organization import OrganizationRole
-from polar.organization.repository import OrganizationRepository
-from polar.postgres import AsyncSession
-from polar.user_organization.service import (
+from outception.models import Organization, User, UserOrganization
+from outception.models.user_organization import OrganizationRole
+from outception.organization.repository import OrganizationRepository
+from outception.postgres import AsyncSession
+from outception.user_organization.service import (
     user_organization as user_organization_service,
 )
 from tests.fixtures.database import SaveFixture

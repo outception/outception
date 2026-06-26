@@ -1,10 +1,10 @@
 import pytest
 
-import polar.news.sources  # noqa: F401 — registers every source getter at import
-from polar.news import registry
-from polar.news.cache import DEFAULT_INTERVAL_MS
-from polar.news.metadata import SOURCES
-from polar.news.schemas import NewsItem
+import outception.news.sources  # noqa: F401 — registers every source getter at import
+from outception.news import registry
+from outception.news.cache import DEFAULT_INTERVAL_MS
+from outception.news.metadata import SOURCES
+from outception.news.schemas import NewsItem
 
 
 def test_resolve_known_source() -> None:

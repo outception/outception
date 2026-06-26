@@ -1,6 +1,6 @@
 import { StaticImage } from '@/components/Image/StaticImage'
 import ProseWrapper from '@/components/MDX/ProseWrapper'
-import { Table } from '@polar-sh/orbit/ui/table'
+import { Table } from '@outception-com/orbit/ui/table'
 import type { MDXComponents } from 'mdx/types'
 import { twMerge } from 'tailwind-merge'
 

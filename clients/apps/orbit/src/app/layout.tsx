@@ -5,9 +5,9 @@ import { AppShell } from '@/components/AppShell'
 import { OrbitThemeProvider } from './providers'
 
 export const metadata: Metadata = {
-  title: 'Orbit — Polar Design System',
+  title: 'Orbit — Outception Design System',
   description:
-    'Playground and documentation for Orbit, the Polar design system: components, variants, usage and design tokens.',
+    'Playground and documentation for Orbit, the Outception design system: components, variants, usage and design tokens.',
 }
 
 export const viewport: Viewport = {

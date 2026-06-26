@@ -1,10 +1,10 @@
-# Polar Handbook
+# Outception Handbook
 
-This repository contains the Polar team handbook built with [Mintlify](https://mintlify.com/).
+This repository contains the Outception team handbook built with [Mintlify](https://mintlify.com/).
 
 ## 📝 Tech Notes
 
-Tech notes are technical deep-dives, debugging stories, and engineering insights from the Polar team.
+Tech notes are technical deep-dives, debugging stories, and engineering insights from the Outception team.
 
 ### Quick Start - Creating a New Tech Note
 

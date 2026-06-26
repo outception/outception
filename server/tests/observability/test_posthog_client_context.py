@@ -1,7 +1,7 @@
-"""Tests that mobile/web client identification (polar #12159) is attached to
+"""Tests that mobile/web client identification (outception #12159) is attached to
 PostHog *events*, and crucially NOT to person/profile properties.
 
-Isolated from the main Polar infrastructure (see conftest.py): no database or
+Isolated from the main Outception infrastructure (see conftest.py): no database or
 service connections. Exercises the real path middleware -> ClientContext ->
 PostHog capture, with a mocked PostHog client.
 """
@@ -14,12 +14,12 @@ from unittest.mock import MagicMock
 import pytest
 from starlette.types import Receive, Scope, Send
 
-from polar.logging import ClientContext
+from outception.logging import ClientContext
 
 
 @pytest.fixture
 def mock_posthog_client() -> Iterator[MagicMock]:
-    from polar.posthog import posthog
+    from outception.posthog import posthog
 
     original = posthog.client
     client = MagicMock()
@@ -46,7 +46,7 @@ def _http_scope(headers: list[tuple[bytes, bytes]]) -> Scope:
 def _run_request(scope: Scope, inside_request: Callable[[], None]) -> None:
     """Drive the middleware; ``inside_request`` runs while ClientContext is
     populated (i.e. as if a handler emitted a PostHog event mid-request)."""
-    from polar.middlewares import LogCorrelationIdMiddleware
+    from outception.middlewares import LogCorrelationIdMiddleware
 
     async def mock_app(scope: Scope, receive: Receive, send: Send) -> None:
         inside_request()
@@ -67,14 +67,14 @@ class TestPostHogClientContext:
     def test_client_identification_attached_to_events(
         self, mock_posthog_client: MagicMock
     ) -> None:
-        from polar.posthog import posthog
+        from outception.posthog import posthog
 
         _run_request(
             _http_scope(
                 [
-                    (b"x-polar-client-version", b"mobile/1.4.0"),
-                    (b"x-polar-client-runtime", b"fingerprint-abc"),
-                    (b"x-polar-client-update", b"update-xyz"),
+                    (b"x-outception-client-version", b"mobile/1.4.0"),
+                    (b"x-outception-client-runtime", b"fingerprint-abc"),
+                    (b"x-outception-client-update", b"update-xyz"),
                 ]
             ),
             lambda: posthog.capture("distinct-id", "backend:test:thing:done"),
@@ -88,7 +88,7 @@ class TestPostHogClientContext:
     def test_client_identification_not_persisted_to_person(
         self, mock_posthog_client: MagicMock
     ) -> None:
-        from polar.posthog import posthog
+        from outception.posthog import posthog
 
         user = MagicMock(
             posthog_distinct_id="user-1",
@@ -98,7 +98,7 @@ class TestPostHogClientContext:
         )
 
         _run_request(
-            _http_scope([(b"x-polar-client-version", b"mobile/1.4.0")]),
+            _http_scope([(b"x-outception-client-version", b"mobile/1.4.0")]),
             lambda: posthog.identify(user),
         )
 
@@ -110,7 +110,7 @@ class TestPostHogClientContext:
     def test_no_client_identification_for_non_mobile_request(
         self, mock_posthog_client: MagicMock
     ) -> None:
-        from polar.posthog import posthog
+        from outception.posthog import posthog
 
         _run_request(
             _http_scope([]),
@@ -122,10 +122,10 @@ class TestPostHogClientContext:
     def test_context_does_not_leak_after_request(
         self, mock_posthog_client: MagicMock
     ) -> None:
-        from polar.posthog import posthog
+        from outception.posthog import posthog
 
         _run_request(
-            _http_scope([(b"x-polar-client-version", b"mobile/1.4.0")]),
+            _http_scope([(b"x-outception-client-version", b"mobile/1.4.0")]),
             lambda: None,
         )
 

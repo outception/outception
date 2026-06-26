@@ -30,11 +30,11 @@ import structlog
 import typer
 from sqlalchemy import or_, select
 
-from polar.kit.db.postgres import create_async_sessionmaker
-from polar.models import Organization
-from polar.models.organization import OrganizationStatus
-from polar.postgres import create_async_engine
-from polar.worker import enqueue_job
+from outception.kit.db.postgres import create_async_sessionmaker
+from outception.models import Organization
+from outception.models.organization import OrganizationStatus
+from outception.postgres import create_async_engine
+from outception.worker import enqueue_job
 
 cli = typer.Typer()
 

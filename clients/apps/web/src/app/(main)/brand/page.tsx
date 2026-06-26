@@ -52,7 +52,7 @@ export default function BrandPage() {
   }, [onMouseMove, onMouseLeave, onMouseEnter])
 
   return (
-    <div className="dark:bg-polar-950 cursor-none bg-white text-black dark:text-white">
+    <div className="dark:bg-outception-950 cursor-none bg-white text-black dark:text-white">
       <div
         ref={cursorRef}
         data-brand-cursor

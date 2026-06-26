@@ -1,7 +1,7 @@
 import { Box } from '@/components/Shared/Box'
 import { Text } from '@/components/Shared/Text'
 import { useTheme } from '@/design-system/useTheme'
-import { usePromotionAnalytics } from '@/hooks/polar/promotions'
+import { usePromotionAnalytics } from '@/hooks/outception/promotions'
 import { ActivityIndicator, useWindowDimensions } from 'react-native'
 import Svg, { Line, Polyline } from 'react-native-svg'
 

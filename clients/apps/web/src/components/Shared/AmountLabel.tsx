@@ -1,4 +1,4 @@
-import { formatCurrency } from '@polar-sh/currency'
+import { formatCurrency } from '@outception-com/currency'
 import { useMemo } from 'react'
 
 interface AmountLabelProps {

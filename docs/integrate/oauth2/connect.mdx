@@ -19,7 +19,7 @@ The parameters are the one described in the [OpenID Connect specification](https
 
 <ParamField path="response_type=code" type="string" required>
   Indicates that you want to use the authorization code flow. Most common and
-  the only one supported by Polar.
+  the only one supported by Outception.
 </ParamField>
 
 <ParamField path="client_id" type="string" required>
@@ -36,7 +36,7 @@ The parameters are the one described in the [OpenID Connect specification](https
   of the scopes you declared when creating the OAuth2 client.
 </ParamField>
 
-If you redirect the user to this URL, they'll see a page asking them to grant access to their data, corresponding to the scopes you asked for. By default, Polar generates user-scoped access tokens, so the token will be tied to the user granting access.
+If you redirect the user to this URL, they'll see a page asking them to grant access to their data, corresponding to the scopes you asked for. By default, Outception generates user-scoped access tokens, so the token will be tied to the user granting access.
 
 <img src="/assets/integrate/oauth2/connect.png" />
 
@@ -82,7 +82,7 @@ The `access_token` will allow you to make authenticated API requests on behalf o
 
 #### Organization vs User Access Tokens
 
-By default, Polar OAuth2 flow generates **user-scoped** access tokens. These tokens are tied to the user granting access, allowing requests to operate on the data of the organizations they are a member of.
+By default, Outception OAuth2 flow generates **user-scoped** access tokens. These tokens are tied to the user granting access, allowing requests to operate on the data of the organizations they are a member of.
 
 ```
 https://polar.sh/oauth2/authorize?response_type=code&client_id=polar_ci_j3X95_MgfdSCeCd2qkFnUw&redirect_uri=https%3A%2F%2Fexample.com%2Fcallback&scope=openid%20email

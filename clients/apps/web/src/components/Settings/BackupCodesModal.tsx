@@ -1,7 +1,7 @@
 'use client'
 
-import { Modal } from '@polar-sh/orbit'
-import { Button } from '@polar-sh/orbit'
+import { Modal } from '@outception-com/orbit'
+import { Button } from '@outception-com/orbit'
 import { useEffect, useRef, useState } from 'react'
 
 interface BackupCodesModalProps {
@@ -37,14 +37,14 @@ export default function BackupCodesModal({
 
   const modalContent = (
     <div className="p-8">
-      <p className="dark:text-polar-400 mb-4 max-w-md text-sm text-gray-600">
+      <p className="dark:text-outception-400 mb-4 max-w-md text-sm text-gray-600">
         You&rsquo;ll only see these backup codes once, so save them somewhere
         secure. Each code lets you sign in one time if you lose access to your
         authenticator app.
       </p>
 
       <div className="relative">
-        <pre className="dark:bg-polar-800 rounded-lg bg-gray-100 p-4 font-mono text-sm break-all whitespace-pre-wrap">
+        <pre className="dark:bg-outception-800 rounded-lg bg-gray-100 p-4 font-mono text-sm break-all whitespace-pre-wrap">
           {codesText}
         </pre>
         <Button

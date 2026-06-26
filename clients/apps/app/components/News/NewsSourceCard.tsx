@@ -1,7 +1,7 @@
 import { Box } from '@/components/Shared/Box'
 import { Text } from '@/components/Shared/Text'
 import { Touchable } from '@/components/Shared/Touchable'
-import { useNewsSource, type NewsSourceMeta } from '@/hooks/polar/news'
+import { useNewsSource, type NewsSourceMeta } from '@/hooks/outception/news'
 import { openExternalUrl } from '@/utils/news'
 import { ActivityIndicator } from 'react-native'
 import { PromotionFooter } from '../Promotions/PromotionFooter'

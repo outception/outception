@@ -1,12 +1,12 @@
 #!/bin/bash
-# Startup script for Polar Web frontend in development mode
+# Startup script for Outception Web frontend in development mode
 # This script handles dependency installation and starts Next.js with Turbopack.
 
 set -euo pipefail
 
 cd /app/clients
 
-echo "=== Polar Web Frontend Startup ==="
+echo "=== Outception Web Frontend Startup ==="
 
 # Always run pnpm install to ensure dependencies are installed
 # pnpm is smart enough to skip if nothing changed
@@ -17,31 +17,31 @@ pnpm install --frozen-lockfile
 # This avoids OOM issues from DTS generation in container
 echo "Checking workspace packages..."
 if [[ ! -d "packages/client/dist" ]]; then
-    echo "Building @polar-sh/client..."
-    pnpm --filter @polar-sh/client build
+    echo "Building @outception-com/client..."
+    pnpm --filter @outception-com/client build
 else
-    echo "@polar-sh/client already built"
+    echo "@outception-com/client already built"
 fi
 
 if [[ ! -d "packages/ui/dist" ]]; then
-    echo "Building @polar-sh/ui..."
-    pnpm --filter @polar-sh/ui build
+    echo "Building @outception-com/ui..."
+    pnpm --filter @outception-com/ui build
 else
-    echo "@polar-sh/ui already built"
+    echo "@outception-com/ui already built"
 fi
 
 if [[ ! -d "packages/orbit/dist" ]]; then
-    echo "Building @polar-sh/orbit..."
-    pnpm --filter @polar-sh/orbit build
+    echo "Building @outception-com/orbit..."
+    pnpm --filter @outception-com/orbit build
 else
-    echo "@polar-sh/ui already built"
+    echo "@outception-com/ui already built"
 fi
 
 if [[ ! -d "packages/checkout/dist" ]]; then
-    echo "Building @polar-sh/checkout..."
-    pnpm --filter @polar-sh/checkout build
+    echo "Building @outception-com/checkout..."
+    pnpm --filter @outception-com/checkout build
 else
-    echo "@polar-sh/checkout already built"
+    echo "@outception-com/checkout already built"
 fi
 
 # Start the requested mode

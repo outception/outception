@@ -1,7 +1,7 @@
 """Conftest for worker tests - isolated from main infrastructure fixtures.
 
 These tests use FakeRedis and mock objects, so they don't need the full
-Polar infrastructure (database, Minio, etc.). We override the session-scoped
+Outception infrastructure (database, Minio, etc.). We override the session-scoped
 autouse fixtures from the main test suite to prevent connection attempts.
 """
 
@@ -10,8 +10,8 @@ from typing import Any
 
 import pytest
 
-# Set up test environment before any polar imports
-os.environ["POLAR_ENV"] = "testing"
+# Set up test environment before any outception imports
+os.environ["OUTCEPTION_ENV"] = "testing"
 
 
 @pytest.fixture(scope="session", autouse=True)

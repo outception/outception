@@ -20,7 +20,7 @@ module.exports = defineConfig([
   },
   {
     plugins: {
-      '@polar': {
+      '@outception': {
         rules: {
           'no-view': noViewRule,
           'no-text': noTextRule,
@@ -37,17 +37,17 @@ module.exports = defineConfig([
       },
     },
     rules: {
-      '@polar/no-view': 'error',
-      '@polar/no-text': 'error',
-      '@polar/no-stylesheet-create': 'error',
-      '@polar/no-image': 'error',
-      '@polar/no-flatlist': 'error',
-      '@polar/no-touchable': 'error',
-      '@polar/no-jsx-logical-and': 'error',
-      '@polar/no-restyle-use-theme': 'error',
-      '@polar/no-hardcoded-spacing': 'error',
-      '@polar/no-hardcoded-colors': 'error',
-      '@polar/no-hardcoded-dimensions': 'error',
+      '@outception/no-view': 'error',
+      '@outception/no-text': 'error',
+      '@outception/no-stylesheet-create': 'error',
+      '@outception/no-image': 'error',
+      '@outception/no-flatlist': 'error',
+      '@outception/no-touchable': 'error',
+      '@outception/no-jsx-logical-and': 'error',
+      '@outception/no-restyle-use-theme': 'error',
+      '@outception/no-hardcoded-spacing': 'error',
+      '@outception/no-hardcoded-colors': 'error',
+      '@outception/no-hardcoded-dimensions': 'error',
     },
   },
   {

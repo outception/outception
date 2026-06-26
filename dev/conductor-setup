@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Setup Polar development environment for Conductor
+# Setup Outception development environment for Conductor
 #
 # This script is called by Conductor to set up the development environment.
 # It uses the Docker-based development setup for isolation.
@@ -15,7 +15,7 @@ INSTANCE=$(( (CONDUCTOR_PORT - 55000) / 10 ))
 
 cd "$ROOT_DIR"
 
-echo "Setting up Polar development environment (instance $INSTANCE)..."
+echo "Setting up Outception development environment (instance $INSTANCE)..."
 
 # Generate environment files if needed
 if [[ ! -f "server/.env" ]] || [[ ! -f "clients/apps/web/.env.local" ]]; then

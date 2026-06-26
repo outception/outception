@@ -1,8 +1,8 @@
 import { CONFIG } from '@/utils/config'
 import { isImpersonating } from '@/utils/impersonation'
 import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown'
-import { schemas } from '@polar-sh/client'
-import { Avatar } from '@polar-sh/orbit'
+import { schemas } from '@outception-com/client'
+import { Avatar } from '@outception-com/orbit'
 import {
   Sidebar,
   SidebarContent,
@@ -13,15 +13,15 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
   useSidebar,
-} from '@polar-sh/ui/components/atoms/Sidebar'
+} from '@outception-com/ui/components/atoms/Sidebar'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@polar-sh/ui/components/ui/dropdown-menu'
-import { Separator } from '@polar-sh/ui/components/ui/separator'
+} from '@outception-com/ui/components/ui/dropdown-menu'
+import { Separator } from '@outception-com/ui/components/ui/separator'
 import { motion } from 'motion/react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -70,9 +70,7 @@ export const DashboardSidebar = ({
         )}
       >
         <Link
-          href={
-            organization ? `/dashboard/${organization.slug}` : '/dashboard'
-          }
+          href={organization ? `/dashboard/${organization.slug}` : '/dashboard'}
         >
           <LogoIcon size={32} className="text-black dark:text-white" />
         </Link>
@@ -164,7 +162,7 @@ export const DashboardSidebar = ({
                   {!CONFIG.IS_SANDBOX && (
                     <DropdownMenuItem
                       onClick={() =>
-                        router.push('https://sandbox.polar.sh/start')
+                        router.push('https://sandbox.outception.com/start')
                       }
                     >
                       Go to Sandbox

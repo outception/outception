@@ -1,6 +1,6 @@
 ---
 title: "Tinybird"
-description: "How we use Tinybird for event ingestion, materialized views, and analytics in Polar."
+description: "How we use Tinybird for event ingestion, materialized views, and analytics in Outception."
 ---
 
 Tinybird is our real-time analytics backend. All usage events flow through a single ingestion point and are materialized into purpose-specific views for querying.
@@ -9,7 +9,7 @@ Tinybird is our real-time analytics backend. All usage events flow through a sin
 
 ### Primary source
 
-**`events_by_ingested_at`** is the single ingestion point. All events are written here from Python via `ingest_events()` in `server/polar/integrations/tinybird/service.py`.
+**`events_by_ingested_at`** is the single ingestion point. All events are written here from Python via `ingest_events()` in `server/outception/integrations/tinybird/service.py`.
 
 ### Materialized views
 
@@ -37,12 +37,12 @@ events_by_ingested_at
     +-- orders_base_state_by_quarter_hour
 ```
 
-Visual lineage: [Tinybird Production Lineage](https://cloud.tinybird.co/aws/us-east-1/polar_production_dedicated/lineage)
+Visual lineage: [Tinybird Production Lineage](https://cloud.tinybird.co/aws/us-east-1/outception_production_dedicated/lineage)
 
 ## Adding a column
 
 1. Add the column to `datasources/events_by_ingested_at.datasource`
-2. Map the field in `TinybirdEvent` in `server/polar/integrations/tinybird/service.py` (the `_event_to_tinybird` function) — fields are extracted from `user_metadata` via `.pop()` so they're denormalized into columns
+2. Map the field in `TinybirdEvent` in `server/outception/integrations/tinybird/service.py` (the `_event_to_tinybird` function) — fields are extracted from `user_metadata` via `.pop()` so they're denormalized into columns
 3. Add it to any materialized view datasources that need it (e.g. `events_by_timestamp.datasource`, `system_events_by_org.datasource`)
 4. Update the corresponding materialization pipes to SELECT the new column
 

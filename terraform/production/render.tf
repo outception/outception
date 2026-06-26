@@ -24,7 +24,7 @@ locals {
   db_password = render_postgres.db.connection_info.password
 
   # Read replica connection info
-  read_replica = [for r in render_postgres.db.read_replicas : r if r.name == "polar-read"][0]
+  read_replica = [for r in render_postgres.db.read_replicas : r if r.name == "outception-read"][0]
 
   # Redis connection info
   redis_host = render_redis.redis.id
@@ -35,8 +35,8 @@ locals {
 # Project and Environments
 # ============================================================================
 
-resource "render_project" "polar" {
-  name = "Polar"
+resource "render_project" "outception" {
+  name = "Outception"
   environments = {
     "Production" : {
       id               = "evm-cj3pgodiuie55pmjh2l0"
@@ -62,10 +62,10 @@ resource "render_project" "polar" {
 # =============================================================================
 
 resource "render_postgres" "db" {
-  environment_id = render_project.polar.environments["Production"].id
+  environment_id = render_project.outception.environments["Production"].id
   name           = "db"
-  database_name  = "polar_cpit"
-  database_user  = "polar_cpit_user"
+  database_name  = "outception_cpit"
+  database_user  = "outception_cpit_user"
   plan           = "pro_64gb"
   region         = "ohio"
   version        = "15"
@@ -74,8 +74,8 @@ resource "render_postgres" "db" {
   high_availability_enabled = false
 
   read_replicas = [
-    { name = "polar-read" },
-    { name = "polar-replica" }
+    { name = "outception-read" },
+    { name = "outception-replica" }
   ]
 
   lifecycle {
@@ -88,7 +88,7 @@ resource "render_postgres" "db" {
     ]
   }
 
-  depends_on = [render_registry_credential.ghcr, render_project.polar]
+  depends_on = [render_registry_credential.ghcr, render_project.outception]
 }
 
 import {
@@ -101,7 +101,7 @@ import {
 # =============================================================================
 
 resource "render_redis" "redis" {
-  environment_id    = render_project.polar.environments["Production"].id
+  environment_id    = render_project.outception.environments["Production"].id
   name              = "redis"
   plan              = "standard"
   region            = "ohio"
@@ -110,7 +110,7 @@ resource "render_redis" "redis" {
   # Empty IP allow list means only private network connections
   ip_allow_list = []
 
-  depends_on = [render_registry_credential.ghcr, render_project.polar]
+  depends_on = [render_registry_credential.ghcr, render_project.outception]
 }
 
 # =============================================================================
@@ -136,15 +136,15 @@ module "production" {
   source = "../modules/render_service"
 
   environment            = "production"
-  render_environment_id  = render_project.polar.environments["Production"].id
+  render_environment_id  = render_project.outception.environments["Production"].id
   registry_credential_id = render_registry_credential.ghcr.id
 
   api_service_config = {
-    postgres_database      = "polar_cpit_p9lf"
-    postgres_read_database = "polar_cpit_p9lf"
-    allowed_hosts          = "[\"polar.sh\", \"backoffice.polar.sh\"]"
-    cors_origins           = "[\"https://polar.sh\", \"https://github.com\", \"https://docs.polar.sh\"]"
-    custom_domains         = [{ name = "api.polar.sh" }, { name = "api-alt.polar.sh" }, { name = "buy.polar.sh" }, { name = "backoffice.polar.sh" }]
+    postgres_database      = "outception_cpit_p9lf"
+    postgres_read_database = "outception_cpit_p9lf"
+    allowed_hosts          = "[\"outception.com\", \"backoffice.outception.com\"]"
+    cors_origins           = "[\"https://outception.com\", \"https://github.com\", \"https://docs.outception.com\"]"
+    custom_domains         = [{ name = "api.outception.com" }, { name = "api-alt.outception.com" }, { name = "buy.outception.com" }, { name = "backoffice.outception.com" }]
     plan                   = "pro_plus"
     web_concurrency        = "6"
   }
@@ -173,34 +173,34 @@ module "production" {
 
   workers = {
     "scheduler" = {
-      start_command      = "uv run python -m polar.worker.scheduler"
+      start_command      = "uv run python -m outception.worker.scheduler"
       plan               = "standard"
       dramatiq_prom_port = "10000"
     }
     "worker" = {
-      start_command      = "uv run dramatiq polar.worker.run -p 2 -t 8 --queues low_priority"
-      custom_domains     = [{ name = "worker.polar.sh" }]
+      start_command      = "uv run dramatiq outception.worker.run -p 2 -t 8 --queues low_priority"
+      custom_domains     = [{ name = "worker.outception.com" }]
       dramatiq_prom_port = "10000"
     }
     "worker-medium-priority" = {
-      start_command      = "uv run dramatiq polar.worker.run -p 2 -t 4 --queues medium_priority"
+      start_command      = "uv run dramatiq outception.worker.run -p 2 -t 4 --queues medium_priority"
       dramatiq_prom_port = "10001"
     }
     "worker-high-priority" = {
-      start_command      = "uv run dramatiq polar.worker.run -p 2 -t 4 --queues high_priority"
+      start_command      = "uv run dramatiq outception.worker.run -p 2 -t 4 --queues high_priority"
       dramatiq_prom_port = "10001"
     }
     "worker-webhook" = {
-      start_command      = "uv run dramatiq polar.worker.run -p 1 -t 16 --queues webhooks"
+      start_command      = "uv run dramatiq outception.worker.run -p 1 -t 16 --queues webhooks"
       dramatiq_prom_port = "10001"
       database_pool_size = "16"
     }
     "worker-tinybird" = {
-      start_command      = "uv run dramatiq polar.worker.run -p 4 -t 32 --queues tinybird"
+      start_command      = "uv run dramatiq outception.worker.run -p 4 -t 32 --queues tinybird"
       dramatiq_prom_port = "10002"
     }
     "worker-invoices-receipts" = {
-      start_command      = "uv run dramatiq polar.worker.run -p 1 -t 3 --queues invoices_and_receipts"
+      start_command      = "uv run dramatiq outception.worker.run -p 1 -t 3 --queues invoices_and_receipts"
       plan               = "standard"
       dramatiq_prom_port = "10003"
     }
@@ -220,23 +220,23 @@ module "production" {
   }
 
   backend_config = {
-    base_url                             = "https://api.polar.sh"
-    backoffice_host                      = "backoffice.polar.sh"
-    checkout_link_host                   = "buy.polar.sh"
-    user_session_cookie_domain           = "polar.sh"
-    authentication_session_cookie_domain = "polar.sh"
-    oauth2_session_state_cookie_domain   = "polar.sh"
+    base_url                             = "https://api.outception.com"
+    backoffice_host                      = "backoffice.outception.com"
+    checkout_link_host                   = "buy.outception.com"
+    user_session_cookie_domain           = "outception.com"
+    authentication_session_cookie_domain = "outception.com"
+    oauth2_session_state_cookie_domain   = "outception.com"
     debug                                = "0"
     email_sender                         = "resend"
-    email_from_name                      = "Polar"
-    email_from_domain                    = "notifications.polar.sh"
-    frontend_base_url                    = "https://polar.sh"
-    checkout_base_url                    = "https://buy.polar.sh/{client_secret}"
+    email_from_name                      = "Outception"
+    email_from_domain                    = "notifications.outception.com"
+    frontend_base_url                    = "https://outception.com"
+    checkout_base_url                    = "https://buy.outception.com/{client_secret}"
     jwks_path                            = "/etc/secrets/jwks.json"
     log_level                            = "INFO"
     testing                              = "0"
-    auth_cookie_domain                   = "polar.sh"
-    invoices_additional_info             = "[support@polar.sh](mailto:support@polar.sh)"
+    auth_cookie_domain                   = "outception.com"
+    invoices_additional_info             = "[support@outception.com](mailto:support@outception.com)"
     invoices_vat_numbers = jsonencode({
       # EU One Stop Shop (OSS) registration
       AT = "EU372061545"
@@ -324,11 +324,11 @@ module "production" {
     region                        = "us-east-2"
     signature_version             = "v4"
     files_presign_ttl             = "3600"
-    files_public_bucket_name      = "polar-public-files"
-    customer_invoices_bucket_name = "polar-customer-invoices"
-    customer_receipts_bucket_name = "polar-customer-receipts"
-    payout_invoices_bucket_name   = "polar-payout-invoices"
-    logs_bucket_name              = "polar-production-logs"
+    files_public_bucket_name      = "outception-public-files"
+    customer_invoices_bucket_name = "outception-customer-invoices"
+    customer_receipts_bucket_name = "outception-customer-receipts"
+    payout_invoices_bucket_name   = "outception-payout-invoices"
+    logs_bucket_name              = "outception-production-logs"
   }
 
   aws_s3_secrets = {
@@ -378,16 +378,16 @@ module "production" {
   }
 
   memory_profile_config = {
-    s3_bucket_name = "polar-production-logs"
+    s3_bucket_name = "outception-production-logs"
   }
 
-  polar_self_config = {
-    access_token     = var.polar_access_token
-    webhook_secret   = var.polar_webhook_secret
-    organization_id  = var.polar_organization_id
-    free_product_id  = var.polar_free_product_id
-    scale_product_id = var.polar_scale_product_id
-    api_url          = "https://api.polar.sh"
+  outception_self_config = {
+    access_token     = var.outception_access_token
+    webhook_secret   = var.outception_webhook_secret
+    organization_id  = var.outception_organization_id
+    free_product_id  = var.outception_free_product_id
+    scale_product_id = var.outception_scale_product_id
+    api_url          = "https://api.outception.com"
   }
 
   tinybird_config = {
@@ -400,7 +400,7 @@ module "production" {
     workspace           = var.tinybird_workspace
   }
 
-  depends_on = [render_registry_credential.ghcr, render_project.polar, render_postgres.db, render_redis.redis]
+  depends_on = [render_registry_credential.ghcr, render_project.outception, render_postgres.db, render_redis.redis]
 }
 
 # =============================================================================
@@ -411,12 +411,12 @@ module "tailscale_router" {
   source = "../modules/tailscale_router"
 
   environment            = "production"
-  render_environment_id  = render_project.polar.environments["Production"].id
+  render_environment_id  = render_project.outception.environments["Production"].id
   registry_credential_id = render_registry_credential.ghcr.id
   tailscale_authkey      = var.tailscale_authkey
   advertise_routes       = var.tailscale_advertise_routes
 
-  depends_on = [render_registry_credential.ghcr, render_project.polar]
+  depends_on = [render_registry_credential.ghcr, render_project.outception]
 }
 
 # =============================================================================
@@ -430,7 +430,7 @@ import {
 
 resource "cloudflare_dns_record" "api" {
   zone_id = "22bcd1b07ec25452aab472486bc8df94"
-  name    = "api.polar.sh"
+  name    = "api.outception.com"
   type    = "CNAME"
   content = replace(module.production.api_service_url, "https://", "")
   proxied = true
@@ -439,7 +439,7 @@ resource "cloudflare_dns_record" "api" {
 
 resource "cloudflare_dns_record" "api_alt" {
   zone_id = "22bcd1b07ec25452aab472486bc8df94"
-  name    = "api-alt.polar.sh"
+  name    = "api-alt.outception.com"
   type    = "CNAME"
   content = replace(module.production.api_service_url, "https://", "")
   proxied = false
@@ -448,7 +448,7 @@ resource "cloudflare_dns_record" "api_alt" {
 
 resource "cloudflare_dns_record" "buy" {
   zone_id = "22bcd1b07ec25452aab472486bc8df94"
-  name    = "buy.polar.sh"
+  name    = "buy.outception.com"
   type    = "CNAME"
   content = replace(module.production.api_service_url, "https://", "")
   proxied = true
@@ -457,7 +457,7 @@ resource "cloudflare_dns_record" "buy" {
 
 resource "cloudflare_dns_record" "backoffice" {
   zone_id = "22bcd1b07ec25452aab472486bc8df94"
-  name    = "backoffice.polar.sh"
+  name    = "backoffice.outception.com"
   type    = "CNAME"
   content = replace(module.production.api_service_url, "https://", "")
   proxied = true
@@ -466,7 +466,7 @@ resource "cloudflare_dns_record" "backoffice" {
 
 resource "cloudflare_dns_record" "worker" {
   zone_id = "22bcd1b07ec25452aab472486bc8df94"
-  name    = "worker.polar.sh"
+  name    = "worker.outception.com"
   type    = "CNAME"
   content = replace(module.production.worker_urls["worker"], "https://", "")
   proxied = false

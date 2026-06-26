@@ -4,7 +4,7 @@ variable "name" {
 }
 
 variable "domain" {
-  description = "Custom domain for the distribution (e.g. assets.polar.sh)"
+  description = "Custom domain for the distribution (e.g. assets.outception.com)"
   type        = string
 }
 

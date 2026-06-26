@@ -1,5 +1,5 @@
-const S3_HOST = 'polar-public-files.s3.amazonaws.com'
-const CDN_HOST = 'uploads.polar.sh'
+const S3_HOST = 'outception-public-files.s3.amazonaws.com'
+const CDN_HOST = 'uploads.outception.com'
 
 // Must match the backend defined list in lambda/image-resizer/handler.py
 const SUPPORTED_WIDTHS = [

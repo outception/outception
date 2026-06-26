@@ -1,8 +1,8 @@
 import { getServerURL } from '@/utils/api'
-import { schemas } from '@polar-sh/client'
-import { Avatar } from '@polar-sh/orbit'
-import { Button } from '@polar-sh/orbit'
-import { List, ListItem } from '@polar-sh/orbit'
+import { schemas } from '@outception-com/client'
+import { Avatar } from '@outception-com/orbit'
+import { Button } from '@outception-com/orbit'
+import { List, ListItem } from '@outception-com/orbit'
 import SharedLayout from './components/SharedLayout'
 
 const isSubTypeOrganization = (
@@ -50,11 +50,11 @@ const AuthorizePage = ({
         <>
           {sub && isSubTypeOrganization(sub_type, sub) && (
             <>
-              <div className="dark:text-polar-400 w-full text-center text-lg text-gray-600">
+              <div className="dark:text-outception-400 w-full text-center text-lg text-gray-600">
                 <span className="font-medium">{clientName}</span> requests the
                 following permissions to your Outception organization.
               </div>
-              <div className="dark:border-polar-700 dark:bg-polar-800 mt-6 mb-0 inline-flex flex-row items-center justify-start gap-2 rounded-2xl border border-gray-100 bg-gray-50 p-2 pr-4 text-sm">
+              <div className="dark:border-outception-700 dark:bg-outception-800 mt-6 mb-0 inline-flex flex-row items-center justify-start gap-2 rounded-2xl border border-gray-100 bg-gray-50 p-2 pr-4 text-sm">
                 <Avatar
                   className="h-8 w-8"
                   avatar_url={sub.avatar_url}
@@ -66,11 +66,11 @@ const AuthorizePage = ({
           )}
           {sub && isSubTypeUser(sub_type, sub) && (
             <>
-              <div className="dark:text-polar-400 w-full text-center text-lg text-gray-600">
+              <div className="dark:text-outception-400 w-full text-center text-lg text-gray-600">
                 <span className="font-medium">{clientName}</span> requests the
                 following permissions to your personal Outception account.
               </div>
-              <div className="dark:border-polar-700 dark:bg-polar-800 mt-6 mb-0 inline-flex flex-row items-center justify-start gap-2 rounded-2xl border border-gray-100 bg-gray-50 p-2 pr-4 text-sm">
+              <div className="dark:border-outception-700 dark:bg-outception-800 mt-6 mb-0 inline-flex flex-row items-center justify-start gap-2 rounded-2xl border border-gray-100 bg-gray-50 p-2 pr-4 text-sm">
                 <Avatar
                   className="h-8 w-8"
                   avatar_url={sub.avatar_url}
@@ -89,7 +89,7 @@ const AuthorizePage = ({
             {Object.entries(groupScopes(scopes)).map(([key, scopes]) => (
               <ListItem
                 key={key}
-                className="dark:bg-polar-800 dark:hover:bg-polar-800 flex flex-col items-start gap-y-1 bg-white py-3 text-sm hover:bg-white"
+                className="dark:bg-outception-800 dark:hover:bg-outception-800 flex flex-col items-start gap-y-1 bg-white py-3 text-sm hover:bg-white"
                 size="small"
               >
                 <h3 className="font-medium capitalize">
@@ -99,7 +99,7 @@ const AuthorizePage = ({
                   {scopes.map((scope) => (
                     <li
                       key={scope}
-                      className="dark:text-polar-500 text-sm text-gray-500"
+                      className="dark:text-outception-500 text-sm text-gray-500"
                     >
                       {scope_display_names[scope]}
                     </li>
@@ -129,7 +129,7 @@ const AuthorizePage = ({
             Before using this app, you can review {clientName}&apos;s{' '}
             {client.tos_uri && (
               <a
-                className="dark:text-polar-300 text-gray-700"
+                className="dark:text-outception-300 text-gray-700"
                 href={client.tos_uri}
               >
                 Terms of Service
@@ -138,7 +138,7 @@ const AuthorizePage = ({
             {client.tos_uri && client.policy_uri && ' and '}
             {client.policy_uri && (
               <a
-                className="dark:text-polar-300 text-gray-700"
+                className="dark:text-outception-300 text-gray-700"
                 href={client.policy_uri}
               >
                 Privacy Policy

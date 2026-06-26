@@ -459,7 +459,7 @@ Services use Docker network hostnames:
 
     ```bash
     dev docker shell api
-    ls -la /app/server/polar/
+    ls -la /app/server/outception/
     ```
 
 2. Restart the service:

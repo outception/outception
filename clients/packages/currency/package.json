@@ -1,14 +1,14 @@
 {
-  "name": "@polar-sh/currency",
-  "description": "Polar Currency Utilities",
-  "author": "Polar",
+  "name": "@outception-com/currency",
+  "description": "Outception Currency Utilities",
+  "author": "Outception",
   "license": "Apache-2.0",
   "type": "module",
   "private": true,
   "version": "0.1.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/polarsource/polar.git",
+    "url": "https://github.com/outception/outception.git",
     "directory": "clients/packages/currency"
   },
   "main": "./dist/index.cjs",
@@ -33,8 +33,8 @@
     }
   },
   "devDependencies": {
-    "@polar-sh/eslint-config": "workspace:*",
-    "@polar-sh/typescript-config": "workspace:*",
+    "@outception-com/eslint-config": "workspace:*",
+    "@outception-com/typescript-config": "workspace:*",
     "tsup": "^8.5.1",
     "typescript": "latest",
     "vitest": "^4.1.4"

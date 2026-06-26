@@ -1,4 +1,4 @@
-const ORBIT_TEXT_SOURCES = new Set(['@polar-sh/orbit'])
+const ORBIT_TEXT_SOURCES = new Set(['@outception-com/orbit'])
 
 /** @type {import('eslint').Rule.RuleModule} */
 const noClassnameText = {
@@ -6,7 +6,7 @@ const noClassnameText = {
     type: 'problem',
     docs: {
       description:
-        'Disallow the `className` prop on `<Text />` from `@polar-sh/orbit`',
+        'Disallow the `className` prop on `<Text />` from `@outception-com/orbit`',
     },
     schema: [],
     messages: {

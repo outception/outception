@@ -4,8 +4,8 @@ import pytest
 from httpx import AsyncClient
 from pytest_mock import MockerFixture
 
-from polar.news.schemas import NewsItem
-from polar.redis import Redis
+from outception.news.schemas import NewsItem
+from outception.redis import Redis
 
 
 @pytest.mark.asyncio
@@ -40,7 +40,7 @@ class TestGetSource:
         getter = AsyncMock(
             return_value=[NewsItem(id="1", title="Hello", url="https://example.com")]
         )
-        mocker.patch.dict("polar.news.registry.GETTERS", {"hackernews": getter})
+        mocker.patch.dict("outception.news.registry.GETTERS", {"hackernews": getter})
 
         response = await client.get("/v1/news/hackernews")
         assert response.status_code == 200
@@ -83,7 +83,7 @@ class TestSearch:
     async def test_matches_cached_headline(
         self, client: AsyncClient, redis: Redis
     ) -> None:
-        from polar.news import cache
+        from outception.news import cache
 
         await cache.set(
             redis,
@@ -136,7 +136,7 @@ class TestFollow:
     async def test_feed_merges_warm_cache_freshest_first(
         self, client: AsyncClient, redis: Redis
     ) -> None:
-        from polar.news import cache
+        from outception.news import cache
 
         await cache.set(
             redis,

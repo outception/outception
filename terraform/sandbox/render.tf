@@ -15,8 +15,8 @@ resource "render_registry_credential" "ghcr" {
 # ============================================================================
 
 data "tfe_outputs" "production" {
-  organization = "polar-sh"
-  workspace    = "polar"
+  organization = "outception-com"
+  workspace    = "outception"
 }
 
 data "render_postgres" "db" {
@@ -41,7 +41,7 @@ locals {
   db_password = data.render_postgres.db.connection_info.password
 
   # Read replica connection info
-  read_replica = [for r in data.render_postgres.db.read_replicas : r if r.name == "polar-read"][0]
+  read_replica = [for r in data.render_postgres.db.read_replicas : r if r.name == "outception-read"][0]
 
   # Redis connection info
   redis_host = data.render_redis.redis.id
@@ -97,34 +97,34 @@ module "sandbox" {
   }
 
   api_service_config = {
-    allowed_hosts          = "[\"sandbox.polar.sh\"]"
-    cors_origins           = "[\"https://sandbox.polar.sh\", \"https://github.com\", \"https://docs.polar.sh\"]"
-    custom_domains         = [{ name = "sandbox-api.polar.sh" }]
+    allowed_hosts          = "[\"sandbox.outception.com\"]"
+    cors_origins           = "[\"https://sandbox.outception.com\", \"https://github.com\", \"https://docs.outception.com\"]"
+    custom_domains         = [{ name = "sandbox-api.outception.com" }]
     web_concurrency        = "2"
     forwarded_allow_ips    = "*"
     database_pool_size     = "10"
-    postgres_database      = "polar_sandbox"
-    postgres_read_database = "polar_sandbox"
+    postgres_database      = "outception_sandbox"
+    postgres_read_database = "outception_sandbox"
     redis_db               = "1"
     plan                   = "pro"
   }
 
   workers = {
     worker-sandbox = {
-      start_command      = "uv run dramatiq polar.worker.run -p 4 -t 8 -f polar.worker.scheduler:start --queues high_priority medium_priority low_priority"
+      start_command      = "uv run dramatiq outception.worker.run -p 4 -t 8 -f outception.worker.scheduler:start --queues high_priority medium_priority low_priority"
       dramatiq_prom_port = "10000"
     }
     worker-sandbox-webhook = {
-      start_command      = "uv run dramatiq polar.worker.run -p 1 -t 16 --queues webhooks"
+      start_command      = "uv run dramatiq outception.worker.run -p 1 -t 16 --queues webhooks"
       dramatiq_prom_port = "10001"
       database_pool_size = "16"
     }
     worker-sandbox-tinybird = {
-      start_command      = "uv run dramatiq polar.worker.run -p 1 -t 16 --queues tinybird"
+      start_command      = "uv run dramatiq outception.worker.run -p 1 -t 16 --queues tinybird"
       dramatiq_prom_port = "10002"
     }
     worker-sandbox-invoices-receipts = {
-      start_command      = "uv run dramatiq polar.worker.run -p 1 -t 3 --queues invoices_and_receipts"
+      start_command      = "uv run dramatiq outception.worker.run -p 1 -t 3 --queues invoices_and_receipts"
       plan               = "standard"
       dramatiq_prom_port = "10003"
     }
@@ -144,22 +144,22 @@ module "sandbox" {
   }
 
   backend_config = {
-    base_url                             = "https://sandbox-api.polar.sh"
-    user_session_cookie_domain           = "polar.sh"
-    user_session_cookie_key              = "polar_sandbox_session"
-    authentication_session_cookie_domain = "polar.sh"
-    oauth2_session_state_cookie_domain   = "polar.sh"
+    base_url                             = "https://sandbox-api.outception.com"
+    user_session_cookie_domain           = "outception.com"
+    user_session_cookie_key              = "outception_sandbox_session"
+    authentication_session_cookie_domain = "outception.com"
+    oauth2_session_state_cookie_domain   = "outception.com"
     debug                                = "0"
     email_sender                         = "resend"
-    email_from_name                      = "[SANDBOX] Polar"
-    email_from_domain                    = "notifications.sandbox.polar.sh"
-    frontend_base_url                    = "https://sandbox.polar.sh"
-    checkout_base_url                    = "https://sandbox-api.polar.sh/v1/checkout-links/{client_secret}/redirect"
+    email_from_name                      = "[SANDBOX] Outception"
+    email_from_domain                    = "notifications.sandbox.outception.com"
+    frontend_base_url                    = "https://sandbox.outception.com"
+    checkout_base_url                    = "https://sandbox-api.outception.com/v1/checkout-links/{client_secret}/redirect"
     jwks_path                            = "/etc/secrets/jwks.json"
     log_level                            = "INFO"
     testing                              = "0"
-    auth_cookie_domain                   = "polar.sh"
-    auth_cookie_key                      = "polar_sandbox_session"
+    auth_cookie_domain                   = "outception.com"
+    auth_cookie_key                      = "outception_sandbox_session"
     tax_processors                       = "[\"numeral\",\"stripe\"]"
     tax_record_processor                 = "numeral"
     customer_portal_url_overrides        = var.customer_portal_url_overrides
@@ -187,11 +187,11 @@ module "sandbox" {
     region                        = "us-east-2"
     signature_version             = "v4"
     files_presign_ttl             = "3600"
-    files_public_bucket_name      = "polar-public-sandbox-files"
-    customer_invoices_bucket_name = "polar-sandbox-customer-invoices"
-    customer_receipts_bucket_name = "polar-sandbox-customer-receipts"
-    payout_invoices_bucket_name   = "polar-sandbox-payout-invoices"
-    logs_bucket_name              = "polar-sandbox-logs"
+    files_public_bucket_name      = "outception-public-sandbox-files"
+    customer_invoices_bucket_name = "outception-sandbox-customer-invoices"
+    customer_receipts_bucket_name = "outception-sandbox-customer-receipts"
+    payout_invoices_bucket_name   = "outception-sandbox-payout-invoices"
+    logs_bucket_name              = "outception-sandbox-logs"
   }
 
   aws_s3_secrets = {
@@ -235,16 +235,16 @@ module "sandbox" {
   }
 
   memory_profile_config = {
-    s3_bucket_name = "polar-sandbox-logs"
+    s3_bucket_name = "outception-sandbox-logs"
   }
 
-  polar_self_config = {
-    access_token     = var.polar_access_token
-    webhook_secret   = var.polar_webhook_secret
-    organization_id  = var.polar_organization_id
-    free_product_id  = var.polar_free_product_id
-    scale_product_id = var.polar_scale_product_id
-    api_url          = "https://sandbox-api.polar.sh"
+  outception_self_config = {
+    access_token     = var.outception_access_token
+    webhook_secret   = var.outception_webhook_secret
+    organization_id  = var.outception_organization_id
+    free_product_id  = var.outception_free_product_id
+    scale_product_id = var.outception_scale_product_id
+    api_url          = "https://sandbox-api.outception.com"
   }
 
   tinybird_config = {
@@ -270,7 +270,7 @@ import {
 
 resource "cloudflare_dns_record" "api" {
   zone_id = "22bcd1b07ec25452aab472486bc8df94"
-  name    = "sandbox-api.polar.sh"
+  name    = "sandbox-api.outception.com"
   type    = "CNAME"
   content = replace(module.sandbox.api_service_url, "https://", "")
   proxied = true

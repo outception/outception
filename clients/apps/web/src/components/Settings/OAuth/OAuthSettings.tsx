@@ -1,14 +1,14 @@
 'use client'
 
-import { InlineModal } from '@polar-sh/orbit'
+import { InlineModal } from '@outception-com/orbit'
 import { useModal } from '@/components/Modal/useModal'
 import { useOAuth2Clients } from '@/hooks/queries/oauth'
 import ArrowForward from '@mui/icons-material/ArrowForward'
-import { schemas } from '@polar-sh/client'
-import { Avatar } from '@polar-sh/orbit'
-import { Button } from '@polar-sh/orbit'
-import FormattedDateTime from '@polar-sh/ui/components/atoms/FormattedDateTime'
-import { ListGroup } from '@polar-sh/orbit'
+import { schemas } from '@outception-com/client'
+import { Avatar } from '@outception-com/orbit'
+import { Button } from '@outception-com/orbit'
+import FormattedDateTime from '@outception-com/ui/components/atoms/FormattedDateTime'
+import { ListGroup } from '@outception-com/orbit'
 import { useState } from 'react'
 import { EditOAuthClientModal } from './EditOAuthClientModal'
 import { NewOAuthClientModal } from './NewOAuthClientModal'
@@ -61,7 +61,7 @@ const OAuthSettings = () => {
         })
       ) : (
         <ListGroup.Item>
-          <p className="dark:text-polar-400 text-sm text-gray-500">
+          <p className="dark:text-outception-400 text-sm text-gray-500">
             You don&apos;t have any configured OAuth Applications
           </p>
         </ListGroup.Item>
@@ -123,7 +123,7 @@ const OAuthClientDetails = ({ client, onClick }: OAuthClientDetailsProps) => {
             <h3 className="text-md mr-4 text-ellipsis whitespace-nowrap">
               {client.client_name}
             </h3>
-            <p className="dark:text-polar-400 text-sm text-gray-500">
+            <p className="dark:text-outception-400 text-sm text-gray-500">
               <FormattedDateTime
                 datetime={client.created_at}
                 dateStyle="long"

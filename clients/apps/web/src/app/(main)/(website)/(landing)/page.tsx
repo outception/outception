@@ -2,7 +2,9 @@ import { NewsWall } from '@/components/News/NewsWall'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Outception — live headlines & paid promotions',
+  // absolute: bypass the root "%s | Outception" template so the tab is just the
+  // brand name.
+  title: { absolute: 'Outception' },
   description:
     'A live wall of headlines from hundreds of sources. Promote what matters — pay to feature a post in any topic.',
   openGraph: {

@@ -1,5 +1,5 @@
 import { getPublicServerURL } from '@/utils/api'
-import { Client, schemas } from '@polar-sh/client'
+import { Client, schemas } from '@outception-com/client'
 import { redirect } from 'next/navigation'
 
 export const getGitHubAuthorizeLoginURL = (): string => {

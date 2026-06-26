@@ -2,8 +2,8 @@
 
 import { useAuth } from '@/hooks'
 import { useUpdateUser } from '@/hooks/queries/user'
-import { Switch, Text } from '@polar-sh/orbit'
-import { Box } from '@polar-sh/orbit/Box'
+import { Switch, Text } from '@outception-com/orbit'
+import { Box } from '@outception-com/orbit/Box'
 import { useState } from 'react'
 
 export const PromotionEmailSettings = () => {

@@ -1,7 +1,7 @@
 'use client'
 
-import { Box } from '@polar-sh/orbit/Box'
-import { Text } from '@polar-sh/orbit'
+import { Box } from '@outception-com/orbit/Box'
+import { Text } from '@outception-com/orbit'
 import {
   Sidebar,
   SidebarContent,
@@ -11,7 +11,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from '@polar-sh/ui/components/ui/sidebar'
+} from '@outception-com/ui/components/ui/sidebar'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { navSections } from '@/lib/registry'
@@ -25,7 +25,7 @@ function Wordmark() {
             Orbit
           </Text>
           <Text variant="caption" color="muted">
-            Polar Design System
+            Outception Design System
           </Text>
         </Box>
       </Box>

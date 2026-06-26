@@ -4,13 +4,13 @@ import pytest
 import pytest_asyncio
 from httpx import AsyncClient
 
-from polar.auth.scope import Scope
-from polar.auth.service import USER_SESSION_TOKEN_PREFIX
-from polar.config import settings
-from polar.kit.crypto import generate_token_hash_pair
-from polar.kit.db.postgres import Session
-from polar.kit.utils import utc_now
-from polar.models import (
+from outception.auth.scope import Scope
+from outception.auth.service import USER_SESSION_TOKEN_PREFIX
+from outception.config import settings
+from outception.kit.crypto import generate_token_hash_pair
+from outception.kit.db.postgres import Session
+from outception.kit.utils import utc_now
+from outception.models import (
     OAuth2Client,
     OAuth2Grant,
     Organization,
@@ -18,9 +18,9 @@ from polar.models import (
     UserOrganization,
     UserSession,
 )
-from polar.models.user_organization import OrganizationRole
-from polar.oauth2.service.oauth2_grant import oauth2_grant as oauth2_grant_service
-from polar.oauth2.sub_type import SubType
+from outception.models.user_organization import OrganizationRole
+from outception.oauth2.service.oauth2_grant import oauth2_grant as oauth2_grant_service
+from outception.oauth2.sub_type import SubType
 from tests.fixtures.auth import AuthSubjectFixture
 from tests.fixtures.database import SaveFixture
 
@@ -30,9 +30,9 @@ from ..conftest import create_oauth2_authorization_code, create_oauth2_token
 @pytest_asyncio.fixture
 async def oauth2_client(save_fixture: SaveFixture, user: User) -> OAuth2Client:
     oauth2_client = OAuth2Client(
-        client_id="polar_ci_123",
-        client_secret="polar_cs_123",
-        registration_access_token="polar_crt_123",
+        client_id="outception_ci_123",
+        client_secret="outception_cs_123",
+        registration_access_token="outception_crt_123",
         user=user,
     )
     oauth2_client.set_client_metadata(
@@ -53,9 +53,9 @@ async def oauth2_client(save_fixture: SaveFixture, user: User) -> OAuth2Client:
 @pytest_asyncio.fixture
 async def public_oauth2_client(save_fixture: SaveFixture, user: User) -> OAuth2Client:
     oauth2_client = OAuth2Client(
-        client_id="polar_ci_123",
-        client_secret="polar_cs_123",
-        registration_access_token="polar_crt_123",
+        client_id="outception_ci_123",
+        client_secret="outception_cs_123",
+        registration_access_token="outception_crt_123",
         user=user,
     )
     oauth2_client.set_client_metadata(
@@ -78,9 +78,9 @@ async def first_party_oauth2_client(
     save_fixture: SaveFixture, user: User
 ) -> OAuth2Client:
     oauth2_client = OAuth2Client(
-        client_id="polar_ci_123",
-        client_secret="polar_cs_123",
-        registration_access_token="polar_crt_123",
+        client_id="outception_ci_123",
+        client_secret="outception_cs_123",
+        registration_access_token="outception_crt_123",
         first_party=True,
         user=user,
     )
@@ -104,9 +104,9 @@ async def web_grant_oauth2_client(
     save_fixture: SaveFixture, user: User
 ) -> OAuth2Client:
     oauth2_client = OAuth2Client(
-        client_id="polar_ci_123",
-        client_secret="polar_cs_123",
-        registration_access_token="polar_crt_123",
+        client_id="outception_ci_123",
+        client_secret="outception_cs_123",
+        registration_access_token="outception_crt_123",
         user=user,
     )
     oauth2_client.set_client_metadata(
@@ -1069,9 +1069,9 @@ class TestOAuth2Token:
         json = response.json()
 
         access_token = json["access_token"]
-        assert access_token.startswith("polar_at_u_")
+        assert access_token.startswith("outception_at_u_")
         refresh_token = json["refresh_token"]
-        assert refresh_token.startswith("polar_rt_u_")
+        assert refresh_token.startswith("outception_rt_u_")
 
     async def test_authorization_code_public_client(
         self,
@@ -1106,9 +1106,9 @@ class TestOAuth2Token:
         json = response.json()
 
         access_token = json["access_token"]
-        assert access_token.startswith("polar_at_u_")
+        assert access_token.startswith("outception_at_u_")
         refresh_token = json["refresh_token"]
-        assert refresh_token.startswith("polar_rt_u_")
+        assert refresh_token.startswith("outception_rt_u_")
 
     async def test_authorization_code_sub_organization(
         self,
@@ -1140,9 +1140,9 @@ class TestOAuth2Token:
         json = response.json()
 
         access_token = json["access_token"]
-        assert access_token.startswith("polar_at_o_")
+        assert access_token.startswith("outception_at_o_")
         refresh_token = json["refresh_token"]
-        assert refresh_token.startswith("polar_rt_o_")
+        assert refresh_token.startswith("outception_rt_o_")
 
     async def test_authorization_code_revoked_public_client(
         self,
@@ -1212,9 +1212,9 @@ class TestOAuth2Token:
         json = response.json()
 
         access_token = json["access_token"]
-        assert access_token.startswith("polar_at_u_")
+        assert access_token.startswith("outception_at_u_")
         refresh_token = json["refresh_token"]
-        assert refresh_token.startswith("polar_rt_u_")
+        assert refresh_token.startswith("outception_rt_u_")
 
     async def test_refresh_token_sub_organization(
         self,
@@ -1245,9 +1245,9 @@ class TestOAuth2Token:
         json = response.json()
 
         access_token = json["access_token"]
-        assert access_token.startswith("polar_at_o_")
+        assert access_token.startswith("outception_at_o_")
         refresh_token = json["refresh_token"]
-        assert refresh_token.startswith("polar_rt_o_")
+        assert refresh_token.startswith("outception_rt_o_")
 
     async def test_refresh_token_unauthenticated_private_client(
         self,
@@ -1303,9 +1303,9 @@ class TestOAuth2Token:
         json = response.json()
 
         access_token = json["access_token"]
-        assert access_token.startswith("polar_at_u_")
+        assert access_token.startswith("outception_at_u_")
         refresh_token = json["refresh_token"]
-        assert refresh_token.startswith("polar_rt_u_")
+        assert refresh_token.startswith("outception_rt_u_")
 
     @pytest.mark.parametrize(
         "payload",
@@ -1469,7 +1469,7 @@ class TestOAuth2Token:
         json = response.json()
 
         access_token = json["access_token"]
-        assert access_token.startswith("polar_at_u_")
+        assert access_token.startswith("outception_at_u_")
         assert "refresh_token" not in json
 
     async def test_web_grant_sub_organization(
@@ -1509,7 +1509,7 @@ class TestOAuth2Token:
         json = response.json()
 
         access_token = json["access_token"]
-        assert access_token.startswith("polar_at_o_")
+        assert access_token.startswith("outception_at_o_")
         assert "refresh_token" not in json
 
     async def test_web_grant_sub_organization_member_without_manage_forbidden(
@@ -1594,7 +1594,7 @@ class TestOAuth2Token:
 
         assert response.status_code == 200
         json = response.json()
-        assert json["access_token"].startswith("polar_at_o_")
+        assert json["access_token"].startswith("outception_at_o_")
 
     async def test_web_grant_sub_organization_manage_in_other_org_forbidden(
         self,

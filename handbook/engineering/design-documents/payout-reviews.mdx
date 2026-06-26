@@ -21,7 +21,7 @@ An organization under review cannot request a payout today. Merchants open Plain
 
 - No per-payout review queue. Hold transitions follow the org review outcome.
 - No new payout-related webhook events.
-- No signal-based gating on `ACTIVE` orgs (that fits into [#121](https://github.com/polarsource/feedback/issues/121)).
+- No signal-based gating on `ACTIVE` orgs (that fits into [#121](https://github.com/outception/feedback/issues/121)).
 - No appeal flow for held payouts. A canceled payout returns funds, and the merchant can request again if they get approved.
 - No merchant-facing cancel endpoint. Backoffice cancel is enough for now.
 - No change to `CREATED`, `DENIED` or `OFFBOARDING` orgs. OFFBOARDING in particular needs its own end-of-life flow, so we explicitly leave it out of this RFC.
@@ -118,7 +118,7 @@ To prevent this, `PayoutService.create` starts with `SELECT ... FOR UPDATE` on t
 
 ### Balance mechanics
 
-Polar does not store the merchant's "available balance" anywhere. Instead, it is computed on every read by `TransactionService.get_summary`, as a filtered `SUM(amount)` over the `transactions` table. When `PayoutService.create` runs, it writes a few negative-amount rows that reduce that sum right away, whether the payout is `pending` or `held`. The hold does not change ledger behavior at all, it only changes whether we run `payout.transfer`.
+Outception does not store the merchant's "available balance" anywhere. Instead, it is computed on every read by `TransactionService.get_summary`, as a filtered `SUM(amount)` over the `transactions` table. When `PayoutService.create` runs, it writes a few negative-amount rows that reduce that sum right away, whether the payout is `pending` or `held`. The hold does not change ledger behavior at all, it only changes whether we run `payout.transfer`.
 
 On cancellation, we reverse the gross payout amount and the per-payout fees, so the full reserved amount returns to the available balance. Today's cancel path does not reverse the fees, but a held payout never ran a Stripe transfer, so no fee was actually paid to Stripe. Reversing them keeps the merchant whole. The full ledger details are in [Appendix A](#appendix-a-balance-mechanics).
 
@@ -167,7 +167,7 @@ On volume: opening the flow to REVIEW and SNOOZED will increase the daily payout
 ## Open questions
 
 - **Cancellation telemetry.** Should we record a `cancel_reason` enum on every cancellation (`org_denied`, `org_blocked`, `org_offboarded`, `backoffice_manual`)? The value it provides is low.
-- **Naming.** We use `held` for the status. Note Polar already uses "Held balance" and an `on_hold` transaction availability status for balance concepts, so keep the payout `held` status mentally separate from those.
+- **Naming.** We use `held` for the status. Note Outception already uses "Held balance" and an `on_hold` transaction availability status for balance concepts, so keep the payout `held` status mentally separate from those.
 - **Connect-account swap during the hold window.** `Payout.payout_account_id` is set at creation. If a merchant rebinds their Stripe Connect account while a held payout is sitting, the release flow would transfer to the old account. The proposed behavior is to cancel held payouts on `set_payout_account` and let the merchant request again. Since canceled held payouts now return their fees too, re-requesting does not double-charge. We need to confirm this during PR 2.
 - **Organization-token requests.** The create endpoint is `User`-only today, and the hold flow does not change that. We just want to confirm we are not accidentally widening the surface.
 
@@ -177,7 +177,7 @@ On volume: opening the flow to REVIEW and SNOOZED will increase the daily payout
 
 ### How the available balance is computed
 
-Polar does not have a balance column anywhere. The available balance is computed on demand by `TransactionService.get_summary`, as a filtered `SUM(Transaction.amount)` over the `transactions` table for the merchant's account. A transaction row counts toward the available balance if any of these is true:
+Outception does not have a balance column anywhere. The available balance is computed on demand by `TransactionService.get_summary`, as a filtered `SUM(Transaction.amount)` over the `transactions` table for the merchant's account. A transaction row counts toward the available balance if any of these is true:
 
 - `type == payout`
 - `platform_fee_type IN (account, cross_border_transfer, payout)`
@@ -187,7 +187,7 @@ Polar does not have a balance column anywhere. The available balance is computed
 
 When a merchant requests a payout, `PayoutService.create` writes three groups of rows on the ledger, all before the function returns. This is the same whether the payout ends up as `pending` or `held`.
 
-1. **Fee debits.** `create_payout_fees_balances` ([server/polar/transaction/service/platform_fee.py](server/polar/transaction/service/platform_fee.py)) inserts up to three balance pairs, one per applicable fee (`account`, `cross_border_transfer`, `payout`). Each pair is a merchant-side debit and a Polar-side credit. The merchant-side rows count toward the available balance via the `platform_fee_type` arm.
+1. **Fee debits.** `create_payout_fees_balances` ([server/outception/transaction/service/platform_fee.py](server/outception/transaction/service/platform_fee.py)) inserts up to three balance pairs, one per applicable fee (`account`, `cross_border_transfer`, `payout`). Each pair is a merchant-side debit and a Outception-side credit. The merchant-side rows count toward the available balance via the `platform_fee_type` arm.
 2. **The Payout row.** A row is inserted in the `payouts` table with `amount = balance_after_fees` and `fees_amount = balance - balance_after_fees`.
 3. **The payout transaction.** `payout_transaction_service.create` inserts one `Transaction(type=payout, amount=-payout.amount)`. This row counts toward the available balance via the `type == payout` arm.
 
@@ -222,7 +222,7 @@ The query is intentionally simple: any held payout older than 2 days is either a
 
 `Payout.status` is a `sa.String()` column backed by a Python `StringEnum`, not a Postgres ENUM. This means adding `held` is a code-only change. There is no `ALTER TYPE`, no column rewrite, and no data migration.
 
-The `payout_status_update_trigger` Postgres trigger ([server/polar/models/payout_attempt.py](server/polar/models/payout_attempt.py)) keeps `payouts.status` in sync with the latest `payout_attempt`. It already has one early-return guard preserving `canceled`:
+The `payout_status_update_trigger` Postgres trigger ([server/outception/models/payout_attempt.py](server/outception/models/payout_attempt.py)) keeps `payouts.status` in sync with the latest `payout_attempt`. It already has one early-return guard preserving `canceled`:
 
 ```sql
 IF current_status = 'canceled' THEN
@@ -254,7 +254,7 @@ The new `held` payout status is **not** a public change: payout endpoints are pr
 
 ## Appendix E: Repository queries to fix
 
-Both fixes live in [server/polar/payout/repository.py](server/polar/payout/repository.py) and land in PR 2:
+Both fixes live in [server/outception/payout/repository.py](server/outception/payout/repository.py) and land in PR 2:
 
 - **`get_all_stripe_pending`.** We tighten the status filter from `not_in([canceled, succeeded])` to `== pending`. Otherwise the hourly Stripe-transfer cron picks up `held` rows and wastes one `retrieve_balance` call per hour for each held payout.
 - **`count_pending_by_payout_account`.** We extend the count to also include `held`. Otherwise `PayoutAccountService.delete` would let a merchant delete a payout account that still has funds reserved against it.

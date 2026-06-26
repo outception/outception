@@ -68,7 +68,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ghcr.io/polarsource/polar-${{ matrix.image }}
+          images: ghcr.io/outception/outception-${{ matrix.image }}
           tags: |
             type=sha
             type=raw,value=latest,enable={{is_default_branch}}

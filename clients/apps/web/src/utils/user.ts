@@ -1,4 +1,4 @@
-import { schemas } from '@polar-sh/client'
+import { schemas } from '@outception-com/client'
 import { headers } from 'next/headers'
 import { cache } from 'react'
 
@@ -6,7 +6,7 @@ const _getAuthenticatedUser = async (): Promise<
   schemas['UserRead'] | undefined
 > => {
   // Middleware set this header for authenticated requests
-  const userData = (await headers()).get('x-polar-user')
+  const userData = (await headers()).get('x-outception-user')
   if (userData) {
     return JSON.parse(Buffer.from(userData, 'base64').toString('utf-8'))
   }

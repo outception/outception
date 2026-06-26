@@ -6,15 +6,15 @@ from typing import Any
 
 import pytest_asyncio
 
-from polar.models import (
+from outception.models import (
     OAuthAccount,
     Organization,
     User,
     UserOrganization,
 )
-from polar.models.organization import STATUS_CAPABILITIES, OrganizationStatus
-from polar.models.user import OAuthPlatform
-from polar.models.user_organization import OrganizationRole
+from outception.models.organization import STATUS_CAPABILITIES, OrganizationStatus
+from outception.models.user import OAuthPlatform
+from outception.models.user_organization import OrganizationRole
 from tests.fixtures.database import SaveFixture
 
 

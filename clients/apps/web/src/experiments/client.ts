@@ -13,7 +13,7 @@ import {
 } from './index'
 
 /**
- * Check if the polar_distinct_id cookie exists.
+ * Check if the outception_distinct_id cookie exists.
  * We only track experiment exposure when this cookie exists to ensure
  * the same distinct ID is used for both client-side experiment events
  * and server-side events. Without this, funnel analysis breaks due to ID mismatches.

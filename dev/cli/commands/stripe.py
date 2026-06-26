@@ -43,10 +43,10 @@ def _is_stripe_configured() -> bool:
         has_secret = False
         has_publishable = False
         for line in content.split("\n"):
-            if line.startswith("POLAR_STRIPE_SECRET_KEY="):
+            if line.startswith("OUTCEPTION_STRIPE_SECRET_KEY="):
                 value = line.split("=", 1)[1].strip().strip("\"'")
                 has_secret = bool(value)
-            if line.startswith("POLAR_STRIPE_PUBLISHABLE_KEY="):
+            if line.startswith("OUTCEPTION_STRIPE_PUBLISHABLE_KEY="):
                 value = line.split("=", 1)[1].strip().strip("\"'")
                 has_publishable = bool(value)
         return has_secret and has_publishable
@@ -77,11 +77,11 @@ def _update_secrets_file(key: str, value: str | None) -> None:
 
 def _save_stripe_keys(secret_key: str, publishable_key: str, webhook_secret: str = "") -> None:
     """Save Stripe keys to the central secrets file."""
-    _update_secrets_file("POLAR_STRIPE_SECRET_KEY", secret_key)
-    _update_secrets_file("POLAR_STRIPE_PUBLISHABLE_KEY", publishable_key)
+    _update_secrets_file("OUTCEPTION_STRIPE_SECRET_KEY", secret_key)
+    _update_secrets_file("OUTCEPTION_STRIPE_PUBLISHABLE_KEY", publishable_key)
     if webhook_secret:
-        _update_secrets_file("POLAR_STRIPE_WEBHOOK_SECRET", webhook_secret)
-        _update_secrets_file("POLAR_STRIPE_CONNECT_WEBHOOK_SECRET", webhook_secret)
+        _update_secrets_file("OUTCEPTION_STRIPE_WEBHOOK_SECRET", webhook_secret)
+        _update_secrets_file("OUTCEPTION_STRIPE_CONNECT_WEBHOOK_SECRET", webhook_secret)
 
 
 def register(app: typer.Typer, prompt_setup: callable) -> None:

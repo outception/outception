@@ -4,20 +4,20 @@ import Link from 'next/link'
 import { useTOTPVerify } from '@/hooks'
 import { setValidationErrors } from '@/utils/api/errors'
 import { CONFIG } from '@/utils/config'
-import { isValidationError } from '@polar-sh/client'
-import { Button } from '@polar-sh/orbit'
+import { isValidationError } from '@outception-com/client'
+import { Button } from '@outception-com/orbit'
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
-} from '@polar-sh/ui/components/atoms/InputOTP'
+} from '@outception-com/ui/components/atoms/InputOTP'
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormMessage,
-} from '@polar-sh/ui/components/ui/form'
+} from '@outception-com/ui/components/ui/form'
 import { useRouter } from 'next/navigation'
 import { useRef, useState } from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
@@ -83,7 +83,7 @@ const VerifyPage = () => {
                         <InputOTPSlot
                           key={index}
                           index={index}
-                          className="dark:border-polar-600 h-12 w-12 border-gray-300 text-xl md:h-16 md:w-16 md:text-2xl"
+                          className="dark:border-outception-600 h-12 w-12 border-gray-300 text-xl md:h-16 md:w-16 md:text-2xl"
                         />
                       ))}
                     </InputOTPGroup>
@@ -101,7 +101,7 @@ const VerifyPage = () => {
         <div className="mt-4 text-center">
           <Link
             href="/auth/backup-codes"
-            className="dark:text-polar-300 text-sm text-gray-600 hover:underline"
+            className="dark:text-outception-300 text-sm text-gray-600 hover:underline"
           >
             Use a backup code instead
           </Link>

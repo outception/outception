@@ -7,9 +7,9 @@ import structlog
 import typer
 from sqlalchemy import CursorResult, text
 
-from polar.config import settings
-from polar.kit.db.postgres import AsyncSession, create_async_sessionmaker
-from polar.kit.db.postgres import create_async_engine as _create_async_engine
+from outception.config import settings
+from outception.kit.db.postgres import AsyncSession, create_async_sessionmaker
+from outception.kit.db.postgres import create_async_engine as _create_async_engine
 
 cli = typer.Typer()
 

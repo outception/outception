@@ -1,14 +1,14 @@
 ---
 title: "Authorization"
-description: "How authorization works in Polar: authentication vs authorization, PolicyGuard, policies, and org-scoped data access."
+description: "How authorization works in Outception: authentication vs authorization, PolicyGuard, policies, and org-scoped data access."
 ---
 
 ## Overview
 
-Authorization in Polar is split into two layers:
+Authorization in Outception is split into two layers:
 
 - **Authentication** (`Authenticator`): "Who are you?" — validates tokens/sessions, resolves the subject (User, Organization, Customer, Member), extracts token scopes.
-- **Authorization** (`server/polar/authz/`): "Are you allowed to do this?" — checks org membership, evaluates policies, enforces access control.
+- **Authorization** (`server/outception/authz/`): "Are you allowed to do this?" — checks org membership, evaluates policies, enforces access control.
 
 These are separate concerns. Authentication happens via FastAPI's `Authenticator` dependency. Authorization happens via **PolicyGuard** dependencies that resolve resources and check policies before the endpoint body runs.
 
@@ -64,7 +64,7 @@ There are three PolicyGuard variants for different resource types:
 
 ### Typed dependencies
 
-Each guard is paired with a policy and exposed as a named dependency in `server/polar/authz/dependencies.py`. Endpoints depend on these names rather than wiring guards and policies themselves. For example:
+Each guard is paired with a policy and exposed as a named dependency in `server/outception/authz/dependencies.py`. Endpoints depend on these names rather than wiring guards and policies themselves. For example:
 
 ```python
 AuthorizeFinanceRead    # OrgPolicyGuard + finance.can_read
@@ -74,14 +74,14 @@ AuthorizeAccountWrite   # AccountPolicyGuard + finance.can_write
 
 There are also "always-allow" variants for endpoints that only need authentication, scope check, and org membership — no further policy. They exist so endpoints can still benefit from centralized resource resolution (the guard fetches the org and 404s non-members) without inventing a trivial policy.
 
-See `server/polar/authz/dependencies.py` for the full list.
+See `server/outception/authz/dependencies.py` for the full list.
 
 ## Policies
 
-Policies are async functions in `server/polar/authz/policies/`. Each policy receives the database session, auth subject, and organization, and returns either `True` (allowed) or a denial reason string.
+Policies are async functions in `server/outception/authz/policies/`. Each policy receives the database session, auth subject, and organization, and returns either `True` (allowed) or a denial reason string.
 
 ```python
-# server/polar/authz/policies/finance.py
+# server/outception/authz/policies/finance.py
 async def can_read(
     session: AsyncReadSession,
     auth_subject: AuthSubject[User | Organization],
@@ -104,7 +104,7 @@ The denial reason string is passed through to the `NotPermitted` exception and a
 
 ### Where policies live
 
-Policies are grouped by the resource area they protect — one file per area in `server/polar/authz/policies/` (e.g. finance, members, organization). A file typically exposes `can_read`/`can_write` or a more specific verb when the operation has its own rules (e.g. `can_delete`, `can_manage`). New areas get a new file rather than overloading an existing one.
+Policies are grouped by the resource area they protect — one file per area in `server/outception/authz/policies/` (e.g. finance, members, organization). A file typically exposes `can_read`/`can_write` or a more specific verb when the operation has its own rules (e.g. `can_delete`, `can_manage`). New areas get a new file rather than overloading an existing one.
 
 ## Org-scoped data access
 
@@ -150,7 +150,7 @@ org_ids = await get_accessible_org_ids(
 
 Some endpoints don't operate on an organization — they act on the authenticated user themselves. Examples: own profile (`/users/me`), Personal Access Token management, OAuth identity linking, email update, per-user integration callbacks. There's no organization to resolve, so no membership check or org-scoped policy applies.
 
-For these, use one of the user-personal `Authorize*` aliases from `server/polar/authz/dependencies.py`:
+For these, use one of the user-personal `Authorize*` aliases from `server/outception/authz/dependencies.py`:
 
 ```python
 from polar.authz.dependencies import AuthorizeWebUserRead, AuthorizeWebUserWrite
@@ -188,7 +188,7 @@ Add a new alias to `authz/dependencies.py` if a new endpoint needs a scope combi
 
 The split between authentication and authorization still applies:
 
-- `WebUserSession` (in `server/polar/auth/dependencies.py`) — pure authentication for the `Web*` aliases. Accepts only web-session users; rejects API tokens.
+- `WebUserSession` (in `server/outception/auth/dependencies.py`) — pure authentication for the `Web*` aliases. Accepts only web-session users; rejects API tokens.
 - `Authorize*` aliases (above) — the authorization layer. Add the scope check, and are the place to attach future cross-cutting per-user checks (account suspended, identity not verified, MFA required, …) without touching endpoint signatures.
 
 Endpoints depend on the `Authorize*` alias, never on `WebUserSession` directly.
@@ -209,8 +209,8 @@ PolicyGuard dependencies declare `required_scopes` appropriate to their resource
 
 ## Adding a new policy-guarded endpoint
 
-1. **Choose or create a policy function** in `server/polar/authz/policies/`
-2. **Create a typed dependency** in `server/polar/authz/dependencies.py` using the appropriate guard variant
+1. **Choose or create a policy function** in `server/outception/authz/policies/`
+2. **Create a typed dependency** in `server/outception/authz/dependencies.py` using the appropriate guard variant
 3. **Use the dependency in the endpoint** — declare it as a parameter, access `.organization` and `.auth_subject` from the result
 
 ```python

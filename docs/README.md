@@ -1,4 +1,4 @@
-# Polar docs
+# Outception docs
 
 Using Mintlify.
 

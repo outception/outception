@@ -2,13 +2,13 @@
 
 data "tfe_project" "production" {
   name         = "Production"
-  organization = "polar-sh"
+  organization = "outception-com"
 }
 
 resource "tfe_variable_set" "production" {
   name              = "Production Settings"
   description       = "Variables specific to the production environment"
-  organization      = "polar-sh"
+  organization      = "outception-com"
   parent_project_id = data.tfe_project.production.id
 }
 
@@ -361,26 +361,26 @@ resource "tfe_variable" "tinybird_read_token_production" {
   variable_set_id = tfe_variable_set.production.id
 }
 
-resource "tfe_variable" "polar_access_token_production" {
-  key             = "polar_access_token"
+resource "tfe_variable" "outception_access_token_production" {
+  key             = "outception_access_token"
   category        = "terraform"
-  description     = "Polar API access token"
+  description     = "Outception API access token"
   sensitive       = true
   variable_set_id = tfe_variable_set.production.id
 }
 
-resource "tfe_variable" "polar_webhook_secret_production" {
-  key             = "polar_webhook_secret"
+resource "tfe_variable" "outception_webhook_secret_production" {
+  key             = "outception_webhook_secret"
   category        = "terraform"
-  description     = "Polar webhook secret"
+  description     = "Outception webhook secret"
   sensitive       = true
   variable_set_id = tfe_variable_set.production.id
 }
 
-resource "tfe_variable" "polar_organization_id_production" {
-  key             = "polar_organization_id"
+resource "tfe_variable" "outception_organization_id_production" {
+  key             = "outception_organization_id"
   category        = "terraform"
-  description     = "Polar organization ID"
+  description     = "Outception organization ID"
   variable_set_id = tfe_variable_set.production.id
 
   lifecycle {
@@ -388,10 +388,10 @@ resource "tfe_variable" "polar_organization_id_production" {
   }
 }
 
-resource "tfe_variable" "polar_free_product_id_production" {
-  key             = "polar_free_product_id"
+resource "tfe_variable" "outception_free_product_id_production" {
+  key             = "outception_free_product_id"
   category        = "terraform"
-  description     = "Polar free-tier product ID"
+  description     = "Outception free-tier product ID"
   variable_set_id = tfe_variable_set.production.id
 
   lifecycle {
@@ -399,10 +399,10 @@ resource "tfe_variable" "polar_free_product_id_production" {
   }
 }
 
-resource "tfe_variable" "polar_scale_product_id_production" {
-  key             = "polar_scale_product_id"
+resource "tfe_variable" "outception_scale_product_id_production" {
+  key             = "outception_scale_product_id"
   category        = "terraform"
-  description     = "Polar Scale-tier product ID for production"
+  description     = "Outception Scale-tier product ID for production"
   variable_set_id = tfe_variable_set.production.id
 }
 
@@ -438,7 +438,7 @@ resource "tfe_variable" "tailscale_advertise_routes_production" {
 resource "tfe_variable" "plain_default_tier_external_id_production" {
   key             = "plain_default_tier_external_id"
   category        = "terraform"
-  description     = "Default Plain tier external ID used as a fallback for the polar-self support benefit for production"
+  description     = "Default Plain tier external ID used as a fallback for the outception-self support benefit for production"
   sensitive       = false
   variable_set_id = tfe_variable_set.production.id
 }
@@ -524,10 +524,10 @@ resource "tfe_variable" "vercel_sentry_auth_token_production" {
   variable_set_id = tfe_variable_set.production.id
 }
 
-resource "tfe_variable" "vercel_polar_preview_access_token_production" {
-  key             = "polar_preview_access_token"
+resource "tfe_variable" "vercel_outception_preview_access_token_production" {
+  key             = "outception_preview_access_token"
   category        = "terraform"
-  description     = "Polar preview access token for the Vercel production frontend"
+  description     = "Outception preview access token for the Vercel production frontend"
   sensitive       = true
   variable_set_id = tfe_variable_set.production.id
 }

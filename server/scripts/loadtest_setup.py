@@ -16,21 +16,26 @@ from datetime import datetime
 
 import dramatiq
 import typer
-from polar.customer.schemas.customer import CustomerIndividualCreate
-from polar.customer.service import customer as customer_service
-from polar.meter.aggregation import AggregationFunction, PropertyAggregation
-from polar.meter.filter import Filter, FilterClause, FilterConjunction, FilterOperator
-from polar.meter.schemas import MeterCreate
-from polar.meter.service import meter as meter_service
+from outception.customer.schemas.customer import CustomerIndividualCreate
+from outception.customer.service import customer as customer_service
+from outception.meter.aggregation import AggregationFunction, PropertyAggregation
+from outception.meter.filter import (
+    Filter,
+    FilterClause,
+    FilterConjunction,
+    FilterOperator,
+)
+from outception.meter.schemas import MeterCreate
+from outception.meter.service import meter as meter_service
 
-import polar.tasks  # noqa: F401 - Import tasks to register all dramatiq actors
-from polar.auth.models import AuthSubject
-from polar.kit.db.postgres import create_async_sessionmaker
-from polar.organization.repository import OrganizationRepository
-from polar.postgres import AsyncSession, create_async_engine
-from polar.redis import create_redis
-from polar.user_organization.service import UserOrganizationService
-from polar.worker import JobQueueManager
+import outception.tasks  # noqa: F401 - Import tasks to register all dramatiq actors
+from outception.auth.models import AuthSubject
+from outception.kit.db.postgres import create_async_sessionmaker
+from outception.organization.repository import OrganizationRepository
+from outception.postgres import AsyncSession, create_async_engine
+from outception.redis import create_redis
+from outception.user_organization.service import UserOrganizationService
+from outception.worker import JobQueueManager
 
 cli = typer.Typer()
 
@@ -74,7 +79,7 @@ async def create_loadtest_data(
         customer = await customer_service.create(
             session=session,
             customer_create=CustomerIndividualCreate(
-                email=f"{external_id}@polar.sh",
+                email=f"{external_id}@outception.com",
                 name=f"Load Test Customer {i + 1}",
                 external_id=external_id,
                 organization_id=organization.id,
@@ -152,7 +157,7 @@ async def create_loadtest_data(
     api_token_line = (
         f"LOAD_TEST_API_TOKEN={existing_token}"
         if existing_token
-        else "LOAD_TEST_API_TOKEN=polar_pat_REPLACE_WITH_YOUR_TOKEN"
+        else "LOAD_TEST_API_TOKEN=outception_pat_REPLACE_WITH_YOUR_TOKEN"
     )
 
     # Output .env format
@@ -161,7 +166,7 @@ async def create_loadtest_data(
 # Organization: {organization.name} ({organization_slug})
 
 # Required: API host and authentication
-# Note: Use an organization access token (polar_oat_*) for this organization
+# Note: Use an organization access token (outception_oat_*) for this organization
 LOAD_TEST_HOST=http://127.0.0.1:8000
 {api_token_line}
 

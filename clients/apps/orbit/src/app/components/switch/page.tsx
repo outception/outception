@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Box } from '@polar-sh/orbit/Box'
-import { Switch, Text } from '@polar-sh/orbit'
+import { Box } from '@outception-com/orbit/Box'
+import { Switch, Text } from '@outception-com/orbit'
 import {
   Example,
   PageHeader,

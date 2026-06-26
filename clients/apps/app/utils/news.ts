@@ -1,5 +1,5 @@
-import type { Client, schemas } from '@polar-sh/client'
-import { unwrap } from '@polar-sh/client'
+import type { Client, schemas } from '@outception-com/client'
+import { unwrap } from '@outception-com/client'
 import { Linking } from 'react-native'
 
 export type NewsSourceMeta = schemas['SourceMeta']
@@ -20,24 +20,24 @@ export const openExternalUrl = (url: string | null | undefined) => {
   }
 }
 
-export const newsApi = (polar: Client) => ({
-  sources: () => unwrap(polar.GET('/v1/news/sources')),
+export const newsApi = (outception: Client) => ({
+  sources: () => unwrap(outception.GET('/v1/news/sources')),
   source: (id: string, sort: NewsSort = 'hot') =>
     unwrap(
-      polar.GET('/v1/news/{source_id}', {
+      outception.GET('/v1/news/{source_id}', {
         params: { path: { source_id: id }, query: { sort } },
       }),
     ),
   search: (q: string) =>
-    unwrap(polar.GET('/v1/news/search', { params: { query: { q } } })),
-  followed: () => unwrap(polar.GET('/v1/news/followed')),
-  followedFeed: () => unwrap(polar.GET('/v1/news/followed/feed')),
+    unwrap(outception.GET('/v1/news/search', { params: { query: { q } } })),
+  followed: () => unwrap(outception.GET('/v1/news/followed')),
+  followedFeed: () => unwrap(outception.GET('/v1/news/followed/feed')),
   follow: (id: string) =>
-    polar.PUT('/v1/news/followed/{source_id}', {
+    outception.PUT('/v1/news/followed/{source_id}', {
       params: { path: { source_id: id } },
     }),
   unfollow: (id: string) =>
-    polar.DELETE('/v1/news/followed/{source_id}', {
+    outception.DELETE('/v1/news/followed/{source_id}', {
       params: { path: { source_id: id } },
     }),
 })

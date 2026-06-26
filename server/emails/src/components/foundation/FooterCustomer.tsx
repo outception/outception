@@ -30,7 +30,7 @@ const FooterCustomer = ({
         <span className="font-medium text-gray-900">{organization.name}</span>{' '}
         by{' '}
         {/* eslint-disable-next-line email-ds/no-raw-text-elements -- footer value uses the dark tone, label stays muted */}
-        <span className="font-medium text-gray-900">Polar Software, Inc.</span>
+        <span className="font-medium text-gray-900">Outception Software, Inc.</span>
       </Text>
     </Section>
   </>

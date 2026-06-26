@@ -4,18 +4,18 @@ import uuid
 from dataclasses import dataclass, field
 
 import typer
-from polar.integrations.plain.service import plain as plain_service
+from outception.integrations.plain.service import plain as plain_service
 from rich.progress import Progress, TaskID
 
-from polar.config import settings
-from polar.kit.db.postgres import (
+from outception.config import settings
+from outception.kit.db.postgres import (
     AsyncSessionMaker,
     create_async_sessionmaker,
 )
-from polar.models import Organization
-from polar.organization.repository import OrganizationRepository
-from polar.postgres import AsyncSession, create_async_engine
-from polar.user.repository import UserRepository
+from outception.models import Organization
+from outception.organization.repository import OrganizationRepository
+from outception.postgres import AsyncSession, create_async_engine
+from outception.user.repository import UserRepository
 
 from .helper import configure_script_logging, typer_async
 
@@ -118,7 +118,7 @@ async def run_backfill(
 ) -> BackfillResult:
     result = BackfillResult()
 
-    self_org_id = uuid.UUID(settings.POLAR_ORGANIZATION_ID)
+    self_org_id = uuid.UUID(settings.OUTCEPTION_ORGANIZATION_ID)
 
     organization_repository = OrganizationRepository.from_session(session)
 
@@ -191,9 +191,9 @@ async def backfill(
     """Backfill Plain tenants and tenant customers for all active organizations."""
     configure_script_logging()
 
-    if not settings.POLAR_SELF_ENABLED:
+    if not settings.OUTCEPTION_SELF_ENABLED:
         typer.echo(
-            "POLAR_ACCESS_TOKEN, POLAR_ORGANIZATION_ID, or POLAR_FREE_PRODUCT_ID "
+            "OUTCEPTION_ACCESS_TOKEN, OUTCEPTION_ORGANIZATION_ID, or OUTCEPTION_FREE_PRODUCT_ID "
             "is not configured, aborting."
         )
         raise typer.Exit(1)

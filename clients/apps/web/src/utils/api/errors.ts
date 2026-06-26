@@ -1,5 +1,5 @@
 import { useToast } from '@/components/Toast/use-toast'
-import { schemas } from '@polar-sh/client'
+import { schemas } from '@outception-com/client'
 import { FieldPath, FieldValues, UseFormSetError } from 'react-hook-form'
 
 export const setValidationErrors = <TFieldValues extends FieldValues>(

@@ -1,5 +1,5 @@
-import { Box } from '@polar-sh/orbit/Box'
-import { Grid, GridItem, Text } from '@polar-sh/orbit'
+import { Box } from '@outception-com/orbit/Box'
+import { Grid, GridItem, Text } from '@outception-com/orbit'
 import { type ReactNode } from 'react'
 
 function Cell({ children }: { children: ReactNode }) {

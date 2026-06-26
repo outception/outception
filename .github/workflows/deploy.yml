@@ -200,7 +200,7 @@ jobs:
         uses: docker/metadata-action@v6
         with:
           images: |
-            ghcr.io/polarsource/polar
+            ghcr.io/outception/outception
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -210,7 +210,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Sync AUP to server
-        run: cp "clients/apps/web/src/app/(main)/(website)/(landing)/(mdx)/legal/acceptable-use-policy/page.mdx" "server/polar/organization_review/acceptable-use-policy.mdx"
+        run: cp "clients/apps/web/src/app/(main)/(website)/(landing)/(mdx)/legal/acceptable-use-policy/page.mdx" "server/outception/organization_review/acceptable-use-policy.mdx"
 
       - uses: useblacksmith/build-push-action@v2
         id: push
@@ -230,7 +230,7 @@ jobs:
         id: meta-playwright
         uses: docker/metadata-action@v6
         with:
-          images: ghcr.io/polarsource/polar-playwright
+          images: ghcr.io/outception/outception-playwright
           tags: |
             type=sha
             type=raw,value=latest,enable={{is_default_branch}}
@@ -264,7 +264,7 @@ jobs:
         uses: useblacksmith/setup-docker-builder@v1.9.0
 
       - name: Sync AUP to server
-        run: cp "clients/apps/web/src/app/(main)/(website)/(landing)/(mdx)/legal/acceptable-use-policy/page.mdx" "server/polar/organization_review/acceptable-use-policy.mdx"
+        run: cp "clients/apps/web/src/app/(main)/(website)/(landing)/(mdx)/legal/acceptable-use-policy/page.mdx" "server/outception/organization_review/acceptable-use-policy.mdx"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6.2.0
@@ -281,11 +281,11 @@ jobs:
         with:
           push: true
           # Sandbox/prod repos — add into the tags block once they exist:
-          #   ${{ steps.login-ecr.outputs.registry }}/polar-sandbox-lambda-worker:sha-${{ github.sha }}
-          #   ${{ steps.login-ecr.outputs.registry }}/polar-production-lambda-worker:sha-${{ github.sha }}
+          #   ${{ steps.login-ecr.outputs.registry }}/outception-sandbox-lambda-worker:sha-${{ github.sha }}
+          #   ${{ steps.login-ecr.outputs.registry }}/outception-production-lambda-worker:sha-${{ github.sha }}
           tags: |
-            ${{ steps.login-ecr.outputs.registry }}/polar-test-lambda-worker:sha-${{ github.sha }}
-            ${{ steps.login-ecr.outputs.registry }}/polar-test-lambda-worker:latest
+            ${{ steps.login-ecr.outputs.registry }}/outception-test-lambda-worker:sha-${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/outception-test-lambda-worker:latest
           context: ./server
           target: lambda
           platforms: linux/amd64
@@ -314,8 +314,8 @@ jobs:
   #     - name: Update sandbox Lambda function code
   #       run: |
   #         aws lambda update-function-code \
-  #           --function-name polar-sandbox-lambda-worker \
-  #           --image-uri "${{ steps.login-ecr.outputs.registry }}/polar-sandbox-lambda-worker:sha-${{ github.sha }}" \
+  #           --function-name outception-sandbox-lambda-worker \
+  #           --image-uri "${{ steps.login-ecr.outputs.registry }}/outception-sandbox-lambda-worker:sha-${{ github.sha }}" \
   #           --publish
 
   # deploy-lambda-production:
@@ -338,8 +338,8 @@ jobs:
   #     - name: Update production Lambda function code
   #       run: |
   #         aws lambda update-function-code \
-  #           --function-name polar-production-lambda-worker \
-  #           --image-uri "${{ steps.login-ecr.outputs.registry }}/polar-production-lambda-worker:sha-${{ github.sha }}" \
+  #           --function-name outception-production-lambda-worker \
+  #           --image-uri "${{ steps.login-ecr.outputs.registry }}/outception-production-lambda-worker:sha-${{ github.sha }}" \
   #           --publish
 
   deploy-sandbox:

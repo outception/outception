@@ -3,7 +3,7 @@
 import { DashboardBody } from '@/components/Layout/DashboardLayout'
 import OrganizationAccessTokensSettings from '@/components/Settings/OrganizationAccessTokensSettings'
 import { Section, SectionDescription } from '@/components/Settings/Section'
-import { schemas } from '@polar-sh/client'
+import { schemas } from '@outception-com/client'
 
 export default function ClientPage({
   organization: org,

@@ -3,7 +3,7 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useMemo } from 'react'
 import { twMerge } from 'tailwind-merge'
-import { Button } from '@polar-sh/orbit'
+import { Button } from '@outception-com/orbit'
 
 interface PaginatorProps {
   totalCount: number
@@ -80,7 +80,7 @@ const Paginator = ({
         // If the pageItem is a DOT, render the DOTS unicode character
         if (typeof pageNumber !== 'number') {
           return (
-            <div className="dark:text-polar-400 text-gray-400" key={idx}>
+            <div className="dark:text-outception-400 text-gray-400" key={idx}>
               &#8230;
             </div>
           )

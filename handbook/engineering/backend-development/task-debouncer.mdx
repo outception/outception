@@ -1,9 +1,9 @@
 ---
 title: "Task Debouncer"
-description: "How to use task debouncing to avoid duplicate task execution in Polar's background worker system."
+description: "How to use task debouncing to avoid duplicate task execution in Outception's background worker system."
 ---
 
-Task debouncing is a mechanism used in Polar's background worker system to prevent duplicate execution of tasks that are triggered multiple times in a short amount of time. This is particularly useful for operations that might be triggered by multiple events or user actions.
+Task debouncing is a mechanism used in Outception's background worker system to prevent duplicate execution of tasks that are triggered multiple times in a short amount of time. This is particularly useful for operations that might be triggered by multiple events or user actions.
 
 ## When to use task debouncing
 
@@ -30,7 +30,7 @@ To add debouncing to a Dramatiq task, you need to:
 ### Example implementation
 
 ```python
-from polar.worker import actor
+from outception.worker import actor
 from polar.config import settings
 
 def _update_customer_debounce_key(customer_id: uuid.UUID) -> str:

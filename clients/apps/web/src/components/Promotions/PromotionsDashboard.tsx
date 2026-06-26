@@ -5,8 +5,8 @@ import {
   usePromotionAnalytics,
 } from '@/hooks/queries/promotions'
 import { topicLabel } from '@/utils/promotions'
-import { Pill, Spinner, Text } from '@polar-sh/orbit'
-import { Box } from '@polar-sh/orbit/Box'
+import { Pill, Spinner, Text } from '@outception-com/orbit'
+import { Box } from '@outception-com/orbit/Box'
 import { PromotionAnalyticsChart } from './PromotionAnalyticsChart'
 
 const formatCents = (cents: number) => `$${(cents / 100).toFixed(2)}`

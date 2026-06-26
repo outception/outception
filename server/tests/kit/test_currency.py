@@ -1,6 +1,6 @@
 import pytest
 
-from polar.kit.currency import get_presentment_currency
+from outception.kit.currency import get_presentment_currency
 
 
 @pytest.mark.parametrize(

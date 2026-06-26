@@ -8,8 +8,8 @@ A **subscription** is the recurring relationship between a customer and one of y
 
 ## How subscriptions work
 
-1. **A customer subscribes.** When a customer completes a [checkout](/features/checkout/session) for a product that has a recurring price, Polar creates a `subscription` and the first [order](/features/orders).
-2. **Polar renews it automatically.** At the end of each billing period, Polar advances the subscription to the next cycle and creates a new order, then attempts to charge the customer's default payment method. If the payment fails, the subscription moves to `past_due` and Polar runs an automated [payment recovery flow](/features/subscriptions/failed-payments).
+1. **A customer subscribes.** When a customer completes a [checkout](/features/checkout/session) for a product that has a recurring price, Outception creates a `subscription` and the first [order](/features/orders).
+2. **Outception renews it automatically.** At the end of each billing period, Outception advances the subscription to the next cycle and creates a new order, then attempts to charge the customer's default payment method. If the payment fails, the subscription moves to `past_due` and Outception runs an automated [payment recovery flow](/features/subscriptions/failed-payments).
 3. **Benefits stay in sync.** As long as the subscription is active or trialing, the customer keeps access to all the [benefits](/features/benefits/introduction) attached to the product. When the subscription ends, those benefits are revoked.
 4. **Customers self-serve from the portal.** The [Customer Portal](/features/customer-portal/introduction) lets customers update their payment method, download invoices, cancel, and — if you allow it — change plans or manage seats.
 
@@ -31,11 +31,11 @@ Subscriptions are driven entirely by the way you price the underlying product. R
 
 ## Renewal reminders
 
-For subscriptions on long billing cycles — six months or more — Polar emails the customer **7 days before the renewal date** to let them know an upcoming charge is coming. This helps with regulations (like the EU's Consumer Rights Directive) that require advance notice on long-interval renewals, and avoids surprise charges that often end in chargebacks.
+For subscriptions on long billing cycles — six months or more — Outception emails the customer **7 days before the renewal date** to let them know an upcoming charge is coming. This helps with regulations (like the EU's Consumer Rights Directive) that require advance notice on long-interval renewals, and avoids surprise charges that often end in chargebacks.
 
 The threshold is six months, however it is expressed: yearly plans, monthly plans with an interval of 6 or more, weekly plans of 25 or more, and daily plans of 180 or more all get the reminder. Reminders are skipped for free subscriptions and for subscriptions already scheduled to cancel at period end.
 
-You can turn renewal reminders off under [**Settings → Customer notifications**](https://polar.sh/to/dashboard/settings) if you prefer to handle that communication yourself.
+You can turn renewal reminders off under [**Settings → Customer notifications**](https://outception.com/to/dashboard/settings) if you prefer to handle that communication yourself.
 
 ## Cancellation
 
@@ -51,7 +51,7 @@ See [Managing subscriptions](/features/subscriptions/manage) for how to perform 
 There are two ways a subscription can come into existence:
 
 - **Through checkout.** The default. Works for any paid recurring product. See [Checkout](/features/checkout/session).
-- **Through the API, for free recurring products only.** You can call [Create Subscription](/api-reference/subscriptions/create) to subscribe an existing customer to a free product — no order, no email, no charge. This is useful for freemium onboarding flows where you want every signup to have a subscription tied to it from day one. Paid products always go through checkout so that Polar can collect and validate the payment method.
+- **Through the API, for free recurring products only.** You can call [Create Subscription](/api-reference/subscriptions/create) to subscribe an existing customer to a free product — no order, no email, no charge. This is useful for freemium onboarding flows where you want every signup to have a subscription tied to it from day one. Paid products always go through checkout so that Outception can collect and validate the payment method.
 
 ## Next steps
 
@@ -77,7 +77,7 @@ There are two ways a subscription can come into existence:
     icon="credit-card"
     href="/features/subscriptions/failed-payments"
   >
-    How Polar retries failed renewals and when benefits are revoked.
+    How Outception retries failed renewals and when benefits are revoked.
   </Card>
   <Card
     title="Subscriptions API"
@@ -96,7 +96,7 @@ There are two ways a subscription can come into existence:
     pricing. A subscription is one specific customer's ongoing relationship
     with that product.
 
-    Polar treats one-time purchases and recurring subscriptions as the same
+    Outception treats one-time purchases and recurring subscriptions as the same
     kind of object (both are "products"); the only difference is whether the
     price is recurring. See [Products](/features/products) for the full model.
   </Accordion>
@@ -109,10 +109,10 @@ There are two ways a subscription can come into existence:
     by toggling on **Allow multiple subscriptions**.
   </Accordion>
   <Accordion title="When is a customer actually charged?">
-    At the end of each billing cycle. When a subscription renews, Polar
+    At the end of each billing cycle. When a subscription renews, Outception
     advances the cycle, creates a new order with tax and any applicable
     discount, and charges the customer's default payment method. If the
-    charge fails the subscription moves to `past_due` and Polar starts the
+    charge fails the subscription moves to `past_due` and Outception starts the
     [payment recovery flow](/features/subscriptions/failed-payments).
 
     The first charge happens at checkout (or when the [trial](/features/subscriptions/trials)
@@ -137,7 +137,7 @@ There are two ways a subscription can come into existence:
       until `current_period_end` — they paid for that period.
     - If you **revoke immediately**, the subscription becomes `canceled`
       right away and all benefits are revoked.
-    - If a renewal payment can't be recovered after Polar's retries, the
+    - If a renewal payment can't be recovered after Outception's retries, the
       subscription moves to `unpaid` and benefits are revoked the same way
       as a revoke — subject to the optional
       [grace period](/features/subscriptions/failed-payments#benefit-revocation-grace-period)

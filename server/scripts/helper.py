@@ -8,8 +8,8 @@ from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 from sqlalchemy import CursorResult, Update, bindparam
 from sqlalchemy.sql.elements import BindParameter
 
-from polar.kit.db.postgres import create_async_sessionmaker
-from polar.postgres import create_async_engine
+from outception.kit.db.postgres import create_async_sessionmaker
+from outception.postgres import create_async_engine
 
 
 def drop_all(*args: Any, **kwargs: Any) -> Any:

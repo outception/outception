@@ -1,4 +1,4 @@
-import { Button } from '@polar-sh/orbit/ui/button'
+import { Button } from '@outception-com/orbit/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { FormControl } from '@/components/ui/form'
 import {
@@ -40,7 +40,7 @@ const DatePicker: React.FC<DatePickerProps> = (props) => {
           <Button
             variant={'outline'}
             className={twMerge(
-              'dark:bg-polar-800 h-10 w-full justify-start rounded-xl bg-white text-left font-normal',
+              'dark:bg-outception-800 h-10 w-full justify-start rounded-xl bg-white text-left font-normal',
               !value && 'text-muted-foreground',
             )}
           >

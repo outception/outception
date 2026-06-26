@@ -4,7 +4,7 @@ import {
   Footer,
   Intro,
   Text,
-  WrapperPolar,
+  WrapperOutception,
 } from '../components/foundation'
 import type { schemas } from '../types'
 
@@ -15,7 +15,7 @@ export function OrganizationInvite({
   invite_url,
 }: schemas['OrganizationInviteProps']) {
   return (
-    <WrapperPolar
+    <WrapperOutception
       preview={`You've been added to ${organization_name} on ${BRAND_NAME}`}
     >
       <Intro>
@@ -32,7 +32,7 @@ export function OrganizationInvite({
       </Text>
       <Button href={invite_url}>Go to the {BRAND_NAME} dashboard</Button>
       <Footer email={email} />
-    </WrapperPolar>
+    </WrapperOutception>
   )
 }
 
@@ -40,7 +40,7 @@ OrganizationInvite.PreviewProps = {
   email: 'john@example.com',
   organization_name: 'Acme Inc.',
   inviter_email: 'admin@acme.com',
-  invite_url: 'https://polar.sh/dashboard/acme-inc',
+  invite_url: 'https://outception.com/dashboard/acme-inc',
 }
 
 export default OrganizationInvite

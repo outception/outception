@@ -1,0 +1,80 @@
+"""
+HTTP request metrics for SLI/SLO monitoring.
+
+These metrics track all HTTP endpoints (except those in METRICS_DENY_LIST
+or belonging to METRICS_EXCLUDED_APPS) for availability and latency SLIs.
+
+Metrics:
+- outception_http_request_total: Counter of total requests by endpoint, method, status_code
+- outception_http_request_duration_seconds: Histogram of request duration by endpoint, method
+"""
+
+import os
+from typing import TYPE_CHECKING
+
+from outception.config import settings
+
+if TYPE_CHECKING:
+    from starlette.types import ASGIApp
+
+# Setup multiprocess prometheus directory before importing prometheus_client
+# This enables metrics to be shared across API server processes
+prometheus_dir = settings.WORKER_PROMETHEUS_DIR
+prometheus_dir.mkdir(parents=True, exist_ok=True)
+os.environ.setdefault("PROMETHEUS_MULTIPROC_DIR", str(prometheus_dir))
+
+from prometheus_client import (  # noqa: E402
+    Counter,
+    Gauge,
+    Histogram,
+)
+
+# Endpoints to EXCLUDE from metrics (noisy/not useful for SLO)
+METRICS_DENY_LIST: set[str] = {
+    "/healthz",
+    "/readyz",
+    "/.well-known/openid-configuration",
+    "/.well-known/jwks.json",
+}
+
+# Apps to EXCLUDE from metrics (e.g., backoffice)
+# Use exclude_app_from_metrics() to register apps
+METRICS_EXCLUDED_APPS: set["ASGIApp"] = set()
+
+
+def exclude_app_from_metrics(app: "ASGIApp") -> None:
+    """Register an app to be excluded from HTTP metrics."""
+    METRICS_EXCLUDED_APPS.add(app)
+
+
+# HTTP request counter for availability SLI
+# Labels:
+# - endpoint: normalized path template (e.g., "/v1/promotions/{promotion_id}")
+# - method: HTTP method (GET, POST, etc.)
+# - status_code: HTTP status code as string
+HTTP_REQUEST_TOTAL = Counter(
+    "outception_http_request_total",
+    "Total number of HTTP requests",
+    ["endpoint", "method", "status_code"],
+)
+
+# HTTP request duration histogram for latency SLI
+# Labels:
+# - endpoint: normalized path template
+# - method: HTTP method
+# Buckets optimized for varying endpoint latency requirements:
+# - Fast endpoints: p99 < 200ms (fine-grained buckets below 0.2s)
+# - Slow endpoints: p99 < 30s (extended range up to 30s)
+HTTP_REQUEST_DURATION_SECONDS = Histogram(
+    "outception_http_request_duration_seconds",
+    "HTTP request duration in seconds",
+    ["endpoint", "method"],
+    buckets=(0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0),
+)
+
+# SSE metrics
+HTTP_SSE_CONNECTIONS_OPENED = Gauge(
+    "outception_http_sse_opened_connection_total",
+    "Number of currently open SSE connections",
+    ["endpoint"],
+)

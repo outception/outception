@@ -5,7 +5,7 @@ import SettingsPage from './SettingsPage'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: 'Settings', // " | Polar is added by the template"
+    title: 'Settings', // " | Outception is added by the template"
   }
 }
 

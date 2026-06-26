@@ -1,3 +1,3 @@
-# `@polar-sh/checkout`
+# `@outception-com/checkout`
 
-This package contains JavaScript utilities to easily integrate Polar Checkout into your website or application.
+This package contains JavaScript utilities to easily integrate Outception Checkout into your website or application.

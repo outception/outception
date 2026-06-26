@@ -255,13 +255,13 @@ function ensureBoxImport(
   root: ReturnType<typeof jscodeshift>,
 ): void {
   const existing = root.find(j.ImportDeclaration, {
-    source: { value: '@polar-sh/orbit/Box' },
+    source: { value: '@outception-com/orbit/Box' },
   })
   if (existing.size() > 0) return
 
   const newImport = j.importDeclaration(
     [j.importSpecifier(j.identifier('Box'))],
-    j.literal('@polar-sh/orbit/Box'),
+    j.literal('@outception-com/orbit/Box'),
   )
   const firstImport = root.find(j.ImportDeclaration).at(0)
   if (firstImport.size() > 0) {

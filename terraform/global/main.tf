@@ -46,7 +46,7 @@ variable "ghcr_username" {
 resource "tfe_variable_set" "global" {
   name         = "Global Settings"
   description  = "For variables that are used in multiple or all environments"
-  organization = "polar-sh"
+  organization = "outception-com"
   global       = true
 }
 

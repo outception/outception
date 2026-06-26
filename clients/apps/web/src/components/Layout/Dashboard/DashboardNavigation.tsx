@@ -1,12 +1,12 @@
 'use client'
 
 import ArrowBack from '@mui/icons-material/ArrowBack'
-import { schemas } from '@polar-sh/client'
+import { schemas } from '@outception-com/client'
 import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from '@polar-sh/ui/components/atoms/Sidebar'
+} from '@outception-com/ui/components/atoms/Sidebar'
 import Link from 'next/link'
 import {
   useAccountRoutes,

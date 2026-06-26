@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from polar.worker._debounce import set_debounce_key
+from outception.worker._debounce import set_debounce_key
 
 
 def make_actor(**options: object) -> MagicMock:

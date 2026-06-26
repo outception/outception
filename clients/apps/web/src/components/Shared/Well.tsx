@@ -9,7 +9,7 @@ export const Well = ({ children, className }: WellProps) => {
   return (
     <div
       className={twMerge(
-        'dark:bg-polar-800 flex flex-col gap-y-4 rounded-3xl bg-gray-100 p-8',
+        'dark:bg-outception-800 flex flex-col gap-y-4 rounded-3xl bg-gray-100 p-8',
         className,
       )}
     >

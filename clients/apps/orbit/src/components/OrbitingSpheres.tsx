@@ -7,7 +7,7 @@ import { useInView } from '@/hooks/useInView'
  * OrbitingSpheres — a large circle plus a stack of nested circles that all
  * share a common tangent point at the large circle's centre. As the satellite
  * dot circles the big sphere, the whole stack swings around the anchor.
- * Adapted from the Polar landing page graphics. Reads --color-graphic-stroke.
+ * Adapted from the Outception landing page graphics. Reads --color-graphic-stroke.
  */
 
 // How much each nested circle shrinks relative to its parent

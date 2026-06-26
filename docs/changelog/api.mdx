@@ -1,7 +1,7 @@
 ---
 title: API Changelog
 sidebarTitle: API
-description: Stay up to date with the latest changes, improvements and deprecations to the Polar API.
+description: Stay up to date with the latest changes, improvements and deprecations to the Outception API.
 ---
 
 <Update label="2025-06-18">
@@ -78,7 +78,7 @@ To be more consistent with the [Order schema changes](#2025-03-14), we've made s
 <Update label="2025-03-20">
   ## New order status and webhooks
 
-Until now, Polar only kept track of fully processed, **paid** orders. To help you keep track of the order lifecycle, we've added a new status `pending`, which is a transitive state meaning the order is created but not paid yet. In most cases, the order will transition from `pending` to `paid` in a short time.
+Until now, Outception only kept track of fully processed, **paid** orders. To help you keep track of the order lifecycle, we've added a new status `pending`, which is a transitive state meaning the order is created but not paid yet. In most cases, the order will transition from `pending` to `paid` in a short time.
 
 - <Icon icon="circle-exclamation" size={16} color="orange" /> When receiving
   `order.created` event, the order status might not be `paid`.

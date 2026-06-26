@@ -50,7 +50,7 @@ SubscriptionTrialConversionReminder.PreviewProps = {
     status: 'trialing',
   },
   conversion_date: '03/17/2026',
-  url: 'https://polar.sh/acme-inc/portal/subscriptions/12345',
+  url: 'https://outception.com/acme-inc/portal/subscriptions/12345',
 }
 
 export default SubscriptionTrialConversionReminder

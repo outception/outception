@@ -52,14 +52,14 @@ from rich.table import Table
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from polar import tasks  # noqa: F401  -- registers dramatiq actors
-from polar.kit.db.postgres import AsyncSession, create_async_sessionmaker
-from polar.models.organization import OrganizationStatus
-from polar.organization.repository import OrganizationRepository
-from polar.postgres import create_async_engine
-from polar.redis import create_redis
-from polar.worker import enqueue_job, make_bulk_job_delay_calculator
-from polar.worker._enqueue import JobQueueManager
+from outception import tasks  # noqa: F401  -- registers dramatiq actors
+from outception.kit.db.postgres import AsyncSession, create_async_sessionmaker
+from outception.models.organization import OrganizationStatus
+from outception.organization.repository import OrganizationRepository
+from outception.postgres import create_async_engine
+from outception.redis import create_redis
+from outception.worker import enqueue_job, make_bulk_job_delay_calculator
+from outception.worker._enqueue import JobQueueManager
 from scripts.helper import configure_script_console_logging, typer_async
 
 cli = typer.Typer()

@@ -3,7 +3,7 @@ import {
   Footer,
   Intro,
   Text,
-  WrapperPolar,
+  WrapperOutception,
 } from '../components/foundation'
 import type { schemas } from '../types'
 
@@ -13,7 +13,7 @@ export function EmailUpdate({
   url,
 }: schemas['EmailUpdateProps']) {
   return (
-    <WrapperPolar preview="Here is the verification link to update your email">
+    <WrapperOutception preview="Here is the verification link to update your email">
       <Intro>
         Here is the verification link to update your email. Click the button
         below to complete the update process.{' '}
@@ -23,14 +23,14 @@ export function EmailUpdate({
       </Intro>
       <Button href={url}>Update email</Button>
       <Footer email={email} />
-    </WrapperPolar>
+    </WrapperOutception>
   )
 }
 
 EmailUpdate.PreviewProps = {
   email: 'john@example.com',
   token_lifetime_minutes: 30,
-  url: 'https://polar.sh/settings/account/email/update?token=abc123',
+  url: 'https://outception.com/settings/account/email/update?token=abc123',
 }
 
 export default EmailUpdate

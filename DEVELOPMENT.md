@@ -1,6 +1,6 @@
 # Development
 
-Polar's stack consists of the following elements:
+Outception's stack consists of the following elements:
 
 - A backend written in Python, exposing a REST API and workers
 - A frontend written in JavaScript
@@ -67,7 +67,7 @@ Running `dev up` after pulling new code is also recommended to make sure depende
 
 ## Setup environment variables
 
-For the Polar stack to run properly, it needs quite a bunch of settings defined as environment variables. To ease things, we provide a script to bootstrap them. It requires [uv](https://docs.astral.sh/uv/getting-started/installation/) to be installed on your system.
+For the Outception stack to run properly, it needs quite a bunch of settings defined as environment variables. To ease things, we provide a script to bootstrap them. It requires [uv](https://docs.astral.sh/uv/getting-started/installation/) to be installed on your system.
 
 ```sh
 ./dev/setup-environment
@@ -89,14 +89,14 @@ Your browser will open a new page and you'll be prompted to **create a GitHub Ap
 
 **Shared secrets (multi-worktree development)**
 
-If you work with multiple Git worktrees, secrets (GitHub, Stripe) are automatically shared via `~/.config/polar/secrets.env`:
+If you work with multiple Git worktrees, secrets (GitHub, Stripe) are automatically shared via `~/.config/outception/secrets.env`:
 
 1. Run `./dev/setup-environment` in your first worktree
 2. If you set up a GitHub App with `--setup-github-app`, credentials are saved automatically to the central file
-3. For Stripe, edit `~/.config/polar/secrets.env` and add your keys (see template at `dev/secrets.env.template`)
+3. For Stripe, edit `~/.config/outception/secrets.env` and add your keys (see template at `dev/secrets.env.template`)
 4. Run `./dev/setup-environment` in each additional worktree - secrets are merged automatically
 
-You can override the secrets file location with `POLAR_SECRETS_FILE` environment variable.
+You can override the secrets file location with `OUTCEPTION_SECRETS_FILE` environment variable.
 
 **Optional: setup Stripe**
 
@@ -106,23 +106,23 @@ You can override the secrets file location with `POLAR_SECRETS_FILE` environment
 If you want to work with payments and subscriptions, you'll need to set up a Stripe development environment:
 
 > [!IMPORTANT]
-> Put all Stripe values in the central secrets file `~/.config/polar/secrets.env`, **not** in `server/.env`.
+> Put all Stripe values in the central secrets file `~/.config/outception/secrets.env`, **not** in `server/.env`.
 > Whenever `setup-environment` regenerates `server/.env` (a fresh clone or worktree, `dev up --clean`,
 > `dev stripe`, or a manual run), it rebuilds the file from the central secrets and those values win — so
 > edits made directly to `server/.env` are overwritten.
 >
 > Do **not** rely on `dev stripe` for the webhook secrets when using the dashboard-endpoint flow below: it
 > derives the secret from `stripe listen --print-secret` (the Stripe CLI listener, a different secret) and
-> writes that one value to *both* `POLAR_STRIPE_WEBHOOK_SECRET` and `POLAR_STRIPE_CONNECT_WEBHOOK_SECRET`,
+> writes that one value to *both* `OUTCEPTION_STRIPE_WEBHOOK_SECRET` and `OUTCEPTION_STRIPE_CONNECT_WEBHOOK_SECRET`,
 > clobbering your two distinct dashboard secrets. Set those by hand in the central file.
 
 1. **Create a Stripe account** at [https://dashboard.stripe.com/register](https://dashboard.stripe.com/register)
 
-2. **Copy your API keys** from the [Stripe API Keys page](https://dashboard.stripe.com/test/apikeys) and add them to your `~/.config/polar/secrets.env` file:
+2. **Copy your API keys** from the [Stripe API Keys page](https://dashboard.stripe.com/test/apikeys) and add them to your `~/.config/outception/secrets.env` file:
 
     ```
-    POLAR_STRIPE_SECRET_KEY=sk_test_...
-    POLAR_STRIPE_PUBLISHABLE_KEY=pk_test_...
+    OUTCEPTION_STRIPE_SECRET_KEY=sk_test_...
+    OUTCEPTION_STRIPE_PUBLISHABLE_KEY=pk_test_...
     ```
 
 3. **Enable tax calculation** by visiting [https://dashboard.stripe.com/test/tax](https://dashboard.stripe.com/test/tax)
@@ -132,19 +132,19 @@ If you want to work with payments and subscriptions, you'll need to set up a Str
     - Click "Add destination"
     - Select "Your account"
     - Set API version to the latest (not the preview)
-    - Set enabled events to only the events listed in `DIRECT_IMPLEMENTED_WEBHOOKS` (see `polar/integrations/stripe/endpoints.py`)
+    - Set enabled events to only the events listed in `DIRECT_IMPLEMENTED_WEBHOOKS` (see `outception/integrations/stripe/endpoints.py`)
     - Click continue, Select Webhook endpoint
     - Set the endpoint URL to: `https://your-domain.ngrok-free.app/v1/integrations/stripe/webhook`
-    - Copy the webhook signing secret and add it to your `~/.config/polar/secrets.env` file:
+    - Copy the webhook signing secret and add it to your `~/.config/outception/secrets.env` file:
         ```
-        POLAR_STRIPE_WEBHOOK_SECRET=whsec_...
+        OUTCEPTION_STRIPE_WEBHOOK_SECRET=whsec_...
         ```
     - Restart the same operation with:
-        - events listed in `CONNECT_IMPLEMENTED_WEBHOOKS` (see `polar/integrations/stripe/endpoints.py`)
+        - events listed in `CONNECT_IMPLEMENTED_WEBHOOKS` (see `outception/integrations/stripe/endpoints.py`)
         - Set the endpoint URL to: `https://your-domain.ngrok-free.app/v1/integrations/stripe/webhook-connect`
-        - Copy the webhook signing secret and add it to your `~/.config/polar/secrets.env` file:
+        - Copy the webhook signing secret and add it to your `~/.config/outception/secrets.env` file:
             ```
-            POLAR_STRIPE_CONNECT_WEBHOOK_SECRET=whsec_...
+            OUTCEPTION_STRIPE_CONNECT_WEBHOOK_SECRET=whsec_...
             ```
 
 
@@ -369,7 +369,7 @@ To log in for the first time, follow these steps:
 1. Navigate to the login page.
 2. Enter your email address in the provided field.
 3. Click the "Login" button.
-4. To use the seeded admin, use **admin@polar.sh** ([seeds_load.py](server/scripts/seeds_load.py)).
+4. To use the seeded admin, use **admin@outception.com** ([seeds_load.py](server/scripts/seeds_load.py)).
 5. Check the terminal where the API is running (`uv run task api`) to get the OTP code.
 6. Enter the OTP code in the login form.
 
@@ -413,8 +413,8 @@ Apple Pay and Google Pay require HTTPS to work. To test these payment methods lo
 4. **Update `server/.env`** to allow CORS from ngrok and set the frontend URL:
 
     ```
-    POLAR_CORS_ORIGINS='["http://localhost:3000", "http://127.0.0.1:3000", "https://github.com", "https://your-ngrok-url.ngrok-free.app"]'
-    POLAR_FRONTEND_BASE_URL="https://your-ngrok-url.ngrok-free.app"
+    OUTCEPTION_CORS_ORIGINS='["http://localhost:3000", "http://127.0.0.1:3000", "https://github.com", "https://your-ngrok-url.ngrok-free.app"]'
+    OUTCEPTION_FRONTEND_BASE_URL="https://your-ngrok-url.ngrok-free.app"
     ```
 
 5. **Access your app** via the ngrok HTTPS URL (e.g., `https://abc123.ngrok-free.app`) in Safari (for Apple Pay) or Chrome (for Google Pay).

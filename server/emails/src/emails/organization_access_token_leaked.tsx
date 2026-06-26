@@ -4,7 +4,7 @@ import {
   Heading,
   List,
   Text,
-  WrapperPolar,
+  WrapperOutception,
 } from '../components/foundation'
 import InfoBox from '../components/InfoBox'
 import SecurityFaqNote from '../components/SecurityFaqNote'
@@ -17,7 +17,7 @@ export function OrganizationAccessTokenLeaked({
   organization_access_token,
 }: schemas['OrganizationAccessTokenLeakedProps']) {
   return (
-    <WrapperPolar preview="Important security notice: Your organization access token has been leaked">
+    <WrapperOutception preview="Important security notice: Your organization access token has been leaked">
       <Heading>Important security notice</Heading>
       <Text>
         We've been notified that one of your organization access token has been
@@ -52,7 +52,7 @@ export function OrganizationAccessTokenLeaked({
       </InfoBox>
       <SecurityFaqNote />
       <Footer email={email} />
-    </WrapperPolar>
+    </WrapperOutception>
   )
 }
 

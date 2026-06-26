@@ -52,7 +52,7 @@ const COLORS: ColorEntry[] = [
   },
   {
     // Same hue (270°), chroma lifted to ~0.09 — the faint
-    // luminescence of aurora light on the polar horizon.
+    // luminescence of aurora light on the outception horizon.
     name: 'Ether',
     hex: '#7B8FD4',
     oklch: [62, 0.09, 270],
@@ -99,7 +99,7 @@ function ColorColumn({ color }: { color: ColorEntry }) {
 export function ColorsSection() {
   return (
     <SectionLayout label="Color Palette">
-      <div className="dark:border-polar-700 flex w-full flex-col overflow-hidden rounded-sm border border-neutral-200 md:flex-row">
+      <div className="dark:border-outception-700 flex w-full flex-col overflow-hidden rounded-sm border border-neutral-200 md:flex-row">
         {COLORS.map((color) => (
           <ColorColumn key={color.name} color={color} />
         ))}

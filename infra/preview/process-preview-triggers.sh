@@ -23,17 +23,17 @@ while true; do
                 if [[ "$PR_NUM" =~ ^[0-9]+$ ]]; then
                     "$PREVIEW_TOOLS_DIR/regenerate-caddyfile.sh"
                     systemctl reload caddy
-                    systemctl restart "polar-preview-backend@${PR_NUM}" || echo "[trigger] Failed to restart pr-${PR_NUM}"
+                    systemctl restart "outception-preview-backend@${PR_NUM}" || echo "[trigger] Failed to restart pr-${PR_NUM}"
                 fi
                 ;;
             pr-*.destroy)
                 PR_NUM="${filename#pr-}"
                 PR_NUM="${PR_NUM%.destroy}"
                 if [[ "$PR_NUM" =~ ^[0-9]+$ ]]; then
-                    systemctl stop "polar-preview-backend@${PR_NUM}" 2>/dev/null || true
-                    systemctl stop "polar-preview-frontend@${PR_NUM}" 2>/dev/null || true
-                    systemctl disable "polar-preview-backend@${PR_NUM}" 2>/dev/null || true
-                    systemctl disable "polar-preview-frontend@${PR_NUM}" 2>/dev/null || true
+                    systemctl stop "outception-preview-backend@${PR_NUM}" 2>/dev/null || true
+                    systemctl stop "outception-preview-frontend@${PR_NUM}" 2>/dev/null || true
+                    systemctl disable "outception-preview-backend@${PR_NUM}" 2>/dev/null || true
+                    systemctl disable "outception-preview-frontend@${PR_NUM}" 2>/dev/null || true
                     "$PREVIEW_TOOLS_DIR/regenerate-caddyfile.sh"
                     systemctl reload caddy 2>/dev/null || true
                 fi
@@ -44,8 +44,8 @@ while true; do
                 if [[ "$PR_NUM" =~ ^[0-9]+$ ]]; then
                     if [[ ! -d "/srv/previews/pr-${PR_NUM}/server" ]]; then
                         echo "[trigger] No deployment for pr-${PR_NUM}, skipping wake"
-                    elif ! systemctl is-active --quiet "polar-preview-backend@${PR_NUM}"; then
-                        systemctl start "polar-preview-backend@${PR_NUM}" || echo "[trigger] Failed to start pr-${PR_NUM}"
+                    elif ! systemctl is-active --quiet "outception-preview-backend@${PR_NUM}"; then
+                        systemctl start "outception-preview-backend@${PR_NUM}" || echo "[trigger] Failed to start pr-${PR_NUM}"
                     fi
                 fi
                 ;;

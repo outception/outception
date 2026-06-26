@@ -8,7 +8,7 @@ import { useRouter } from 'expo-router'
 import * as WebBrowser from 'expo-web-browser'
 import { useCallback } from 'react'
 
-const widgetStorage = new ExtensionStorage('group.com.polarsource.Polar')
+const widgetStorage = new ExtensionStorage('group.com.outception.Outception')
 
 export const useLogout = () => {
   const { session, setSession } = useSession()

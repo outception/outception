@@ -2,13 +2,13 @@
 
 data "tfe_project" "test" {
   name         = "test"
-  organization = "polar-sh"
+  organization = "outception-com"
 }
 
 resource "tfe_variable_set" "test" {
   name              = "Test Settings"
   description       = "Variables specific to the test environment"
-  organization      = "polar-sh"
+  organization      = "outception-com"
   parent_project_id = data.tfe_project.test.id
 }
 
@@ -300,7 +300,7 @@ resource "tfe_variable" "tinybird_read_token_test" {
 resource "tfe_variable" "plain_default_tier_external_id_test" {
   key             = "plain_default_tier_external_id"
   category        = "terraform"
-  description     = "Default Plain tier external ID used as a fallback for the polar-self support benefit for test"
+  description     = "Default Plain tier external ID used as a fallback for the outception-self support benefit for test"
   sensitive       = false
   variable_set_id = tfe_variable_set.test.id
 }
@@ -334,26 +334,26 @@ resource "tfe_variable" "customer_portal_url_overrides_test" {
   }
 }
 
-resource "tfe_variable" "polar_access_token_test" {
-  key             = "polar_access_token"
+resource "tfe_variable" "outception_access_token_test" {
+  key             = "outception_access_token"
   category        = "terraform"
-  description     = "Polar API access token"
+  description     = "Outception API access token"
   sensitive       = true
   variable_set_id = tfe_variable_set.test.id
 }
 
-resource "tfe_variable" "polar_webhook_secret_test" {
-  key             = "polar_webhook_secret"
+resource "tfe_variable" "outception_webhook_secret_test" {
+  key             = "outception_webhook_secret"
   category        = "terraform"
-  description     = "Polar webhook secret"
+  description     = "Outception webhook secret"
   sensitive       = true
   variable_set_id = tfe_variable_set.test.id
 }
 
-resource "tfe_variable" "polar_organization_id_test" {
-  key             = "polar_organization_id"
+resource "tfe_variable" "outception_organization_id_test" {
+  key             = "outception_organization_id"
   category        = "terraform"
-  description     = "Polar organization ID"
+  description     = "Outception organization ID"
   variable_set_id = tfe_variable_set.test.id
 
   lifecycle {
@@ -361,10 +361,10 @@ resource "tfe_variable" "polar_organization_id_test" {
   }
 }
 
-resource "tfe_variable" "polar_free_product_id_test" {
-  key             = "polar_free_product_id"
+resource "tfe_variable" "outception_free_product_id_test" {
+  key             = "outception_free_product_id"
   category        = "terraform"
-  description     = "Polar free-tier product ID"
+  description     = "Outception free-tier product ID"
   variable_set_id = tfe_variable_set.test.id
 
   lifecycle {
@@ -372,10 +372,10 @@ resource "tfe_variable" "polar_free_product_id_test" {
   }
 }
 
-resource "tfe_variable" "polar_scale_product_id_test" {
-  key             = "polar_scale_product_id"
+resource "tfe_variable" "outception_scale_product_id_test" {
+  key             = "outception_scale_product_id"
   category        = "terraform"
-  description     = "Polar Scale-tier product ID for test"
+  description     = "Outception Scale-tier product ID for test"
   variable_set_id = tfe_variable_set.test.id
 }
 
@@ -412,10 +412,10 @@ resource "tfe_variable" "vercel_sentry_auth_token_test" {
   variable_set_id = tfe_variable_set.test.id
 }
 
-resource "tfe_variable" "vercel_polar_preview_access_token_test" {
-  key             = "polar_preview_access_token"
+resource "tfe_variable" "vercel_outception_preview_access_token_test" {
+  key             = "outception_preview_access_token"
   category        = "terraform"
-  description     = "Polar preview access token for the Vercel test frontend"
+  description     = "Outception preview access token for the Vercel test frontend"
   sensitive       = true
   variable_set_id = tfe_variable_set.test.id
 }

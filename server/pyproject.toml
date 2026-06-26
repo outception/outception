@@ -1,5 +1,5 @@
 [project]
-name = "polar"
+name = "outception"
 version = "0.0.0"
 readme = "README.md"
 requires-python = ">=3.14.0"
@@ -62,7 +62,6 @@ dependencies = [
   "playwright>=1.60.0",
   "trafilatura>=2.1.0",
   "firecrawl-py>=4.28.2",
-  "polar-sdk==0.31.7",
   "anyio>=4.13.0",
   "markdown-it-py>=4.2.0",
   "tzdata>=2026.2",
@@ -104,24 +103,24 @@ dev = [
 
 [tool.taskipy.tasks]
 emails = { cmd = "cd emails && pnpm i --frozen-lockfile && pnpm run build", help = "build emails" }
-backoffice = { cmd = "pnpm -C polar/backoffice install --frozen-lockfile && pnpm -C polar/backoffice build", help = "build backoffice CSS and JS" }
-api = { cmd = "env AUTHLIB_INSECURE_TRANSPORT=true uvicorn polar.app:app --reload --workers 1 --host 127.0.0.1 --port 8000", help = "run api service" }
-worker = { cmd = "dramatiq -p 1 -t 1 --watch polar -f polar.worker.scheduler:start polar.worker.run", help = "run worker" }
-test = { cmd = "POLAR_ENV=testing python -m pytest --cov polar/ --cov-report=term-missing", help = "run all tests" }
-test_fast = { cmd = "POLAR_ENV=testing python -m pytest -n auto -p no:sugar --no-cov", help = "run all tests, but fast" }
+backoffice = { cmd = "pnpm -C outception/backoffice install --frozen-lockfile && pnpm -C outception/backoffice build", help = "build backoffice CSS and JS" }
+api = { cmd = "env AUTHLIB_INSECURE_TRANSPORT=true uvicorn outception.app:app --reload --workers 1 --host 127.0.0.1 --port 8000", help = "run api service" }
+worker = { cmd = "dramatiq -p 1 -t 1 --watch outception -f outception.worker.scheduler:start outception.worker.run", help = "run worker" }
+test = { cmd = "OUTCEPTION_ENV=testing python -m pytest --cov outception/ --cov-report=term-missing", help = "run all tests" }
+test_fast = { cmd = "OUTCEPTION_ENV=testing python -m pytest -n auto -p no:sugar --no-cov", help = "run all tests, but fast" }
 loadtest = { cmd = "locust -f load_tests/locustfile.py --host=http://127.0.0.1:8000", help = "run load tests (interactive)" }
 lint = { cmd = "ruff format . && ruff check --fix . && task lint_subquery", help = "run linters with autofix" }
 lint_check = { cmd = "ruff format --check . && ruff check . && task lint_subquery", help = "run ruff linter" }
 lint_subquery = { cmd = "python scripts/lint_subquery.py", help = "flag .subquery() calls that don't narrow columns" }
-lint_types = { cmd = "mypy --num-workers 2 polar scripts tests", help = "run mypy type verify" }
+lint_types = { cmd = "mypy --num-workers 2 outception scripts tests", help = "run mypy type verify" }
 db_migrate = { cmd = "python -m scripts.db upgrade", help = "run alembic upgrade" }
 db_recreate = { cmd = "python -m scripts.db recreate", help = "drop and recreate database" }
 db_reparent = { cmd = "python -m scripts.db reparent", help = "try to auto-fix conflicting migrations" }
 tb_deploy = { cmd = "python -m scripts.tinybird", help = "deploy tinybird datasources" }
 preview = { cmd = "python -m scripts.preview", help = "manage preview environments" }
 clean = { cmd = "find * -name '*.pyc' -delete && find * -name '__pycache__' -delete", help = "clean up .pyc and __pycache__" }
-verify_github_app = { cmd = "python -m polar.verify_github_app", help = "verify that the github app is correctly configured" }
-generate_dev_jwks = { cmd = "python -m polar.kit.jwk polar_dev > ./.jwks.json", help = "generate a development JWKS file" }
+verify_github_app = { cmd = "python -m outception.verify_github_app", help = "verify that the github app is correctly configured" }
+generate_dev_jwks = { cmd = "python -m outception.kit.jwk outception_dev > ./.jwks.json", help = "generate a development JWKS file" }
 seeds_load = { cmd = "python -m scripts.seeds_load", help = "load sample/test data into the database" }
 enable_payments = { cmd = "python -m scripts.enable_payments", help = "enable payments for an organization by slug" }
 loadtest_setup = { cmd = "python -m scripts.loadtest_setup", help = "setup load test data for event ingestion" }
@@ -191,4 +190,3 @@ exclude-newer-package = { reauth = false } # Reauth is brand new, but remember t
 
 [tool.uv.sources]
 dramatiq = { git = "https://github.com/frankie567/dramatiq", rev = "memory-leak-asyncio-ter" }
-polar-sdk = { url = "https://files.pythonhosted.org/packages/dc/e0/a88026b9432c7e2c0c096911ddc97cb06f483036a00a8afd5254efe1c16a/polar_sdk-0.31.7-py3-none-any.whl" }

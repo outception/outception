@@ -50,7 +50,7 @@ SubscriptionRenewalReminder.PreviewProps = {
     status: 'active',
   },
   renewal_date: '04/15/2026',
-  url: 'https://polar.sh/acme-inc/portal/subscriptions/12345',
+  url: 'https://outception.com/acme-inc/portal/subscriptions/12345',
 }
 
 export default SubscriptionRenewalReminder

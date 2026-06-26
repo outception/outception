@@ -5,7 +5,7 @@
   "version": "0.2.0",
   "compounds": [
     {
-      "name": "Polar (Server)",
+      "name": "Outception (Server)",
       "configurations": ["API", "Worker"],
       "stopAll": true
     }
@@ -20,7 +20,7 @@
       "request": "launch",
       "module": "uvicorn",
       "args": [
-        "polar.app:app",
+        "outception.app:app",
         "--reload",
         "--workers",
         "1",

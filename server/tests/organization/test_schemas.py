@@ -1,10 +1,10 @@
 import pytest
 from pydantic import ValidationError
 
-from polar.enums import SubscriptionProrationBehavior
-from polar.kit.currency import PresentmentCurrency
-from polar.models.organization import OrganizationSubscriptionSettings
-from polar.organization.schemas import OrganizationCreate, OrganizationUpdate
+from outception.enums import SubscriptionProrationBehavior
+from outception.kit.currency import PresentmentCurrency
+from outception.models.organization import OrganizationSubscriptionSettings
+from outception.organization.schemas import OrganizationCreate, OrganizationUpdate
 
 
 def test_reset_proration_behavior_accepted_in_schema() -> None:

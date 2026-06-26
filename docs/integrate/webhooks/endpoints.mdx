@@ -38,7 +38,7 @@ formatting. Making it a breeze to setup in-chat notifications for your team.
   <Step title="Choose a delivery format">
     For standard, custom integrations, leave this parameter on **Raw**. This will send a payload in JSON format.
 
-    If you wish to send notifications to a Discord or Slack channel, you can select the corresponding format here. Polar will then adapt the payload so properly formatted messages are sent to your channel.
+    If you wish to send notifications to a Discord or Slack channel, you can select the corresponding format here. Outception will then adapt the payload so properly formatted messages are sent to your channel.
 
     <img className="block dark:hidden" src="/assets/integrate/webhooks/format.light.png" />
     <img className="hidden dark:block" src="/assets/integrate/webhooks/format.dark.png" />
@@ -48,7 +48,7 @@ formatting. Making it a breeze to setup in-chat notifications for your team.
   <Step title="Set a secret">
     We cryptographically sign the requests using this secret. So you can easily
     verify them using our SDKs to ensure they are legitimate webhook payloads
-    from Polar.
+    from Outception.
 
     You can set your own or generate a random one.
 
@@ -65,15 +65,15 @@ formatting. Making it a breeze to setup in-chat notifications for your team.
 <Tip>
   **Developing locally?**
 
-  Install Polar CLI to use the listening command. This will allow you to test your webhook handlers without deploying them to a live server.
+  Install Outception CLI to use the listening command. This will allow you to test your webhook handlers without deploying them to a live server.
 
-  Install the Polar CLI
+  Install the Outception CLI
 
   ```bash Terminal
   curl -fsSL https://polar.sh/install.sh | bash
   ```
 
-  Once you have installed the Polar CLI, you can easily start a tunnel:
+  Once you have installed the Outception CLI, you can easily start a tunnel:
 
   ```bash Terminal
   polar listen http://localhost:3000/

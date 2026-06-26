@@ -16,7 +16,7 @@ A **receipt** is the missing artifact: a PDF proving the payment event without t
 - Every Order with a succeeded Payment has a downloadable receipt PDF in the customer portal, regardless of whether billing details are set.
 - The receipt is mutable. Issuing a refund updates the PDF; the customer's URL keeps working and serves the latest content.
 - A stable `receipt_number` is shown on the document and stored on the Order, so it can be referenced from support tools.
-- Polar staff can also fetch a customer's receipt from backoffice. Merchants can fetch it through the dashboard API.
+- Outception staff can also fetch a customer's receipt from backoffice. Merchants can fetch it through the dashboard API.
 
 ### Non-goals (v0)
 
@@ -28,7 +28,7 @@ A **receipt** is the missing artifact: a PDF proving the payment event without t
 
 ### Receipt per Order
 
-Each Order gets at most one receipt. Polar Orders have at most one succeeded `Payment`, so per-Order and per-Payment collapse into the same shape. The receipt is allocated when the Order transitions to paid. The PDF itself is rendered lazily on first download and re-rendered whenever the payment state changes (typically a refund).
+Each Order gets at most one receipt. Outception Orders have at most one succeeded `Payment`, so per-Order and per-Payment collapse into the same shape. The receipt is allocated when the Order transitions to paid. The PDF itself is rendered lazily on first download and re-rendered whenever the payment state changes (typically a refund).
 
 ### Allocation
 
@@ -58,7 +58,7 @@ Each render uploads to a brand new S3 key:
 {org_id}/{order_id}/{utc_iso8601}.pdf
 ```
 
-The path lives in a new dedicated bucket, `polar-customer-receipts` (env-prefixed for sandbox and test). It mirrors Polar's one-bucket-per-purpose convention and follows the existing org-scoped, UUID-named pattern used elsewhere for mutable artifacts. A new `aws_s3_bucket` resource plus a matching IAM policy is roughly 10 lines of Terraform.
+The path lives in a new dedicated bucket, `polar-customer-receipts` (env-prefixed for sandbox and test). It mirrors Outception's one-bucket-per-purpose convention and follows the existing org-scoped, UUID-named pattern used elsewhere for mutable artifacts. A new `aws_s3_bucket` resource plus a matching IAM policy is roughly 10 lines of Terraform.
 
 Because every render writes to a fresh key, there are no overwrites. That means no S3 versioning is needed, no CDN cache can serve stale content, and old keys remain in S3 as a free audit trail. Objects are uploaded with `Cache-Control: public, max-age=31536000, immutable`. The `Order.receipt_path` column always points at the current key.
 
@@ -95,7 +95,7 @@ Receipt download mirrors the existing invoice endpoints, with one difference: th
 | Surface | Auth | Endpoint |
 |---|---|---|
 | Customer portal | `CustomerPortalUnionBillingRead` (Customer always, Member needs `owner` or `billing_manager`) | `GET /v1/customer-portal/orders/{id}/receipt` |
-| Backoffice (Polar staff) | Existing backoffice auth, read-only | mirror of the customer-portal endpoint |
+| Backoffice (Outception staff) | Existing backoffice auth, read-only | mirror of the customer-portal endpoint |
 | Merchant dashboard | `auth.OrdersRead` | `GET /v1/orders/{id}/receipt` |
 
 Each endpoint returns `{url}` (200) when the receipt is ready, 202 when a render is in flight, and 404 when no receipt has been allocated. The `Order` resource exposes `receipt_number` (used by the frontend to gate the download button) but does not expose `receipt_url`. Presigned URLs are short-lived, so embedding one in every list response would waste compute and ship URLs that expire by click time.

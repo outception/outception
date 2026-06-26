@@ -1,4 +1,4 @@
-import { schemas } from '@polar-sh/client'
+import { schemas } from '@outception-com/client'
 import { nanoid } from 'nanoid'
 import { RequestCookiesAdapter } from 'next/dist/server/web/spec-extension/adapters/request-cookies'
 import type { NextRequest } from 'next/server'
@@ -6,10 +6,10 @@ import { NextResponse } from 'next/server'
 import { COOKIE_MAX_AGE, DISTINCT_ID_COOKIE } from './experiments/constants'
 import { createServerSideAPI } from './utils/client'
 import { CONFIG } from './utils/config'
-import { POLAR_ENV_COOKIE } from './utils/cookies'
+import { OUTCEPTION_ENV_COOKIE } from './utils/cookies'
 
-const POLAR_AUTH_COOKIE_KEY =
-  process.env.POLAR_AUTH_COOKIE_KEY || 'polar_session'
+const OUTCEPTION_AUTH_COOKIE_KEY =
+  process.env.OUTCEPTION_AUTH_COOKIE_KEY || 'outception_session'
 
 const IS_SANDBOX =
   (process.env.NEXT_PUBLIC_ENVIRONMENT ||
@@ -104,7 +104,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (request.nextUrl.pathname.startsWith('/to/')) {
-    const lastEnv = request.cookies.get(POLAR_ENV_COOKIE)?.value
+    const lastEnv = request.cookies.get(OUTCEPTION_ENV_COOKIE)?.value
     const currentEnv = IS_SANDBOX ? 'sandbox' : 'production'
     if (
       (lastEnv === 'sandbox' || lastEnv === 'production') &&
@@ -147,7 +147,7 @@ export async function proxy(request: NextRequest) {
 
   let user: schemas['UserRead'] | undefined = undefined
 
-  if (request.cookies.has(POLAR_AUTH_COOKIE_KEY)) {
+  if (request.cookies.has(OUTCEPTION_AUTH_COOKIE_KEY)) {
     const api = await createServerSideAPI(
       request.headers,
       RequestCookiesAdapter.seal(request.cookies),
@@ -185,17 +185,17 @@ export async function proxy(request: NextRequest) {
     getOrCreateDistinctId(request)
 
   // Build the downstream *request* headers (what Server Components read via
-  // `headers()`). Strip any client-supplied x-polar-* first so a forged
-  // `x-polar-user` header can't impersonate a user, then set the values we
+  // `headers()`). Strip any client-supplied x-outception-* first so a forged
+  // `x-outception-user` header can't impersonate a user, then set the values we
   // derived from the backend-validated session. Using `request.headers` (not
   // response headers) is what actually forwards these to Server Components.
   const requestHeaders = new Headers(request.headers)
-  requestHeaders.delete('x-polar-user')
-  requestHeaders.delete('x-polar-distinct-id')
-  requestHeaders.set('x-polar-distinct-id', distinctId)
+  requestHeaders.delete('x-outception-user')
+  requestHeaders.delete('x-outception-distinct-id')
+  requestHeaders.set('x-outception-distinct-id', distinctId)
   if (user) {
     requestHeaders.set(
-      'x-polar-user',
+      'x-outception-user',
       Buffer.from(JSON.stringify(user)).toString('base64'),
     )
   }

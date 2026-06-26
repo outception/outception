@@ -5,10 +5,10 @@
 .vscode/
 
 .minio/
-polar_backoffice/
+outception_backoffice/
 tests/
 emails/node_modules/
-polar/backoffice/node_modules/
+outception/backoffice/node_modules/
 
 ip-geolocation.mmdb
 .env*

@@ -6,13 +6,13 @@ from httpx import AsyncClient
 from pytest_mock import MockerFixture
 from standardwebhooks.webhooks import Webhook as StandardWebhook
 
-from polar.config import settings
-from polar.kit.utils import utc_now
-from polar.models import User
-from polar.models.promotion import Promotion, PromotionStatus
-from polar.postgres import AsyncSession
-from polar.promotion.repository import PromotionRepository
-from polar.promotion.service import promotion as promotion_service
+from outception.config import settings
+from outception.kit.utils import utc_now
+from outception.models import User
+from outception.models.promotion import Promotion, PromotionStatus
+from outception.postgres import AsyncSession
+from outception.promotion.repository import PromotionRepository
+from outception.promotion.service import promotion as promotion_service
 
 # A valid base64-encoded Standard Webhooks secret (no `whsec_` prefix).
 WEBHOOK_SECRET = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
@@ -161,15 +161,15 @@ class TestWebhook:
         assert refreshed is not None
         assert refreshed.status == PromotionStatus.PENDING_PAYMENT
 
-    async def test_real_polar_order_shape_uses_gross_total_amount(
+    async def test_real_outception_order_shape_uses_gross_total_amount(
         self,
         client: AsyncClient,
         session: AsyncSession,
         user: User,
         mocker: MockerFixture,
     ) -> None:
-        # A real polar.sh order carries subtotal/tax/total/net. The customer
-        # paid `total_amount` (gross); `net_amount` is lower because Polar's fee
+        # A real outception.com order carries subtotal/tax/total/net. The customer
+        # paid `total_amount` (gross); `net_amount` is lower because Outception's fee
         # is deducted. The check must accept on the gross total, not refuse just
         # because the merchant nets less than the slot price after fees.
         mocker.patch.object(settings, "PAYMENT_GATEWAY_WEBHOOK_SECRET", WEBHOOK_SECRET)
@@ -185,7 +185,8 @@ class TestWebhook:
                 "discount_amount": 0,
                 "tax_amount": 0,
                 "total_amount": price,  # what the customer was charged
-                "net_amount": price - 50,  # after Polar's fee — intentionally < price
+                "net_amount": price
+                - 50,  # after Outception's fee — intentionally < price
                 "metadata": {
                     "kind": "promotion_purchase",
                     "user_id": str(user.id),

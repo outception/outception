@@ -3,13 +3,13 @@ export default {
     footer: {
       poweredBy: 'Powered by',
       merchantOfRecord:
-        'この注文は、当社のオンライン再販業者兼販売元である Polar により処理されます。Polar は注文に関するお問い合わせや返品も対応します。',
+        'この注文は、当社のオンライン再販業者兼販売元である Outception により処理されます。Outception は注文に関するお問い合わせや返品も対応します。',
       mandateSubscriptionTrial:
-        '「{buttonLabel}」をクリックすると、オンライン再販業者兼販売元である Polar Software, Inc. に対し、試用期間終了時およびその後の各請求日に、上記の金額を選択した支払い方法に請求することを承認し、{buyerTermsLink} に同意したものとみなされます。請求を避けるには、試用期間終了前であればいつでもキャンセルできます。',
+        '「{buttonLabel}」をクリックすると、オンライン再販業者兼販売元である Outception Software, Inc. に対し、試用期間終了時およびその後の各請求日に、上記の金額を選択した支払い方法に請求することを承認し、{buyerTermsLink} に同意したものとみなされます。請求を避けるには、試用期間終了前であればいつでもキャンセルできます。',
       mandateSubscription:
-        '「{buttonLabel}」をクリックすると、オンライン再販業者兼販売元である Polar Software, Inc. に対し、上記の金額を直ちに選択した支払い方法に請求し、キャンセルするまでその後の各請求日に同額を請求することを承認し、{buyerTermsLink} に同意したものとみなされます。',
+        '「{buttonLabel}」をクリックすると、オンライン再販業者兼販売元である Outception Software, Inc. に対し、上記の金額を直ちに選択した支払い方法に請求し、キャンセルするまでその後の各請求日に同額を請求することを承認し、{buyerTermsLink} に同意したものとみなされます。',
       mandateOneTime:
-        '「{buttonLabel}」をクリックすると、オンライン再販業者兼販売元である Polar Software, Inc. に対し、上記の金額を選択した支払い方法に請求することを承認し、{buyerTermsLink} に同意したものとみなされます。これは1回限りの請求です。',
+        '「{buttonLabel}」をクリックすると、オンライン再販業者兼販売元である Outception Software, Inc. に対し、上記の金額を選択した支払い方法に請求することを承認し、{buyerTermsLink} に同意したものとみなされます。これは1回限りの請求です。',
       buyerTermsLink: '購入者規約',
     },
     form: {

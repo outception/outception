@@ -8,7 +8,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@polar-sh/orbit'
+} from '@outception-com/orbit'
 
 const CountryPicker = ({
   allowedCountries,

@@ -1,7 +1,13 @@
 'use client'
 
-import { Tabs, TabsContent, TabsList, TabsTrigger, Text } from '@polar-sh/orbit'
-import { Box } from '@polar-sh/orbit/Box'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  Text,
+} from '@outception-com/orbit'
+import { Box } from '@outception-com/orbit/Box'
 import { useState } from 'react'
 import type { PropRow } from '@/components/docs'
 import {

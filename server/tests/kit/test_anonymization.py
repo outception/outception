@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from polar.kit.anonymization import (
+from outception.kit.anonymization import (
     ANONYMIZED_EMAIL_DOMAIN,
     anonymize_email_for_deletion,
     anonymize_for_deletion,

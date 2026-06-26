@@ -3,11 +3,11 @@ title: "Security and Vulnerability Reporting"
 sidebarTitle: "Security"
 ---
 
-At Polar, we care deeply about the safety and security of our customers' data and our systems. We welcome security and vulnerability reports as part of our commitment to providing the most secure product possible.
+At Outception, we care deeply about the safety and security of our customers' data and our systems. We welcome security and vulnerability reports as part of our commitment to providing the most secure product possible.
 
 ## Making a report
 
-If you've read this document and discovered an issue that you believe is in-scope, Please report it using [GitHub Security Advisory](https://github.com/polarsource/polar/security/advisories/new) tool. It should include:
+If you've read this document and discovered an issue that you believe is in-scope, Please report it using [GitHub Security Advisory](https://github.com/outception/outception/security/advisories/new) tool. It should include:
 
 - A clear summary of the issue and its potential impact.
 - Detailed steps to reproduce the issue.
@@ -30,8 +30,8 @@ We'll get back to you within a few days to acknowledge your report.
 
 ## In scope
 
-- [https://polar.sh](https://polar.sh)
-- [https://api.polar.sh](https://api.polar.sh)
+- [https://outception.com](https://outception.com)
+- [https://api.outception.com](https://api.outception.com)
 
 ## Out of scope
 

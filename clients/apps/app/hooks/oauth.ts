@@ -34,7 +34,7 @@ export const useOAuth = () => {
       clientId: CLIENT_ID,
       scopes,
       redirectUri: makeRedirectUri({
-        scheme: 'polar',
+        scheme: 'outception',
         path: 'oauth/callback',
       }),
       usePKCE: true,
@@ -63,7 +63,7 @@ export const useOAuth = () => {
           clientId: CLIENT_ID,
           code: response.params.code,
           redirectUri: makeRedirectUri({
-            scheme: 'polar',
+            scheme: 'outception',
             path: 'oauth/callback',
           }),
           extraParams: {

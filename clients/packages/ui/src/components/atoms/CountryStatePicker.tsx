@@ -1,13 +1,13 @@
 'use client'
 
-import { Input } from '@polar-sh/orbit'
+import { Input } from '@outception-com/orbit'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@polar-sh/orbit'
+} from '@outception-com/orbit'
 
 export const FIXED_STATE_OPTIONS: Record<string, Record<string, string>> = {
   US: {

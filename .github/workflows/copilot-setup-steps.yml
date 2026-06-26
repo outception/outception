@@ -26,9 +26,9 @@ jobs:
       postgres:
         image: postgres:15.1-bullseye
         env:
-          POSTGRES_USER: polar
-          POSTGRES_PASSWORD: polar
-          POSTGRES_DB: polar_development
+          POSTGRES_USER: outception
+          POSTGRES_PASSWORD: outception
+          POSTGRES_DB: outception_development
           POSTGRES_PORT: 5432
         options: >-
           --health-cmd pg_isready
@@ -44,8 +44,8 @@ jobs:
           - 9000:9000
           - 9001:9001
         env:
-          MINIO_ROOT_USER: polar
-          MINIO_ROOT_PASSWORD: polarpolar
+          MINIO_ROOT_USER: outception
+          MINIO_ROOT_PASSWORD: outceptionoutception
         options: >-
           --health-cmd "curl -I http://127.0.0.1:9000/minio/health/live"
           --health-interval 10s
@@ -70,12 +70,12 @@ jobs:
         working-directory: ./server/.minio
         env:
           MINIO_HOST: 127.0.0.1
-          MINIO_ROOT_USER: polar
-          MINIO_ROOT_PASSWORD: polarpolar
-          ACCESS_KEY: polar-development
-          SECRET_ACCESS_KEY: polar123456789
-          BUCKET_NAME: polar-s3
-          BUCKET_TESTING_NAME: testing-polar-s3
+          MINIO_ROOT_USER: outception
+          MINIO_ROOT_PASSWORD: outceptionoutception
+          ACCESS_KEY: outception-development
+          SECRET_ACCESS_KEY: outception123456789
+          BUCKET_NAME: outception-s3
+          BUCKET_TESTING_NAME: testing-outception-s3
           POLICY_FILE: policy.json
         run: bash github.sh
 

@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import httpx
 import pytest
 
-from polar.kit.http import (
+from outception.kit.http import (
     SSRFBlockedError,
     check_url_reachable,
     get_safe_return_url,
@@ -136,7 +136,7 @@ def _mock_transport(
     def factory(**kwargs: object) -> httpx.AsyncClient:
         return real_async_client(transport=httpx.MockTransport(handler), **kwargs)  # type: ignore[arg-type]
 
-    with patch("polar.kit.http.httpx.AsyncClient", new=factory):
+    with patch("outception.kit.http.httpx.AsyncClient", new=factory):
         yield
 
 

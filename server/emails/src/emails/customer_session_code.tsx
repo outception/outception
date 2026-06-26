@@ -42,8 +42,8 @@ CustomerSessionCode.PreviewProps = {
   organization,
   code: 'ABC123',
   code_lifetime_minutes: 30,
-  url: 'https://polar.sh/acme-inc/portal/authenticate',
-  domain: 'polar.sh',
+  url: 'https://outception.com/acme-inc/portal/authenticate',
+  domain: 'outception.com',
 }
 
 export default CustomerSessionCode

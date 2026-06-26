@@ -2,12 +2,12 @@
 
 import { AuthModal } from '@/components/Auth/AuthModal'
 import GetStartedButton from '@/components/Auth/GetStartedButton'
-import { Modal } from '@polar-sh/orbit'
+import { Modal } from '@outception-com/orbit'
 import { useModal } from '@/components/Modal/useModal'
 import PublicProfileDropdown from '@/components/Navigation/PublicProfileDropdown'
 import { usePostHog } from '@/hooks/posthog'
-import { schemas } from '@polar-sh/client'
-import { Button } from '@polar-sh/orbit'
+import { schemas } from '@outception-com/client'
+import { Button } from '@outception-com/orbit'
 import { usePathname } from 'next/navigation'
 
 const TopbarRight = ({

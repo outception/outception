@@ -14,7 +14,7 @@ description: "Proposal for a date-based API versioning strategy with strict chan
 
 ## Abstract
 
-This RFC proposes a date-based API versioning strategy for Polar with the following characteristics:
+This RFC proposes a date-based API versioning strategy for Outception with the following characteristics:
 
 - **Version lifecycle**: 3 versions maintained with ~9-month support window — open for discussion
 - **Release cadence**: Quarterly (January, April, July, October) — open for discussion
@@ -28,7 +28,7 @@ The goal is to establish a predictable, disciplined API evolution process that b
 
 ### Problems with Current Approach
 
-Currently, Polar lacks a formal API versioning strategy. Our current approach is "best-effort", where we _try_ to limit breaking changes and maintain backward compatibility, but we have no guarantees or clear policies. This leads to several issues:
+Currently, Outception lacks a formal API versioning strategy. Our current approach is "best-effort", where we _try_ to limit breaking changes and maintain backward compatibility, but we have no guarantees or clear policies. This leads to several issues:
 
 - No strong guarantees for consumers about stability and support duration
 - Deprecated fields and endpoints accumulate over time, increasing technical debt
@@ -116,7 +116,7 @@ Each version follows this lifecycle:
 3. New contract changes target the new Next version
 4. Bug fixes can be applied to any maintained version
 
-Polar dashboard and mobile app will always use the **Next** version, so it can benefit from latest features immediately. Breaking changes are less disruptive for internal clients since we control both sides of the contract.
+Outception dashboard and mobile app will always use the **Next** version, so it can benefit from latest features immediately. Breaking changes are less disruptive for internal clients since we control both sides of the contract.
 
 ### Version Increment
 

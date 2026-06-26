@@ -1,33 +1,22 @@
 'use client'
 
-import { useAuth } from '@/hooks'
-import {
-  useFollowSource,
-  useFollowedSources,
-  useUnfollowSource,
-} from '@/hooks/queries/news'
-import { Button } from '@polar-sh/orbit'
+import { useT } from '@/providers/locale'
+import { Button } from '@outception-com/orbit'
+import { useNewsColumn } from './NewsColumnContext'
 
+/** Star a source into your device-local deck ("Your deck"). No login needed. */
 export const FollowButton = ({ sourceId }: { sourceId: string }) => {
-  const { currentUser } = useAuth()
-  const { data } = useFollowedSources(!!currentUser)
-  const follow = useFollowSource()
-  const unfollow = useUnfollowSource()
-
-  if (!currentUser) return null
-
-  const isFollowing = (data?.sourceIds ?? []).includes(sourceId)
+  const { isFocused, toggleFocus } = useNewsColumn()
+  const t = useT()
+  const followed = isFocused(sourceId)
 
   return (
     <Button
-      variant={isFollowing ? 'secondary' : 'ghost'}
+      variant={followed ? 'secondary' : 'ghost'}
       size="sm"
-      loading={follow.isPending || unfollow.isPending}
-      onClick={() =>
-        isFollowing ? unfollow.mutate(sourceId) : follow.mutate(sourceId)
-      }
+      onClick={() => toggleFocus(sourceId)}
     >
-      {isFollowing ? '★ Following' : '☆ Follow'}
+      {followed ? t('news.follow.following') : t('news.follow.follow')}
     </Button>
   )
 }

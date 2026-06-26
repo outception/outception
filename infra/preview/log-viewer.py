@@ -91,7 +91,7 @@ class LogHandler(BaseHTTPRequestHandler):
 
         pr_num = match.group(1)
         service = match.group(2)
-        unit = f"polar-preview-{service}@{pr_num}"
+        unit = f"outception-preview-{service}@{pr_num}"
 
         n = "500"
         for param in query.split("&"):

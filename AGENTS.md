@@ -2,7 +2,7 @@
 
 A live news wall with pay-to-promote. Public news feed (250+ sources) plus login-gated paid
 promotions charged through polar.sh as an external merchant. Monorepo with a Python/FastAPI
-backend (package `polar`) and Next.js + Expo frontends. Forked from Polar; the Merchant-of-Record
+backend (package `outception`) and Next.js + Expo frontends. Forked from Polar; the Merchant-of-Record
 stack was removed and its auth/payments/analytics repurposed for promotions.
 
 This file is the entry point for AI agents working in this repo: start here, then read the
@@ -18,9 +18,9 @@ per-area `AGENTS.md` linked from the Architecture and Conventions sections befor
 ## Architecture
 
 ```
-polar/
+outception/
 ├── server/                 # Python/FastAPI backend — see server/AGENTS.md
-│   ├── polar/
+│   ├── outception/
 │   │   ├── {module}/
 │   │   │   ├── endpoints.py     # FastAPI routes
 │   │   │   ├── service.py       # Business logic (singleton)
@@ -70,12 +70,12 @@ uv run task worker            # background worker (separate terminal)
 pnpm install && pnpm dev
 ```
 
-**Promotions (polar.sh)** — add to `server/.env` to enable promotion checkout:
-- `POLAR_PROMOTION_PRODUCT_ID` (pay-what-you-want product on your polar.sh org)
-- `POLAR_PAYMENT_GATEWAY_BASE_URL` (default `https://api.polar.sh`)
-- `POLAR_PAYMENT_GATEWAY_ACCESS_TOKEN`, `POLAR_PAYMENT_GATEWAY_WEBHOOK_SECRET`
+**Promotions (outception.com)** — add to `server/.env` to enable promotion checkout:
+- `OUTCEPTION_PROMOTION_PRODUCT_ID` (pay-what-you-want product on your outception.com org)
+- `OUTCEPTION_PAYMENT_GATEWAY_BASE_URL` (default `https://api.polar.sh`)
+- `OUTCEPTION_PAYMENT_GATEWAY_ACCESS_TOKEN`, `OUTCEPTION_PAYMENT_GATEWAY_WEBHOOK_SECRET`
 
-**Tinybird (optional analytics)** — `POLAR_TINYBIRD_API_URL`, `POLAR_TINYBIRD_API_TOKEN`. Without
+**Tinybird (optional analytics)** — `OUTCEPTION_TINYBIRD_API_URL`, `OUTCEPTION_TINYBIRD_API_TOKEN`. Without
 these, promotion analytics fall back to Postgres-only counters.
 
 **Fresh worktrees** (`.claude/worktrees/`) don't carry `.env` or built artifacts. Before running
@@ -108,7 +108,7 @@ See `server/AGENTS.md` for backend command and testing specifics.
 Detailed, review-enforced patterns live next to the code — read the relevant file before writing:
 
 - **Backend** → `server/AGENTS.md`: modular structure, repository/service/endpoint patterns,
-  `lazy="raise"` relationships, status-coded `PolarError`, endpoints return ORM models,
+  `lazy="raise"` relationships, status-coded `OutceptionError`, endpoints return ORM models,
   authentication (`AuthSubject` + scopes).
 - **Frontend** → `clients/AGENTS.md`: Orbit `<Box />` design system (raw Tailwind is **deprecated**
   for layout/spacing/color/etc.), TanStack Query for data, Zustand for state, 250-line `max-lines` limit.
@@ -118,13 +118,13 @@ job auto-translates the rest. Don't edit other locale files. (More in `clients/A
 
 ## Custom Commands
 
-- `/polar-code-review` — comprehensive review with 3 parallel agents (security, conventions, simplification).
+- `/outception-code-review` — comprehensive review with 3 parallel agents (security, conventions, simplification).
 
 ## Documentation
 
-- **Handbook**: https://handbook.polar.sh/engineering/
-- **Design docs**: https://handbook.polar.sh/engineering/design-documents/
-- **API guidelines**: https://handbook.polar.sh/engineering/rest-api-guidelines
+- **Handbook**: https://handbook.outception.com/engineering/
+- **Design docs**: https://handbook.outception.com/engineering/design-documents/
+- **API guidelines**: https://handbook.outception.com/engineering/rest-api-guidelines
 - **User/developer docs**: `docs/` (Mintlify) — `cd docs && pnpm dev` to serve locally.
 
 ## Key Integrations

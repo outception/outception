@@ -1,4 +1,4 @@
-import { Footer, Intro, Text, WrapperPolar } from '../components/foundation'
+import { Footer, Intro, Text, WrapperOutception } from '../components/foundation'
 import type { schemas } from '../types'
 
 export function CustomerEmailChangedNotification({
@@ -7,7 +7,7 @@ export function CustomerEmailChangedNotification({
   new_email,
 }: schemas['CustomerEmailChangedNotificationProps']) {
   return (
-    <WrapperPolar preview="Your email address has been changed">
+    <WrapperOutception preview="Your email address has been changed">
       <Intro>
         The email address for your{' '}
         <Text as="span" weight="bold">
@@ -24,7 +24,7 @@ export function CustomerEmailChangedNotification({
         immediately.
       </Text>
       <Footer email={email} />
-    </WrapperPolar>
+    </WrapperOutception>
   )
 }
 

@@ -1,7 +1,7 @@
 'use client'
 
-import { List, ListGroup, ListItem, Status, Text } from '@polar-sh/orbit'
-import { Box } from '@polar-sh/orbit/Box'
+import { List, ListGroup, ListItem, Status, Text } from '@outception-com/orbit'
+import { Box } from '@outception-com/orbit/Box'
 import type { PropRow } from '@/components/docs'
 import {
   Example,

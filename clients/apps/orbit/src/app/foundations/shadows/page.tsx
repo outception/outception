@@ -1,7 +1,7 @@
-import { Box } from '@polar-sh/orbit/Box'
+import { Box } from '@outception-com/orbit/Box'
 import { PageHeader, Section, Prose, Example } from '@/components/docs'
-import { Text } from '@polar-sh/orbit'
-import type { ShadowToken } from '@polar-sh/orbit/theme'
+import { Text } from '@outception-com/orbit'
+import type { ShadowToken } from '@outception-com/orbit/theme'
 
 const SHADOWS: { token: ShadowToken; note: string }[] = [
   { token: 'none', note: 'Flat, no elevation' },

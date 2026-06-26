@@ -6,8 +6,8 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@polar-sh/orbit'
-import { Box } from '@polar-sh/orbit/Box'
+} from '@outception-com/orbit'
+import { Box } from '@outception-com/orbit/Box'
 import type { PropRow } from '@/components/docs'
 import { Example, PageHeader, PropsTable, Section } from '@/components/docs'
 

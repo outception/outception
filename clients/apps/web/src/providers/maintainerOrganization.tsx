@@ -1,6 +1,6 @@
 'use client'
 
-import { schemas } from '@polar-sh/client'
+import { schemas } from '@outception-com/client'
 import React from 'react'
 
 const stub = (): never => {

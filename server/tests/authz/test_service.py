@@ -2,12 +2,12 @@ from uuid import UUID
 
 import pytest
 
-from polar.auth.models import AuthSubject
-from polar.authz.service import get_accessible_org_ids, get_accessible_organization
-from polar.models import Organization, User
-from polar.models.organization import OrganizationStatus
-from polar.models.user_organization import UserOrganization
-from polar.postgres import AsyncSession
+from outception.auth.models import AuthSubject
+from outception.authz.service import get_accessible_org_ids, get_accessible_organization
+from outception.models import Organization, User
+from outception.models.organization import OrganizationStatus
+from outception.models.user_organization import UserOrganization
+from outception.postgres import AsyncSession
 from tests.fixtures.auth import AuthSubjectFixture
 
 NONEXISTENT_ORG_ID = UUID("00000000-0000-0000-0000-000000000000")

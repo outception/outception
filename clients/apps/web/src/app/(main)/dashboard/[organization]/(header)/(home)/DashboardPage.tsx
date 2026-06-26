@@ -2,7 +2,7 @@
 
 import { DashboardBody } from '@/components/Layout/DashboardLayout'
 import { PromotionsDashboard } from '@/components/Promotions/PromotionsDashboard'
-import { schemas } from '@polar-sh/client'
+import { schemas } from '@outception-com/client'
 
 interface OverviewPageProps {
   organization: schemas['Organization']

@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from polar.config import INSECURE_DEFAULT_SECRET, Environment, Settings
+from outception.config import INSECURE_DEFAULT_SECRET, Environment, Settings
 
 
 class TestRequireStrongSecret:

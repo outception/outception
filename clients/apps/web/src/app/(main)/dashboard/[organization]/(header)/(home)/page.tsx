@@ -5,7 +5,7 @@ import DashboardPage from './DashboardPage'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: 'Overview', // " | Polar is added by the template"
+    title: 'Overview', // " | Outception is added by the template"
   }
 }
 
