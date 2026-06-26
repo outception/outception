@@ -15,21 +15,21 @@ This document outlines the guidelines and principles we follow when designing an
 
 ## Core conventions
 
-- Always use `polar.kit.Schema` (or `TimestampedSchema` when timestamps exist)
+- Always use `outception.kit.Schema` (or `TimestampedSchema` when timestamps exist)
 - Snake_case field names
 - Add docstrings, field descriptions, and meaningful examples
 - Separate read/create/update schemas; updates must be partial (all fields optional)
-- Validation errors should return `422 Unprocessable Entity` in FastAPI format via `PolarRequestValidationError`
+- Validation errors should return `422 Unprocessable Entity` in FastAPI format via `OutceptionRequestValidationError`
 
 ## Schemas
 
 Our schemas are defined in our Python backend using [Pydantic](https://docs.pydantic.dev/latest/) models. Each schema represents a resource to read, create, or update.
 
-**Inherit from `polar.kit.Schema`**
+**Inherit from `outception.kit.Schema`**
 
 ```py
 # ✅ DO
-from polar.kit import Schema
+from outception.kit import Schema
 
 class Customer(Schema):
     email: str
@@ -54,17 +54,17 @@ class Customer(Schema):
     firstName: str
 ```
 
-**If the underlying data model includes `created_at` or `updated_at` fields, inherit from `polar.kit.TimestampedSchema`**
+**If the underlying data model includes `created_at` or `updated_at` fields, inherit from `outception.kit.TimestampedSchema`**
 
 ```py
 # ✅ DO
-from polar.kit import TimestampedSchema
+from outception.kit import TimestampedSchema
 
 class Customer(TimestampedSchema):
     email: str
 
 # ❌ DON'T
-from polar.kit import Schema
+from outception.kit import Schema
 
 class Customer(Schema):
     email: str
@@ -72,7 +72,7 @@ class Customer(Schema):
     updated_at: datetime
 
 # ❌ DON'T
-from polar.kit import Schema
+from outception.kit import Schema
 
 class Customer(Schema):
     email: str
@@ -82,7 +82,7 @@ class Customer(Schema):
 
 ```py
 # ✅ DO
-from polar.kit import Schema
+from outception.kit import Schema
 from pydantic import Field
 
 class Customer(Schema):
@@ -91,7 +91,7 @@ class Customer(Schema):
     email: str = Field(..., description="The customer's email address", example="john@example.com")
 
 # ❌ DON'T
-from polar.kit import Schema
+from outception.kit import Schema
 
 class Customer(Schema):
     email: str
@@ -184,13 +184,13 @@ List endpoints return a list of resources and support filtering, pagination, and
 ### Create endpoints
 
 - Request body uses the create schema.
-- On validation errors, return `422 Unprocessable Entity` with FastAPI-style details (`PolarRequestValidationError`).
+- On validation errors, return `422 Unprocessable Entity` with FastAPI-style details (`OutceptionRequestValidationError`).
 - On success, return `201 Created` with the read schema.
 
 ### Update endpoints
 
 - Request body uses the update schema (partial updates allowed).
-- On validation errors, return `422 Unprocessable Entity` with FastAPI-style details (`PolarRequestValidationError`).
+- On validation errors, return `422 Unprocessable Entity` with FastAPI-style details (`OutceptionRequestValidationError`).
 - On success, return `200 OK` with the read schema.
 
 ### Delete endpoints

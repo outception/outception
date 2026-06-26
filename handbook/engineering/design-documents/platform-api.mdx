@@ -64,7 +64,7 @@ Used when the platform wants to act on behalf of a specific organization:
   "jti": "org-token-id-12345", // Unique ID for the token (single use)
   "sub": "org-external-123", // Platform's external organization ID
   "iss": "platform-123", // Platform ID
-  "aud": "polar:platform-organization", // Audience: organization operations
+  "aud": "outception:platform-organization", // Audience: organization operations
   "organization_name": "Acme Inc", // Optional: Organization name (creation only)
   "organization_slug": "acme", // Optional: Organization slug (creation only)
   "iat": 1735689600, // Issued at timestamp
@@ -82,7 +82,7 @@ Used when the platform wants to perform platform-level operations:
   "jti": "platform-token-id-67890", // Unique ID for the token
   "sub": "platform-123", // Platform ID (subject)
   "iss": "platform-123", // Platform ID (issuer)
-  "aud": "polar:platform", // Audience: platform operations
+  "aud": "outception:platform", // Audience: platform operations
   "iat": 1735689600, // Issued at timestamp
   "nbf": 1735689600, // Not before timestamp
   "exp": 1735776000 // Expiration timestamp
@@ -102,7 +102,7 @@ The validation process differs based on the JWT type:
 ### Organization JWT Validation
 
 1. **JWT Validation**: Verify signature using platform's JWKS
-2. **Audience Check**: Ensure `aud` = `polar:platform-organization`
+2. **Audience Check**: Ensure `aud` = `outception:platform-organization`
 3. **Claim Extraction**: Extract `sub` (platform_external_id) and `iss` (platform_id)
 4. **Organization Lookup**: Query Organization by `platform_external_id` and `platform_id`
 5. **Organization Creation** (if not exists):
@@ -113,7 +113,7 @@ The validation process differs based on the JWT type:
 ### Platform JWT Validation
 
 1. **JWT Validation**: Verify signature using platform's JWKS
-2. **Audience Check**: Ensure `aud` = `polar:platform`
+2. **Audience Check**: Ensure `aud` = `outception:platform`
 3. **Claim Validation**: Ensure `sub` = `iss` = platform_id
 4. **Platform Verification**: Verify platform exists and is active
 5. **Access Token Issuance**: Return Platform Access Token with requested scopes
@@ -160,7 +160,7 @@ Platforms can authenticate using a dedicated Platform JWT:
   "jti": "platform-token-id-67890", // Unique ID for the token
   "sub": "platform-123", // Platform ID (subject)
   "iss": "platform-123", // Platform ID (issuer)
-  "aud": "polar:platform", // Audience: platform operations
+  "aud": "outception:platform", // Audience: platform operations
   "iat": 1735689600, // Issued at timestamp
   "nbf": 1735689600, // Not before timestamp
   "exp": 1735776000 // Expiration timestamp
@@ -170,7 +170,7 @@ Platforms can authenticate using a dedicated Platform JWT:
 **Key differences from Organization JWT:**
 
 - `sub` and `iss` are both the Platform ID
-- `aud` is `polar:platform` (vs `polar:platform-organization` for org-specific operations)
+- `aud` is `outception:platform` (vs `outception:platform-organization` for org-specific operations)
 - No organization-specific claims
 
 ## Platform Access Token Capabilities
@@ -185,7 +185,7 @@ Platform Access Tokens enable:
 ## Token Exchange for Platform Access
 
 ```bash
-curl -X POST https://api.polar.sh/v1/oauth2/token \
+curl -X POST https://api.outception.com/v1/oauth2/token \
   -H "Content-Type: application/json" \
   -d '{
     "grant_type": "platform",
@@ -198,8 +198,8 @@ curl -X POST https://api.polar.sh/v1/oauth2/token \
 ## Platform Authentication
 
 - `POST /v1/oauth2/token` - Exchange JWT for access tokens
-  - `grant_type: platform` with `aud: polar:platform` → Platform Access Token
-  - `grant_type: platform` with `aud: polar:platform-organization` → Organization Access Token
+  - `grant_type: platform` with `aud: outception:platform` → Platform Access Token
+  - `grant_type: platform` with `aud: outception:platform-organization` → Organization Access Token
 
 ## Organization Management (Platform Access)
 

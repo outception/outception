@@ -19,7 +19,7 @@ Do **not** use `user_metadata` to store Outception-internal data; use dedicated 
 ### 1. Add the mixin to the SQLAlchemy model
 
 ```python
-from polar.kit.metadata import MetadataMixin
+from outception.kit.metadata import MetadataMixin
 
 class Order(MetadataMixin, RecordModel):
     ...
@@ -35,7 +35,7 @@ class Order(MetadataMixin, RecordModel):
 Use `MetadataInputMixin` for write schemas (create / update) and `MetadataOutputMixin` for read schemas:
 
 ```python
-from polar.kit.metadata import MetadataInputMixin, MetadataOutputMixin
+from outception.kit.metadata import MetadataInputMixin, MetadataOutputMixin
 
 class OrderCreate(MetadataInputMixin, Schema):
     ...
@@ -60,7 +60,7 @@ Add `MetadataQuery` to your list endpoint and service, then call `apply_metadata
 
 ```python
 # endpoints.py
-from polar.kit.metadata import MetadataQuery, get_metadata_query_openapi_schema
+from outception.kit.metadata import MetadataQuery, get_metadata_query_openapi_schema
 
 @router.get(
     "/",
@@ -75,7 +75,7 @@ async def list(
 
 ```python
 # service.py
-from polar.kit.metadata import MetadataQuery, apply_metadata_clause
+from outception.kit.metadata import MetadataQuery, apply_metadata_clause
 
 async def list(self, session, *, metadata: MetadataQuery | None = None, ...):
     statement = repository.get_readable_statement(auth_subject)
@@ -143,7 +143,7 @@ model.user_metadata[key].as_string() == value
 
 FastAPI cannot automatically generate a correct OpenAPI `parameter` object for `deepObject`-style query parameters — it has no built-in concept for them. Two functions work together to paper over this gap:
 
-**`add_metadata_query_schema`** is called once, at application startup, inside the custom `openapi()` function in `polar/openapi.py`. It injects a reusable `MetadataQuery` component into the global `components/schemas` section of the OpenAPI document:
+**`add_metadata_query_schema`** is called once, at application startup, inside the custom `openapi()` function in `outception/openapi.py`. It injects a reusable `MetadataQuery` component into the global `components/schemas` section of the OpenAPI document:
 
 ```python
 openapi_schema["components"]["schemas"]["MetadataQuery"] = {

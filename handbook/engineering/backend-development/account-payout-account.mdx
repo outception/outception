@@ -16,7 +16,7 @@ Outception's financial architecture is split across two distinct entities:
 erDiagram
     Organization ||--|| Account : "account_id (unique, NOT NULL)"
     Organization }o--o| PayoutAccount : "payout_account_id (nullable)"
-    Transaction }o--o| Account : "account_id (nullable = Polar's own)"
+    Transaction }o--o| Account : "account_id (nullable = Outception's own)"
     Payout ||--|| Account : "account_id"
     Payout ||--|| PayoutAccount : "payout_account_id"
     AccountCredit }o--|| Account : "account_id"
@@ -68,7 +68,7 @@ The `Account` is a pure financial ledger. It has no Stripe credentials and no pa
 ### Key fields
 
 ```python
-currency: str              # Always "usd" (Polar's settlement currency)
+currency: str              # Always "usd" (Outception's settlement currency)
 credit_balance: int        # Denormalized sum of active promotional fee credits (cents)
 
 # Platform fee overrides — None falls back to global settings
@@ -198,7 +198,7 @@ payout_account_id: UUID | None = mapped_column(
 **`server/outception/models/transaction.py` · table `transactions`**
 
 ```python
-account_id: UUID | None    # NULL → Polar's own transaction; NOT NULL → merchant/seller
+account_id: UUID | None    # NULL → Outception's own transaction; NOT NULL → merchant/seller
 payout_id: UUID | None     # Set when this transaction is swept in a Payout
 ```
 
@@ -211,7 +211,7 @@ The future goal is to extend `Account` to represent customers and Outception sub
 
 ```mermaid
 flowchart LR
-    C[Customer Account] -->|payment| P[Polar Account\nMerchant of Record]
+    C[Customer Account] -->|payment| P[Outception Account\nMerchant of Record]
     P -->|balance credit| M[Merchant Account]
     M -->|platform fee| P
     P -->|payout transfer| PA[PayoutAccount\nStripe Connect]
@@ -227,7 +227,7 @@ A `Payout` links both entities, representing the transfer of funds from the merc
 account_id: UUID           # Source: merchant Account (NOT NULL)
 payout_account_id: UUID    # Destination: PayoutAccount (NOT NULL)
 
-currency: str              # "usd" (Polar's side)
+currency: str              # "usd" (Outception's side)
 amount: int                # cents
 fees_amount: int           # cents
 

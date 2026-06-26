@@ -892,8 +892,8 @@ This appendix shows how merchants integrate with Outception for common workflows
 ##### Option 1: Member Model
 
 ```http
-POST https://api.polar.sh/v1/customers
-Authorization: Bearer polar_secret_...
+POST https://api.outception.com/v1/customers
+Authorization: Bearer outception_secret_...
 Content-Type: application/json
 
 {
@@ -933,8 +933,8 @@ Content-Type: application/json
 ##### Option 2: Customer Type + Member
 
 ```http
-POST https://api.polar.sh/v1/customers
-Authorization: Bearer polar_secret_...
+POST https://api.outception.com/v1/customers
+Authorization: Bearer outception_secret_...
 Content-Type: application/json
 
 {
@@ -976,8 +976,8 @@ Content-Type: application/json
 
 ```http
 # Step 1: Create business customer
-POST https://api.polar.sh/v1/customers
-Authorization: Bearer polar_secret_...
+POST https://api.outception.com/v1/customers
+Authorization: Bearer outception_secret_...
 
 {
   "name": "Acme Corp",
@@ -1010,8 +1010,8 @@ Authorization: Bearer polar_secret_...
 
 ```http
 # Step 2: Add billing manager as member
-POST https://api.polar.sh/v1/customers/cust_acme_123/members
-Authorization: Bearer polar_secret_...
+POST https://api.outception.com/v1/customers/cust_acme_123/members
+Authorization: Bearer outception_secret_...
 
 {
   "email": "billing@acme.com",
@@ -1037,8 +1037,8 @@ Authorization: Bearer polar_secret_...
 
 ```http
 # Step 1: Create business customer
-POST https://api.polar.sh/v1/customers
-Authorization: Bearer polar_secret_...
+POST https://api.outception.com/v1/customers
+Authorization: Bearer outception_secret_...
 
 {
   "type": "business",
@@ -1062,8 +1062,8 @@ Authorization: Bearer polar_secret_...
 
 ```http
 # Step 2: Add billing manager to business via Member
-POST https://api.polar.sh/v1/customers/cust_acme_123/members
-Authorization: Bearer polar_secret_...
+POST https://api.outception.com/v1/customers/cust_acme_123/members
+Authorization: Bearer outception_secret_...
 
 {
   "email": "billing@acme.com",
@@ -1098,8 +1098,8 @@ Authorization: Bearer polar_secret_...
 
 ```http
 # Step 1: Create checkout session
-POST https://api.polar.sh/v1/checkouts
-Authorization: Bearer polar_secret_...
+POST https://api.outception.com/v1/checkouts
+Authorization: Bearer outception_secret_...
 
 {
   "product_id": "prod_theme_123",
@@ -1115,14 +1115,14 @@ Authorization: Bearer polar_secret_...
 ```json
 {
   "id": "checkout_abc",
-  "url": "https://polar.sh/checkout/abc",
+  "url": "https://outception.com/checkout/abc",
   "customer_id": null  // Created after payment
 }
 ```
 
 ```http
-# Step 2: Customer completes checkout (Polar hosted)
-# → Polar auto-creates Customer + Member
+# Step 2: Customer completes checkout (Outception hosted)
+# → Outception auto-creates Customer + Member
 
 # Step 3: Webhook received
 ```
@@ -1152,7 +1152,7 @@ Authorization: Bearer polar_secret_...
 
 ```http
 # Step 4: Grant benefit to member
-# Polar automatically creates BenefitGrant linked to ben_alice_789
+# Outception automatically creates BenefitGrant linked to ben_alice_789
 ```
 
 ---
@@ -1161,8 +1161,8 @@ Authorization: Bearer polar_secret_...
 
 ```http
 # Step 1: Create checkout session
-POST https://api.polar.sh/v1/checkouts
-Authorization: Bearer polar_secret_...
+POST https://api.outception.com/v1/checkouts
+Authorization: Bearer outception_secret_...
 
 {
   "product_id": "prod_theme_123",
@@ -1178,14 +1178,14 @@ Authorization: Bearer polar_secret_...
 ```json
 {
   "id": "checkout_abc",
-  "url": "https://polar.sh/checkout/abc",
+  "url": "https://outception.com/checkout/abc",
   "customer_id": null  // Created after payment
 }
 ```
 
 ```http
-# Step 2: Customer completes checkout (Polar hosted)
-# → Polar auto-creates Customer with type="individual"
+# Step 2: Customer completes checkout (Outception hosted)
+# → Outception auto-creates Customer with type="individual"
 
 # Step 3: Webhook received
 ```
@@ -1209,7 +1209,7 @@ Authorization: Bearer polar_secret_...
 
 ```http
 # Step 4: Grant benefit to customer
-# Polar automatically creates BenefitGrant linked to cust_alice_456
+# Outception automatically creates BenefitGrant linked to cust_alice_456
 ```
 
 ---
@@ -1228,8 +1228,8 @@ Authorization: Bearer polar_secret_...
 
 ```http
 # Step 1: Create business customer
-POST https://api.polar.sh/v1/customers
-Authorization: Bearer polar_secret_...
+POST https://api.outception.com/v1/customers
+Authorization: Bearer outception_secret_...
 
 {
   "name": "Acme Corp",
@@ -1243,8 +1243,8 @@ Authorization: Bearer polar_secret_...
 
 ```http
 # Step 2: Create checkout session for business
-POST https://api.polar.sh/v1/checkouts
-Authorization: Bearer polar_secret_...
+POST https://api.outception.com/v1/checkouts
+Authorization: Bearer outception_secret_...
 
 {
   "product_id": "prod_team_plan_4seats",
@@ -1257,14 +1257,14 @@ Authorization: Bearer polar_secret_...
 ```json
 {
   "id": "checkout_def",
-  "url": "https://polar.sh/checkout/def",
+  "url": "https://outception.com/checkout/def",
   "customer_id": "cust_acme_123"
 }
 ```
 
 ```http
 # Step 3: Billing manager completes checkout
-# → Polar auto-creates member for billing@acme.com
+# → Outception auto-creates member for billing@acme.com
 ```
 
 Step 4: Webhook received
@@ -1295,8 +1295,8 @@ Step 4: Webhook received
 
 ```http
 # Step 5: Beneficiaries claim seats
-POST https://api.polar.sh/v1/subscriptions/sub_acme_456/seats
-Authorization: Bearer polar_customer_session_... // ben_billing_789 session
+POST https://api.outception.com/v1/subscriptions/sub_acme_456/seats
+Authorization: Bearer outception_customer_session_... // ben_billing_789 session
 
 { "member_email": "alive@acme.com" }
 ```
@@ -1317,8 +1317,8 @@ Authorization: Bearer polar_customer_session_... // ben_billing_789 session
 
 ```http
 # Step 1: Create business customer
-POST https://api.polar.sh/v1/customers
-Authorization: Bearer polar_secret_...
+POST https://api.outception.com/v1/customers
+Authorization: Bearer outception_secret_...
 
 {
   "type": "business",
@@ -1333,8 +1333,8 @@ Authorization: Bearer polar_secret_...
 
 ```http
 # Step 2: Create checkout session
-POST https://api.polar.sh/v1/checkouts
-Authorization: Bearer polar_secret_...
+POST https://api.outception.com/v1/checkouts
+Authorization: Bearer outception_secret_...
 
 {
   "product_id": "prod_team_plan_4seats",
@@ -1379,8 +1379,8 @@ Step 4: Webhook received
 
 ```http
 # Step 5: Beneficiaries claim seats
-POST https://api.polar.sh/v1/subscriptions/sub_acme_789/seats
-Authorization: Bearer polar_customer_session_... // cust_acme_456 session
+POST https://api.outception.com/v1/subscriptions/sub_acme_789/seats
+Authorization: Bearer outception_customer_session_... // cust_acme_456 session
 
 { "customer_email": "alice@acme.com" }
 ```
@@ -1412,10 +1412,10 @@ Authorization: Bearer polar_customer_session_... // cust_acme_456 session
 
 ```http
 # Merchant shares public checkout link
-https://buy.polar.sh/polar_cl_gon2ISU4r7oYyjVaxXlRVUv5MKh1H3c1gCxKn1zZGHA
+https://buy.outception.com/outception_cl_gon2ISU4r7oYyjVaxXlRVUv5MKh1H3c1gCxKn1zZGHA
 
 # Customer clicks, enters email, completes purchase
-# → Polar auto-creates Customer + Member
+# → Outception auto-creates Customer + Member
 
 # Webhook received
 ```
@@ -1449,10 +1449,10 @@ https://buy.polar.sh/polar_cl_gon2ISU4r7oYyjVaxXlRVUv5MKh1H3c1gCxKn1zZGHA
 
 ```http
 # Merchant shares public checkout link
-https://polar.sh/org_abc/products/prod_team_plan
+https://outception.com/org_abc/products/prod_team_plan
 
 # Customer clicks, enters email, completes purchase
-# → Polar detects seat-based product, auto-creates:
+# → Outception detects seat-based product, auto-creates:
 #    1. Business customer (generated name from email domain)
 #    2. Individual customer for buyer
 #    3. Member linking them
@@ -1509,8 +1509,8 @@ https://polar.sh/org_abc/products/prod_team_plan
 # Session identifies him by customer_id (B2C backward compatibility as 1 member == 1 customer in B2C)
 
 # B2C: Using customer_id (backward compatible)
-GET https://api.polar.sh/v1/customer-portal/downloadables
-Authorization: Bearer polar_customer_session_...
+GET https://api.outception.com/v1/customer-portal/downloadables
+Authorization: Bearer outception_customer_session_...
 
 ```
 
@@ -1550,8 +1550,8 @@ Authorization: Bearer polar_customer_session_...
 # Alice authenticates via Customer Portal
 # Session identifies her as ben_alice_acme_123 (B2B: explicit member)
 
-GET https://api.polar.sh/v1/benefit-grants?member_id=ben_alice_acme_123
-Authorization: Bearer polar_member_session_...
+GET https://api.outception.com/v1/benefit-grants?member_id=ben_alice_acme_123
+Authorization: Bearer outception_member_session_...
 ```
 
 **Response:**
@@ -1586,8 +1586,8 @@ Authorization: Bearer polar_member_session_...
 # Alice authenticates via Customer Portal
 # Session identifies her as cust_alice_123 (individual customer)
 
-GET https://api.polar.sh/v1/customer-portal/downloadables
-Authorization: Bearer polar_customer_session_...
+GET https://api.outception.com/v1/customer-portal/downloadables
+Authorization: Bearer outception_customer_session_...
 ```
 
 **Response:**
@@ -1608,8 +1608,8 @@ Authorization: Bearer polar_customer_session_...
 
 ```http
 # Download benefit
-GET https://api.polar.sh/v1/benefits/benefit_theme_download/download
-Authorization: Bearer polar_customer_session_...
+GET https://api.outception.com/v1/benefits/benefit_theme_download/download
+Authorization: Bearer outception_customer_session_...
 ```
 
 ---
@@ -1631,16 +1631,16 @@ Authorization: Bearer polar_customer_session_...
 
 ```http
 # Option A: Using customer_id (B2C backward compatible)
-POST https://api.polar.sh/v1/customer-sessions
-Authorization: Bearer polar_secret_...
+POST https://api.outception.com/v1/customer-sessions
+Authorization: Bearer outception_secret_...
 
 {
   "customer_id": "cust_bob_123"  // ✅ B2C backward compatible
 }
 
 # Option B: Using member_id (new explicit way)
-POST https://api.polar.sh/v1/customer-sessions
-Authorization: Bearer polar_secret_...
+POST https://api.outception.com/v1/customer-sessions
+Authorization: Bearer outception_secret_...
 
 {
   "member_id": "ben_bob_default_456"  // ✅ New way
@@ -1650,10 +1650,10 @@ Authorization: Bearer polar_secret_...
 **Response (same for both):**
 ```json
 {
-  "token": "polar_cst_abc123xyz",
+  "token": "outception_cst_abc123xyz",
   "customer_id": "cust_bob_123",
   "member_id": "ben_bob_default_456",  // Auto-resolved from customer
-  "return_url": "https://polar.sh/org_merchant/portal?token=polar_cst_abc123xyz",
+  "return_url": "https://outception.com/org_merchant/portal?token=outception_cst_abc123xyz",
   "expires_at": "2025-12-01T10:00:00Z"
 }
 ```
@@ -1673,8 +1673,8 @@ Authorization: Bearer polar_secret_...
 ###### Option 2: Customer Type + Member
 
 ```http
-POST https://api.polar.sh/v1/customer-sessions
-Authorization: Bearer polar_secret_...
+POST https://api.outception.com/v1/customer-sessions
+Authorization: Bearer outception_secret_...
 
 {
   "customer_id": "cust_bob_456"
@@ -1684,9 +1684,9 @@ Authorization: Bearer polar_secret_...
 **Response:**
 ```json
 {
-  "token": "polar_cst_abc123xyz",
+  "token": "outception_cst_abc123xyz",
   "customer_id": "cust_bob_456",
-  "return_url": "https://polar.sh/org_merchant/portal?token=polar_cst_abc123xyz",
+  "return_url": "https://outception.com/org_merchant/portal?token=outception_cst_abc123xyz",
   "expires_at": "2025-12-01T10:00:00Z"
 }
 ```
@@ -1711,8 +1711,8 @@ Authorization: Bearer polar_secret_...
 We can only use the member id. The customerId has multiple benefficieres and we don't know which one to pick.
 
 ```http
-POST https://api.polar.sh/v1/customer-sessions
-Authorization: Bearer polar_secret_...
+POST https://api.outception.com/v1/customer-sessions
+Authorization: Bearer outception_secret_...
 
 {
   "member_id": "ben_jane_789"  // Jane's member at Acme
@@ -1722,10 +1722,10 @@ Authorization: Bearer polar_secret_...
 **Response:**
 ```json
 {
-  "token": "polar_cst_def456",
+  "token": "outception_cst_def456",
   "member_id": "ben_jane_789",
   "customer_id": "cust_acme_123",
-  "url": "https://polar.sh/portal?token=polar_cst_def456",
+  "url": "https://outception.com/portal?token=outception_cst_def456",
   "expires_at": "2025-12-01T10:00:00Z"
 }
 ```
@@ -1741,8 +1741,8 @@ Authorization: Bearer polar_secret_...
 ###### Option 2: Customer Type + Member
 
 ```http
-POST https://api.polar.sh/v1/customer-sessions
-Authorization: Bearer polar_secret_...
+POST https://api.outception.com/v1/customer-sessions
+Authorization: Bearer outception_secret_...
 
 {
   "customer_id": "cust_jane_456"  // Jane's individual customer
@@ -1752,9 +1752,9 @@ Authorization: Bearer polar_secret_...
 **Response:**
 ```json
 {
-  "token": "polar_cst_def456",
+  "token": "outception_cst_def456",
   "customer_id": "cust_jane_456",
-  "url": "https://polar.sh/portal?token=polar_cst_def456",
+  "url": "https://outception.com/portal?token=outception_cst_def456",
   "expires_at": "2025-12-01T10:00:00Z"
 }
 ```
@@ -1788,8 +1788,8 @@ Authorization: Bearer polar_secret_...
 
 ```http
 # Option A: Using customer_id (B2C backward compatible)
-POST https://api.polar.sh/v1/events
-Authorization: Bearer polar_secret_...
+POST https://api.outception.com/v1/events
+Authorization: Bearer outception_secret_...
 
 {
   "customer_id": "cust_bob_123",  // ✅ B2C backward compatible
@@ -1801,8 +1801,8 @@ Authorization: Bearer polar_secret_...
 }
 
 # Option B: Using member_id (new explicit way)
-POST https://api.polar.sh/v1/events
-Authorization: Bearer polar_secret_...
+POST https://api.outception.com/v1/events
+Authorization: Bearer outception_secret_...
 
 {
   "member_id": "ben_bob_default_456",  // ✅ New way
@@ -1827,8 +1827,8 @@ Authorization: Bearer polar_secret_...
 ###### Option 2: Customer Type + Member
 
 ```http
-POST https://api.polar.sh/v1/events
-Authorization: Bearer polar_secret_...
+POST https://api.outception.com/v1/events
+Authorization: Bearer outception_secret_...
 
 {
   "customer_id": "cust_bob_456",
@@ -1854,8 +1854,8 @@ Authorization: Bearer polar_secret_...
 ###### Option 1: Member Model
 
 ```http
-POST https://api.polar.sh/v1/events
-Authorization: Bearer polar_secret_...
+POST https://api.outception.com/v1/events
+Authorization: Bearer outception_secret_...
 
 {
   "customer_id": "cust_acme_123", // the business customer of the subscription, who to bill. ⚠️ This breaks current seats usage as merchants will need to pass a new customer ID or use the new benefficiaryId
@@ -1879,8 +1879,8 @@ Authorization: Bearer polar_secret_...
 ###### Option 2: Customer Type + Member
 
 ```http
-POST https://api.polar.sh/v1/events
-Authorization: Bearer polar_secret_...
+POST https://api.outception.com/v1/events
+Authorization: Bearer outception_secret_...
 
 {
   "customer_id": "cust_alice_123",  // Alice's individual customer
@@ -1918,7 +1918,7 @@ Authorization: Bearer polar_secret_...
 
 **Retry with explicit subscription:**
 ```http
-POST https://api.polar.sh/v1/events
+POST https://api.outception.com/v1/events
 {
   "customer_id": "cust_alice_123",
   "subscription_id": "sub_acme_789",  // Explicit

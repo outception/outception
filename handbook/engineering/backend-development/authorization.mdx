@@ -25,7 +25,7 @@ A PolicyGuard is a FastAPI dependency factory that combines resource resolution 
 If any step fails, the appropriate HTTP error is raised before the endpoint body executes.
 
 ```python
-from polar.authz.dependencies import AuthorizeFinanceRead
+from outception.authz.dependencies import AuthorizeFinanceRead
 
 @router.get("/{id}/account")
 async def get_account(
@@ -123,7 +123,7 @@ Services resolve which orgs the subject can access, then pass the IDs to the rep
 
 ```python
 # Service — resolves org access, delegates to repository
-from polar.authz.service import get_accessible_org_ids
+from outception.authz.service import get_accessible_org_ids
 
 class ProductService:
     async def list(self, session, auth_subject, ...):
@@ -153,7 +153,7 @@ Some endpoints don't operate on an organization — they act on the authenticate
 For these, use one of the user-personal `Authorize*` aliases from `server/outception/authz/dependencies.py`:
 
 ```python
-from polar.authz.dependencies import AuthorizeWebUserRead, AuthorizeWebUserWrite
+from outception.authz.dependencies import AuthorizeWebUserRead, AuthorizeWebUserWrite
 
 @router.get("/me")
 async def get_authenticated(auth_subject: AuthorizeWebUserRead) -> User:

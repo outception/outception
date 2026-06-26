@@ -31,7 +31,7 @@ To add debouncing to a Dramatiq task, you need to:
 
 ```python
 from outception.worker import actor
-from polar.config import settings
+from outception.config import settings
 
 def _update_customer_debounce_key(customer_id: uuid.UUID) -> str:
     return f"customer_meter.update_customer:{customer_id}"
@@ -227,7 +227,7 @@ Result: Both M1 and M2 execute — they belong to separate debounce windows.
 
 The debouncer emits two key metrics:
 
-- `polar_task_debounced_total`: Counter of tasks that were skipped due to debouncing
-- `polar_task_debounce_delay_seconds`: Histogram of delays between first enqueue and execution
+- `outception_task_debounced_total`: Counter of tasks that were skipped due to debouncing
+- `outception_task_debounce_delay_seconds`: Histogram of delays between first enqueue and execution
 
 Both metrics are labeled with `queue` and `task_name` for filtering.

@@ -20,7 +20,7 @@ This RFC proposes a date-based API versioning strategy for Outception with the f
 - **Release cadence**: Quarterly (January, April, July, October) — open for discussion
 - **Change policy**: Strict freeze on Current and Deprecated versions; all contract changes through Next version
 - **Version naming**: `YYYY-MM` format (e.g., `2026-01`, `2026-04`)
-- **Versioning mechanism**: `Polar-Version` header, defaulting to Current version
+- **Versioning mechanism**: `Outception-Version` header, defaulting to Current version
 
 The goal is to establish a predictable, disciplined API evolution process that balances innovation with stability.
 
@@ -149,16 +149,16 @@ API versions use the `YYYY-MM` format representing the quarter of release:
 Clients specify the API version using a custom header:
 
 ```http
-Polar-Version: 2026-01
+Outception-Version: 2026-01
 ```
 
 #### Default Behavior
 
-When the `Polar-Version` header is omitted, requests are routed to the **Current** version.
+When the `Outception-Version` header is omitted, requests are routed to the **Current** version.
 
 <Warning>
   The default version changes over time as new versions are released. **Clients
-  should explicitly set the `Polar-Version` header to avoid unexpected
+  should explicitly set the `Outception-Version` header to avoid unexpected
   disruptions when the Current version changes.**
 </Warning>
 
@@ -192,7 +192,7 @@ sdk/
 The user would use the client by importing the version they want:
 
 ```py
-from polar.v2026_07 import Polar
+from outception.v2026_07 import Outception
 ```
 
 Under the hood, this version would automatically use the schemas and services corresponding to that version and automatically set the version header when issuing requests. The good side effect is that it forces users to explicitly set a version.
@@ -209,7 +209,7 @@ Under the hood, this version would automatically use the schemas and services co
 
 We introduce a new `version` decorator to put on top of routes. By default, without the decorator, the route is available on all versions. If the decorator is used, the route is only available on the specified version(s). A more specific version takes precedence over a more general one.
 
-Custom routing classes will then take care to create sub-FastAPI apps that expose the right endpoints and schemas for each version. The main app will route requests to the appropriate sub-app based on the `Polar-Version` header.
+Custom routing classes will then take care to create sub-FastAPI apps that expose the right endpoints and schemas for each version. The main app will route requests to the appropriate sub-app based on the `Outception-Version` header.
 
 ```python Usage
 class ItemOld(BaseModel):
@@ -277,8 +277,8 @@ from starlette.datastructures import Headers
 from starlette.routing import BaseRoute, Match, Route
 from starlette.types import ASGIApp, Receive, Send
 
-from polar.openapi import APITag
-from polar.routing import APIRouter
+from outception.openapi import APITag
+from outception.routing import APIRouter
 
 
 class APIVersion:
@@ -402,7 +402,7 @@ class VersionRoute(BaseRoute):
     def matches(self, scope: Scope) -> tuple[Match, Scope]:
         if scope["type"] in ("http", "websocket"):
             headers = Headers(scope=scope)
-            raw_version = headers.get("polar-version")
+            raw_version = headers.get("outception-version")
             try:
                 request_version = (
                     APIVersion.parse(raw_version)
