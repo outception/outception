@@ -69,26 +69,15 @@
               "engineering/backend-development/task-debouncer",
               "engineering/backend-development/operational-errors",
               "engineering/backend-development/metadata",
-              "engineering/backend-development/tinybird",
-              "engineering/backend-development/account-payout-account"
+              "engineering/backend-development/tinybird"
             ]
           },
           {
             "group": "Design Documents",
             "pages": [
               "engineering/design-documents/index",
-              "engineering/design-documents/seat-based-pricing",
-              "engineering/design-documents/prorations",
-              "engineering/design-documents/subscription-retries",
-              "engineering/design-documents/wallets",
-              "engineering/design-documents/multi-currency",
-              "engineering/design-documents/business-entity",
-              "engineering/design-documents/event-storage",
-              "engineering/design-documents/platform-api",
               "engineering/design-documents/rbac",
-              "engineering/design-documents/outception-for-outception",
-              "engineering/design-documents/api-versioning",
-              "engineering/design-documents/payout-reviews"
+              "engineering/design-documents/api-versioning"
             ]
           },
           "engineering/tech-notes",
