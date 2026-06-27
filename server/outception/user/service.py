@@ -1,6 +1,5 @@
 from datetime import UTC, datetime
 from typing import Any
-from uuid import UUID
 
 import structlog
 
@@ -24,39 +23,6 @@ log = structlog.get_logger()
 
 
 class UserError(OutceptionError): ...
-
-
-class IdentityAlreadyVerified(UserError):
-    def __init__(self, user_id: UUID) -> None:
-        self.user_id = user_id
-        message = "Your identity is already verified."
-        super().__init__(message, 403)
-
-
-class IdentityVerificationProcessing(UserError):
-    def __init__(self, user_id: UUID) -> None:
-        self.user_id = user_id
-        message = "Your identity verification is still processing."
-        super().__init__(message, 403)
-
-
-class IdentityVerificationDoesNotExist(UserError):
-    def __init__(self, identity_verification_id: str) -> None:
-        self.identity_verification_id = identity_verification_id
-        message = (
-            f"Received identity verification {identity_verification_id} from Stripe, "
-            "but no associated User exists."
-        )
-        super().__init__(message)
-
-
-class InvalidAccount(UserError):
-    def __init__(self, account_id: UUID) -> None:
-        self.account_id = account_id
-        message = (
-            f"The account {account_id} does not exist or you don't have access to it."
-        )
-        super().__init__(message)
 
 
 class UserService:
@@ -156,10 +122,6 @@ class UserService:
         Flow:
         1. Check if user has any active organizations -> block if yes
         2. Soft delete the user
-
-        Note: The user's Account (payout account) is not deleted here.
-        Accounts are tied to organizations and should be deleted when the
-        organization is deleted, not when the user account is deleted.
         """
         check_result = await self.check_can_delete(session, user)
 

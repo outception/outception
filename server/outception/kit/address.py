@@ -2,11 +2,8 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Annotated, Any, NotRequired, Self, TypedDict, cast
 
 import pycountry
-from pydantic import BaseModel, BeforeValidator, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 from pydantic.json_schema import WithJsonSchema
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.engine.interfaces import Dialect
-from sqlalchemy.types import TypeDecorator
 
 from outception.kit.schemas import EmptyStrToNone
 
@@ -219,24 +216,3 @@ class Address(BaseModel):
                 lines.append(self.country)
 
         return "\n".join(lines)
-
-
-class AddressInput(Address):
-    country: Annotated[CountryAlpha2Input, BeforeValidator(str.upper)] = Field(  # type: ignore
-        examples=["US", "SE", "FR"]
-    )
-
-
-class AddressType(TypeDecorator[Any]):
-    impl = JSONB
-    cache_ok = True
-
-    def process_bind_param(self, value: Any, dialect: Dialect) -> Any:
-        if isinstance(value, Address):
-            return value.model_dump(exclude_none=True)
-        return value
-
-    def process_result_value(self, value: str | None, dialect: Dialect) -> Any:
-        if value is not None:
-            return Address.model_validate(value)
-        return value
