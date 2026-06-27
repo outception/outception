@@ -17,8 +17,7 @@
 
           python312
 
-          # Webhooks
-          stripe-cli
+          # Webhooks / tunneling
           ngrok
         ];
       };
