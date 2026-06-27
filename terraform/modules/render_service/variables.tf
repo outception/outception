@@ -114,21 +114,15 @@ variable "backend_config" {
     user_session_cookie_key              = optional(string, "")
     authentication_session_cookie_domain = string               # "outception.com"
     oauth2_session_state_cookie_domain   = string               # "outception.com"
-    debug                                = string               # "0"
     email_sender                         = string               # "resend"
     email_from_name                      = string               # "Outception"
     email_from_domain                    = string               # "notifications.outception.com"
     frontend_base_url                    = string               # "https://outception.com"
-    checkout_base_url                    = string               # "https://buy.outception.com/{client_secret}"
     jwks_path                            = string               # "/etc/secrets/jwks.json"
     log_level                            = string               # "INFO"
     testing                              = string               # "0"
     auth_cookie_domain                   = string               # "outception.com"
     auth_cookie_key                      = optional(string, "") # "outception.com"
-    invoices_additional_info             = optional(string, "")
-    invoices_vat_numbers                 = optional(string, "{}") # JSON dict of country code -> VAT number
-    customer_portal_url_overrides        = optional(string, "{}")
-    plain_default_tier_external_id       = optional(string, "")
   })
 }
 

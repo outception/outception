@@ -257,14 +257,6 @@ resource "tfe_variable" "tinybird_read_token_test" {
   variable_set_id = tfe_variable_set.test.id
 }
 
-resource "tfe_variable" "plain_default_tier_external_id_test" {
-  key             = "plain_default_tier_external_id"
-  category        = "terraform"
-  description     = "Default Plain tier external ID used as a fallback for the outception-self support benefit for test"
-  sensitive       = false
-  variable_set_id = tfe_variable_set.test.id
-}
-
 resource "tfe_variable" "firecrawl_api_key_test" {
   key             = "firecrawl_api_key"
   category        = "terraform"
@@ -279,19 +271,6 @@ resource "tfe_variable" "backend_discord_proxy_url_test" {
   description     = "Discord Proxy URL for test"
   sensitive       = true
   variable_set_id = tfe_variable_set.test.id
-}
-
-resource "tfe_variable" "customer_portal_url_overrides_test" {
-  key             = "customer_portal_url_overrides"
-  category        = "terraform"
-  description     = "JSON object mapping organization IDs to custom customer portal URLs for test"
-  sensitive       = false
-  value           = "{}"
-  variable_set_id = tfe_variable_set.test.id
-
-  lifecycle {
-    ignore_changes = [value]
-  }
 }
 
 resource "tfe_variable" "outception_access_token_test" {

@@ -250,11 +250,6 @@ variable "tinybird_read_token" {
   sensitive   = true
 }
 
-variable "plain_default_tier_external_id" {
-  description = "Default Plain tier external ID used as a fallback for the outception-self support benefit"
-  type        = string
-}
-
 variable "firecrawl_api_key" {
   description = "Firecrawl Cloud API key"
   type        = string
@@ -265,12 +260,6 @@ variable "backend_discord_proxy_url" {
   description = "Discord Proxy URL"
   type        = string
   sensitive   = true
-}
-
-variable "customer_portal_url_overrides" {
-  description = "JSON object mapping organization IDs to custom customer portal URLs"
-  type        = string
-  default     = "{}"
 }
 
 variable "outception_access_token" {

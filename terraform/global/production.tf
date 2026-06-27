@@ -366,19 +366,6 @@ resource "tfe_variable" "outception_scale_product_id_production" {
   variable_set_id = tfe_variable_set.production.id
 }
 
-resource "tfe_variable" "customer_portal_url_overrides_production" {
-  key             = "customer_portal_url_overrides"
-  category        = "terraform"
-  description     = "JSON object mapping organization IDs to custom customer portal URLs for production"
-  sensitive       = false
-  value           = "{}"
-  variable_set_id = tfe_variable_set.production.id
-
-  lifecycle {
-    ignore_changes = [value]
-  }
-}
-
 resource "tfe_variable" "tailscale_authkey_production" {
   key             = "tailscale_authkey"
   category        = "terraform"
@@ -391,14 +378,6 @@ resource "tfe_variable" "tailscale_advertise_routes_production" {
   key             = "tailscale_advertise_routes"
   category        = "terraform"
   description     = "IP routes that should go via Tailscale for production"
-  sensitive       = false
-  variable_set_id = tfe_variable_set.production.id
-}
-
-resource "tfe_variable" "plain_default_tier_external_id_production" {
-  key             = "plain_default_tier_external_id"
-  category        = "terraform"
-  description     = "Default Plain tier external ID used as a fallback for the outception-self support benefit for production"
   sensitive       = false
   variable_set_id = tfe_variable_set.production.id
 }

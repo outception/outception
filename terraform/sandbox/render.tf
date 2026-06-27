@@ -149,19 +149,15 @@ module "sandbox" {
     user_session_cookie_key              = "outception_sandbox_session"
     authentication_session_cookie_domain = "outception.com"
     oauth2_session_state_cookie_domain   = "outception.com"
-    debug                                = "0"
     email_sender                         = "resend"
     email_from_name                      = "[SANDBOX] Outception"
     email_from_domain                    = "notifications.sandbox.outception.com"
     frontend_base_url                    = "https://sandbox.outception.com"
-    checkout_base_url                    = "https://sandbox-api.outception.com/v1/checkout-links/{client_secret}/redirect"
     jwks_path                            = "/etc/secrets/jwks.json"
     log_level                            = "INFO"
     testing                              = "0"
     auth_cookie_domain                   = "outception.com"
     auth_cookie_key                      = "outception_sandbox_session"
-    customer_portal_url_overrides        = var.customer_portal_url_overrides
-    plain_default_tier_external_id       = var.plain_default_tier_external_id
   }
 
   backend_secrets = {

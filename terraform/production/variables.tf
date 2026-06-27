@@ -355,12 +355,6 @@ variable "outception_scale_product_id" {
   type        = string
 }
 
-variable "customer_portal_url_overrides" {
-  description = "JSON object mapping organization IDs to custom customer portal URLs"
-  type        = string
-  default     = "{}"
-}
-
 # Tailscale
 variable "tailscale_authkey" {
   description = "Tailscale auth key for the subnet router"
@@ -370,11 +364,6 @@ variable "tailscale_authkey" {
 
 variable "tailscale_advertise_routes" {
   description = "IP routes that should go via Tailscale"
-  type        = string
-}
-
-variable "plain_default_tier_external_id" {
-  description = "Default Plain tier external ID used as a fallback for the outception-self support benefit"
   type        = string
 }
 

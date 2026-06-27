@@ -226,71 +226,14 @@ module "production" {
     user_session_cookie_domain           = "outception.com"
     authentication_session_cookie_domain = "outception.com"
     oauth2_session_state_cookie_domain   = "outception.com"
-    debug                                = "0"
     email_sender                         = "resend"
     email_from_name                      = "Outception"
     email_from_domain                    = "notifications.outception.com"
     frontend_base_url                    = "https://outception.com"
-    checkout_base_url                    = "https://buy.outception.com/{client_secret}"
     jwks_path                            = "/etc/secrets/jwks.json"
     log_level                            = "INFO"
     testing                              = "0"
     auth_cookie_domain                   = "outception.com"
-    invoices_additional_info             = "[support@outception.com](mailto:support@outception.com)"
-    invoices_vat_numbers = jsonencode({
-      # EU One Stop Shop (OSS) registration
-      AT = "EU372061545"
-      BE = "EU372061545"
-      BG = "EU372061545"
-      CY = "EU372061545"
-      CZ = "EU372061545"
-      DE = "EU372061545"
-      DK = "EU372061545"
-      EE = "EU372061545"
-      ES = "EU372061545"
-      FI = "EU372061545"
-      FR = "EU372061545"
-      GR = "EU372061545"
-      HR = "EU372061545"
-      HU = "EU372061545"
-      IE = "EU372061545"
-      IT = "EU372061545"
-      LT = "EU372061545"
-      LU = "EU372061545"
-      LV = "EU372061545"
-      MT = "EU372061545"
-      NL = "EU372061545"
-      PL = "EU372061545"
-      PT = "EU372061545"
-      RO = "EU372061545"
-      SE = "EU372061545"
-      SI = "EU372061545"
-      SK = "EU372061545"
-      # United Kingdom
-      GB = "GB458254961"
-      # Vietnam
-      VN = "9000020281"
-      # Chile
-      CL = "59.259.480-3"
-      # New Zealand
-      NZ = "148-410-224"
-      # Norway
-      NO = "VOEC3039846"
-      # Turkey
-      TR = "7300889760"
-      # Switzerland
-      CH = "CHE-401.265.595 MWST"
-      # South Korea
-      KR = "111-80-05229"
-      # Kenya
-      KE = "P052518030C"
-      # Canada (GST/HST)
-      CA = "720474766 RT9999"
-      # Australia (GST)
-      AU = "300038975137"
-    })
-    customer_portal_url_overrides  = var.customer_portal_url_overrides
-    plain_default_tier_external_id = var.plain_default_tier_external_id
   }
 
   backend_secrets = {

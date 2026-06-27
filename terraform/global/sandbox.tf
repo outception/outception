@@ -308,27 +308,6 @@ resource "tfe_variable" "tinybird_read_token_sandbox" {
   variable_set_id = tfe_variable_set.sandbox.id
 }
 
-resource "tfe_variable" "customer_portal_url_overrides_sandbox" {
-  key             = "customer_portal_url_overrides"
-  category        = "terraform"
-  description     = "JSON object mapping organization IDs to custom customer portal URLs for sandbox"
-  sensitive       = false
-  value           = "{}"
-  variable_set_id = tfe_variable_set.sandbox.id
-
-  lifecycle {
-    ignore_changes = [value]
-  }
-}
-
-resource "tfe_variable" "plain_default_tier_external_id_sandbox" {
-  key             = "plain_default_tier_external_id"
-  category        = "terraform"
-  description     = "Default Plain tier external ID used as a fallback for the outception-self support benefit for sandbox"
-  sensitive       = false
-  variable_set_id = tfe_variable_set.sandbox.id
-}
-
 resource "tfe_variable" "firecrawl_api_key_sandbox" {
   key             = "firecrawl_api_key"
   category        = "terraform"

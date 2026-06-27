@@ -41,19 +41,15 @@ resource "render_env_group" "backend" {
       OUTCEPTION_AUTHENTICATION_SESSION_COOKIE_DOMAIN = { value = var.backend_config.authentication_session_cookie_domain }
       OUTCEPTION_OAUTH2_SESSION_STATE_COOKIE_DOMAIN   = { value = var.backend_config.oauth2_session_state_cookie_domain }
       OUTCEPTION_BASE_URL                             = { value = var.backend_config.base_url }
-      OUTCEPTION_DEBUG                                = { value = var.backend_config.debug }
       OUTCEPTION_EMAIL_SENDER                         = { value = var.backend_config.email_sender }
       OUTCEPTION_EMAIL_FROM_NAME                      = { value = var.backend_config.email_from_name }
       OUTCEPTION_EMAIL_FROM_DOMAIN                    = { value = var.backend_config.email_from_domain }
       OUTCEPTION_ENV                                  = { value = local.environment }
       OUTCEPTION_FRONTEND_BASE_URL                    = { value = var.backend_config.frontend_base_url }
-      OUTCEPTION_CHECKOUT_BASE_URL                    = { value = var.backend_config.checkout_base_url }
       OUTCEPTION_JWKS                                 = { value = var.backend_config.jwks_path }
       OUTCEPTION_LOG_LEVEL                            = { value = var.backend_config.log_level }
       OUTCEPTION_TESTING                              = { value = var.backend_config.testing }
       OUTCEPTION_AUTH_COOKIE_DOMAIN                   = { value = var.backend_config.auth_cookie_domain }
-      OUTCEPTION_INVOICES_ADDITIONAL_INFO             = { value = var.backend_config.invoices_additional_info }
-      OUTCEPTION_INVOICES_VAT_NUMBERS                 = { value = var.backend_config.invoices_vat_numbers }
       OUTCEPTION_CURRENT_JWK_KID                      = { value = var.backend_secrets.current_jwk_kid }
       OUTCEPTION_DISCORD_BOT_TOKEN                    = { value = var.backend_secrets.discord_bot_token }
       OUTCEPTION_DISCORD_CLIENT_ID                    = { value = var.backend_secrets.discord_client_id }
@@ -65,11 +61,7 @@ resource "render_env_group" "backend" {
       OUTCEPTION_LOGO_DEV_PUBLISHABLE_KEY             = { value = var.backend_secrets.logo_dev_publishable_key }
       OUTCEPTION_SECRET                               = { value = var.backend_secrets.secret }
       OUTCEPTION_SENTRY_DSN                           = { value = var.backend_secrets.sentry_dsn }
-      OUTCEPTION_CUSTOMER_PORTAL_URL_OVERRIDES        = { value = var.backend_config.customer_portal_url_overrides }
     },
-    var.backend_config.plain_default_tier_external_id != "" ? {
-      OUTCEPTION_PLAIN_DEFAULT_TIER_EXTERNAL_ID = { value = var.backend_config.plain_default_tier_external_id }
-    } : {},
     var.backend_config.user_session_cookie_key != "" ? {
       OUTCEPTION_USER_SESSION_COOKIE_KEY = { value = var.backend_config.user_session_cookie_key }
     } : {},
