@@ -243,12 +243,8 @@ class Settings(BaseSettings):
         "playwright"
     )
 
-    # Stripe
-    # Stripe webhook secrets
+    # Stripe statement descriptor (prefix on the payment statement)
     STRIPE_STATEMENT_DESCRIPTOR: str = "OUTCEPTION"
-
-    # Numeral
-    NUMERAL_API_KEY: str | None = None
 
     # Sentry
     SENTRY_DSN: str | None = None
@@ -336,28 +332,10 @@ class Settings(BaseSettings):
     OUTCEPTION_ACCESS_TOKEN: str = ""
     OUTCEPTION_WEBHOOK_SECRET: str = ""
     OUTCEPTION_ORGANIZATION_ID: str = ""
-    # Scale plan product, used by the Startup Program to grant a 100% discount
     OUTCEPTION_API_URL: str = "https://api.outception.com"
-
-    # Customer portal URL overrides per organization
-
-    # Invoices
 
     # Application behaviours
     API_PAGINATION_MAX_LIMIT: int = 100
-
-    # Stripe enforces per-country minimum payout amounts in the recipient's
-    # local currency. For most countries the per-currency minimum above
-    # already exceeds the country minimum after FX conversion, but a few
-    # don't fit that pattern: USD-denominated countries with a higher local
-    # minimum than the default $10, and BSD (not listed per-currency above).
-    # Values are in USD cents and indexed by ISO 3166-1 alpha-2 country
-    # code, rounded up to the next multiple of $5 USD for FX headroom. See:
-    # https://docs.stripe.com/global-payouts/send-money
-    PLATFORM_FEE_BASIS_POINTS: int = 500
-    PLATFORM_FEE_FIXED: int = 50
-    PLATFORM_FEE_BASIS_POINTS_EARLY_ACCESS: int = 400
-    PLATFORM_FEE_FIXED_EARLY_ACCESS: int = 40
 
     ORGANIZATION_BLOCKED_WORDS: list[str] = [
         "porn",

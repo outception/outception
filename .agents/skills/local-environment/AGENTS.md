@@ -378,7 +378,7 @@ dev docker up -b -d
 
 **`dev/docker/.env.docker`** - Docker-specific overrides (auto-created from template)
 
-**`server/.env`** - Backend secrets (GitHub, Stripe, etc.)
+**`server/.env`** - Backend secrets (GitHub, etc.)
 
 ### Key Environment Variables
 

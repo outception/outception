@@ -77,20 +77,6 @@ git add clients/packages/i18n/src/index.ts
 git commit -m "Enable ${isoAlpha2}"
 ```
 
-## Step 6: Update the public docs
+## Step 6: Hand back to the user
 
-Edit `docs/features/checkout/localization.mdx`:
-
-- Add `- ${localeName} (${isoAlpha2})` to the "Supported languages" list.
-- Remove the locale from the "coming soon" list if it was listed there.
-
-Commit:
-
-```bash
-git add docs/features/checkout/localization.mdx
-git commit -m "Update localization docs"
-```
-
-## Step 7: Hand back to the user
-
-Summarize the four commits created on `add-locale-${isoAlpha2}` and leave the branch for the user to push and open a PR. Do not push or open a PR unless asked.
+Summarize the three commits created on `add-locale-${isoAlpha2}` and leave the branch for the user to push and open a PR. Do not push or open a PR unless asked.

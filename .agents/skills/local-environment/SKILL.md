@@ -83,4 +83,3 @@ without host port mappings — reach it via `dev docker exec <service>` or
 | [manage-instances](rules/manage-instances.md) | Operations | Running parallel instances |
 | [view-logs](rules/view-logs.md) | Debugging | Viewing service logs |
 | [troubleshooting](rules/troubleshooting.md) | Debugging | Common errors and fixes |
-| [payment-testing](rules/payment-testing.md) | Operations | Login codes, Stripe webhooks, dramatiq actors, backoffice |
