@@ -28,7 +28,7 @@ Lint, type-check, and create a PR.
 
    **PR title must use a conventional commit prefix** — one of: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`, `test:`, `perf:`, `ci:`, `build:`, `style:`. Choose the prefix that best describes the overall change. Examples:
    - `feat: add webhook retry with exponential backoff`
-   - `fix: prevent duplicate subscription charges`
+   - `fix: prevent duplicate promotion charges`
    - `refactor: extract payment validation into service layer`
 
    This is important because we use **merge queues with squash**, so the PR title becomes the final commit message on `main`.

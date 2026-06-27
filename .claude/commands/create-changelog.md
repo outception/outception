@@ -1,6 +1,6 @@
 # Create Changelog
 
-Produce a polished changelog entry for `docs/changelog/recent.mdx` covering recently shipped merchant and customer facing features. Delegate research and screenshots to subagents, and confirm the feature list with the user before writing anything.
+Produce a polished changelog entry for `docs/changelog/recent.mdx` covering recently shipped reader and promoter facing features. Delegate research and screenshots to subagents, and confirm the feature list with the user before writing anything.
 
 ## Arguments
 
@@ -21,7 +21,7 @@ Confirmation flag (optional):
 - **No em dashes** (`—`) or en dashes (`–`) anywhere in the entry. Use commas, periods, parentheses, or rewrite the sentence.
 - **Never mention Stripe** or other payment processors by name.
 - Each feature: a short title and no more than 5 lines of copy.
-- Write for merchants and customers, not engineers. Say what the reader can now do and why it matters.
+- Write for readers and promoters, not engineers. Say what the reader can now do and why it matters.
 - Use the `<Update label="YYYY-MM-DD">` block format. The date is today.
 - Reference images as `/assets/changelog/YYYY-MM-DD/<name>.png` with `<img class="border rounded" src="..." />`.
 
@@ -29,8 +29,8 @@ Confirmation flag (optional):
 
 High-signal, externally visible changes:
 
-- New merchant features (dashboard, API, webhooks, invoicing).
-- New customer features (checkout, customer portal, seats).
+- New reader-facing features (news wall, search, following sources).
+- New promoter features (promotion compose, featured queue, dashboard, API, webhooks).
 - New localization, currency, or i18n coverage.
 
 ## What to Exclude (be strict, err on the side of dropping)
@@ -45,7 +45,7 @@ High-signal, externally visible changes:
 - Organization status, review, appeal, or onboarding lifecycle plumbing.
 - **Docs-only changes.** If the PR only touches `docs/` or `handbook/`, the feature likely shipped weeks ago. Do not include it. Verify by grepping the code for the feature before including it.
 
-When in doubt, leave it out. It is much better to ship a short changelog than a bloated one. **The cap is 10, not a target.** A given week or month often has fewer than 5 items that pass the bar. Apply this smell test before including anything: "would a merchant or customer actually notice this in their week?" If the honest answer is no, drop it, even if it ships visible UI.
+When in doubt, leave it out. It is much better to ship a short changelog than a bloated one. **The cap is 10, not a target.** A given week or month often has fewer than 5 items that pass the bar. Apply this smell test before including anything: "would a reader or promoter actually notice this in their week?" If the honest answer is no, drop it, even if it ships visible UI.
 
 ## Verifying scope claims
 
@@ -75,8 +75,8 @@ Launch a `general-purpose` subagent with the full commit list. Also pass it the 
 
 - Filter the list using the include and exclude rules above. Be conservative.
 - For each candidate, run `gh pr view <n> --json files,body` and inspect the actual changed files to confirm the feature is real, user-visible, and shipped in this window (not a docs update for a feature that shipped earlier).
-- **Apply the smell test**: would a merchant or customer notice this in their week? Items that pass on technicality but read as filler (e.g. "delete account from web" matching mobile, "full description on checkout" removing a truncation, "name your webhook endpoints" labels) should be dropped. Prefer 4 sharp items to 10 mixed ones.
-- **Verify scope by reading the diff.** Do not paraphrase the PR description if it lists multiple surfaces (checkout, portal, emails, mobile, etc.). Confirm each surface you name has matching files in the diff. See the "Verifying scope claims" section above.
+- **Apply the smell test**: would a reader or promoter notice this in their week? Items that pass on technicality but read as filler (e.g. "delete account from web" matching mobile, "name your webhook endpoints" labels) should be dropped. Prefer 4 sharp items to 10 mixed ones.
+- **Verify scope by reading the diff.** Do not paraphrase the PR description if it lists multiple surfaces (news, promotions, emails, mobile, etc.). Confirm each surface you name has matching files in the diff. See the "Verifying scope claims" section above.
 - **Dedupe against the monthly log**: drop anything already announced. An _enhancement_ to a previously-announced feature is fine to include if it is materially new (e.g. new filters added to a list that shipped last month), but say so clearly and frame it as an enhancement.
 - **Cap is 10, not a target.** If only 3 items pass the bar, return 3.
 - Decide which are **MAJOR** (warrants a screenshot) and which are **MINOR**. Decide yourself, do not ask the user.
@@ -115,8 +115,8 @@ docker exec outception-dev-<N>-api-1 bash -c "cd /app/server && uv run python -m
 Launch a `general-purpose` subagent with the list of accepted MAJOR features. Tell it:
 
 - Log in at `http://localhost:<web-port>/auth` as `admin@outception.com`. The email domain must be real (outception.com works) or login validation rejects it. Grab the login code with `docker logs outception-dev-<N>-api-1 --since 30s 2>&1 | grep -oE 'LOGIN CODE: [A-Z0-9]+' | tail -1`.
-- If a feature lives in an org that `admin@outception.com` is not a member of, rename the seeded owner's email to a real `@outception.com` domain (e.g. `UPDATE users SET email='merchant@outception.com' WHERE email='support@meltedsql.com'`) and restart the web container so Next.js re-fetches the user's org list: `docker restart outception-dev-<N>-web-1`.
-- **Prefer clicking through the UI or calling documented API endpoints to create the state you need.** That path exercises real validation and produces screenshots that will not drift when schemas change. Fall back to direct SQL only for states the product does not let you reach through normal flows (e.g. placing a subscription into a pre-scheduled update that is applied by a cron job), or for minor tidy-up so the UI reads clearly (e.g. removing placeholder rows that distract from what the screenshot is about).
+- If a feature lives in an org that `admin@outception.com` is not a member of, rename the seeded owner's email to a real `@outception.com` domain (e.g. `UPDATE users SET email='promoter@outception.com' WHERE email='support@meltedsql.com'`) and restart the web container so Next.js re-fetches the user's org list: `docker restart outception-dev-<N>-web-1`.
+- **Prefer clicking through the UI or calling documented API endpoints to create the state you need.** That path exercises real validation and produces screenshots that will not drift when schemas change. Fall back to direct SQL only for states the product does not let you reach through normal flows (e.g. placing a promotion into a scheduled state that is applied by a cron job), or for minor tidy-up so the UI reads clearly (e.g. removing placeholder rows that distract from what the screenshot is about).
 - Read the relevant frontend component first to understand what data the screenshot actually needs, then pick the shortest path to get there.
 - Use Playwright MCP (`mcp__playwright__browser_navigate`, `mcp__playwright__browser_take_screenshot`) and save to `docs/assets/changelog/YYYY-MM-DD/<slug>.png`. Create the directory first.
 - Return the list of saved paths.
