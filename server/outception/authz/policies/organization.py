@@ -12,7 +12,7 @@ async def can_manage(
     auth_subject: AuthSubject[User | Organization],
     organization: OrganizationModel,
 ) -> PolicyResult:
-    """Can the subject edit, delete, or set the payout account for this organization?"""
+    """Can the subject edit or delete this organization?"""
     return await _require_permission(
         session,
         auth_subject,

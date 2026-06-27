@@ -187,7 +187,7 @@ AuthorizeOrgAccessUser = Annotated[
 #
 # Two prefixes:
 #
-# - ``AuthorizeWeb{User,Payouts}{Read,Write}`` — User **via web session**
+# - ``AuthorizeWebUser{Read,Write}`` — User **via web session**
 #   only. Rejects API tokens (PATs, OATs, OAuth2 access tokens). Use for
 #   browser/dashboard-only flows.
 # - ``Authorize{User}{Read,Write}`` — Any User subject (web session, PAT,
