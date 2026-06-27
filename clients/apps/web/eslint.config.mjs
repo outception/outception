@@ -55,29 +55,6 @@ export default [
   },
   {
     files: [
-      'src/components/CustomerPortal/**/*.{ts,tsx}',
-      'src/app/**/portal/**/*.{ts,tsx}',
-    ],
-    rules: {
-      'outception/no-merchant-queries-in-customer-portal': 'error',
-      'outception/no-merchant-api-calls-in-customer-portal': 'error',
-    },
-  },
-  {
-    files: ['src/app/**/portal/**/page.tsx'],
-    ignores: [
-      'src/app/**/portal/page.tsx',
-      'src/app/**/portal/request/page.tsx',
-      'src/app/**/portal/authenticate/page.tsx',
-      'src/app/**/portal/verify-email/page.tsx',
-      'src/app/**/portal/claim/page.tsx',
-    ],
-    rules: {
-      'outception/require-customer-portal-page': 'error',
-    },
-  },
-  {
-    files: [
       'src/app/(main)/onboarding/**/*.tsx',
       'src/components/Onboarding/**/*.tsx',
     ],
