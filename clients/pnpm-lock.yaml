@@ -546,9 +546,6 @@ importers:
       '@outception-com/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
-      '@playwright/test':
-        specifier: ^1.59.1
-        version: 1.59.1
       '@stylexjs/babel-plugin':
         specifier: ^0.18.2
         version: 0.18.2
@@ -14644,6 +14641,7 @@ snapshots:
   '@playwright/test@1.59.1':
     dependencies:
       playwright: 1.59.1
+    optional: true
 
   '@pnpm/config.env-replace@1.1.0': {}
 
@@ -22802,13 +22800,15 @@ snapshots:
       mlly: 1.8.0
       pathe: 2.0.3
 
-  playwright-core@1.59.1: {}
+  playwright-core@1.59.1:
+    optional: true
 
   playwright@1.59.1:
     dependencies:
       playwright-core: 1.59.1
     optionalDependencies:
       fsevents: 2.3.2
+    optional: true
 
   plist@3.1.0:
     dependencies:

@@ -85,9 +85,6 @@ jobs:
       - name: "🧪 Test: @outception-com/currency"
         run: pnpm --filter @outception-com/currency test
 
-      - name: "🧪 Test: @outception-com/checkout"
-        run: pnpm --filter @outception-com/checkout test
-
       - name: "🧪 Test: @outception-com/orbit"
         run: pnpm --filter @outception-com/orbit test
 

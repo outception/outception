@@ -13,7 +13,6 @@ export default [
         projectService: {
           allowDefaultProject: [
             'vitest.config.ts',
-            'playwright.config.ts',
             '*.config.mjs',
             'instrumentation-client.ts',
           ],
@@ -96,8 +95,6 @@ export default [
       'eslint-rules/**',
       'src/app/.well-known/**',
       'next-env.d.ts',
-      'e2e/**',
-      'playwright-report/**',
       'babel.config.js',
     ],
   },

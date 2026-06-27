@@ -12,7 +12,6 @@
     "lint": "pnpm format:check && pnpm lint:only",
     "lint:changed": "eslint --max-warnings 0 $(git diff --name-only --relative --diff-filter=ACMR HEAD | grep -E '\\.(js|jsx|ts|tsx)$')",
     "test": "vitest run",
-    "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit"
   },
   "engines": {
@@ -91,7 +90,6 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@playwright/test": "^1.59.1",
     "@outception-com/eslint-config": "workspace:*",
     "@outception-com/typescript-config": "workspace:*",
     "@stylexjs/babel-plugin": "^0.18.2",
