@@ -42,7 +42,7 @@ outception/
 │   └── packages/i18n/          # Translations
 ├── dev/                    # Dev scripts and tooling
 ├── docs/                   # User/developer docs (Mintlify)
-├── sdk/overlay/            # OpenAPI Overlay tweaks for Speakeasy-generated SDKs
+├── sdk/overlays/           # OpenAPI Overlay tweaks for Speakeasy-generated SDKs
 └── .claude/                # Claude Code config (settings, hooks, commands)
 ```
 
