@@ -121,7 +121,6 @@ module "vercel" {
     next_public_posthog_token                       = var.next_public_posthog_token
     next_public_apple_domain_association            = var.next_public_apple_domain_association
     next_public_checkout_embed_script_src           = "https://cdn.jsdelivr.net/npm/@outception-com/checkout@0.1/dist/embed.global.js"
-    next_public_stripe_payment_method_configuration = var.next_public_stripe_payment_method_configuration
     s3_public_images_bucket_protocol                = "https"
     s3_public_images_bucket_hostname                = "outception-public-files.s3.amazonaws.com"
     s3_public_images_bucket_port                    = null
@@ -149,7 +148,6 @@ module "vercel" {
     { key = "NEXT_PUBLIC_SENTRY_ENABLED", value = "true" },
     { key = "NEXT_PUBLIC_GOOGLE_ANALYTICS_ID", value = "G-MBYW1QZFHE" },
     { key = "NEXT_PUBLIC_GITHUB_INSTALLATION_URL", value = "https://github.com/apps/outception-com/installations/new" },
-    { key = "NEXT_PUBLIC_STRIPE_KEY", value = var.stripe_publishable_key },
     { key = "MCP_OAUTH2_CLIENT_ID", value = var.mcp_oauth2_client_id, target = ["production", "preview"] },
     { key = "MCP_OAUTH2_CLIENT_SECRET", value = var.mcp_oauth2_client_secret, target = ["production", "preview"] },
     { key = "ATTIO_API_KEY", value = var.attio_api_key, target = ["production", "preview"], sensitive = true },

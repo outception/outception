@@ -51,11 +51,6 @@ import {
 }
 
 import {
-  to = module.sandbox.render_env_group.stripe
-  id = "evg-crkocfrtq21c73ddsc9g"
-}
-
-import {
   to = module.sandbox.render_env_group.prometheus[0]
   id = "evg-d4nf3qili9vc73fi984g"
 }
@@ -88,11 +83,6 @@ import {
 import {
   to = module.sandbox.render_env_group_link.openai
   id = "evg-d2at9pje5dus73c0lun0"
-}
-
-import {
-  to = module.sandbox.render_env_group_link.stripe
-  id = "evg-crkocfrtq21c73ddsc9g"
 }
 
 import {

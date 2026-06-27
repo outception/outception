@@ -260,38 +260,6 @@ resource "tfe_variable" "github_repository_benefits_client_secret_production" {
   variable_set_id = tfe_variable_set.production.id
 }
 
-resource "tfe_variable" "stripe_connect_webhook_secret_production" {
-  key             = "stripe_connect_webhook_secret_production"
-  category        = "terraform"
-  description     = "Stripe Connect Webhook Secret for production"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.production.id
-}
-
-resource "tfe_variable" "stripe_secret_key_production" {
-  key             = "stripe_secret_key_production"
-  category        = "terraform"
-  description     = "Stripe Secret Key for production"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.production.id
-}
-
-resource "tfe_variable" "stripe_publishable_key_production" {
-  key             = "stripe_publishable_key_production"
-  category        = "terraform"
-  description     = "Stripe Publishable Key for production"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.production.id
-}
-
-resource "tfe_variable" "stripe_webhook_secret_production" {
-  key             = "stripe_webhook_secret_production"
-  category        = "terraform"
-  description     = "Stripe Webhook Secret for production"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.production.id
-}
-
 
 
 resource "tfe_variable" "backend_app_review_email" {
@@ -306,14 +274,6 @@ resource "tfe_variable" "backend_app_review_otp_code" {
   key             = "backend_app_review_otp_code"
   category        = "terraform"
   description     = "App review OTP code for app store review login bypass"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.production.id
-}
-
-resource "tfe_variable" "numeral_api_key_production" {
-  key             = "numeral_api_key_production"
-  category        = "terraform"
-  description     = "Numeral API Key for production"
   sensitive       = true
   variable_set_id = tfe_variable_set.production.id
 }
@@ -452,14 +412,6 @@ resource "tfe_variable" "firecrawl_api_key_production" {
 }
 
 # Vercel frontend
-resource "tfe_variable" "vercel_stripe_publishable_key_production" {
-  key             = "stripe_publishable_key"
-  category        = "terraform"
-  description     = "Stripe publishable key for the Vercel production frontend"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.production.id
-}
-
 resource "tfe_variable" "vercel_pydantic_ai_gateway_api_key_production" {
   key             = "pydantic_ai_gateway_api_key"
   category        = "terraform"
@@ -556,10 +508,3 @@ resource "tfe_variable" "vercel_next_public_apple_domain_association_production"
   variable_set_id = tfe_variable_set.production.id
 }
 
-resource "tfe_variable" "vercel_next_public_stripe_payment_method_configuration_production" {
-  key             = "next_public_stripe_payment_method_configuration"
-  category        = "terraform"
-  description     = "Stripe payment method configuration ID for the Vercel production frontend"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.production.id
-}

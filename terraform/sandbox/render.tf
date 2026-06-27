@@ -160,14 +160,11 @@ module "sandbox" {
     testing                              = "0"
     auth_cookie_domain                   = "outception.com"
     auth_cookie_key                      = "outception_sandbox_session"
-    tax_processors                       = "[\"numeral\",\"stripe\"]"
-    tax_record_processor                 = "numeral"
     customer_portal_url_overrides        = var.customer_portal_url_overrides
     plain_default_tier_external_id       = var.plain_default_tier_external_id
   }
 
   backend_secrets = {
-    stripe_publishable_key   = var.stripe_publishable_key_sandbox
     current_jwk_kid          = var.backend_current_jwk_kid_sandbox
     discord_bot_token        = var.backend_discord_bot_token_sandbox
     discord_client_id        = var.backend_discord_client_id_sandbox
@@ -180,7 +177,6 @@ module "sandbox" {
     secret                   = var.backend_secret_sandbox
     sentry_dsn               = var.backend_sentry_dsn_sandbox
     jwks                     = var.backend_jwks_sandbox
-    numeral_api_key          = var.numeral_api_key_sandbox
   }
 
   aws_s3_config = {
@@ -209,12 +205,6 @@ module "sandbox" {
     repository_benefits_app_private_key = var.github_repository_benefits_app_private_key_sandbox
     repository_benefits_client_id       = var.github_repository_benefits_client_id_sandbox
     repository_benefits_client_secret   = var.github_repository_benefits_client_secret_sandbox
-  }
-
-  stripe_secrets = {
-    connect_webhook_secret = var.stripe_connect_webhook_secret_sandbox
-    secret_key             = var.stripe_secret_key_sandbox
-    webhook_secret         = var.stripe_webhook_secret_sandbox
   }
 
   apple_secrets = {

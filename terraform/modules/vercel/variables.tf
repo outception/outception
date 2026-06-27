@@ -119,7 +119,6 @@ variable "config" {
     next_public_posthog_token                       = string
     next_public_apple_domain_association            = string
     next_public_checkout_embed_script_src           = string
-    next_public_stripe_payment_method_configuration = string
     s3_public_images_bucket_protocol                = string
     s3_public_images_bucket_hostname                = string
     s3_public_images_bucket_port                    = string

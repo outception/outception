@@ -31,7 +31,6 @@ module "vercel" {
     next_public_posthog_token                       = var.next_public_posthog_token
     next_public_apple_domain_association            = var.next_public_apple_domain_association
     next_public_checkout_embed_script_src           = "https://cdn.jsdelivr.net/npm/@outception-com/checkout@0.1/dist/embed.global.js"
-    next_public_stripe_payment_method_configuration = var.next_public_stripe_payment_method_configuration
     s3_public_images_bucket_protocol                = "https"
     s3_public_images_bucket_hostname                = "outception-test-public-files.s3.amazonaws.com"
     s3_public_images_bucket_port                    = null
@@ -57,8 +56,6 @@ module "vercel" {
     { key = "OUTCEPTION_AUTH_COOKIE_KEY", value = "outception_test_session" },
     { key = "NEXT_PUBLIC_PRODUCT_LINK_BASE_URL", value = "https://test.outception.com/api/checkout?price=" },
     { key = "OUTCEPTION_PREVIEW_BACKEND_HOST", value = "", target = ["preview"] },
-    { key = "NEXT_PUBLIC_STRIPE_KEY", value = var.stripe_publishable_key, target = ["production", "development"] },
-    { key = "NEXT_PUBLIC_STRIPE_KEY", value = var.stripe_publishable_key_preview, target = ["preview"], sensitive = true },
     { key = "MCP_OAUTH2_CLIENT_ID", value = var.mcp_oauth2_client_id, target = ["production", "preview", "development"] },
     { key = "MCP_OAUTH2_CLIENT_SECRET", value = var.mcp_oauth2_client_secret, target = ["production", "preview", "development"] },
   ]

@@ -168,31 +168,6 @@ variable "github_repository_benefits_client_secret" {
   sensitive   = true
 }
 
-# Stripe
-variable "stripe_connect_webhook_secret" {
-  description = "Stripe Connect Webhook Secret for production"
-  type        = string
-  sensitive   = true
-}
-
-variable "stripe_secret_key" {
-  description = "Stripe Secret Key for production"
-  type        = string
-  sensitive   = true
-}
-
-variable "stripe_publishable_key" {
-  description = "Stripe Publishable Key for production"
-  type        = string
-  sensitive   = true
-}
-
-variable "stripe_webhook_secret" {
-  description = "Stripe Webhook Secret for production"
-  type        = string
-  sensitive   = true
-}
-
 # Logfire
 variable "logfire_token" {
   description = "Logfire Token"
@@ -244,12 +219,6 @@ variable "grafana_cloud_prometheus_password" {
 }
 
 
-
-variable "numeral_api_key" {
-  description = "Numeral API Key"
-  type        = string
-  sensitive   = true
-}
 
 # Tinybird
 variable "tinybird_api_token" {
@@ -332,12 +301,6 @@ variable "outception_scale_product_id" {
 }
 
 # Vercel frontend
-variable "stripe_publishable_key_preview" {
-  description = "Stripe publishable key for Vercel preview deployments"
-  type        = string
-  sensitive   = true
-}
-
 variable "mintlify_assistant_api_key" {
   description = "Mintlify assistant API key for the Vercel frontend"
   type        = string
@@ -392,8 +355,3 @@ variable "next_public_apple_domain_association" {
   sensitive   = true
 }
 
-variable "next_public_stripe_payment_method_configuration" {
-  description = "Stripe payment method configuration ID for the Vercel frontend"
-  type        = string
-  sensitive   = true
-}

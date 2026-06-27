@@ -212,47 +212,7 @@ resource "tfe_variable" "github_repository_benefits_client_secret_test" {
   variable_set_id = tfe_variable_set.test.id
 }
 
-resource "tfe_variable" "stripe_connect_webhook_secret_test" {
-  key             = "stripe_connect_webhook_secret"
-  category        = "terraform"
-  description     = "Stripe Connect Webhook Secret for test"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.test.id
-}
 
-resource "tfe_variable" "stripe_secret_key_test" {
-  key             = "stripe_secret_key"
-  category        = "terraform"
-  description     = "Stripe Secret Key for test"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.test.id
-}
-
-resource "tfe_variable" "stripe_publishable_key_test" {
-  key             = "stripe_publishable_key"
-  category        = "terraform"
-  description     = "Stripe Publishable Key for test"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.test.id
-}
-
-resource "tfe_variable" "stripe_webhook_secret_test" {
-  key             = "stripe_webhook_secret"
-  category        = "terraform"
-  description     = "Stripe Webhook Secret for test"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.test.id
-}
-
-
-
-resource "tfe_variable" "numeral_api_key_test" {
-  key             = "numeral_api_key"
-  category        = "terraform"
-  description     = "Numeral API Key for test"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.test.id
-}
 
 resource "tfe_variable" "tinybird_api_token_test" {
   key             = "tinybird_api_token"
@@ -380,14 +340,6 @@ resource "tfe_variable" "outception_scale_product_id_test" {
 }
 
 # Vercel frontend
-resource "tfe_variable" "vercel_stripe_publishable_key_preview_test" {
-  key             = "stripe_publishable_key_preview"
-  category        = "terraform"
-  description     = "Stripe publishable key for Vercel test preview deployments"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.test.id
-}
-
 resource "tfe_variable" "vercel_mintlify_assistant_api_key_test" {
   key             = "mintlify_assistant_api_key"
   category        = "terraform"
@@ -460,10 +412,3 @@ resource "tfe_variable" "vercel_next_public_apple_domain_association_test" {
   variable_set_id = tfe_variable_set.test.id
 }
 
-resource "tfe_variable" "vercel_next_public_stripe_payment_method_configuration_test" {
-  key             = "next_public_stripe_payment_method_configuration"
-  category        = "terraform"
-  description     = "Stripe payment method configuration ID for the Vercel test frontend"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.test.id
-}

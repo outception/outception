@@ -220,46 +220,6 @@ resource "tfe_variable" "github_repository_benefits_client_secret_sandbox" {
   variable_set_id = tfe_variable_set.sandbox.id
 }
 
-resource "tfe_variable" "stripe_connect_webhook_secret_sandbox" {
-  key             = "stripe_connect_webhook_secret_sandbox"
-  category        = "terraform"
-  description     = "Stripe Connect Webhook Secret for sandbox"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.sandbox.id
-}
-
-resource "tfe_variable" "stripe_secret_key_sandbox" {
-  key             = "stripe_secret_key_sandbox"
-  category        = "terraform"
-  description     = "Stripe Secret Key for sandbox"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.sandbox.id
-}
-
-resource "tfe_variable" "stripe_publishable_key_sandbox" {
-  key             = "stripe_publishable_key_sandbox"
-  category        = "terraform"
-  description     = "Stripe Publishable Key for sandbox"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.sandbox.id
-}
-
-resource "tfe_variable" "stripe_webhook_secret_sandbox" {
-  key             = "stripe_webhook_secret_sandbox"
-  category        = "terraform"
-  description     = "Stripe Webhook Secret for sandbox"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.sandbox.id
-}
-
-resource "tfe_variable" "numeral_api_key_sandbox" {
-  key             = "numeral_api_key_sandbox"
-  category        = "terraform"
-  description     = "Numeral API Key for sandbox"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.sandbox.id
-}
-
 resource "tfe_variable" "outception_access_token_sandbox" {
   key             = "outception_access_token"
   category        = "terraform"
@@ -378,22 +338,6 @@ resource "tfe_variable" "firecrawl_api_key_sandbox" {
 }
 
 # Vercel frontend
-resource "tfe_variable" "vercel_stripe_publishable_key_sandbox" {
-  key             = "stripe_publishable_key"
-  category        = "terraform"
-  description     = "Stripe publishable key for the Vercel sandbox frontend"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.sandbox.id
-}
-
-resource "tfe_variable" "vercel_stripe_publishable_key_preview_sandbox" {
-  key             = "stripe_publishable_key_preview"
-  category        = "terraform"
-  description     = "Stripe publishable key for Vercel sandbox preview deployments"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.sandbox.id
-}
-
 resource "tfe_variable" "vercel_pydantic_ai_gateway_api_key_sandbox" {
   key             = "pydantic_ai_gateway_api_key"
   category        = "terraform"
@@ -474,10 +418,3 @@ resource "tfe_variable" "vercel_next_public_apple_domain_association_sandbox" {
   variable_set_id = tfe_variable_set.sandbox.id
 }
 
-resource "tfe_variable" "vercel_next_public_stripe_payment_method_configuration_sandbox" {
-  key             = "next_public_stripe_payment_method_configuration"
-  category        = "terraform"
-  description     = "Stripe payment method configuration ID for the Vercel sandbox frontend"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.sandbox.id
-}

@@ -54,7 +54,6 @@ resource "render_env_group" "backend" {
       OUTCEPTION_AUTH_COOKIE_DOMAIN                   = { value = var.backend_config.auth_cookie_domain }
       OUTCEPTION_INVOICES_ADDITIONAL_INFO             = { value = var.backend_config.invoices_additional_info }
       OUTCEPTION_INVOICES_VAT_NUMBERS                 = { value = var.backend_config.invoices_vat_numbers }
-      OUTCEPTION_STRIPE_PUBLISHABLE_KEY               = { value = var.backend_secrets.stripe_publishable_key }
       OUTCEPTION_CURRENT_JWK_KID                      = { value = var.backend_secrets.current_jwk_kid }
       OUTCEPTION_DISCORD_BOT_TOKEN                    = { value = var.backend_secrets.discord_bot_token }
       OUTCEPTION_DISCORD_CLIENT_ID                    = { value = var.backend_secrets.discord_client_id }
@@ -66,9 +65,6 @@ resource "render_env_group" "backend" {
       OUTCEPTION_LOGO_DEV_PUBLISHABLE_KEY             = { value = var.backend_secrets.logo_dev_publishable_key }
       OUTCEPTION_SECRET                               = { value = var.backend_secrets.secret }
       OUTCEPTION_SENTRY_DSN                           = { value = var.backend_secrets.sentry_dsn }
-      OUTCEPTION_TAX_PROCESSORS                       = { value = var.backend_config.tax_processors }
-      OUTCEPTION_TAX_RECORD_PROCESSOR                 = { value = var.backend_config.tax_record_processor }
-      OUTCEPTION_NUMERAL_API_KEY                      = { value = var.backend_secrets.numeral_api_key }
       OUTCEPTION_CUSTOMER_PORTAL_URL_OVERRIDES        = { value = var.backend_config.customer_portal_url_overrides }
     },
     var.backend_config.plain_default_tier_external_id != "" ? {
@@ -138,16 +134,6 @@ resource "render_env_group" "github" {
     OUTCEPTION_GITHUB_REPOSITORY_BENEFITS_APP_PRIVATE_KEY = { value = var.github_secrets.repository_benefits_app_private_key }
     OUTCEPTION_GITHUB_REPOSITORY_BENEFITS_CLIENT_ID       = { value = var.github_secrets.repository_benefits_client_id }
     OUTCEPTION_GITHUB_REPOSITORY_BENEFITS_CLIENT_SECRET   = { value = var.github_secrets.repository_benefits_client_secret }
-  }
-}
-
-resource "render_env_group" "stripe" {
-  environment_id = var.render_environment_id
-  name           = "stripe-${var.environment}"
-  env_vars = {
-    OUTCEPTION_STRIPE_CONNECT_WEBHOOK_SECRET = { value = var.stripe_secrets.connect_webhook_secret }
-    OUTCEPTION_STRIPE_SECRET_KEY             = { value = var.stripe_secrets.secret_key }
-    OUTCEPTION_STRIPE_WEBHOOK_SECRET         = { value = var.stripe_secrets.webhook_secret }
   }
 }
 
@@ -444,11 +430,6 @@ resource "render_env_group_link" "backend" {
 resource "render_env_group_link" "backend_production" {
   count        = var.environment == "production" ? 1 : 0
   env_group_id = render_env_group.backend_production[0].id
-  service_ids  = local.all_service_ids
-}
-
-resource "render_env_group_link" "stripe" {
-  env_group_id = render_env_group.stripe.id
   service_ids  = local.all_service_ids
 }
 

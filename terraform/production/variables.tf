@@ -207,31 +207,6 @@ variable "github_repository_benefits_client_secret_production" {
   sensitive   = true
 }
 
-# Stripe - Production
-variable "stripe_connect_webhook_secret_production" {
-  description = "Stripe Connect Webhook Secret for production"
-  type        = string
-  sensitive   = true
-}
-
-variable "stripe_secret_key_production" {
-  description = "Stripe Secret Key for production"
-  type        = string
-  sensitive   = true
-}
-
-variable "stripe_publishable_key_production" {
-  description = "Stripe Publishable Key for production"
-  type        = string
-  sensitive   = true
-}
-
-variable "stripe_webhook_secret_production" {
-  description = "Stripe Webhook Secret for production"
-  type        = string
-  sensitive   = true
-}
-
 # Logfire
 variable "logfire_token" {
   description = "Logfire Token"
@@ -318,12 +293,6 @@ variable "slo_report_slack_channel" {
 # ChargebackStop Webhook Secret
 variable "backend_chargebackstop_webhook_secret_production" {
   description = "ChargebackStop Webhook Secret for production"
-  type        = string
-  sensitive   = true
-}
-
-variable "numeral_api_key_production" {
-  description = "Numeral API Key for production"
   type        = string
   sensitive   = true
 }
@@ -416,12 +385,6 @@ variable "firecrawl_api_key" {
 }
 
 # Vercel frontend secrets
-variable "stripe_publishable_key" {
-  description = "Stripe publishable key for the Vercel frontend"
-  type        = string
-  sensitive   = true
-}
-
 
 variable "pydantic_ai_gateway_api_key" {
   description = "Pydantic AI Gateway API key for the Vercel frontend"
@@ -497,8 +460,3 @@ variable "next_public_apple_domain_association" {
   sensitive   = true
 }
 
-variable "next_public_stripe_payment_method_configuration" {
-  description = "Stripe payment method configuration ID for the Vercel frontend"
-  type        = string
-  sensitive   = true
-}

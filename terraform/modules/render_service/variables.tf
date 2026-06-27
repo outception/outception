@@ -127,8 +127,6 @@ variable "backend_config" {
     auth_cookie_key                      = optional(string, "") # "outception.com"
     invoices_additional_info             = optional(string, "")
     invoices_vat_numbers                 = optional(string, "{}") # JSON dict of country code -> VAT number
-    tax_processors                       = optional(string, "[\"stripe\"]")
-    tax_record_processor                 = optional(string, "stripe")
     customer_portal_url_overrides        = optional(string, "{}")
     plain_default_tier_external_id       = optional(string, "")
   })
@@ -137,7 +135,6 @@ variable "backend_config" {
 variable "backend_secrets" {
   description = "Backend secrets (sensitive)"
   type = object({
-    stripe_publishable_key         = string
     current_jwk_kid                = string
     discord_bot_token              = string
     discord_client_id              = string
@@ -157,7 +154,6 @@ variable "backend_secrets" {
     app_review_email               = optional(string, "")
     app_review_otp_code            = optional(string, "")
     chargeback_stop_webhook_secret = optional(string, "")
-    numeral_api_key                = optional(string, "")
     firecrawl_api_key              = optional(string, "")
   })
   sensitive = true
@@ -198,16 +194,6 @@ variable "github_secrets" {
     repository_benefits_app_private_key = string
     repository_benefits_client_id       = string
     repository_benefits_client_secret   = string
-  })
-  sensitive = true
-}
-
-variable "stripe_secrets" {
-  description = "Stripe secrets (sensitive)"
-  type = object({
-    connect_webhook_secret = string
-    secret_key             = string
-    webhook_secret         = string
   })
   sensitive = true
 }

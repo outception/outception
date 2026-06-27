@@ -174,31 +174,6 @@ variable "github_repository_benefits_client_secret_sandbox" {
   sensitive   = true
 }
 
-# Stripe - Sandbox
-variable "stripe_connect_webhook_secret_sandbox" {
-  description = "Stripe Connect Webhook Secret for sandbox"
-  type        = string
-  sensitive   = true
-}
-
-variable "stripe_secret_key_sandbox" {
-  description = "Stripe Secret Key for sandbox"
-  type        = string
-  sensitive   = true
-}
-
-variable "stripe_publishable_key_sandbox" {
-  description = "Stripe Publishable Key for sandbox"
-  type        = string
-  sensitive   = true
-}
-
-variable "stripe_webhook_secret_sandbox" {
-  description = "Stripe Webhook Secret for sandbox"
-  type        = string
-  sensitive   = true
-}
-
 # Apple (shared across environments)
 variable "apple_client_id" {
   description = "Apple Client ID"
@@ -279,12 +254,6 @@ variable "logfire_token" {
   sensitive   = true
 }
 
-variable "numeral_api_key_sandbox" {
-  description = "Numeral API Key for sandbox"
-  type        = string
-  sensitive   = true
-}
-
 # Tinybird
 variable "tinybird_api_token" {
   description = "Tinybird API Token"
@@ -333,18 +302,6 @@ variable "firecrawl_api_key" {
 }
 
 # Vercel frontend secrets
-variable "stripe_publishable_key" {
-  description = "Stripe publishable key for the Vercel frontend"
-  type        = string
-  sensitive   = true
-}
-
-variable "stripe_publishable_key_preview" {
-  description = "Stripe publishable key for Vercel preview deployments"
-  type        = string
-  sensitive   = true
-}
-
 
 variable "pydantic_ai_gateway_api_key" {
   description = "Pydantic AI Gateway API key for the Vercel frontend"
@@ -408,8 +365,3 @@ variable "next_public_apple_domain_association" {
   sensitive   = true
 }
 
-variable "next_public_stripe_payment_method_configuration" {
-  description = "Stripe payment method configuration ID for the Vercel frontend"
-  type        = string
-  sensitive   = true
-}

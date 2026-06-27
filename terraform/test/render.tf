@@ -178,14 +178,11 @@ module "test" {
     log_level                            = "INFO"
     testing                              = "0"
     auth_cookie_domain                   = "test.outception.com"
-    tax_processors                       = "[\"numeral\",\"stripe\"]"
-    tax_record_processor                 = "numeral"
     customer_portal_url_overrides        = var.customer_portal_url_overrides
     plain_default_tier_external_id       = var.plain_default_tier_external_id
   }
 
   backend_secrets = {
-    stripe_publishable_key   = var.stripe_publishable_key
     current_jwk_kid          = var.backend_current_jwk_kid
     discord_bot_token        = var.backend_discord_bot_token
     discord_client_id        = var.backend_discord_client_id
@@ -198,7 +195,6 @@ module "test" {
     secret                   = var.backend_secret
     sentry_dsn               = var.backend_sentry_dsn
     jwks                     = var.backend_jwks
-    numeral_api_key          = var.numeral_api_key
   }
 
   aws_s3_config = {
@@ -227,12 +223,6 @@ module "test" {
     repository_benefits_app_private_key = var.github_repository_benefits_app_private_key
     repository_benefits_client_id       = var.github_repository_benefits_client_id
     repository_benefits_client_secret   = var.github_repository_benefits_client_secret
-  }
-
-  stripe_secrets = {
-    connect_webhook_secret = var.stripe_connect_webhook_secret
-    secret_key             = var.stripe_secret_key
-    webhook_secret         = var.stripe_webhook_secret
   }
 
   logfire_config = {

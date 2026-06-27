@@ -49,7 +49,6 @@ locals {
     { key = "NEXT_PUBLIC_POSTHOG_TOKEN", value = var.config.next_public_posthog_token },
     { key = "NEXT_PUBLIC_APPLE_DOMAIN_ASSOCIATION", value = var.config.next_public_apple_domain_association },
     { key = "NEXT_PUBLIC_CHECKOUT_EMBED_SCRIPT_SRC", value = var.config.next_public_checkout_embed_script_src },
-    { key = "NEXT_PUBLIC_STRIPE_PAYMENT_METHOD_CONFIGURATION", value = var.config.next_public_stripe_payment_method_configuration },
     { key = "S3_PUBLIC_IMAGES_BUCKET_PROTOCOL", value = var.config.s3_public_images_bucket_protocol },
     { key = "S3_PUBLIC_IMAGES_BUCKET_HOSTNAME", value = var.config.s3_public_images_bucket_hostname },
     { key = "S3_PUBLIC_IMAGES_BUCKET_PORT", value = var.config.s3_public_images_bucket_port },

@@ -289,14 +289,11 @@ module "production" {
       # Australia (GST)
       AU = "300038975137"
     })
-    tax_processors                 = "[\"stripe\"]"
-    tax_record_processor           = "stripe"
     customer_portal_url_overrides  = var.customer_portal_url_overrides
     plain_default_tier_external_id = var.plain_default_tier_external_id
   }
 
   backend_secrets = {
-    stripe_publishable_key         = var.stripe_publishable_key_production
     current_jwk_kid                = var.backend_current_jwk_kid_production
     discord_bot_token              = var.backend_discord_bot_token_production
     discord_client_id              = var.backend_discord_client_id_production
@@ -317,7 +314,6 @@ module "production" {
     app_review_email               = var.backend_app_review_email
     app_review_otp_code            = var.backend_app_review_otp_code
     chargeback_stop_webhook_secret = var.backend_chargebackstop_webhook_secret_production
-    numeral_api_key                = var.numeral_api_key_production
   }
 
   aws_s3_config = {
@@ -346,12 +342,6 @@ module "production" {
     repository_benefits_app_private_key = var.github_repository_benefits_app_private_key_production
     repository_benefits_client_id       = var.github_repository_benefits_client_id_production
     repository_benefits_client_secret   = var.github_repository_benefits_client_secret_production
-  }
-
-  stripe_secrets = {
-    connect_webhook_secret = var.stripe_connect_webhook_secret_production
-    secret_key             = var.stripe_secret_key_production
-    webhook_secret         = var.stripe_webhook_secret_production
   }
 
   logfire_config = {
