@@ -14,11 +14,6 @@ class PaymentProcessor(StrEnum):
     stripe = "stripe"
 
 
-class TaxProcessor(StrEnum):
-    stripe = "stripe"
-    numeral = "numeral"
-
-
 class TaxBehavior(StrEnum):
     inclusive = "inclusive"
     exclusive = "exclusive"

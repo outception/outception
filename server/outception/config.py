@@ -19,8 +19,7 @@ from pydantic_ai.models import Model, infer_model, parse_model_id
 from pydantic_ai.providers.gateway import gateway_provider
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from outception.enums import EmailSender, TaxProcessor
-from outception.kit.address import Address, CountryAlpha2
+from outception.enums import EmailSender
 from outception.kit.jwk import JWKSFile
 
 
@@ -96,9 +95,6 @@ class Settings(BaseSettings):
     WORKER_DEFAULT_DEBOUNCE_MIN_THRESHOLD: timedelta = timedelta(seconds=15)
     WORKER_DEFAULT_DEBOUNCE_MAX_THRESHOLD: timedelta = timedelta(minutes=15)
 
-    CUSTOMER_METER_UPDATE_DEBOUNCE_MIN_THRESHOLD: timedelta = timedelta(seconds=15)
-    CUSTOMER_METER_UPDATE_DEBOUNCE_MAX_THRESHOLD: timedelta = timedelta(minutes=180)
-
     SECRET: str = INSECURE_DEFAULT_SECRET
     JWKS: JWKSFile = Field(default="./.jwks.json")
     CURRENT_JWK_KID: str = "outception_dev"
@@ -118,16 +114,12 @@ class Settings(BaseSettings):
     # generate URLs to the backend accessible from the outside.
     BASE_URL: str = "http://127.0.0.1:8000"
     BACKOFFICE_HOST: str | None = None
-    CHECKOUT_LINK_HOST: str | None = None  # e.g., "buy.outception.com" in production
 
     # URL to frontend app.
     # Update to ngrok domain or similar in case you want
     # working Github badges in development.
     FRONTEND_BASE_URL: str = "http://127.0.0.1:3000"
     FRONTEND_DEFAULT_RETURN_PATH: str = "/"
-    CHECKOUT_BASE_URL: str = (
-        "http://127.0.0.1:8000/v1/checkout-links/{client_secret}/redirect"
-    )
 
     # Promotions: pay-to-post featured slots, charged through polar.sh as an
     # external payment gateway. A category's featured slot costs
@@ -169,9 +161,6 @@ class Settings(BaseSettings):
     USER_SESSION_COOKIE_DOMAIN: str = "127.0.0.1"
 
     # Customer session
-    CUSTOMER_SESSION_TTL: timedelta = timedelta(hours=1)
-    CUSTOMER_SESSION_CODE_TTL: timedelta = timedelta(minutes=30)
-    CUSTOMER_SESSION_CODE_LENGTH: int = 6
 
     # Impersonation session
     IMPERSONATION_COOKIE_KEY: str = "outception_original_session"
@@ -181,7 +170,6 @@ class Settings(BaseSettings):
     EMAIL_VERIFICATION_TTL_SECONDS: int = 60 * 30  # 30 minutes
 
     # Checkout
-    CHECKOUT_TTL_SECONDS: int = 60 * 60 * 24  # 24 hours
     IP_GEOLOCATION_DATABASE_DIRECTORY_PATH: DirectoryPath = Path(__file__).parent.parent
     IP_GEOLOCATION_DATABASE_NAME: str = "ip-geolocation.mmdb"
 
@@ -232,7 +220,6 @@ class Settings(BaseSettings):
     GITHUB_CLIENT_SECRET: str = ""
 
     # GitHub App for repository benefits
-    GITHUB_REPOSITORY_BENEFITS_APP_NAMESPACE: str = ""
     GITHUB_REPOSITORY_BENEFITS_APP_IDENTIFIER: str = ""
     GITHUB_REPOSITORY_BENEFITS_APP_PRIVATE_KEY: str = ""
     GITHUB_REPOSITORY_BENEFITS_CLIENT_ID: str = ""
@@ -263,11 +250,7 @@ class Settings(BaseSettings):
     )
 
     # Stripe
-    STRIPE_SECRET_KEY: str = ""
-    STRIPE_PUBLISHABLE_KEY: str = ""
     # Stripe webhook secrets
-    STRIPE_WEBHOOK_SECRET: str = ""
-    STRIPE_CONNECT_WEBHOOK_SECRET: str = ""
     STRIPE_STATEMENT_DESCRIPTOR: str = "OUTCEPTION"
 
     # Numeral
@@ -323,10 +306,7 @@ class Settings(BaseSettings):
     S3_LOGS_BUCKET_NAME: str | None = None
 
     # Plain
-    PLAIN_REQUEST_SIGNING_SECRET: str | None = None
-    PLAIN_TOKEN: str | None = None
     PLAIN_CHAT_SECRET: str | None = None
-    PLAIN_DEFAULT_TIER_EXTERNAL_ID: str | None = None
 
     # AWS (File Downloads)
     AWS_ACCESS_KEY_ID: str = "outception-development"
@@ -362,94 +342,15 @@ class Settings(BaseSettings):
     OUTCEPTION_ACCESS_TOKEN: str = ""
     OUTCEPTION_WEBHOOK_SECRET: str = ""
     OUTCEPTION_ORGANIZATION_ID: str = ""
-    OUTCEPTION_FREE_PRODUCT_ID: str = ""
     # Scale plan product, used by the Startup Program to grant a 100% discount
-    OUTCEPTION_SCALE_PRODUCT_ID: str = ""
     OUTCEPTION_API_URL: str = "https://api.outception.com"
 
-    @property
-    def OUTCEPTION_SELF_ENABLED(self) -> bool:
-        return all(
-            [
-                self.OUTCEPTION_ACCESS_TOKEN,
-                self.OUTCEPTION_ORGANIZATION_ID,
-                self.OUTCEPTION_FREE_PRODUCT_ID,
-            ]
-        )
-
-    @property
-    def STARTUP_PROGRAM_ENABLED(self) -> bool:
-        # All three are required: org_id to scope reads, scale_product_id to
-        # attach the discount to, access_token so the SDK calls can auth.
-        return bool(
-            self.OUTCEPTION_ORGANIZATION_ID
-            and self.OUTCEPTION_SCALE_PRODUCT_ID
-            and self.OUTCEPTION_ACCESS_TOKEN
-        )
-
     # Customer portal URL overrides per organization
-    CUSTOMER_PORTAL_URL_OVERRIDES: dict[str, str] = {}
 
     # Invoices
-    S3_CUSTOMER_INVOICES_BUCKET_NAME: str = "outception-customer-invoices"
-    S3_CUSTOMER_RECEIPTS_BUCKET_NAME: str = "outception-customer-receipts"
-    S3_PAYOUT_INVOICES_BUCKET_NAME: str = "outception-payout-invoices"
-    INVOICES_NAME: str = "Outception Software, Inc."
-    INVOICES_ADDRESS: Address = Address(
-        line1="548 Market St",
-        line2="PMB 61301",
-        postal_code="94104",
-        city="San Francisco",
-        state="US-CA",
-        country=CountryAlpha2("US"),
-    )
-    INVOICES_ADDITIONAL_INFO: str | None = (
-        "[support@outception.com](mailto:support@outception.com)"
-    )
-    INVOICES_VAT_NUMBERS: dict[str, str] = {}
-    PAYOUT_INVOICES_PREFIX: str = "OUTCEPTION-"
 
     # Application behaviours
     API_PAGINATION_MAX_LIMIT: int = 100
-
-    ACCOUNT_PAYOUT_DELAY: timedelta = timedelta(seconds=1)
-    ACCOUNT_DEFAULT_PAYOUT_INTERVAL: timedelta = timedelta(hours=24)
-    ACCOUNT_PAYOUT_MINIMUM_BALANCE: int = 1000
-
-    _DEFAULT_ACCOUNT_PAYOUT_MINIMUM_BALANCE: int = 1000
-    ACCOUNT_PAYOUT_MINIMUM_BALANCE_PER_PAYOUT_CURRENCY: dict[str, int] = {
-        "all": 4000,
-        "amd": 4000,
-        "aoa": 3000,
-        "azn": 4000,
-        "bam": 4000,
-        "bob": 4000,
-        "btn": 4000,
-        "chf": 1500,
-        "clp": 4000,
-        "cop": 5000,
-        "eur": 1300,
-        "gbp": 1500,
-        "gmd": 4000,
-        "gyd": 4000,
-        "khr": 4000,
-        "krw": 4000,
-        "lak": 4000,
-        "mdl": 4000,
-        "mga": 4000,
-        "mkd": 4000,
-        "mnt": 4000,
-        "myr": 4000,
-        "mzn": 4000,
-        "nad": 4000,
-        "pyg": 4000,
-        "rsd": 4000,
-        "thb": 4000,
-        "twd": 4000,
-        "uzs": 4000,
-        # USD, default
-        "usd": _DEFAULT_ACCOUNT_PAYOUT_MINIMUM_BALANCE,
-    }
 
     # Stripe enforces per-country minimum payout amounts in the recipient's
     # local currency. For most countries the per-currency minimum above
@@ -459,17 +360,10 @@ class Settings(BaseSettings):
     # Values are in USD cents and indexed by ISO 3166-1 alpha-2 country
     # code, rounded up to the next multiple of $5 USD for FX headroom. See:
     # https://docs.stripe.com/global-payouts/send-money
-    ACCOUNT_PAYOUT_MINIMUM_BALANCE_PER_PAYOUT_COUNTRY: dict[str, int] = {
-        "BS": 3000,  # Bahamas: 25 BSD
-        "SV": 3000,  # El Salvador: 30 USD
-        "PA": 5000,  # Panama: 50 USD
-    }
     PLATFORM_FEE_BASIS_POINTS: int = 500
     PLATFORM_FEE_FIXED: int = 50
-    PLATFORM_SUBSCRIPTION_FEE_BASIS_POINTS: int = 0
     PLATFORM_FEE_BASIS_POINTS_EARLY_ACCESS: int = 400
     PLATFORM_FEE_FIXED_EARLY_ACCESS: int = 40
-    PLATFORM_SUBSCRIPTION_FEE_BASIS_POINTS_EARLY_ACCESS: int = 50
 
     ORGANIZATION_BLOCKED_WORDS: list[str] = [
         "porn",
@@ -531,10 +425,6 @@ class Settings(BaseSettings):
         timedelta(days=7),  # Third retry after 14 days (2 + 5 + 7)
         timedelta(days=7),  # Fourth retry after 21 days (2 + 5 + 7 + 7)
     ]
-    CUSTOMER_RETRY_MAX_ATTEMPTS: int = 5
-
-    TAX_PROCESSORS: list[TaxProcessor] = [TaxProcessor.stripe]
-    TAX_RECORD_PROCESSOR: TaxProcessor = TaxProcessor.stripe
 
     model_config = SettingsConfigDict(
         env_prefix="outception_",
@@ -642,15 +532,6 @@ class Settings(BaseSettings):
     @property
     def stripe_descriptor_suffix_max_length(self) -> int:
         return 22 - len("* ") - len(self.STRIPE_STATEMENT_DESCRIPTOR)
-
-    def get_minimum_payout(self, currency: str, country: str) -> int:
-        currency_minimum = self.ACCOUNT_PAYOUT_MINIMUM_BALANCE_PER_PAYOUT_CURRENCY.get(
-            currency.lower(), self._DEFAULT_ACCOUNT_PAYOUT_MINIMUM_BALANCE
-        )
-        country_minimum = self.ACCOUNT_PAYOUT_MINIMUM_BALANCE_PER_PAYOUT_COUNTRY.get(
-            country.upper(), 0
-        )
-        return max(currency_minimum, country_minimum)
 
     def get_pydantic_gateway_model(
         self, model: str | None = None

@@ -17,7 +17,6 @@ dependencies = [
   "githubkit==0.15.5",
   "redis>=5.0.4",
   "sse-starlette>=3.4.4",
-  "stripe>=14,<15",
   "pyjwt>=2.13.0",
   "pydantic>=2.13.4",
   "sentry-sdk[fastapi,sqlalchemy]>=2.62.0",
@@ -42,17 +41,12 @@ dependencies = [
   "cryptography>=48.0.1",
   "babel>=2.16.0",
   "pycountry>=24.6.1",
-  "python-stdnum>=2.1",
-  "ipinfo-db>=0.0.4",
   "taskipy>=1.10.3",
   "psycopg2-binary>=2.9.12",
   "apscheduler>=3.10.4",
   "dramatiq[redis,watch]>=1.17.1",
   "prometheus-client>=0.25.0",
   "python-snappy>=0.7.3",
-  "fpdf2>=2.8.3",
-  "arabic-reshaper>=3.0.1",
-  "python-bidi>=0.6.10",
   "pydantic-ai-slim[openai]>=1.106.0",
   "genai-prices>=0.0.66",
   "asgi-ratelimit>=0.10.0",
@@ -122,7 +116,6 @@ clean = { cmd = "find * -name '*.pyc' -delete && find * -name '__pycache__' -del
 verify_github_app = { cmd = "python -m outception.verify_github_app", help = "verify that the github app is correctly configured" }
 generate_dev_jwks = { cmd = "python -m outception.kit.jwk outception_dev > ./.jwks.json", help = "generate a development JWKS file" }
 seeds_load = { cmd = "python -m scripts.seeds_load", help = "load sample/test data into the database" }
-enable_payments = { cmd = "python -m scripts.enable_payments", help = "enable payments for an organization by slug" }
 loadtest_setup = { cmd = "python -m scripts.loadtest_setup", help = "setup load test data for event ingestion" }
 pre_deploy = { cmd = "task db_migrate", help = "Pre-deploy command run by Render" }
 
