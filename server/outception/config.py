@@ -233,16 +233,6 @@ class Settings(BaseSettings):
     PYDANTIC_AI_GATEWAY_API_KEY: str = "DummyKey"
     PYDANTIC_AI_GATEWAY_MODEL: str = "openai:gpt-5.5"
 
-    # Organization review website scraping
-    FIRECRAWL_API_KEY: str | None = None
-    # Which scraper backs the JS-render path of the organization-review website
-    # collector. "playwright" uses the in-house headless browser, "firecrawl"
-    # uses Firecrawl Cloud, and "shadow" runs Firecrawl alongside Playwright to
-    # log a comparison while still using Playwright's result for the live verdict.
-    ORGANIZATION_REVIEW_SCRAPER: Literal["playwright", "firecrawl", "shadow"] = (
-        "playwright"
-    )
-
     # Stripe statement descriptor (prefix on the payment statement)
     STRIPE_STATEMENT_DESCRIPTOR: str = "OUTCEPTION"
 
