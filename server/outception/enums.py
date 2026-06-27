@@ -15,7 +15,6 @@ class TokenType(StrEnum):
     refresh_token = "outception_refresh_token"
     personal_access_token = "outception_personal_access_token"
     organization_access_token = "outception_organization_access_token"
-    customer_session_token = "outception_customer_session_token"
     user_session_token = "outception_user_session_token"
 
 
