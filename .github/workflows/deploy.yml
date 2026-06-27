@@ -224,7 +224,6 @@ jobs:
           build-args: |
             RELEASE_VERSION=${{ github.sha }}
           secrets: |
-            IPINFO_ACCESS_TOKEN=${{ secrets.IPINFO_ACCESS_TOKEN }}
 
       - name: Docker meta (Playwright)
         id: meta-playwright
@@ -246,7 +245,6 @@ jobs:
           build-args: |
             RELEASE_VERSION=${{ github.sha }}
           secrets: |
-            IPINFO_ACCESS_TOKEN=${{ secrets.IPINFO_ACCESS_TOKEN }}
 
   build-lambda-worker:
     name: "Build Lambda Worker Image (ECR) λ"
@@ -292,7 +290,6 @@ jobs:
           build-args: |
             RELEASE_VERSION=${{ github.sha }}
           secrets: |
-            IPINFO_ACCESS_TOKEN=${{ secrets.IPINFO_ACCESS_TOKEN }}
 
   # deploy-lambda-sandbox:
   #   name: "Deploy Lambda Worker to Sandbox 🧪"
