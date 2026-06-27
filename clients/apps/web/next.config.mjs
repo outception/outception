@@ -48,11 +48,6 @@ const nonEmbeddedCSP = `
   form-action 'self' ${process.env.NEXT_PUBLIC_API_URL} outception:;
   frame-ancestors 'none';
 `
-const embeddedCSP = `
-  ${baseCSP}
-  form-action 'self' ${process.env.NEXT_PUBLIC_API_URL} outception:;
-  frame-ancestors *;
-`
 // Don't add form-action to the OAuth2 authorize page, as it blocks the OAuth2 redirection
 // 10-years old debate about whether to block redirects with form-action or not: https://github.com/w3c/webappsec-csp/issues/8
 const oauth2CSP = `
@@ -79,7 +74,7 @@ const docsCSP = `
 const nextConfig = {
   allowedDevOrigins: ['127.0.0.1'],
   reactStrictMode: true,
-  transpilePackages: ['shiki', '@outception-com/checkout', '@outception-com/orbit'],
+  transpilePackages: ['shiki', '@outception-com/orbit'],
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
 
   ...(previewBasePath && {
@@ -93,12 +88,6 @@ const nextConfig = {
     typescript: { ignoreBuildErrors: true },
     eslint: { ignoreDuringBuilds: true },
   }),
-
-  outputFileTracingIncludes: {
-    '/onboarding/validate-description': [
-      './src/app/(main)/onboarding/validate-description/acceptable-use-policy.mdx',
-    ],
-  },
 
   // This is required to support PostHog trailing slash API requests
   skipTrailingSlashRedirect: true,
@@ -288,63 +277,8 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source: '/finance',
-        destination: '/finance/income',
-        permanent: false,
-      },
-      {
         source: '/dashboard/:organization/overview',
         destination: '/dashboard/:organization',
-        permanent: true,
-      },
-      {
-        source: '/dashboard/:organization/benefits',
-        destination: '/dashboard/:organization/products/benefits',
-        permanent: true,
-      },
-      {
-        source: '/dashboard/:organization/products/overview',
-        destination: '/dashboard/:organization/products',
-        permanent: true,
-      },
-      {
-        source: '/dashboard/:organization/issues',
-        destination: '/dashboard/:organization/issues/overview',
-        permanent: false,
-      },
-      {
-        source: '/dashboard/:organization/promote/issues',
-        destination: '/dashboard/:organization/issues/badge',
-        permanent: false,
-      },
-      {
-        source: '/dashboard/:organization/issues/promote',
-        destination: '/dashboard/:organization/issues/badge',
-        permanent: false,
-      },
-      {
-        source: '/dashboard/:organization/finance',
-        destination: '/dashboard/:organization/finance/income',
-        permanent: false,
-      },
-      {
-        source: '/dashboard/:organization/usage-billing',
-        destination: '/dashboard/:organization/products/meters',
-        permanent: true,
-      },
-      {
-        source: '/dashboard/:organization/usage-billing/meters',
-        destination: '/dashboard/:organization/products/meters',
-        permanent: true,
-      },
-      {
-        source: '/dashboard/:organization/usage-billing/events',
-        destination: '/dashboard/:organization/analytics/events',
-        permanent: true,
-      },
-      {
-        source: '/dashboard/:organization/usage-billing/spans',
-        destination: '/dashboard/:organization/analytics/costs',
         permanent: true,
       },
 
@@ -429,7 +363,7 @@ const nextConfig = {
 
     return [
       {
-        source: '/((?!checkout|embed|oauth2|docs).*)',
+        source: '/((?!oauth2|docs).*)',
         headers: baseHeaders,
       },
       {
@@ -447,50 +381,6 @@ const nextConfig = {
           {
             key: 'X-Frame-Options',
             value: 'DENY',
-          },
-          ...(ENVIRONMENT === 'sandbox'
-            ? [
-                {
-                  key: 'X-Robots-Tag',
-                  value:
-                    'noindex, nofollow, noarchive, nosnippet, noimageindex',
-                },
-              ]
-            : []),
-        ],
-      },
-      {
-        source: '/checkout/:path*',
-        headers: [
-          {
-            key: 'Content-Security-Policy',
-            value: embeddedCSP.replace(/\n/g, ''),
-          },
-          {
-            key: 'Permissions-Policy',
-            value: `payment=*, publickey-credentials-get=*, camera=(), microphone=(), geolocation=()`,
-          },
-          ...(ENVIRONMENT === 'sandbox'
-            ? [
-                {
-                  key: 'X-Robots-Tag',
-                  value:
-                    'noindex, nofollow, noarchive, nosnippet, noimageindex',
-                },
-              ]
-            : []),
-        ],
-      },
-      {
-        source: '/embed/:path*',
-        headers: [
-          {
-            key: 'Content-Security-Policy',
-            value: embeddedCSP.replace(/\n/g, ''),
-          },
-          {
-            key: 'Permissions-Policy',
-            value: `payment=*, publickey-credentials-get=*, camera=(), microphone=(), geolocation=()`,
           },
           ...(ENVIRONMENT === 'sandbox'
             ? [

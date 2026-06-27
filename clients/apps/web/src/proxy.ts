@@ -23,24 +23,17 @@ const SANDBOX_ALLOWED_PATHS: (string | RegExp)[] = [
   '/auth',
   '/dashboard',
   '/start',
-  '/onboarding',
-  '/finance',
   '/settings',
   '/oauth2',
-  '/checkout',
-  '/embed',
   '/verify-email',
   '/api',
   '/to',
   /^\/favicon[\w-]*\.\w+$/, // /favicon.png, /favicon-dark.png, etc.
-  /^\/[^/]+\/portal(\/|$)/, // /:organization/portal
 ]
 
 const AUTHENTICATED_ROUTES = [
   new RegExp('^/start(/.*)?$'),
-  new RegExp('^/onboarding(/.*)?$'),
   new RegExp('^/dashboard(/.*)?$'),
-  new RegExp('^/finance(/.*)?$'),
   new RegExp('^/settings(/.*)?$'),
   new RegExp('^/oauth2(/.*)?$'),
   new RegExp('^/to(/.*)?$'),
