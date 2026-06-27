@@ -105,92 +105,9 @@ AvatarUrl = Annotated[HttpUrlToStr, AfterValidator(_discard_logo_dev_url)]
 
 
 class OrganizationCapabilities(Schema):
-    checkout_payments: bool = Field(
-        description="Whether the organization can accept new checkout payments."
-    )
-    subscription_renewals: bool = Field(
-        description="Whether the organization can process subscription renewals."
-    )
-    payouts: bool = Field(
-        description="Whether the organization can withdraw its balance."
-    )
-    refunds: bool = Field(description="Whether the organization can issue refunds.")
     api_access: bool = Field(description="Whether the organization can access the API.")
     dashboard_access: bool = Field(
         description="Whether the organization can access the dashboard."
-    )
-
-
-def _coerce_overview_metrics(value: Any) -> Any:
-    if isinstance(value, bool):
-        return None
-    return value
-
-
-OverviewMetrics = Annotated[list[str] | None, BeforeValidator(_coerce_overview_metrics)]
-
-
-class OrganizationFeatureSettings(Schema):
-    issue_funding_enabled: bool = Field(
-        False, description="If this organization has issue funding enabled"
-    )
-    seat_based_pricing_enabled: bool = Field(
-        False, description="If this organization has seat-based pricing enabled"
-    )
-    wallets_enabled: bool = Field(
-        False, description="If this organization has Wallets enabled"
-    )
-    member_model_enabled: bool = Field(
-        False, description="If this organization has the Member model enabled"
-    )
-    checkout_localization_enabled: bool = Field(
-        False,
-        description="If this organization has checkout localization enabled",
-    )
-    overview_metrics: OverviewMetrics = Field(
-        None,
-        description="Ordered list of metric slugs shown on the dashboard overview.",
-    )
-    reset_proration_behavior_enabled: bool = Field(
-        False,
-        description="If this organization has access to reset proration behavior.",
-    )
-    off_session_charges_enabled: bool = Field(
-        False,
-        description=(
-            "If this organization can create and finalize draft orders via the API "
-            "(off-session charges against a saved payment method)."
-        ),
-    )
-    slack_benefit_enabled: bool = Field(
-        False, description="Enables the slack shared channel benefit"
-    )
-    preview_access_enabled: bool = Field(
-        False,
-        description="If this organization has preview access to new features enabled",
-    )
-
-
-class OrganizationFeatureSettingsUpdate(Schema):
-    """Feature settings that organizations can update themselves.
-
-    Other feature settings are managed by Outception staff: they're ignored if
-    provided and keep their current value.
-    """
-
-    seat_based_pricing_enabled: bool = Field(
-        False, description="If this organization has seat-based pricing enabled"
-    )
-    member_model_enabled: bool = Field(
-        False, description="If this organization has the Member model enabled"
-    )
-    checkout_localization_enabled: bool = Field(
-        False,
-        description="If this organization has checkout localization enabled",
-    )
-    overview_metrics: OverviewMetrics = Field(
-        None,
-        description="Ordered list of metric slugs shown on the dashboard overview.",
     )
 
 
@@ -374,8 +291,6 @@ class OrganizationPublicBase(OrganizationBase):
         BeforeValidator(LegacyOrganizationStatus.from_status),
     ]
 
-    feature_settings: SkipJsonSchema[OrganizationFeatureSettings | None]
-
 
 class Organization(OrganizationBase):
     email: str | None = Field(description="Public support email.")
@@ -394,9 +309,6 @@ class Organization(OrganizationBase):
     )
     default_tax_behavior: TaxBehaviorOption = Field(
         description="Default tax behavior applied on products."
-    )
-    feature_settings: OrganizationFeatureSettings | None = Field(
-        description="Organization feature settings",
     )
     country: CountryAlpha2 | None = Field(
         None, description="Two-letter country code (ISO 3166-1 alpha-2)."
@@ -489,7 +401,6 @@ class OrganizationCreate(Schema):
     country: CountryAlpha2Input | None = Field(
         None, description="Two-letter country code (ISO 3166-1 alpha-2)."
     )
-    feature_settings: OrganizationFeatureSettingsUpdate | None = None
     default_presentment_currency: PresentmentCurrency = Field(
         PresentmentCurrency.usd,
         description="Default presentment currency for the organization",
@@ -519,7 +430,6 @@ class OrganizationUpdate(Schema):
         None, description="Two-letter country code (ISO 3166-1 alpha-2)."
     )
 
-    feature_settings: OrganizationFeatureSettingsUpdate | None = None
     default_presentment_currency: PresentmentCurrency | None = Field(
         None, description="Default presentment currency for the organization"
     )

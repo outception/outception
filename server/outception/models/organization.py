@@ -73,19 +73,11 @@ class OrganizationStatus(StrEnum):
 
 
 class OrganizationCapabilities(TypedDict):
-    checkout_payments: bool
-    subscription_renewals: bool
-    payouts: bool
-    refunds: bool
     api_access: bool
     dashboard_access: bool
 
 
 CapabilityName = Literal[
-    "checkout_payments",
-    "subscription_renewals",
-    "payouts",
-    "refunds",
     "api_access",
     "dashboard_access",
 ]
@@ -106,26 +98,14 @@ class InvalidStatusTransitionError(OutceptionError):
 
 STATUS_CAPABILITIES: dict[OrganizationStatus, OrganizationCapabilities] = {
     OrganizationStatus.CREATED: {
-        "checkout_payments": False,
-        "subscription_renewals": False,
-        "payouts": False,
-        "refunds": False,
         "api_access": True,
         "dashboard_access": True,
     },
     OrganizationStatus.ACTIVE: {
-        "checkout_payments": True,
-        "subscription_renewals": True,
-        "payouts": True,
-        "refunds": True,
         "api_access": True,
         "dashboard_access": True,
     },
     OrganizationStatus.BLOCKED: {
-        "checkout_payments": False,
-        "subscription_renewals": False,
-        "payouts": False,
-        "refunds": False,
         "api_access": False,
         "dashboard_access": False,
     },
@@ -133,22 +113,6 @@ STATUS_CAPABILITIES: dict[OrganizationStatus, OrganizationCapabilities] = {
 
 
 CAPABILITY_METADATA: dict[CapabilityName, tuple[str, str]] = {
-    "checkout_payments": (
-        "Checkout payments",
-        "Allow new checkouts and subscriptions.",
-    ),
-    "subscription_renewals": (
-        "Subscription renewals",
-        "Allow recurring billing cycles and dunning retries.",
-    ),
-    "payouts": (
-        "Payouts",
-        "Allow funds to be paid out to the payout account.",
-    ),
-    "refunds": (
-        "Refunds",
-        "Allow refunds to be issued on this organization's orders.",
-    ),
     "api_access": (
         "API access",
         "Allow authenticated API access for team members.",
@@ -250,10 +214,6 @@ class Organization(RateLimitGroupMixin, RecordModel):
         JSONB, nullable=False, default=dict
     )
 
-    @property
-    def is_member_model_enabled(self) -> bool:
-        return self.feature_settings.get("member_model_enabled", False)
-
     #
     # Currency and tax settings
     #
@@ -309,42 +269,6 @@ class Organization(RateLimitGroupMixin, RecordModel):
             cls.is_deleted.is_(False),
             cls.capabilities["dashboard_access"].as_boolean().is_(True),
         )
-
-    @hybrid_property
-    def can_accept_payments(self) -> bool:
-        return self._capability("checkout_payments")
-
-    @can_accept_payments.inplace.expression
-    @classmethod
-    def _can_accept_payments_expression(cls) -> ColumnElement[bool]:
-        return cls.capabilities["checkout_payments"].as_boolean().is_(True)
-
-    @hybrid_property
-    def can_renew_subscriptions(self) -> bool:
-        return self._capability("subscription_renewals")
-
-    @can_renew_subscriptions.inplace.expression
-    @classmethod
-    def _can_renew_subscriptions_expression(cls) -> ColumnElement[bool]:
-        return cls.capabilities["subscription_renewals"].as_boolean().is_(True)
-
-    @hybrid_property
-    def can_payout(self) -> bool:
-        return self._capability("payouts")
-
-    @can_payout.inplace.expression
-    @classmethod
-    def _can_payout_expression(cls) -> ColumnElement[bool]:
-        return cls.capabilities["payouts"].as_boolean().is_(True)
-
-    @hybrid_property
-    def can_refund(self) -> bool:
-        return self._capability("refunds")
-
-    @can_refund.inplace.expression
-    @classmethod
-    def _can_refund_expression(cls) -> ColumnElement[bool]:
-        return cls.capabilities["refunds"].as_boolean().is_(True)
 
     def set_status(self, status: OrganizationStatus) -> None:
         if (
