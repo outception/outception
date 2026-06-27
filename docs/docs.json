@@ -19,7 +19,7 @@
       "dark": "#131316"
     }
   },
-  "favicon": "./logo/favicon.png",
+  "favicon": "/logo/top-spin.webp",
   "integrations": {
     "ga4": {
       "measurementId": "G-MBYW1QZFHE"
@@ -148,8 +148,8 @@
     ]
   },
   "logo": {
-    "light": "./logo/light.png",
-    "dark": "./logo/dark.png",
+    "light": "/logo/top-spin.webp",
+    "dark": "/logo/top-spin.webp",
     "href": "https://outception.com"
   },
   "navbar": {
