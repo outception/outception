@@ -1648,23 +1648,6 @@ export interface components {
       | 'ZA'
       | 'ZM'
       | 'ZW'
-    /** CustomerPortalCustomerSettings */
-    CustomerPortalCustomerSettings: {
-      /** Allow Email Change */
-      allow_email_change?: boolean
-    }
-    /** CustomerPortalSubscriptionSettings */
-    CustomerPortalSubscriptionSettings: {
-      /** Update Seats */
-      update_seats: boolean
-      /** Update Plan */
-      update_plan: boolean
-    }
-    /** CustomerPortalUsageSettings */
-    CustomerPortalUsageSettings: {
-      /** Show */
-      show: boolean
-    }
     /** EmailOTPRequest */
     EmailOTPRequest: {
       /**
@@ -2077,13 +2060,6 @@ export interface components {
        * @description Avatar URL shown in checkout, customer portal, emails etc.
        */
       avatar_url: string | null
-      /** @description Proration behavior applied when customer updates their subscription from the portal. */
-      proration_behavior: components['schemas']['SubscriptionProrationBehavior']
-      /**
-       * Allow Customer Updates
-       * @description Whether customers can update their subscriptions from the customer portal.
-       */
-      allow_customer_updates: boolean
       /**
        * Email
        * @description Public support email.
@@ -2102,27 +2078,12 @@ export interface components {
       /** @description Current organization status */
       status: components['schemas']['OrganizationStatus']
       /**
-       * Details Submitted At
-       * @description When the business details were submitted for review.
-       */
-      details_submitted_at: string | null
-      /**
        * Default Presentment Currency
        * @description Default presentment currency. Used as fallback in checkout and customer portal, if the customer's local currency is not available.
        */
       default_presentment_currency: string
       /** @description Default tax behavior applied on products. */
       default_tax_behavior: components['schemas']['TaxBehaviorOption']
-      /** @description Organization feature settings */
-      feature_settings:
-        | components['schemas']['OrganizationFeatureSettings']
-        | null
-      /** @description Settings related to subscriptions management */
-      subscription_settings: components['schemas']['OrganizationSubscriptionSettings']
-      /** @description Settings related to customer emails */
-      customer_email_settings: components['schemas']['OrganizationCustomerEmailSettings']
-      /** @description Settings related to the customer portal */
-      customer_portal_settings: components['schemas']['OrganizationCustomerPortalSettings']
       /** @description Two-letter country code (ISO 3166-1 alpha-2). */
       country?:
         | (
@@ -2454,26 +2415,6 @@ export interface components {
     /** OrganizationCapabilities */
     OrganizationCapabilities: {
       /**
-       * Checkout Payments
-       * @description Whether the organization can accept new checkout payments.
-       */
-      checkout_payments: boolean
-      /**
-       * Subscription Renewals
-       * @description Whether the organization can process subscription renewals.
-       */
-      subscription_renewals: boolean
-      /**
-       * Payouts
-       * @description Whether the organization can withdraw its balance.
-       */
-      payouts: boolean
-      /**
-       * Refunds
-       * @description Whether the organization can issue refunds.
-       */
-      refunds: boolean
-      /**
        * Api Access
        * @description Whether the organization can access the API.
        */
@@ -2483,37 +2424,6 @@ export interface components {
        * @description Whether the organization can access the dashboard.
        */
       dashboard_access: boolean
-    }
-    /** OrganizationCustomerEmailSettings */
-    OrganizationCustomerEmailSettings: {
-      /** Order Confirmation */
-      order_confirmation: boolean
-      /** Subscription Cancellation */
-      subscription_cancellation: boolean
-      /** Subscription Confirmation */
-      subscription_confirmation: boolean
-      /** Subscription Cycled */
-      subscription_cycled: boolean
-      /** Subscription Cycled After Trial */
-      subscription_cycled_after_trial: boolean
-      /** Subscription Past Due */
-      subscription_past_due: boolean
-      /** Subscription Renewal Reminder */
-      subscription_renewal_reminder: boolean
-      /** Subscription Revoked */
-      subscription_revoked: boolean
-      /** Subscription Trial Conversion Reminder */
-      subscription_trial_conversion_reminder: boolean
-      /** Subscription Uncanceled */
-      subscription_uncanceled: boolean
-      /** Subscription Updated */
-      subscription_updated: boolean
-    }
-    /** OrganizationCustomerPortalSettings */
-    OrganizationCustomerPortalSettings: {
-      usage: components['schemas']['CustomerPortalUsageSettings']
-      subscription: components['schemas']['CustomerPortalSubscriptionSettings']
-      customer?: components['schemas']['CustomerPortalCustomerSettings']
     }
     /** OrganizationDetails */
     OrganizationDetails: {
@@ -2576,100 +2486,6 @@ export interface components {
        */
       previous_annual_revenue?: number | null
     }
-    /** OrganizationFeatureSettings */
-    OrganizationFeatureSettings: {
-      /**
-       * Issue Funding Enabled
-       * @description If this organization has issue funding enabled
-       * @default false
-       */
-      issue_funding_enabled: boolean
-      /**
-       * Seat Based Pricing Enabled
-       * @description If this organization has seat-based pricing enabled
-       * @default false
-       */
-      seat_based_pricing_enabled: boolean
-      /**
-       * Wallets Enabled
-       * @description If this organization has Wallets enabled
-       * @default false
-       */
-      wallets_enabled: boolean
-      /**
-       * Member Model Enabled
-       * @description If this organization has the Member model enabled
-       * @default false
-       */
-      member_model_enabled: boolean
-      /**
-       * Checkout Localization Enabled
-       * @description If this organization has checkout localization enabled
-       * @default false
-       */
-      checkout_localization_enabled: boolean
-      /**
-       * Overview Metrics
-       * @description Ordered list of metric slugs shown on the dashboard overview.
-       */
-      overview_metrics?: string[] | null
-      /**
-       * Reset Proration Behavior Enabled
-       * @description If this organization has access to reset proration behavior.
-       * @default false
-       */
-      reset_proration_behavior_enabled: boolean
-      /**
-       * Off Session Charges Enabled
-       * @description If this organization can create and finalize draft orders via the API (off-session charges against a saved payment method).
-       * @default false
-       */
-      off_session_charges_enabled: boolean
-      /**
-       * Slack Benefit Enabled
-       * @description Enables the slack shared channel benefit
-       * @default false
-       */
-      slack_benefit_enabled: boolean
-      /**
-       * Preview Access Enabled
-       * @description If this organization has preview access to new features enabled
-       * @default false
-       */
-      preview_access_enabled: boolean
-    }
-    /**
-     * OrganizationFeatureSettingsUpdate
-     * @description Feature settings that organizations can update themselves.
-     *
-     *     Other feature settings are managed by Outception staff: they're ignored if
-     *     provided and keep their current value.
-     */
-    OrganizationFeatureSettingsUpdate: {
-      /**
-       * Seat Based Pricing Enabled
-       * @description If this organization has seat-based pricing enabled
-       * @default false
-       */
-      seat_based_pricing_enabled: boolean
-      /**
-       * Member Model Enabled
-       * @description If this organization has the Member model enabled
-       * @default false
-       */
-      member_model_enabled: boolean
-      /**
-       * Checkout Localization Enabled
-       * @description If this organization has checkout localization enabled
-       * @default false
-       */
-      checkout_localization_enabled: boolean
-      /**
-       * Overview Metrics
-       * @description Ordered list of metric slugs shown on the dashboard overview.
-       */
-      overview_metrics?: string[] | null
-    }
     /** OrganizationNotificationSettings */
     OrganizationNotificationSettings: {
       /** New Order */
@@ -2721,38 +2537,11 @@ export interface components {
       | '-slug'
       | 'name'
       | '-name'
-      | 'next_review_threshold'
-      | '-next_review_threshold'
-      | 'days_in_status'
-      | '-days_in_status'
     /**
      * OrganizationStatus
      * @enum {string}
      */
-    OrganizationStatus:
-      | 'created'
-      | 'review'
-      | 'snoozed'
-      | 'denied'
-      | 'active'
-      | 'blocked'
-      | 'offboarding'
-    /** OrganizationSubscriptionSettings */
-    OrganizationSubscriptionSettings: {
-      /** Allow Multiple Subscriptions */
-      allow_multiple_subscriptions: boolean
-      /**
-       * PublicSubscriptionProrationBehavior
-       * @enum {string}
-       */
-      proration_behavior: 'invoice' | 'prorate' | 'next_period'
-      /** Benefit Revocation Grace Period */
-      benefit_revocation_grace_period: number
-      /** Prevent Trial Abuse */
-      prevent_trial_abuse: boolean
-      /** Allow Customer Updates */
-      allow_customer_updates: boolean
-    }
+    OrganizationStatus: 'created' | 'active' | 'blocked'
     /** OrganizationUpdate */
     OrganizationUpdate: {
       /** Name */
@@ -3025,18 +2814,6 @@ export interface components {
             | 'ZW'
           )
         | null
-      feature_settings?:
-        | components['schemas']['OrganizationFeatureSettingsUpdate']
-        | null
-      subscription_settings?:
-        | components['schemas']['OrganizationSubscriptionSettings']
-        | null
-      customer_email_settings?:
-        | components['schemas']['OrganizationCustomerEmailSettings']
-        | null
-      customer_portal_settings?:
-        | components['schemas']['OrganizationCustomerPortalSettings']
-        | null
       /** @description Default presentment currency for the organization */
       default_presentment_currency?:
         | components['schemas']['PresentmentCurrency']
@@ -3082,13 +2859,6 @@ export interface components {
        * @description Avatar URL shown in checkout, customer portal, emails etc.
        */
       avatar_url: string | null
-      /** @description Proration behavior applied when customer updates their subscription from the portal. */
-      proration_behavior: components['schemas']['SubscriptionProrationBehavior']
-      /**
-       * Allow Customer Updates
-       * @description Whether customers can update their subscriptions from the customer portal.
-       */
-      allow_customer_updates: boolean
       /**
        * Email
        * @description Public support email.
@@ -3107,27 +2877,12 @@ export interface components {
       /** @description Current organization status */
       status: components['schemas']['OrganizationStatus']
       /**
-       * Details Submitted At
-       * @description When the business details were submitted for review.
-       */
-      details_submitted_at: string | null
-      /**
        * Default Presentment Currency
        * @description Default presentment currency. Used as fallback in checkout and customer portal, if the customer's local currency is not available.
        */
       default_presentment_currency: string
       /** @description Default tax behavior applied on products. */
       default_tax_behavior: components['schemas']['TaxBehaviorOption']
-      /** @description Organization feature settings */
-      feature_settings:
-        | components['schemas']['OrganizationFeatureSettings']
-        | null
-      /** @description Settings related to subscriptions management */
-      subscription_settings: components['schemas']['OrganizationSubscriptionSettings']
-      /** @description Settings related to customer emails */
-      customer_email_settings: components['schemas']['OrganizationCustomerEmailSettings']
-      /** @description Settings related to the customer portal */
-      customer_portal_settings: components['schemas']['OrganizationCustomerPortalSettings']
       /** @description Two-letter country code (ISO 3166-1 alpha-2). */
       country?:
         | (
@@ -3830,15 +3585,6 @@ export interface components {
      * @enum {string}
      */
     SubType: 'user' | 'organization'
-    /**
-     * SubscriptionProrationBehavior
-     * @enum {string}
-     */
-    SubscriptionProrationBehavior:
-      | 'invoice'
-      | 'prorate'
-      | 'next_period'
-      | 'reset'
     /** TOTPEnable */
     TOTPEnable: {
       /** Code */
@@ -6932,32 +6678,10 @@ export const organizationSocialPlatformsValues: ReadonlyArray<
 ]
 export const organizationSortPropertyValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OrganizationSortProperty']
-> = [
-  'created_at',
-  '-created_at',
-  'slug',
-  '-slug',
-  'name',
-  '-name',
-  'next_review_threshold',
-  '-next_review_threshold',
-  'days_in_status',
-  '-days_in_status',
-]
+> = ['created_at', '-created_at', 'slug', '-slug', 'name', '-name']
 export const organizationStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OrganizationStatus']
-> = [
-  'created',
-  'review',
-  'snoozed',
-  'denied',
-  'active',
-  'blocked',
-  'offboarding',
-]
-export const organizationSubscriptionSettingsProration_behaviorValues: ReadonlyArray<
-  FlattenedDeepRequired<components>['schemas']['OrganizationSubscriptionSettings']['proration_behavior']
-> = ['invoice', 'prorate', 'next_period']
+> = ['created', 'active', 'blocked']
 export const organizationUpdateCountryAnyOf0Values: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OrganizationUpdate']['country']
 > = [
@@ -7615,9 +7339,6 @@ export const sourceResponseStatusValues: ReadonlyArray<
 export const subTypeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SubType']
 > = ['user', 'organization']
-export const subscriptionProrationBehaviorValues: ReadonlyArray<
-  FlattenedDeepRequired<components>['schemas']['SubscriptionProrationBehavior']
-> = ['invoice', 'prorate', 'next_period', 'reset']
 export const taxBehaviorOptionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TaxBehaviorOption']
 > = ['location', 'inclusive', 'exclusive']
