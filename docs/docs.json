@@ -8,7 +8,7 @@
     "default": "system"
   },
   "name": "Outception",
-  "description": "Payments & Billing with 6 lines of code. Open Source & Global Merchant of Record.",
+  "description": "Outception API & developer docs — a live news wall with pay-to-promote.",
   "colors": {
     "primary": "#000",
     "light": "#fff",
@@ -470,30 +470,6 @@
       "destination": "/integrate/sdk/adapters/hono"
     },
     {
-      "source": "/documentation/outception-as-merchant-of-record/tax",
-      "destination": "/merchant-of-record/introduction"
-    },
-    {
-      "source": "/documentation/outception-as-merchant-of-record/fees",
-      "destination": "/merchant-of-record/fees"
-    },
-    {
-      "source": "/documentation/outception-as-merchant-of-record/supported-countries",
-      "destination": "/merchant-of-record/supported-countries"
-    },
-    {
-      "source": "/documentation/outception-as-merchant-of-record/acceptable-products-use",
-      "destination": "/merchant-of-record/acceptable-use"
-    },
-    {
-      "source": "/merchant-of-record/acceptable-use",
-      "destination": "https://outception.com/legal/acceptable-use-policy"
-    },
-    {
-      "source": "/documentation/outception-as-merchant-of-record/account-reviews",
-      "destination": "/merchant-of-record/account-reviews"
-    },
-    {
       "source": "/developers/webhooks",
       "destination": "/integrate/webhooks/endpoints"
     },
@@ -516,22 +492,6 @@
     {
       "source": "/docs/finance/balance",
       "destination": "/features/finance/balance"
-    },
-    {
-      "source": "/merchant-of-record/tax",
-      "destination": "/merchant-of-record/introduction"
-    },
-    {
-      "source": "/docs/merchant-of-record/tax",
-      "destination": "/merchant-of-record/introduction"
-    },
-    {
-      "source": "/fees",
-      "destination": "/merchant-of-record/fees"
-    },
-    {
-      "source": "/docs/fees",
-      "destination": "/merchant-of-record/fees"
     },
     {
       "source": "/developers/sdk",
