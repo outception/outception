@@ -5,12 +5,10 @@ from urllib.parse import urlparse
 
 from sqlalchemy import (
     TIMESTAMP,
-    BigInteger,
     CheckConstraint,
     ColumnElement,
     Integer,
     String,
-    Text,
     UniqueConstraint,
     and_,
     or_,
@@ -397,9 +395,6 @@ class Organization(RateLimitGroupMixin, RecordModel):
         TIMESTAMP(timezone=True), nullable=True
     )
 
-    snooze_count: Mapped[int] = mapped_column(
-        Integer, nullable=False, default=0, server_default="0"
-    )
     snoozed_until: Mapped[datetime | None] = mapped_column(
         TIMESTAMP(timezone=True), nullable=True, default=None
     )
@@ -410,15 +405,6 @@ class Organization(RateLimitGroupMixin, RecordModel):
     # Support priority tier — the benefit's metadata ``level``, denormalized
     # from the active Outception support grant (see SupportTier). NULL = free; only
     # paid tiers are persisted, higher level = higher priority.
-    support_tier: Mapped[int | None] = mapped_column(
-        Integer, nullable=True, default=None
-    )
-
-    total_balance: Mapped[int | None] = mapped_column(
-        BigInteger, nullable=True, server_default="0"
-    )
-
-    internal_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     onboarded_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
     ai_onboarding_completed_at: Mapped[datetime | None] = mapped_column(
