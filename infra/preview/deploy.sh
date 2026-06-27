@@ -184,7 +184,6 @@ for k, v in json.loads(sys.stdin.read()).items():
     # OUTCEPTION_PREVIEW_BUILD=1
     # NEXT_PUBLIC_API_URL=${PREVIEW_URL}
     # NEXT_PUBLIC_FRONTEND_BASE_URL=${PREVIEW_URL}
-    # NEXT_PUBLIC_BACKOFFICE_URL=${PREVIEW_URL}/backoffice
     # S3_UPLOAD_ORIGINS=
     # S3_PUBLIC_IMAGES_BUCKET_HOSTNAME=
     # DOTENV
@@ -194,7 +193,6 @@ for k, v in json.loads(sys.stdin.read()).items():
     # NEXT_PUBLIC_API_URL=${PREVIEW_URL}
     # OUTCEPTION_API_URL=http://127.0.0.1:${API_PORT}
     # NEXT_PUBLIC_FRONTEND_BASE_URL=${PREVIEW_URL}
-    # NEXT_PUBLIC_BACKOFFICE_URL=${PREVIEW_URL}/backoffice
     # PORT=${FRONTEND_LOCAL_PORT}
     # DOTENV
     #

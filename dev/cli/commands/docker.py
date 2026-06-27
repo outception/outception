@@ -346,10 +346,6 @@ def _ensure_server_env() -> None:
     template_env = dotenv_values(SERVER_ENV_TEMPLATE)
     central_secrets = _load_central_secrets()
 
-    if "OUTCEPTION_STRIPE_PUBLISHABLE_KEY" in central_secrets:
-        central_secrets["NEXT_PUBLIC_STRIPE_KEY"] = central_secrets[
-            "OUTCEPTION_STRIPE_PUBLISHABLE_KEY"
-        ]
     if "OUTCEPTION_GITHUB_APP_NAMESPACE" in central_secrets:
         central_secrets["NEXT_PUBLIC_GITHUB_APP_NAMESPACE"] = central_secrets[
             "OUTCEPTION_GITHUB_APP_NAMESPACE"

@@ -57,7 +57,7 @@ x-common-backend-env: &common-backend-env
   OUTCEPTION_TINYBIRD_CLICKHOUSE_URL: http://tinybird:7182
   # OAuth insecure transport for development
   AUTHLIB_INSECURE_TRANSPORT: "true"
-  # Note: Secrets like OUTCEPTION_GITHUB_CLIENT_ID, OUTCEPTION_STRIPE_* are loaded from
+  # Note: Secrets like OUTCEPTION_GITHUB_CLIENT_ID are loaded from
   # env_file (server/.env) and NOT set here. Setting them here with ${VAR:-default}
   # would read from the HOST shell, not from env_file.
   # Prometheus (optional)
@@ -123,9 +123,8 @@ services:
       # NEXT_PUBLIC_* are for browser requests (via host machine)
       NEXT_PUBLIC_API_URL: http://localhost:${API_PORT:-8000}
       NEXT_PUBLIC_FRONTEND_BASE_URL: http://localhost:${WEB_PORT:-3000}
-      NEXT_PUBLIC_BACKOFFICE_URL: http://localhost:${API_PORT:-8000}/backoffice
-      # Note: NEXT_PUBLIC_STRIPE_KEY and NEXT_PUBLIC_GITHUB_APP_NAMESPACE
-      # must be set in server/.env (they're loaded via env_file)
+      # Note: NEXT_PUBLIC_GITHUB_APP_NAMESPACE must be set in server/.env
+      # (loaded via env_file)
       # OUTCEPTION_API_URL is for server-side requests (container-to-container)
       OUTCEPTION_API_URL: http://api:8000
       # Browser-side MinIO uploads require a host-reachable MinIO. Shared

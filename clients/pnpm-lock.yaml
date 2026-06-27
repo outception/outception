@@ -398,12 +398,6 @@ importers:
       '@shikijs/rehype':
         specifier: ^3.23.0
         version: 3.23.0
-      '@stripe/react-stripe-js':
-        specifier: ^5.6.1
-        version: 5.6.1(@stripe/stripe-js@8.11.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
-      '@stripe/stripe-js':
-        specifier: ^8.11.0
-        version: 8.11.0
       '@stylexjs/stylex':
         specifier: ^0.18.2
         version: 0.18.2
@@ -890,9 +884,6 @@ importers:
       '@outception-com/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
-      '@stripe/stripe-js':
-        specifier: ^8.11.0
-        version: 8.11.0
       '@types/react':
         specifier: 19.2.13
         version: 19.2.13
@@ -4515,17 +4506,6 @@ packages:
 
   '@standard-schema/utils@0.3.0':
     resolution: {integrity: sha512-e7Mew686owMaPJVNNLs55PUvgz371nKgwsc4vxE49zsODpJEnxgxRo2y/OKrqueavXgZNMDVj3DdHFlaSAeU8g==}
-
-  '@stripe/react-stripe-js@5.6.1':
-    resolution: {integrity: sha512-5xBrjkGmFvKvpMod6VvpOaFaa67eRbmieKeFTePZyOr/sUXzm7A3YY91l330pS0usUst5PxTZDUZHWfOc0v1GA==}
-    peerDependencies:
-      '@stripe/stripe-js': '>=8.0.0 <9.0.0'
-      react: '>=16.8.0 <20.0.0'
-      react-dom: '>=16.8.0 <20.0.0'
-
-  '@stripe/stripe-js@8.11.0':
-    resolution: {integrity: sha512-3fVF4z3efsgwgyj64nFK+6F4/vMw0mUXD2TBbOfftJtKVNx4JNv3CSfe1fY4DCtCk0JFp8/YPNcRkzgV0HJ8cg==}
-    engines: {node: '>=12.16'}
 
   '@stylexjs/babel-plugin@0.18.2':
     resolution: {integrity: sha512-vmdk1DGiMBuz4hKjXh3KiM+E065OE115GZTNrK9icak0wYAgzpF6K/hExBSwS+yjiH/c3p+6tfN7G9UJPet1gA==}
@@ -16315,15 +16295,6 @@ snapshots:
   '@standard-schema/spec@1.1.0': {}
 
   '@standard-schema/utils@0.3.0': {}
-
-  '@stripe/react-stripe-js@5.6.1(@stripe/stripe-js@8.11.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
-    dependencies:
-      '@stripe/stripe-js': 8.11.0
-      prop-types: 15.8.1
-      react: 19.2.5
-      react-dom: 19.2.5(react@19.2.5)
-
-  '@stripe/stripe-js@8.11.0': {}
 
   '@stylexjs/babel-plugin@0.18.2':
     dependencies:

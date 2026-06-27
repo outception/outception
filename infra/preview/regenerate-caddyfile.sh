@@ -15,7 +15,7 @@ HANDLE_ERRORS=$(cat <<'ERRORS'
 	handle_errors {
 		@hibernated {
 			expression {err.status_code} == 502
-			path_regexp pr ^/pr-(\d+)/(v1|backoffice|healthz)
+			path_regexp pr ^/pr-(\d+)/(v1|healthz)
 		}
 		handle @hibernated {
 			rewrite * /wake/pr-{re.pr.1}
