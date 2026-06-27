@@ -2294,47 +2294,6 @@
         ],
         "title": "CountryAlpha2Input"
       },
-      "CustomerPortalCustomerSettings": {
-        "properties": {
-          "allow_email_change": {
-            "type": "boolean",
-            "title": "Allow Email Change"
-          }
-        },
-        "type": "object",
-        "title": "CustomerPortalCustomerSettings"
-      },
-      "CustomerPortalSubscriptionSettings": {
-        "properties": {
-          "update_seats": {
-            "type": "boolean",
-            "title": "Update Seats"
-          },
-          "update_plan": {
-            "type": "boolean",
-            "title": "Update Plan"
-          }
-        },
-        "type": "object",
-        "required": [
-          "update_seats",
-          "update_plan"
-        ],
-        "title": "CustomerPortalSubscriptionSettings"
-      },
-      "CustomerPortalUsageSettings": {
-        "properties": {
-          "show": {
-            "type": "boolean",
-            "title": "Show"
-          }
-        },
-        "type": "object",
-        "required": [
-          "show"
-        ],
-        "title": "CustomerPortalUsageSettings"
-      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -2995,15 +2954,6 @@
             "title": "Avatar Url",
             "description": "Avatar URL shown in checkout, customer portal, emails etc."
           },
-          "proration_behavior": {
-            "$ref": "#/components/schemas/SubscriptionProrationBehavior",
-            "description": "Proration behavior applied when customer updates their subscription from the portal."
-          },
-          "allow_customer_updates": {
-            "type": "boolean",
-            "title": "Allow Customer Updates",
-            "description": "Whether customers can update their subscriptions from the customer portal."
-          },
           "email": {
             "anyOf": [
               {
@@ -3040,19 +2990,6 @@
             "$ref": "#/components/schemas/OrganizationStatus",
             "description": "Current organization status"
           },
-          "details_submitted_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Details Submitted At",
-            "description": "When the business details were submitted for review."
-          },
           "default_presentment_currency": {
             "type": "string",
             "title": "Default Presentment Currency",
@@ -3061,29 +2998,6 @@
           "default_tax_behavior": {
             "$ref": "#/components/schemas/TaxBehaviorOption",
             "description": "Default tax behavior applied on products."
-          },
-          "feature_settings": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/OrganizationFeatureSettings"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Organization feature settings"
-          },
-          "subscription_settings": {
-            "$ref": "#/components/schemas/OrganizationSubscriptionSettings",
-            "description": "Settings related to subscriptions management"
-          },
-          "customer_email_settings": {
-            "$ref": "#/components/schemas/OrganizationCustomerEmailSettings",
-            "description": "Settings related to customer emails"
-          },
-          "customer_portal_settings": {
-            "$ref": "#/components/schemas/OrganizationCustomerPortalSettings",
-            "description": "Settings related to the customer portal"
           },
           "country": {
             "anyOf": [
@@ -3612,19 +3526,12 @@
           "name",
           "slug",
           "avatar_url",
-          "proration_behavior",
-          "allow_customer_updates",
           "email",
           "website",
           "socials",
           "status",
-          "details_submitted_at",
           "default_presentment_currency",
           "default_tax_behavior",
-          "feature_settings",
-          "subscription_settings",
-          "customer_email_settings",
-          "customer_portal_settings",
           "capabilities"
         ],
         "title": "Organization"
@@ -3828,26 +3735,6 @@
       },
       "OrganizationCapabilities": {
         "properties": {
-          "checkout_payments": {
-            "type": "boolean",
-            "title": "Checkout Payments",
-            "description": "Whether the organization can accept new checkout payments."
-          },
-          "subscription_renewals": {
-            "type": "boolean",
-            "title": "Subscription Renewals",
-            "description": "Whether the organization can process subscription renewals."
-          },
-          "payouts": {
-            "type": "boolean",
-            "title": "Payouts",
-            "description": "Whether the organization can withdraw its balance."
-          },
-          "refunds": {
-            "type": "boolean",
-            "title": "Refunds",
-            "description": "Whether the organization can issue refunds."
-          },
           "api_access": {
             "type": "boolean",
             "title": "Api Access",
@@ -3861,96 +3748,10 @@
         },
         "type": "object",
         "required": [
-          "checkout_payments",
-          "subscription_renewals",
-          "payouts",
-          "refunds",
           "api_access",
           "dashboard_access"
         ],
         "title": "OrganizationCapabilities"
-      },
-      "OrganizationCustomerEmailSettings": {
-        "properties": {
-          "order_confirmation": {
-            "type": "boolean",
-            "title": "Order Confirmation"
-          },
-          "subscription_cancellation": {
-            "type": "boolean",
-            "title": "Subscription Cancellation"
-          },
-          "subscription_confirmation": {
-            "type": "boolean",
-            "title": "Subscription Confirmation"
-          },
-          "subscription_cycled": {
-            "type": "boolean",
-            "title": "Subscription Cycled"
-          },
-          "subscription_cycled_after_trial": {
-            "type": "boolean",
-            "title": "Subscription Cycled After Trial"
-          },
-          "subscription_past_due": {
-            "type": "boolean",
-            "title": "Subscription Past Due"
-          },
-          "subscription_renewal_reminder": {
-            "type": "boolean",
-            "title": "Subscription Renewal Reminder"
-          },
-          "subscription_revoked": {
-            "type": "boolean",
-            "title": "Subscription Revoked"
-          },
-          "subscription_trial_conversion_reminder": {
-            "type": "boolean",
-            "title": "Subscription Trial Conversion Reminder"
-          },
-          "subscription_uncanceled": {
-            "type": "boolean",
-            "title": "Subscription Uncanceled"
-          },
-          "subscription_updated": {
-            "type": "boolean",
-            "title": "Subscription Updated"
-          }
-        },
-        "type": "object",
-        "required": [
-          "order_confirmation",
-          "subscription_cancellation",
-          "subscription_confirmation",
-          "subscription_cycled",
-          "subscription_cycled_after_trial",
-          "subscription_past_due",
-          "subscription_renewal_reminder",
-          "subscription_revoked",
-          "subscription_trial_conversion_reminder",
-          "subscription_uncanceled",
-          "subscription_updated"
-        ],
-        "title": "OrganizationCustomerEmailSettings"
-      },
-      "OrganizationCustomerPortalSettings": {
-        "properties": {
-          "usage": {
-            "$ref": "#/components/schemas/CustomerPortalUsageSettings"
-          },
-          "subscription": {
-            "$ref": "#/components/schemas/CustomerPortalSubscriptionSettings"
-          },
-          "customer": {
-            "$ref": "#/components/schemas/CustomerPortalCustomerSettings"
-          }
-        },
-        "type": "object",
-        "required": [
-          "usage",
-          "subscription"
-        ],
-        "title": "OrganizationCustomerPortalSettings"
       },
       "OrganizationDetails": {
         "properties": {
@@ -4074,121 +3875,6 @@
         "type": "object",
         "title": "OrganizationDetails"
       },
-      "OrganizationFeatureSettings": {
-        "properties": {
-          "issue_funding_enabled": {
-            "type": "boolean",
-            "title": "Issue Funding Enabled",
-            "description": "If this organization has issue funding enabled",
-            "default": false
-          },
-          "seat_based_pricing_enabled": {
-            "type": "boolean",
-            "title": "Seat Based Pricing Enabled",
-            "description": "If this organization has seat-based pricing enabled",
-            "default": false
-          },
-          "wallets_enabled": {
-            "type": "boolean",
-            "title": "Wallets Enabled",
-            "description": "If this organization has Wallets enabled",
-            "default": false
-          },
-          "member_model_enabled": {
-            "type": "boolean",
-            "title": "Member Model Enabled",
-            "description": "If this organization has the Member model enabled",
-            "default": false
-          },
-          "checkout_localization_enabled": {
-            "type": "boolean",
-            "title": "Checkout Localization Enabled",
-            "description": "If this organization has checkout localization enabled",
-            "default": false
-          },
-          "overview_metrics": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Overview Metrics",
-            "description": "Ordered list of metric slugs shown on the dashboard overview."
-          },
-          "reset_proration_behavior_enabled": {
-            "type": "boolean",
-            "title": "Reset Proration Behavior Enabled",
-            "description": "If this organization has access to reset proration behavior.",
-            "default": false
-          },
-          "off_session_charges_enabled": {
-            "type": "boolean",
-            "title": "Off Session Charges Enabled",
-            "description": "If this organization can create and finalize draft orders via the API (off-session charges against a saved payment method).",
-            "default": false
-          },
-          "slack_benefit_enabled": {
-            "type": "boolean",
-            "title": "Slack Benefit Enabled",
-            "description": "Enables the slack shared channel benefit",
-            "default": false
-          },
-          "preview_access_enabled": {
-            "type": "boolean",
-            "title": "Preview Access Enabled",
-            "description": "If this organization has preview access to new features enabled",
-            "default": false
-          }
-        },
-        "type": "object",
-        "title": "OrganizationFeatureSettings"
-      },
-      "OrganizationFeatureSettingsUpdate": {
-        "properties": {
-          "seat_based_pricing_enabled": {
-            "type": "boolean",
-            "title": "Seat Based Pricing Enabled",
-            "description": "If this organization has seat-based pricing enabled",
-            "default": false
-          },
-          "member_model_enabled": {
-            "type": "boolean",
-            "title": "Member Model Enabled",
-            "description": "If this organization has the Member model enabled",
-            "default": false
-          },
-          "checkout_localization_enabled": {
-            "type": "boolean",
-            "title": "Checkout Localization Enabled",
-            "description": "If this organization has checkout localization enabled",
-            "default": false
-          },
-          "overview_metrics": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Overview Metrics",
-            "description": "Ordered list of metric slugs shown on the dashboard overview."
-          }
-        },
-        "type": "object",
-        "title": "OrganizationFeatureSettingsUpdate",
-        "description": "Feature settings that organizations can update themselves.\n\nOther feature settings are managed by Outception staff: they're ignored if\nprovided and keep their current value."
-      },
       "OrganizationNotificationSettings": {
         "properties": {
           "new_order": {
@@ -4258,11 +3944,7 @@
           "slug",
           "-slug",
           "name",
-          "-name",
-          "next_review_threshold",
-          "-next_review_threshold",
-          "days_in_status",
-          "-days_in_status"
+          "-name"
         ],
         "title": "OrganizationSortProperty"
       },
@@ -4270,52 +3952,10 @@
         "type": "string",
         "enum": [
           "created",
-          "review",
-          "snoozed",
-          "denied",
           "active",
-          "blocked",
-          "offboarding"
+          "blocked"
         ],
         "title": "OrganizationStatus"
-      },
-      "OrganizationSubscriptionSettings": {
-        "properties": {
-          "allow_multiple_subscriptions": {
-            "type": "boolean",
-            "title": "Allow Multiple Subscriptions"
-          },
-          "proration_behavior": {
-            "type": "string",
-            "enum": [
-              "invoice",
-              "prorate",
-              "next_period"
-            ],
-            "title": "PublicSubscriptionProrationBehavior"
-          },
-          "benefit_revocation_grace_period": {
-            "type": "integer",
-            "title": "Benefit Revocation Grace Period"
-          },
-          "prevent_trial_abuse": {
-            "type": "boolean",
-            "title": "Prevent Trial Abuse"
-          },
-          "allow_customer_updates": {
-            "type": "boolean",
-            "title": "Allow Customer Updates"
-          }
-        },
-        "type": "object",
-        "required": [
-          "allow_multiple_subscriptions",
-          "proration_behavior",
-          "benefit_revocation_grace_period",
-          "prevent_trial_abuse",
-          "allow_customer_updates"
-        ],
-        "title": "OrganizationSubscriptionSettings"
       },
       "OrganizationUpdate": {
         "properties": {
@@ -4903,46 +4543,6 @@
             ],
             "description": "Two-letter country code (ISO 3166-1 alpha-2)."
           },
-          "feature_settings": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/OrganizationFeatureSettingsUpdate"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "subscription_settings": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/OrganizationSubscriptionSettings"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "customer_email_settings": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/OrganizationCustomerEmailSettings"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "customer_portal_settings": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/OrganizationCustomerPortalSettings"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
           "default_presentment_currency": {
             "anyOf": [
               {
@@ -5433,16 +5033,6 @@
           "organization"
         ],
         "title": "SubType"
-      },
-      "SubscriptionProrationBehavior": {
-        "type": "string",
-        "enum": [
-          "invoice",
-          "prorate",
-          "next_period",
-          "reset"
-        ],
-        "title": "SubscriptionProrationBehavior"
       },
       "TaxBehaviorOption": {
         "type": "string",
