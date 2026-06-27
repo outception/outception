@@ -29,84 +29,18 @@ You now need to setup a route handler for the endpoint registered on Outception 
 receive, validate and parse webhooks before handling them according to your
 needs.
 
-### Using our SDKs
-
-Our TypeScript & Python SDKs come with a built-in helper function to easily
-validate and parse the webhook event - see full examples below.
-
-<CodeGroup>
-```typescript icon="square-js" JS (Express)
-import express, { Request, Response } from 'express'
-import { validateEvent, WebhookVerificationError } from '@polar-sh/sdk/webhooks'
-
-const app = express()
-
-app.post(
-  '/webhook',
-  express.raw({ type: 'application/json' }),
-  (req: Request, res: Response) => {
-    try {
-      const event = validateEvent(
-        req.body,
-        req.headers,
-        process.env['POLAR_WEBHOOK_SECRET'] ?? '',
-      )
-
-      // Process the event
-
-      res.status(202).send('')
-    } catch (error) {
-      if (error instanceof WebhookVerificationError) {
-        res.status(403).send('')
-      }
-      throw error
-    }
-  },
-)
-```
-
-```python Python (Flask)
-import os
-from flask import Flask, request
-from polar_sdk.webhooks import validate_event, WebhookVerificationError
-
-app = Flask(__name__)
-
-@app.route('/webhook', methods=['POST'])
-def webhook():
-    try:
-        event = validate_event(
-            body=request.data,
-            headers=request.headers,
-            secret=os.getenv('POLAR_WEBHOOK_SECRET', ''),
-        )
-
-        # Process the event
-
-        return "", 202
-    except WebhookVerificationError as e:
-        return "", 403
-```
-
-</CodeGroup>
-
-Both examples above expect an environment variable named `POLAR_WEBHOOK_SECRET`
-to be set to the secret you configured during the endpoint setup.
-
-### Custom validation
-
 We follow the [Standard Webhooks](https://www.standardwebhooks.com/)
 standard which offers [many libraries across languages](https://github.com/standard-webhooks/standard-webhooks/tree/main/libraries) to
 easily validate signatures. Or you can follow their
 [specification](https://github.com/standard-webhooks/standard-webhooks/blob/main/spec/standard-webhooks.md)
-in case you want to roll your own.
+in case you want to roll your own. Validate the signature against the secret you
+configured during the endpoint setup before parsing the payload.
 
 <Info>
   **Note: Secret needs to be base64 encoded**
 
 One common gotcha with the specification is that the webhook secret is expected to be
-base64 encoded. You don't have to do this with our SDK as it takes care of the
-implementation details with better developer ergonomics.
+base64 encoded.
 
 </Info>
 
