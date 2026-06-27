@@ -453,7 +453,7 @@ Create checkouts with dynamic pricing that override catalog prices:
 * Supports all price types (fixed, free, custom)
 * Full API and SDK support
 
-[Read more](/docs/features/checkout/session#ad-hoc-prices)
+Read more
 
 ## Churn Rate
 
@@ -704,7 +704,7 @@ We've launched Cost Insights - a powerful way to track and analyze costs associa
 
 Perfect for understanding unit economics and profitability of your usage-based offerings.
 
-[Read more](/features/usage-billing/cost-insights)
+Read more
 
 ## Webhook Management
 
@@ -815,7 +815,7 @@ Configure the interval count when creating or updating subscription products thr
 
 We've launched a new API endpoint to create subscriptions programmatically. This enables you to set up subscriptions directly without requiring customers to go through the checkout flow.
 
-[Read more](/api-reference/subscriptions/create)
+Read more
 
 ## Enhanced Email Confirmations
 
@@ -940,7 +940,7 @@ We've made several improvements to the Customer Portal to handle authentication 
 
   ## Launched Subscription Trials
 
-You can now offer [trial periods](/docs/features/trials) for new subscriptions! This highly requested feature allows you to let customers experience your product before their first payment is due. Trials can be configured in both the dashboard and API when creating or updating subscription products.
+You can now offer trial periods for new subscriptions! This highly requested feature allows you to let customers experience your product before their first payment is due. Trials can be configured in both the dashboard and API when creating or updating subscription products.
 
   ## Always display taxes line item in the checkout
 
@@ -968,7 +968,7 @@ License key activation now correctly checks the `expires_at` date, ensuring that
 
   ## Fix customer state for trialing subscriptions
 
-The [Customer State API](/docs/api-reference/customers/state) now properly handles customers with `trialing` subscriptions, so your integrations and dashboards always show an accurate subscription status.
+The Customer State API now properly handles customers with `trialing` subscriptions, so your integrations and dashboards always show an accurate subscription status.
 
 </Update>
 
@@ -1020,7 +1020,7 @@ Customer emails now appear to come from your organization (e.g., "YourOrg (via O
 
 We've added the ability to update the discount on a subscription. This allows you to add, remove, or change the discount applied to a subscription at any time.
 
-This feature is both available through the [API](/api-reference/subscriptions/update) and the dashboard.
+This feature is both available through the API and the dashboard.
 
 </Update>
 
@@ -1029,7 +1029,7 @@ This feature is both available through the [API](/api-reference/subscriptions/up
 
 We've added the ability to generate reverse invoices for payouts directly from the Payouts page. This feature allows you to easily create an invoice that details the sales made on your behalf, minus our fees.
 
-[Read more](/features/finance/payouts#reverse-invoices)
+Read more
 
 </Update>
 
@@ -1045,7 +1045,7 @@ We've added a new "I'm purchasing as a business" checkbox to the Checkout flow. 
 
 We've added support for `reference_id` and UTM parameters (`utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term`) as query parameters for Checkout Links. These parameters are automatically stored in the Checkout metadata, allowing you to track the source of your traffic and conversions more effectively.
 
-[Read more](/features/checkout/links#store-attribution-and-reference-metadata)
+Read more
 
 </Update>
 
@@ -1086,11 +1086,11 @@ Need to perform actions in Outception? Tell us about your use case [here](https:
 <Update label="2025-03-05">
   ## Customer State
 
-Maybe one of our neatest features to date! Customer State is a concept allowing you to query for the current state of a customer, including their **active subscriptions** and **granted [benefits](/features/benefits/introduction)**, in a single [API call](/api-reference/customers/state-external) or single [webhook event](/api-reference/webhooks/customer.state_changed).
+Maybe one of our neatest features to date! Customer State is a concept allowing you to query for the current state of a customer, including their **active subscriptions** and **granted benefits**, in a single API call or single webhook event.
 
-Combined with the [External ID](/features/customer-management#external-id) feature, you can get up-and-running in minutes.
+Combined with the External ID feature, you can get up-and-running in minutes.
 
-[Read more](/integrate/customer-state)
+Read more
 
 </Update>
 
@@ -1116,9 +1116,9 @@ We've added support for an `external_id` field on Customers. We believe this wil
 
 Previously, the recommended way to reconcile with your users was to use `metadata`. However, this was not always the most convenient method, especially if you needed to fetch a Customer from our API.
 
-With `external_id`, you can now fetch a Customer directly by their external ID through dedicated `GET`, `PATCH`, and `DELETE` endpoints. You don't even need to store Outception's internal ID in your system anymore! [Read more](/features/customer-management#external-id)
+With `external_id`, you can now fetch a Customer directly by their external ID through dedicated `GET`, `PATCH`, and `DELETE` endpoints. You don't even need to store Outception's internal ID in your system anymore! Read more
 
-Of course, you can also directly preset `external_customer_id` when creating a Checkout Session, and it will automatically be set on the newly created Customer after a successful checkout. [Read more](/features/checkout/session#external-customer-id)
+Of course, you can also directly preset `external_customer_id` when creating a Checkout Session, and it will automatically be set on the newly created Customer after a successful checkout. Read more
 
 </Update>
 
@@ -1142,7 +1142,7 @@ Thus, we introduce support for **multiple products** at checkout, allowing custo
   src="/assets/features/checkout/session/checkout_multiple_products.dark.png"
 />
 
-This is available right now using the [Checkout Session API](/features/checkout/session) and [Checkout Links](/features/checkout/links).
+This is available right now using the Checkout Session API and Checkout Links.
 
 ### Depreciations
 
@@ -1163,7 +1163,7 @@ This is available right now using the [Checkout Session API](/features/checkout/
 
 ### API changes
 
-- The `product_id` and `product_price_id` fields are deprecated in the [Checkout Session API](/api-reference/checkouts/create-session). You should now use the `products` field to specify the products you want to include in the checkout.
+- The `product_id` and `product_price_id` fields are deprecated in the Checkout Session API. You should now use the `products` field to specify the products you want to include in the checkout.
 - The `type` and `recurring_interval` fields on `ProductPrice` are deprecated. `recurring_interval` is now set directly on `Product`.
 
 </Update>

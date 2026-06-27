@@ -15,7 +15,7 @@ To be more consistent across our API, we've renamed `customer_external_id` field
 
 ## Benefit metadata in Customer State
 
-The customer state now includes the [benefit metadata](/api-reference/customers/state#response-benefit-metadata) in the `granted_benefits` list.
+The customer state now includes the benefit metadata in the `granted_benefits` list.
 
 </Update>
 
@@ -40,11 +40,11 @@ To ensure fair usage and maintain performance, we've introduced rate limits for 
 <Update label="2025-06-02">
   ## Order invoice generation and retrieval
 
-Until now, the invoice was generated automatically when the order was created, allowing you to call [`GET /v1/orders/{id}/invoice`](/api-reference/orders/get-invoice) and [`GET /v1/customer-portal/orders/{id}/invoice`](/api-reference/customer-portal/orders/get-invoice) endpoints without any prior action.
+Until now, the invoice was generated automatically when the order was created, allowing you to call `GET /v1/orders/{id}/invoice` and `GET /v1/customer-portal/orders/{id}/invoice` endpoints without any prior action.
 
-We now require you to explicitly generate the invoice by calling the [`POST /v1/orders/{id}/invoice`](/api-reference/orders/post-invoice) or [`POST /v1/customer-portal/orders/{id}/invoice`](/api-reference/customer-portal/orders/post-invoice) endpoints.
+We now require you to explicitly generate the invoice by calling the `POST /v1/orders/{id}/invoice` or `POST /v1/customer-portal/orders/{id}/invoice` endpoints.
 
-This change allows us to better handle the invoice generation process, and to allow the customer to change the billing details (name and address) before generating the invoice. This can be done through the [`PATCH /v1/orders/{id}`](/api-reference/orders/patch) or [`PATCH /v1/customer-portal/orders/{id}`](/api-reference/customer-portal/orders/patch) endpoints.
+This change allows us to better handle the invoice generation process, and to allow the customer to change the billing details (name and address) before generating the invoice. This can be done through the `PATCH /v1/orders/{id}` or `PATCH /v1/customer-portal/orders/{id}` endpoints.
 
 </Update>
 
@@ -52,7 +52,7 @@ This change allows us to better handle the invoice generation process, and to al
   ## Benefit metadata support and floating point numbers in metadata
 
 - <Icon icon="check" size={16} color="green" /> **Added**: Benefits now support
-  [metadata](/api-reference/benefits/create#body-metadata).
+  metadata.
 - <Icon icon="check" size={16} color="green" /> **Added**: Metadata values now
   support floating-point numbers. Before, only strings, integers and booleans
   were supported.
@@ -65,12 +65,12 @@ This change allows us to better handle the invoice generation process, and to al
 To be more consistent with the [Order schema changes](#2025-03-14), we've made some changes to the field related to amounts in the Checkout schema.
 
 - <Icon icon="check" size={16} color="green" /> **Added**:
-  [`checkout.discount_amount`](/api-reference/checkouts/get-session#response-discount-amount).
+  `checkout.discount_amount`.
 - <Icon icon="check" size={16} color="green" /> **Added**:
-  [`checkout.net_amount`](/api-reference/checkouts/get-session#response-net-amount).
+  `checkout.net_amount`.
 - <Icon icon="circle-exclamation" size={16} color="orange" /> **Deprecated**:
   `checkout.subtotal_amount`, use
-  [`checkout.net_amount`](/api-reference/checkouts/get-session#response-net-amount)
+  `checkout.net_amount`
   instead.
 
 </Update>
@@ -83,13 +83,13 @@ Until now, Outception only kept track of fully processed, **paid** orders. To he
 - <Icon icon="circle-exclamation" size={16} color="orange" /> When receiving
   `order.created` event, the order status might not be `paid`.
 - <Icon icon="check" size={16} color="green" /> **Added**:
-  [`order.updated`](/api-reference/webhooks/order.updated) webhook, sent when
+  `order.updated` webhook, sent when
   the order status changes or when it's partially or fully refunded.
 - <Icon icon="check" size={16} color="green" /> **Added**:
-  [`order.paid`](/api-reference/webhooks/order.paid) webhook, sent when the
+  `order.paid` webhook, sent when the
   order is fully processed and paid.
 - <Icon icon="check" size={16} color="green" /> **Added**:
-  [`Order.paid`](/api-reference/orders/get#response-paid) property to the order
+  `Order.paid` property to the order
   schema.
 
 <Info>
@@ -102,7 +102,7 @@ Until now, Outception only kept track of fully processed, **paid** orders. To he
 <Update label="2025-03-14">
   ## Subscriptions and Orders schema changes
 
-To prepare our next move to support usage-based billing, we've made some changes to the [`Subscription`](/api-reference/subscriptions/get) and [`Order`](/api-reference/orders/get) schemas. The main reason behind those is that we need to support multiple prices and items in a single subscription or order.
+To prepare our next move to support usage-based billing, we've made some changes to the `Subscription` and `Order` schemas. The main reason behind those is that we need to support multiple prices and items in a single subscription or order.
 
 - <Icon icon="circle-exclamation" size={16} color="orange" /> **Deprecated**:
   `Subscription.price_id` and `Subscription.price`. Use the

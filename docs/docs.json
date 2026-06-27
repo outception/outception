@@ -33,111 +33,8 @@
         "groups": [
           {
             "group": "Bootup",
-            "pages": ["introduction", "migrate"]
-          },
-          {
-            "group": "Features",
             "pages": [
-              "features/products",
-              {
-                "group": "Usage Based Billing",
-                "pages": [
-                  "features/usage-based-billing/introduction",
-                  "features/usage-based-billing/event-ingestion",
-                  {
-                    "group": "Ingestion Strategies",
-                    "pages": [
-                      "features/usage-based-billing/ingestion-strategies/ingestion-strategy",
-                      "features/usage-based-billing/ingestion-strategies/llm-strategy",
-                      "features/usage-based-billing/ingestion-strategies/s3-strategy",
-                      "features/usage-based-billing/ingestion-strategies/stream-strategy",
-                      "features/usage-based-billing/ingestion-strategies/delta-time-strategy"
-                    ]
-                  },
-                  "features/usage-based-billing/meters",
-                  "features/usage-based-billing/credits",
-                  "features/usage-based-billing/billing"
-                ]
-              },
-              {
-                "group": "Cost Insights",
-                "tag": "Beta",
-                "pages": [
-                  "features/cost-insights/introduction",
-                  "features/cost-insights/cost-events",
-                  "features/cost-insights/cost-traces"
-                ]
-              },
-              {
-                "group": "Benefits",
-                "pages": [
-                  "features/benefits/introduction",
-                  "features/benefits/credits",
-                  "features/benefits/custom",
-                  "features/benefits/discord-access",
-                  "features/benefits/feature-flags",
-                  "features/benefits/file-downloads",
-                  "features/benefits/github-access",
-                  "features/benefits/license-keys",
-                  "features/benefits/slack-shared-channel"
-                ]
-              },
-              {
-                "group": "Checkout",
-                "pages": [
-                  "features/checkout/embed",
-                  "features/checkout/embed-payment-method",
-                  "features/checkout/links",
-                  "features/checkout/session",
-                  "features/checkout/localization"
-                ]
-              },
-              "features/seat-based-pricing",
-              "features/custom-fields",
-              "features/discounts",
-              "features/tax-inclusive-pricing",
-              {
-                "group": "Subscriptions",
-                "pages": [
-                  "features/subscriptions/introduction",
-                  "features/subscriptions/manage",
-                  "features/subscriptions/proration",
-                  "features/subscriptions/failed-payments",
-                  "features/subscriptions/trials"
-                ]
-              },
-              "features/orders",
-              "features/refunds",
-              "features/analytics",
-              "features/customer-management",
-              "features/team-management",
-              {
-                "group": "Customer Portal",
-                "pages": [
-                  "features/customer-portal/introduction",
-                  "features/customer-portal/navigate-customers",
-                  "features/customer-portal/settings"
-                ]
-              },
-              {
-                "group": "Finance & Payouts",
-                "pages": [
-                  "features/finance/accounts",
-                  "features/finance/balance",
-                  "features/finance/payouts"
-                ]
-              },
-              {
-                "group": "Integrations",
-                "pages": [
-                  "features/integrations/affonso",
-                  "features/integrations/fernand",
-                  "features/integrations/framer",
-                  "features/integrations/paritydeals",
-                  "features/integrations/raycast",
-                  "features/integrations/zapier"
-                ]
-              }
+              "introduction"
             ]
           },
           {
@@ -145,7 +42,6 @@
             "pages": [
               "integrate/authentication",
               "integrate/sandbox",
-              "integrate/customer-state",
               "integrate/mcp",
               {
                 "group": "SDKs",
@@ -176,16 +72,11 @@
                 ]
               },
               {
-                "group": "Framework Guides",
-                "pages": ["guides/encore", "guides/laravel", "guides/nextjs"]
-              },
-              {
                 "group": "Webhooks",
                 "pages": [
                   "integrate/webhooks/endpoints",
                   "integrate/webhooks/locally",
-                  "integrate/webhooks/delivery",
-                  "integrate/webhooks/events"
+                  "integrate/webhooks/delivery"
                 ]
               },
               {
@@ -197,17 +88,6 @@
                 ]
               }
             ]
-          },
-          {
-            "group": "Merchant of Record (MoR)",
-            "pages": [
-              "merchant-of-record/introduction",
-              "merchant-of-record/fees",
-              "merchant-of-record/supported-countries",
-              "merchant-of-record/acceptable-use",
-              "merchant-of-record/account-reviews",
-              "migrate-away"
-            ]
           }
         ]
       },
@@ -217,180 +97,13 @@
         "groups": [
           {
             "group": "General",
-            "pages": ["api-reference/introduction"]
+            "pages": [
+              "api-reference/introduction"
+            ]
           },
           {
             "group": "Core API",
             "pages": [
-              {
-                "group": "Checkout",
-                "pages": [
-                  "api-reference/checkouts/create-session",
-                  "api-reference/checkouts/get-session",
-                  "api-reference/checkouts/list-sessions",
-                  "api-reference/checkouts/update-session",
-                  "api-reference/checkouts/get-session-from-client",
-                  "api-reference/checkouts/update-session-from-client",
-                  "api-reference/checkouts/confirm-session-from-client"
-                ]
-              },
-              {
-                "group": "Checkout Links",
-                "pages": [
-                  "api-reference/checkout-links/create",
-                  "api-reference/checkout-links/get",
-                  "api-reference/checkout-links/list",
-                  "api-reference/checkout-links/update",
-                  "api-reference/checkout-links/delete"
-                ]
-              },
-              {
-                "group": "Custom Checkout Fields",
-                "pages": [
-                  "api-reference/custom-fields/create",
-                  "api-reference/custom-fields/get",
-                  "api-reference/custom-fields/list",
-                  "api-reference/custom-fields/update",
-                  "api-reference/custom-fields/delete"
-                ]
-              },
-              {
-                "group": "Customers",
-                "pages": [
-                  "api-reference/customers/state",
-                  "api-reference/customers/state-external",
-                  "api-reference/customers/list",
-                  "api-reference/customers/create",
-                  "api-reference/customers/get",
-                  "api-reference/customers/update",
-                  "api-reference/customers/delete",
-                  "api-reference/customers/get-external",
-                  "api-reference/customers/update-external",
-                  "api-reference/customers/delete-external",
-                  "api-reference/customers/list-payment-methods",
-                  "api-reference/customers/list-payment-methods-external"
-                ]
-              },
-              {
-                "group": "Subscriptions",
-                "pages": [
-                  "api-reference/subscriptions/get",
-                  "api-reference/subscriptions/list",
-                  "api-reference/subscriptions/create",
-                  "api-reference/subscriptions/update",
-                  "api-reference/subscriptions/revoke"
-                ]
-              },
-              {
-                "group": "Orders",
-                "pages": [
-                  "api-reference/orders/get",
-                  "api-reference/orders/patch",
-                  "api-reference/orders/list",
-                  "api-reference/orders/post-invoice",
-                  "api-reference/orders/get-invoice",
-                  "api-reference/orders/get-receipt"
-                ]
-              },
-              {
-                "group": "Discounts",
-                "pages": [
-                  "api-reference/discounts/get",
-                  "api-reference/discounts/list",
-                  "api-reference/discounts/create",
-                  "api-reference/discounts/update",
-                  "api-reference/discounts/delete"
-                ]
-              },
-              {
-                "group": "Refunds",
-                "pages": [
-                  "api-reference/refunds/create",
-                  "api-reference/refunds/list"
-                ]
-              },
-              {
-                "group": "Products",
-                "pages": [
-                  "api-reference/products/get",
-                  "api-reference/products/list",
-                  "api-reference/products/create",
-                  "api-reference/products/update",
-                  "api-reference/products/update-benefits"
-                ]
-              },
-              {
-                "group": "Events",
-                "pages": [
-                  "api-reference/events/ingest",
-                  "api-reference/events/get",
-                  "api-reference/events/list"
-                ]
-              },
-              {
-                "group": "Meters",
-                "pages": [
-                  "api-reference/meters/create",
-                  "api-reference/meters/get",
-                  "api-reference/meters/list",
-                  "api-reference/meters/update",
-                  "api-reference/meters/get-quantities"
-                ]
-              },
-              {
-                "group": "Benefits",
-                "pages": [
-                  "api-reference/benefits/create",
-                  "api-reference/benefits/get",
-                  "api-reference/benefits/list",
-                  "api-reference/benefits/list-grants",
-                  "api-reference/benefits/update",
-                  "api-reference/benefits/delete"
-                ]
-              },
-              {
-                "group": "Customer Meters",
-                "pages": [
-                  "api-reference/customer-meters/get",
-                  "api-reference/customer-meters/list"
-                ]
-              },
-              {
-                "group": "License Keys",
-                "pages": [
-                  "api-reference/license-keys/get",
-                  "api-reference/license-keys/list",
-                  "api-reference/license-keys/update",
-                  "api-reference/license-keys/get-activation",
-                  "api-reference/license-keys/validate",
-                  "api-reference/license-keys/activate",
-                  "api-reference/license-keys/deactivate"
-                ]
-              },
-              {
-                "group": "Members",
-                "pages": [
-                  "api-reference/members/list",
-                  "api-reference/members/create",
-                  "api-reference/members/get",
-                  "api-reference/members/update",
-                  "api-reference/members/delete",
-                  "api-reference/members/get-external",
-                  "api-reference/members/update-external",
-                  "api-reference/members/delete-external"
-                ]
-              },
-              {
-                "group": "Customer Seats",
-                "pages": [
-                  "api-reference/customer-seats/assign",
-                  "api-reference/customer-seats/list",
-                  "api-reference/customer-seats/revoke",
-                  "api-reference/customer-seats/resend",
-                  "api-reference/customer-seats/get-claim-info",
-                  "api-reference/customer-seats/claim"
-                ]
-              },
               {
                 "group": "Files",
                 "pages": [
@@ -420,159 +133,16 @@
             ]
           },
           {
-            "group": "Customer Portal API",
-            "pages": [
-              "api-reference/customer-portal/get-customer",
-              "api-reference/customer-portal/update-customer",
-              "api-reference/customer-portal/get-organization",
-              {
-                "group": "Sessions",
-                "pages": ["api-reference/customer-portal/sessions/create"]
-              },
-              {
-                "group": "Subscriptions",
-                "pages": [
-                  "api-reference/customer-portal/subscriptions/get",
-                  "api-reference/customer-portal/subscriptions/list",
-                  "api-reference/customer-portal/subscriptions/update",
-                  "api-reference/customer-portal/subscriptions/cancel"
-                ]
-              },
-              {
-                "group": "Orders",
-                "pages": [
-                  "api-reference/customer-portal/orders/get",
-                  "api-reference/customer-portal/orders/patch",
-                  "api-reference/customer-portal/orders/list",
-                  "api-reference/customer-portal/orders/post-invoice",
-                  "api-reference/customer-portal/orders/get-invoice",
-                  "api-reference/customer-portal/orders/get-receipt"
-                ]
-              },
-              {
-                "group": "License Keys",
-                "pages": [
-                  "api-reference/customer-portal/license-keys/validate",
-                  "api-reference/customer-portal/license-keys/activate",
-                  "api-reference/customer-portal/license-keys/deactivate",
-                  "api-reference/customer-portal/license-keys/get",
-                  "api-reference/customer-portal/license-keys/list"
-                ]
-              },
-              {
-                "group": "File Downloads",
-                "pages": [
-                  "api-reference/customer-portal/downloadables/get",
-                  "api-reference/customer-portal/downloadables/list"
-                ]
-              },
-              {
-                "group": "Seats",
-                "pages": [
-                  "api-reference/customer-portal/seats/list",
-                  "api-reference/customer-portal/seats/assign",
-                  "api-reference/customer-portal/seats/revoke",
-                  "api-reference/customer-portal/seats/resend",
-                  "api-reference/customer-portal/seats/list-subscriptions"
-                ]
-              },
-              {
-                "group": "Payment Methods",
-                "pages": [
-                  "api-reference/customer-portal/payment-methods/list",
-                  "api-reference/customer-portal/payment-methods/delete"
-                ]
-              }
-            ]
-          },
-          {
             "group": "Webhook Events",
             "pages": [
-              {
-                "group": "Customer Events",
-                "pages": [
-                  "api-reference/webhooks/customer.state_changed",
-                  "api-reference/webhooks/customer.created",
-                  "api-reference/webhooks/customer.updated",
-                  "api-reference/webhooks/customer.deleted"
-                ]
-              },
-              {
-                "group": "Billing Events",
-                "pages": [
-                  {
-                    "group": "Checkout",
-                    "pages": [
-                      "api-reference/webhooks/checkout.created",
-                      "api-reference/webhooks/checkout.updated"
-                    ]
-                  },
-                  {
-                    "group": "Subscriptions",
-                    "pages": [
-                      "api-reference/webhooks/subscription.created",
-                      "api-reference/webhooks/subscription.active",
-                      "api-reference/webhooks/subscription.updated",
-                      "api-reference/webhooks/subscription.canceled",
-                      "api-reference/webhooks/subscription.uncanceled",
-                      "api-reference/webhooks/subscription.revoked"
-                    ]
-                  },
-                  {
-                    "group": "Orders",
-                    "pages": [
-                      "api-reference/webhooks/order.created",
-                      "api-reference/webhooks/order.paid",
-                      "api-reference/webhooks/order.updated",
-                      "api-reference/webhooks/order.refunded"
-                    ]
-                  },
-                  {
-                    "group": "Customer Seats",
-                    "pages": [
-                      "api-reference/webhooks/customer_seat.assigned",
-                      "api-reference/webhooks/customer_seat.claimed",
-                      "api-reference/webhooks/customer_seat.revoked"
-                    ]
-                  },
-                  {
-                    "group": "Refunds",
-                    "pages": [
-                      "api-reference/webhooks/refund.created",
-                      "api-reference/webhooks/refund.updated"
-                    ]
-                  },
-                  {
-                    "group": "Benefit Grants",
-                    "pages": [
-                      "api-reference/webhooks/benefit_grant.created",
-                      "api-reference/webhooks/benefit_grant.cycled",
-                      "api-reference/webhooks/benefit_grant.updated",
-                      "api-reference/webhooks/benefit_grant.revoked"
-                    ]
-                  }
-                ]
-              },
               {
                 "group": "Organization Events",
                 "pages": [
                   {
-                    "group": "Benefits",
-                    "pages": [
-                      "api-reference/webhooks/benefit.created",
-                      "api-reference/webhooks/benefit.updated"
-                    ]
-                  },
-                  {
-                    "group": "Products",
-                    "pages": [
-                      "api-reference/webhooks/product.created",
-                      "api-reference/webhooks/product.updated"
-                    ]
-                  },
-                  {
                     "group": "Organization",
-                    "pages": ["api-reference/webhooks/organization.updated"]
+                    "pages": [
+                      "api-reference/webhooks/organization.updated"
+                    ]
                   }
                 ]
               }
@@ -608,12 +178,18 @@
       {
         "tab": "Changelog",
         "icon": "signal-stream",
-        "pages": ["changelog/recent", "changelog/api"]
+        "pages": [
+          "changelog/recent",
+          "changelog/api"
+        ]
       },
       {
         "tab": "Support",
         "icon": "square-question",
-        "pages": ["support", "security"]
+        "pages": [
+          "support",
+          "security"
+        ]
       }
     ]
   },
@@ -640,7 +216,12 @@
     }
   },
   "contextual": {
-    "options": ["copy", "view", "chatgpt", "claude"]
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude"
+    ]
   },
   "footer": {
     "socials": {
