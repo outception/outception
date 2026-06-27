@@ -16,19 +16,11 @@ type Surface =
   | 'website'
   | 'docs'
   | 'dashboard'
-  | 'storefront'
   // For rare global(ish) events, e.g login, signup...
   // We can use properties to distinguish flywheel etc
   | 'global'
 
-type Category =
-  | 'benefits'
-  | 'checkout'
-  | 'subscriptions'
-  | 'user'
-  | 'organizations'
-  | 'onboarding'
-  | 'issues'
+type Category = 'user' | 'organizations' | 'onboarding'
 
 type Noun = string
 

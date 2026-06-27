@@ -20,38 +20,37 @@ describe('useImpressionEvent', () => {
   it('fires once when `enabled` is omitted (defaults to true)', () => {
     renderHook(() =>
       useImpressionEvent({
-        event: 'dashboard:subscriptions:plan_upsell:view',
+        event: 'dashboard:onboarding:hint:view',
         build: () => ({ ok: true }),
       }),
     )
     expect(captureMock).toHaveBeenCalledTimes(1)
-    expect(captureMock).toHaveBeenCalledWith(
-      'dashboard:subscriptions:plan_upsell:view',
-      { ok: true },
-    )
+    expect(captureMock).toHaveBeenCalledWith('dashboard:onboarding:hint:view', {
+      ok: true,
+    })
   })
 
   it('fires the event once when enabled is true on mount', () => {
     const build = vi.fn(() => ({ org_id: 'org_1', value: 1 }))
     renderHook(() =>
       useImpressionEvent({
-        event: 'dashboard:subscriptions:plan_upsell:view',
+        event: 'dashboard:onboarding:hint:view',
         enabled: true,
         build,
       }),
     )
     expect(captureMock).toHaveBeenCalledTimes(1)
-    expect(captureMock).toHaveBeenCalledWith(
-      'dashboard:subscriptions:plan_upsell:view',
-      { org_id: 'org_1', value: 1 },
-    )
+    expect(captureMock).toHaveBeenCalledWith('dashboard:onboarding:hint:view', {
+      org_id: 'org_1',
+      value: 1,
+    })
     expect(build).toHaveBeenCalledTimes(1)
   })
 
   it('does not fire when enabled is false', () => {
     renderHook(() =>
       useImpressionEvent({
-        event: 'dashboard:subscriptions:plan_upsell:view',
+        event: 'dashboard:onboarding:hint:view',
         enabled: false,
         build: () => ({}),
       }),
@@ -63,7 +62,7 @@ describe('useImpressionEvent', () => {
     const { rerender } = renderHook(
       ({ enabled }: { enabled: boolean }) =>
         useImpressionEvent({
-          event: 'dashboard:subscriptions:plan_upsell:view',
+          event: 'dashboard:onboarding:hint:view',
           enabled,
           build: () => ({ tick: Math.random() }),
         }),
@@ -78,7 +77,7 @@ describe('useImpressionEvent', () => {
     const { rerender } = renderHook(
       ({ enabled }: { enabled: boolean }) =>
         useImpressionEvent({
-          event: 'dashboard:subscriptions:plan_upsell:view',
+          event: 'dashboard:onboarding:hint:view',
           enabled,
           build: () => ({ ok: true }),
         }),
@@ -98,7 +97,7 @@ describe('useImpressionEvent', () => {
   it('does not fire on remount until enabled becomes true', () => {
     const { unmount } = renderHook(() =>
       useImpressionEvent({
-        event: 'dashboard:subscriptions:plan_upsell:view',
+        event: 'dashboard:onboarding:hint:view',
         enabled: false,
         build: () => ({}),
       }),
@@ -108,7 +107,7 @@ describe('useImpressionEvent', () => {
 
     renderHook(() =>
       useImpressionEvent({
-        event: 'dashboard:subscriptions:plan_upsell:view',
+        event: 'dashboard:onboarding:hint:view',
         enabled: true,
         build: () => ({ ok: true }),
       }),
