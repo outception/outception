@@ -1,5 +1,4 @@
 import re
-from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, Any, Literal
 from urllib.parse import urlparse
@@ -221,13 +220,13 @@ class OrganizationSocialLink(Schema):
 
 class OrganizationBase(IDSchema, TimestampedSchema):
     name: str = Field(
-        description="Organization name shown in checkout, customer portal, emails etc.",
+        description="Organization name shown in promotions, emails, etc.",
     )
     slug: str = Field(
-        description="Unique organization slug in checkout, customer portal and credit card statements.",
+        description="Unique organization slug used in promotions and credit card statements.",
     )
     avatar_url: str | None = Field(
-        description="Avatar URL shown in checkout, customer portal, emails etc."
+        description="Avatar URL shown in promotions, emails, etc."
     )
     # Deprecated attributes
     bio: SkipJsonSchema[str | None] = Field(..., deprecated="")
@@ -303,12 +302,12 @@ class Organization(OrganizationBase):
     default_presentment_currency: str = Field(
         description=(
             "Default presentment currency. "
-            "Used as fallback in checkout and customer portal, "
+            "Used as a fallback, "
             "if the customer's local currency is not available."
         )
     )
     default_tax_behavior: TaxBehaviorOption = Field(
-        description="Default tax behavior applied on products."
+        description="Default tax behavior applied on promotions."
     )
     country: CountryAlpha2 | None = Field(
         None, description="Two-letter country code (ISO 3166-1 alpha-2)."
@@ -407,7 +406,7 @@ class OrganizationCreate(Schema):
     )
     default_tax_behavior: TaxBehaviorOption = Field(
         default=TaxBehaviorOption.location,
-        description="Default tax behavior applied on products.",
+        description="Default tax behavior applied on promotions.",
     )
 
 
@@ -434,244 +433,5 @@ class OrganizationUpdate(Schema):
         None, description="Default presentment currency for the organization"
     )
     default_tax_behavior: TaxBehaviorOption | None = Field(
-        None, description="Default tax behavior applied on products."
-    )
-
-
-class OrganizationReviewSubmissionDetails(Schema):
-    product_description: Annotated[
-        str, StringConstraints(strip_whitespace=True, min_length=30)
-    ]
-
-
-def _empty_review_submission_details_to_dict(value: Any) -> Any:
-    if value is None:
-        return {}
-    return value
-
-
-class OrganizationReviewSubmission(Schema):
-    name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
-    website: Annotated[str, StringConstraints(min_length=1)]
-    email: EmailStrDNS
-    socials: list[OrganizationSocialLink] = Field(min_length=1)
-    details: Annotated[
-        OrganizationReviewSubmissionDetails,
-        BeforeValidator(_empty_review_submission_details_to_dict),
-    ]
-
-
-class OrganizationReviewSubmissionBody(Schema):
-    body: OrganizationReviewSubmission
-
-
-class OrganizationPaymentStatus(Schema):
-    payment_ready: bool = Field(
-        description="Whether the organization is ready to accept payments"
-    )
-    organization_status: OrganizationStatus = Field(
-        description="Current organization status"
-    )
-
-
-class OrganizationAppealRequest(Schema):
-    reason: Annotated[
-        str,
-        StringConstraints(min_length=50, max_length=5000),
-        Field(
-            description="Detailed explanation of why this organization should be approved. Minimum 50 characters."
-        ),
-    ]
-
-
-class OrganizationAppealResponse(Schema):
-    success: bool = Field(description="Whether the appeal was successfully submitted")
-    message: str = Field(description="Success or error message")
-    appeal_submitted_at: datetime = Field(description="When the appeal was submitted")
-
-
-class OrganizationReviewStatus(Schema):
-    verdict: Literal["PASS", "FAIL", "UNCERTAIN"] | None = Field(
-        default=None, description="AI validation verdict"
-    )
-    reason: str | None = Field(default=None, description="Reason for the verdict")
-    appeal_submitted_at: datetime | None = Field(
-        default=None, description="When appeal was submitted"
-    )
-    appeal_reason: str | None = Field(default=None, description="Reason for the appeal")
-    appeal_decision: str | None = Field(
-        default=None, description="Decision on the appeal (approved/rejected)"
-    )
-    appeal_reviewed_at: datetime | None = Field(
-        default=None, description="When appeal was reviewed"
-    )
-
-
-class OrganizationReviewCheckKey(StrEnum):
-    """Stable identifiers for each check. Adding a new key is a coordinated FE+BE change."""
-
-    IDENTITY_EMAIL = "identity.email"
-    IDENTITY_SOCIAL_LINKS = "identity.social_links"
-    IDENTITY_STRIPE_VERIFICATION = "identity.stripe_identity_verification"
-    PRODUCT_DESCRIPTION = "product_description"
-    PRODUCT_URL = "product_url"
-    PAYOUT_ACCOUNT = "payout_account"
-    PRODUCT_CONFIGURATION = "product_configuration"
-    SETUP_READINESS = "setup_readiness"
-
-
-class OrganizationReviewCheckStatus(StrEnum):
-    PASSED = "passed"
-    WARNING = "warning"  # attention flag; does NOT block submission
-    FAILED = "failed"
-    PENDING = "pending"
-
-
-class OrganizationReviewCheckReason(StrEnum):
-    """Reasons explaining a check's status. Scoped reasons are namespaced
-    with the prefix of the check key they apply to."""
-
-    # Universal
-    NOT_STARTED = "not_started"
-    IN_PROGRESS = "in_progress"
-    EXTERNAL_PENDING = "external_pending"
-
-    # Identity
-    IDENTITY_REJECTED = "identity.rejected"
-    IDENTITY_PERSONAL_EMAIL = "identity.personal_email"
-    IDENTITY_DOMAIN_MISMATCH = "identity.domain_mismatch"
-
-    # Product URL
-    PRODUCT_URL_UNREACHABLE = "product_url.unreachable"
-
-    # Payout account
-    PAYOUT_ACCOUNT_REQUIREMENTS_DUE = "payout_account.requirements_due"
-    PAYOUT_ACCOUNT_PAYOUTS_DISABLED = "payout_account.payouts_disabled"
-
-    # Setup readiness
-    SETUP_READINESS_WEBHOOK_MISSING = "setup_readiness.webhook_missing"
-    SETUP_READINESS_CHECKOUT_LINK_NOT_FULFILLABLE = (
-        "setup_readiness.checkout_link_not_fulfillable"
-    )
-
-
-class OrganizationReviewSubCheckKey(StrEnum):
-    """Stable identifiers for nested sub-checks inside a parent check."""
-
-    SETUP_READINESS_CHECKOUT_LINK = "setup_readiness.checkout_link"
-    SETUP_READINESS_ACCESS_TOKEN = "setup_readiness.access_token"
-    SETUP_READINESS_WEBHOOK = "setup_readiness.webhook"
-
-
-class OrganizationReviewSubCheck(Schema):
-    """A nested sub-item that contributes to a parent check's rolled-up status.
-
-    Sub-checks expose the per-component breakdown for aggregate checks (e.g.
-    `setup_readiness`) so the frontend doesn't have to re-derive which path
-    is configured. The parent's `status` is the source of truth for gating;
-    reasons explaining a sub-item live on the sub-check itself.
-    """
-
-    key: OrganizationReviewSubCheckKey
-    status: OrganizationReviewCheckStatus
-    reasons: list[OrganizationReviewCheckReason] = Field(
-        default_factory=list,
-        description="Reasons for the sub-check's current status. Empty when `passed`.",
-    )
-    value: str | None = Field(
-        default=None,
-        description="Optional contextual value associated with the sub-check.",
-    )
-
-
-class OrganizationReviewCheck(Schema):
-    """A single item in the self-review checklist."""
-
-    key: OrganizationReviewCheckKey
-    status: OrganizationReviewCheckStatus
-    reasons: list[OrganizationReviewCheckReason] = Field(
-        default_factory=list,
-        description="Reasons for the current status. Empty when `passed`.",
-    )
-    value: str | None = Field(
-        default=None,
-        description=(
-            "Optional contextual value associated with the check, e.g. the "
-            "product URL for the `product_url` check."
-        ),
-    )
-    sub_checks: list[OrganizationReviewSubCheck] = Field(
-        default_factory=list,
-        description=(
-            "Per-component breakdown, populated only for aggregate checks "
-            "(currently `setup_readiness`). The parent `status` is the "
-            "source of truth for gating."
-        ),
-    )
-
-
-class OrganizationReviewAppeal(Schema):
-    submitted_at: datetime
-    reviewed_at: datetime | None = None
-    decision: str | None = None
-
-
-OrganizationReviewVerdict = Literal["pass", "fail"]
-
-
-class OrganizationReviewState(Schema):
-    """Merchant self-review checklist. Frozen once `submitted_at` is set."""
-
-    can_submit: bool = Field(
-        description=(
-            "True when `submitted_at` is null AND no preliminary check is "
-            "`failed` or `pending`. Warnings do not block submission."
-        )
-    )
-    submitted_at: datetime | None = None
-    verdict: OrganizationReviewVerdict | None = None
-    appeal: OrganizationReviewAppeal | None = None
-    preliminary_steps: list[OrganizationReviewCheck] = Field(default_factory=list)
-
-
-class OrganizationDeletionBlockedReason(StrEnum):
-    """Reasons why an organization cannot be immediately deleted."""
-
-    HAS_ORDERS = "has_orders"
-    HAS_ACTIVE_SUBSCRIPTIONS = "has_active_subscriptions"
-    STRIPE_ACCOUNT_DELETION_FAILED = "stripe_account_deletion_failed"
-
-
-class OrganizationDeletionResponse(Schema):
-    """Response for organization deletion request."""
-
-    deleted: bool = Field(
-        description="Whether the organization was immediately deleted"
-    )
-    requires_support: bool = Field(
-        description="Whether a support ticket was created for manual handling"
-    )
-    blocked_reasons: list[OrganizationDeletionBlockedReason] = Field(
-        default_factory=list,
-        description="Reasons why immediate deletion is blocked",
-    )
-
-
-class OrganizationValidateWebsiteRequest(Schema):
-    url: HttpUrl = Field(description="The URL to validate.")
-
-
-class OrganizationValidateWebsiteResponse(Schema):
-    reachable: bool = Field(description="Whether the URL is reachable.")
-    status: int | None = Field(
-        default=None, description="HTTP status code returned by the URL."
-    )
-    error: str | None = Field(
-        default=None, description="Error message if the URL is not reachable."
-    )
-
-
-class OrganizationPayoutAccountSet(Schema):
-    payout_account_id: UUID4 = Field(
-        description="ID of the payout account to set on the organization."
+        None, description="Default tax behavior applied on promotions."
     )
