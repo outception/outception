@@ -40,7 +40,6 @@ async def create_organization(
         name=name,
         slug=name,
         status=status,
-        customer_invoice_prefix=name.upper(),
         avatar_url="https://avatars.githubusercontent.com/u/105373340?s=200&v=4",
         **kwargs,
     )

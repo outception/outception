@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 from uuid import UUID
 
-from sqlalchemy import Select, select, update
+from sqlalchemy import Select, select
 
 from outception.authz.types import AccessibleOrganizationID
 from outception.kit.repository import (
@@ -115,26 +115,6 @@ class OrganizationRepository(
         )
         result = await self.session.execute(statement)
         return result.unique().scalar_one_or_none()
-
-    async def increment_customer_invoice_next_number(
-        self, organization_id: UUID
-    ) -> int:
-        """
-        Atomically increment customer_invoice_next_number and return the value
-        before increment.
-        """
-        stmt = (
-            update(Organization)
-            .where(Organization.id == organization_id)
-            .values(
-                customer_invoice_next_number=Organization.customer_invoice_next_number
-                + 1
-            )
-            .returning(Organization.customer_invoice_next_number)
-        )
-        result = await self.session.execute(stmt)
-        next_number = result.scalar_one()
-        return next_number - 1
 
     async def get_all_by_owner_user(self, user_id: UUID) -> Sequence[Organization]:
         statement = (

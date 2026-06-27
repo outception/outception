@@ -373,7 +373,6 @@ class OrganizationPublicBase(OrganizationBase):
         SkipJsonSchema[LegacyOrganizationStatus],
         BeforeValidator(LegacyOrganizationStatus.from_status),
     ]
-    details_submitted_at: SkipJsonSchema[datetime | None]
 
     feature_settings: SkipJsonSchema[OrganizationFeatureSettings | None]
 
@@ -385,9 +384,6 @@ class Organization(OrganizationBase):
         description="Links to social profiles.",
     )
     status: OrganizationStatus = Field(description="Current organization status")
-    details_submitted_at: datetime | None = Field(
-        description="When the business details were submitted for review.",
-    )
 
     default_presentment_currency: str = Field(
         description=(

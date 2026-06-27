@@ -6,7 +6,6 @@ from urllib.parse import urlparse
 from sqlalchemy import (
     TIMESTAMP,
     ColumnElement,
-    Integer,
     String,
     UniqueConstraint,
     and_,
@@ -28,13 +27,6 @@ if TYPE_CHECKING:
     from outception.email.sender import EmailFromReply
 
 
-class PayoutAccountNotReady(OutceptionError):
-    def __init__(self, organization: "Organization") -> None:
-        self.organization = organization
-        message = "Your payout account is not ready yet. Complete the setup to receive payouts."
-        super().__init__(message, 403)
-
-
 class OrganizationSocials(TypedDict):
     platform: str
     url: str
@@ -51,15 +43,6 @@ class OrganizationDetails(TypedDict, total=False):
     switching: bool
     switching_from: str | None
     previous_annual_revenue: int
-
-
-class OrganizationCheckoutSettings(TypedDict):
-    require_3ds: bool
-
-
-_default_checkout_settings: OrganizationCheckoutSettings = {
-    "require_3ds": True,
-}
 
 
 class OrganizationIndividualLegalEntity(TypedDict):
@@ -231,14 +214,6 @@ class Organization(RateLimitGroupMixin, RecordModel):
     details: Mapped[OrganizationDetails] = mapped_column(
         JSONB, nullable=False, default=dict
     )
-    details_submitted_at: Mapped[datetime | None] = mapped_column(
-        TIMESTAMP(timezone=True)
-    )
-
-    customer_invoice_prefix: Mapped[str] = mapped_column(String, nullable=False)
-    customer_invoice_next_number: Mapped[int] = mapped_column(
-        Integer, nullable=False, default=1
-    )
 
     status: Mapped[OrganizationStatus] = mapped_column(
         StringEnum(OrganizationStatus),
@@ -261,10 +236,6 @@ class Organization(RateLimitGroupMixin, RecordModel):
 
     profile_settings: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, default=dict
-    )
-
-    checkout_settings: Mapped[OrganizationCheckoutSettings] = mapped_column(
-        JSONB, nullable=False, default=_default_checkout_settings
     )
 
     legal_entity: Mapped[OrganizationLegalEntity | None] = mapped_column(
@@ -391,10 +362,6 @@ class Organization(RateLimitGroupMixin, RecordModel):
     @property
     def account_url(self) -> str:
         return f"{settings.FRONTEND_BASE_URL}/dashboard/{self.slug}/finance/account"
-
-    @property
-    def checkout_require_3ds(self) -> bool:
-        return self.checkout_settings.get("require_3ds", False)
 
     def is_blocked(self) -> bool:
         return self.status == OrganizationStatus.BLOCKED
