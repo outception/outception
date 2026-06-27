@@ -13,8 +13,8 @@ This skill declares a new Terraform Cloud variable so a value can be set via the
 
 The skill takes two positional args from the invocation: `/render-env <name> <description>`.
 
-- `${name}` — the Terraform variable name in **snake_case**. Used verbatim as the TFC variable `key`, the `tfe_variable` resource suffix, and the `variable` block name. Example: `stripe_climate_api_key`.
-- `${description}` — a short human-readable description. Used in the `description` attribute and (with the env appended) in the per-env tfe_variable description. Example: `Stripe Climate API key`.
+- `${name}` — the Terraform variable name in **snake_case**. Used verbatim as the TFC variable `key`, the `tfe_variable` resource suffix, and the `variable` block name. Example: `logo_dev_publishable_key`.
+- `${description}` — a short human-readable description. Used in the `description` attribute and (with the env appended) in the per-env tfe_variable description. Example: `Logo.dev publishable key`.
 
 If either arg is missing, ask the user before doing anything. Also ask:
 
@@ -84,7 +84,7 @@ Report to the user:
   1. **Add a field to the relevant config/secrets object in `terraform/modules/render_service/variables.tf`.** Pick by purpose:
      - `backend_config` — non-sensitive backend env vars (URLs, flags, log level, tax processor list).
      - `backend_secrets` — sensitive backend env vars (API keys, tokens, signing secrets).
-     - Themed `render_env_group` blocks (`stripe`, `github`, `logfire`, `tinybird`, `aws_s3`, `apple`, `prometheus`, `slo_report`, `google`, `openai`, etc.) each have their own object — use the matching one when the var belongs to a clear bucket.
+     - Themed `render_env_group` blocks (`github`, `logfire`, `tinybird`, `aws_s3`, `apple`, `prometheus`, `slo_report`, `google`, `openai`, etc.) each have their own object — use the matching one when the var belongs to a clear bucket.
      - Use `optional(string, "<default>")` if you want a module-level default; otherwise plain `string`.
   2. **Wire the field into the matching `render_env_group` block in `terraform/modules/render_service/main.tf`** as `OUTCEPTION_${NAME_UPPER} = { value = var.<object>.<field> }`. Two backend groups exist:
      - `render_env_group "backend"` — applied to **every** environment.
@@ -97,7 +97,7 @@ Report to the user:
 
 Choose the right shape up-front:
 
-- **Hardcoded in `render.tf`** (e.g. `tax_processors = "[\"stripe\"]"`): use when the value is static and you're fine editing + PR'ing terraform to change it.
+- **Hardcoded in `render.tf`** (e.g. `log_level = "INFO"`): use when the value is static and you're fine editing + PR'ing terraform to change it.
 - **`tfe_variable` via this skill**: use when the value is a secret or needs to be editable from the TFC UI without a code deploy. Don't hardcode a `"{}"` / `""` default in `render.tf` for something that's supposed to be UI-tunable — it defeats the point.
 
 ## Don't
