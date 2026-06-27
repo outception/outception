@@ -38,8 +38,6 @@ The parameters are the one described in the [OpenID Connect specification](https
 
 If you redirect the user to this URL, they'll see a page asking them to grant access to their data, corresponding to the scopes you asked for. By default, Outception generates user-scoped access tokens, so the token will be tied to the user granting access.
 
-<img src="/assets/integrate/oauth2/connect.png" />
-
 If they allow it, they'll be redirected to your `redirect_uri` with a `code` parameter in the query string. This code is a one-time code that you can exchange for an access token.
 
 To get an organization-scoped token instead, you can add `sub_type=organization` to the authorization URL. The user will then be prompted to select one of the organizations they have management permissions for:

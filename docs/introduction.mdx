@@ -1,399 +1,81 @@
 ---
-title: "Outception: Turn Your Software into a Business"
+title: "Outception"
 sidebarTitle: "Introduction"
-description: "The next generation unicorns will be built by smaller teams. Outception makes that dream possible."
+description: "A live news wall with pay-to-promote. A public feed from 250+ sources, plus paid in-feed promotions."
 ---
-
-<img height="200" src="/assets/welcome.png" />
 
 ## What is Outception?
 
-Turn your software into a business with Outception. Sell digital products, subscriptions, and more without the hassle of traditional payment systems.
+Outception is a **live news wall** aggregating headlines from 250+ sources,
+combined with **pay-to-promote** placements: anyone can pay to feature a
+promotion in the feed. The public news API is open; promotion payments are
+handled externally by [polar.sh](https://polar.sh) as the merchant of record.
 
 <CardGroup cols={2}>
-  <Card title="Beyond Payment Processing" icon="credit-card">
-    Unlike Stripe that only handles transactions, we provide complete billing
-    infrastructure with tax compliance, product management, and automated access
-    & delivery.
+  <Card title="Live News Feed" icon="newspaper">
+    A continuously updated wall of headlines aggregated from 250+ sources,
+    searchable and grouped by category.
   </Card>
-  <Card title="Merchant of Record" icon="globe">
-    We handle all international tax compliance, so you can sell globally without
-    worrying about VAT, GST, or sales tax regulations.
+  <Card title="Pay to Promote" icon="bullhorn">
+    Buy a featured slot to surface a promotion as a "Promoted" card in the
+    feed, charged through polar.sh.
   </Card>
 </CardGroup>
 
-## Problems We Solve
+## API
 
-<AccordionGroup>
-  <Accordion title="Tax Compliance Nightmare" icon="building-columns">
-    **The Problem**: Selling digital products globally means dealing with VAT, GST, and sales tax in dozens of jurisdictions, each with different rates, rules, and filing requirements. Most developers either ignore this (risky) or avoid international sales entirely.
+The Outception API is organized around two public surfaces — **News** and
+**Promotions** — plus organization management and authentication.
 
-    **Outception's Solution**: As your Merchant of Record, we handle all international tax compliance. We calculate, collect, and remit taxes worldwide. You focus on building; we handle the paperwork.
+<CardGroup cols={2}>
+  <Card title="API Overview" icon="book" href="/api-reference/introduction">
+    Base URLs, authentication, pagination, and rate limits.
+  </Card>
+  <Card title="News" icon="newspaper" href="/api-reference/news/sources">
+    List sources, search headlines, and fetch news in batches.
+  </Card>
+  <Card title="Promotions" icon="bullhorn" href="/api-reference/promotions/get-featured">
+    Read featured promotions, pricing, and category placements.
+  </Card>
+  <Card title="Organizations" icon="building" href="/api-reference/organizations/list">
+    Manage organizations and their settings.
+  </Card>
+</CardGroup>
 
-  </Accordion>
+## Authentication
 
-  <Accordion title="Complex Billing Infrastructure" icon="gears">
-    **The Problem**: Building subscription billing, product catalogs, customer portals, and payment flows from scratch takes months of development time and ongoing maintenance.
+<CardGroup cols={2}>
+  <Card title="Organization Access Tokens" icon="key" href="/integrate/oat">
+    Authenticate server-side requests with an OAT.
+  </Card>
+  <Card title="OAuth 2.0" icon="user-lock" href="/integrate/oauth2/introduction">
+    Authenticate users via the OAuth 2.0 authorization flow.
+  </Card>
+</CardGroup>
 
-    **Outception's Solution**: Complete billing infrastructure out-of-the-box with APIs that let you integrate in minutes. No need to build customer portals, handle subscription lifecycle, or manage failed payments.
-
-  </Accordion>
-
-  <Accordion title="Manual Access & Delivery Overhead" icon="box">
-    **The Problem**: Manually sending license keys, granting repository access, or managing Discord invites for every purchase doesn't scale and creates delays for customers.
-
-    **Outception's Solution**: Automated benefit delivery for common developer needs - license keys, file downloads, GitHub repo access, Discord roles, and more. Customers get instant access.
-
-  </Accordion>
-
-  <Accordion title="High Processing Costs" icon="money-bill">
-    **The Problem**: Traditional MoR solutions charge 5-8% per transaction plus monthly fees, eating into your profits before you even start.
-
-    **Outception's Solution**: Transparent fee structure starting at 5% + 50¢ per transaction on the free Starter plan, with optional paid plans that lower your rate. We earn when you earn.
-
-  </Accordion>
-</AccordionGroup>
-
-## Core Features
-
-### Flexible Product Management
+## Integrate
 
 <CardGroup cols={3}>
-  <Card title="One-time Purchases" icon="cart-shopping">
-    Sell digital products, courses, templates, or software licenses with instant
-    delivery
+  <Card title="Webhooks" icon="link" href="/integrate/webhooks/endpoints">
+    Register endpoints and handle incoming events.
   </Card>
-  <Card title="Subscriptions" icon="arrows-rotate">
-    Recurring billing with automatic renewals and dunning management
+  <Card title="Sandbox" icon="flask" href="/integrate/sandbox">
+    Test against an isolated environment before going live.
   </Card>
-  <Card title="Flexible Pricing" icon="hand-holding-dollar">
-    Fixed price, pay-what-you-want, or free products with optional minimums
-  </Card>
-</CardGroup>
-
-### Powerful Checkout Experience
-
-<img
-  className="block dark:hidden"
-  src="/assets/introduction/checkout.light.png"
-/>
-<img
-  className="hidden dark:block"
-  src="/assets/introduction/checkout.dark.png"
-/>
-
-<CardGroup cols={3}>
-  <Card title="Checkout Links" icon="link" href="/features/checkout/links">
-    No-code solution for quick product sales. Create and share instantly.
-  </Card>
-  <Card
-    title="Embedded Checkout"
-    icon="browser"
-    href="/features/checkout/embed"
-  >
-    Integrate seamlessly into your website with customizable branding.
-  </Card>
-  <Card title="Checkout API" icon="code" href="/api-reference">
-    Programmatically create dynamic checkout sessions for custom flows.
+  <Card title="MCP" icon="robot" href="/integrate/mcp">
+    Connect AI tools to your Outception organization.
   </Card>
 </CardGroup>
 
-### Automated Benefits (Entitlements)
+## Open Source
 
-**Set it and forget it**: Configure once, and customers get instant access to
-their benefits automatically. No manual work required.
+Outception is developed in the open under the Apache 2.0 license.
 
 <CardGroup cols={2}>
-  <Card title="License Keys" icon="key" href="/features/benefits/license-keys">
-    Generate and deliver software licenses automatically with custom formats
+  <Card title="Source Code" icon="github" href="https://github.com/outception/outception">
+    Browse the codebase and contribute.
   </Card>
-  <Card
-    title="File Downloads"
-    icon="download"
-    href="/features/benefits/file-downloads"
-  >
-    Secure delivery of digital assets up to 10GB with download tracking
-  </Card>
-  <Card
-    title="GitHub Access"
-    icon="github"
-    href="/features/benefits/github-access"
-  >
-    Auto-invite customers to private repositories and manage permissions
-  </Card>
-  <Card
-    title="Discord Access"
-    icon="discord"
-    href="/features/benefits/discord-access"
-  >
-    Automatic role assignment and server invites for community access
-  </Card>
-</CardGroup>
-
-### Global Merchant of Record
-
-- **Worldwide Tax Compliance** - We handle VAT, GST, and sales tax in all jurisdictions
-- **EU VAT Handling** - Proper B2B reverse charge and B2C tax collection
-- **Automatic Tax Calculation** - Real-time tax rates for every transaction
-
-## Quick Start Guide
-
-<Steps>
-  <Step title="Create Your Account">
-    [Sign up for Outception](https://outception.com/signup) using GitHub, Google, or email. Create an organization to manage your products and customers.
-
-    <img className="block dark:hidden" src="/assets/create-org.light.png" />
-    <img className="hidden dark:block" src="/assets/create-org.dark.png" />
-
-  </Step>
-
-  <Step title="Create Your First Product">
-    Set up a digital product in minutes:
-    - Choose between one-time purchase or subscription
-    - Set your pricing (fixed, pay-what-you-want, or free)
-    - Configure automated benefits for instant delivery
-
-    Learn more about Products →
-
-  </Step>
-
-  <Step title="Choose Your Integration">
-    Pick the approach that fits your needs:
-
-    <Tabs>
-      <Tab title="No-Code (Fastest)">
-        Perfect for getting started quickly:
-        - Create Checkout Links from your dashboard
-        - Share via email, social media, or embed in websites
-        - Start accepting payments immediately
-      </Tab>
-      <Tab title="Embedded">
-        Integrate into your existing website:
-        - Add our Embedded Checkout component
-        - Maintain your site's look and feel
-        - Customers never leave your domain
-      </Tab>
-      <Tab title="Full API (Maximum Control)">
-        Maximum flexibility for custom workflows:
-        - Use our SDKs for any language
-        - Build custom checkout flows and experiences
-        - Integrate with your existing tech stack
-      </Tab>
-    </Tabs>
-
-  </Step>
-
-  <Step title="Set Up Webhooks">
-    Stay synchronized with customer events:
-    - Configure webhook endpoints in your dashboard
-    - React to purchases, subscription changes, and customer events
-    - Keep your database in sync automatically
-
-    Read the [Webhooks guide →](/integrate/webhooks/endpoints)
-
-  </Step>
-</Steps>
-
-## Integration Options
-
-### Framework Adapters (Recommended)
-
-<CardGroup cols={2}>
-  <Card title="Next.js" icon="react" href="/integrate/sdk/adapters/nextjs">
-    React-based full-stack framework with App Router support
-  </Card>
-  <Card
-    title="BetterAuth"
-    icon="react"
-    href="/integrate/sdk/adapters/better-auth"
-  >
-    Payments and billing empowered by authentication & authorization
-  </Card>
-  <Card title="Laravel" icon="php" href="/integrate/sdk/adapters/laravel">
-    PHP web application framework with Eloquent ORM integration
-  </Card>
-  <Card title="Deno" icon="node-js" href="/integrate/sdk/adapters/deno">
-    A modern runtime for TypeScript
-  </Card>
-</CardGroup>
-
-<Expandable title="All 12 supported frameworks">
-  <CardGroup cols={4}>
-    <Card title="Nuxt" href="/integrate/sdk/adapters/nuxt">
-      Vue.js framework
-    </Card>
-    <Card title="Remix" href="/integrate/sdk/adapters/remix">
-      React framework
-    </Card>
-    <Card title="Fastify" href="/integrate/sdk/adapters/fastify">
-      Fast Node.js
-    </Card>
-    <Card title="Hono" href="/integrate/sdk/adapters/hono">
-      Cloudflare Workers
-    </Card>
-    <Card title="Deno" href="/integrate/sdk/adapters/deno">
-      Modern runtime
-    </Card>
-    <Card title="Tanstack Start" href="/integrate/sdk/adapters/tanstack-start">
-      Full-stack React
-    </Card>
-    <Card title="Elysia" href="/integrate/sdk/adapters/elysia">
-      Bun framework
-    </Card>
-    <Card title="Astro" href="/integrate/sdk/adapters/astro">
-      Static site generator
-    </Card>
-    <Card title="Express" icon="node-js" href="/integrate/sdk/adapters/express">
-      Flexible Node.js framework
-    </Card>
-    <Card title="SvelteKit" icon="js" href="/integrate/sdk/adapters/sveltekit">
-      Full-stack framework
-    </Card>
-  </CardGroup>
-</Expandable>
-
-### Native SDKs
-
-<CardGroup cols={4}>
-  <Card title="JS/TS" icon="js" href="/integrate/sdk/typescript">
-    For web and Node.js applications
-  </Card>
-  <Card title="Python" icon="python" href="/integrate/sdk/python">
-    For Django, Flask, FastAPI frameworks
-  </Card>
-  <Card title="Go" icon="golang" href="/integrate/sdk/golang">
-    For Go web services and applications
-  </Card>
-  <Card title="PHP" icon="php" href="/integrate/sdk/php">
-    For WordPress, Laravel, and PHP apps
-  </Card>
-</CardGroup>
-
-## Why Choose Outception?
-
-<Tabs>
-  <Tab title="Individual Developers">
-    <CardGroup cols={2}>
-      <Card title="Ship Faster" icon="rocket">
-        Focus on your product, not billing infrastructure. Get to market weeks faster.
-      </Card>
-      <Card title="Global Reach" icon="globe">
-        Sell worldwide without worrying about tax compliance or regional restrictions.
-      </Card>
-      <Card title="Automated Delivery" icon="box">
-        License keys and downloads handled automatically. No manual work required.
-      </Card>
-      <Card title="Transparent Pricing" icon="piggy-bank">
-        Transparent, pay-as-you-earn pricing with no hidden fees.
-      </Card>
-    </CardGroup>
-  </Tab>
-
-<Tab title="Small Teams">
-  <CardGroup cols={2}>
-    <Card title="No Engineering Overhead" icon="wrench">
-      Complete billing solution without months of custom development work.
-    </Card>
-    <Card title="Scalable Pricing" icon="chart-line">
-      Pay only when you earn, no monthly minimums or setup fees.
-    </Card>
-    <Card title="Team Collaboration" icon="users">
-      Multiple team members can manage products, customers, and analytics.
-    </Card>
-    <Card title="Professional Checkout" icon="credit-card">
-      Branded experience that builds customer trust and increases conversions.
-    </Card>
-  </CardGroup>
-</Tab>
-
-  <Tab title="Growing Businesses">
-    <CardGroup cols={2}>
-      <Card title="Enterprise Features" icon="building">
-        Advanced analytics, custom fields, bulk operations, and priority support.
-      </Card>
-      <Card title="API Flexibility" icon="code">
-        Full programmatic control over products, customers, orders, and subscriptions.
-      </Card>
-      <Card title="Webhook Reliability" icon="link">
-        Reliable real-time synchronization with your systems and database.
-      </Card>
-    </CardGroup>
-  </Tab>
-</Tabs>
-
-## Transparent Pricing
-
-<CardGroup cols={1}>
-  <Card title="5% + 50¢ or lower" icon="percent">
-    **Per successful transaction**
-
-    Optional paid plans to get even lower transaction fees
-
-  </Card>
-</CardGroup>
-
-<Info>
-  **Additional fees may apply**: Some transactions may incur additional fees
-  (e.g. international cards). Payout fees are charged by payment providers. See
-  our detailed fees page for complete information.
-</Info>
-
-## Open Source & Community
-
-Outception is built in the open with full transparency and a growing community of
-contributors.
-
-<CardGroup cols={2}>
-  <Card
-    title="Open Source Codebase"
-    icon="github"
-    href="https://github.com/outception/outception"
-  >
-    Apache 2.0 license with 36+ contributors and growing
-  </Card>
-  <Card
-    title="Public Development"
-    icon="users"
-    href="https://github.com/outception/outception/issues"
-  >
-    Feature requests, roadmap, and issues - all developed in public
-  </Card>
-  <Card title="Transparent Pricing" icon="eye">
-    No hidden fees or surprise charges. What you see is what you pay.
-  </Card>
-</CardGroup>
-
-<Warning>
-  While self-hosting is technically possible, we recommend using our hosted
-  service to get the full Merchant of Record benefits including global tax
-  compliance.
-</Warning>
-
-## Ready to Start?
-
-<CardGroup cols={2}>
-  <Card title="Create Account" icon="user-plus" href="https://outception.com/signup">
-    **Free signup, no credit card required**
-
-    Get started in under 2 minutes
-
-  </Card>
-  <Card title="Read the Guides" icon="book" href="/guides/nextjs">
-    **Framework-specific tutorials**
-
-    Step-by-step integration guides
-
-  </Card>
-  <Card title="Explore the API" icon="code" href="/api-reference">
-    **Complete API documentation**
-
-    Interactive examples and SDKs
-
-  </Card>
-  <Card title="Join Our Community" icon="discord" href="https://discord.gg/Pnhfz3UThd">
-    **Get help from our team**
-
-    Active community and support
-
+  <Card title="Issues & Roadmap" icon="users" href="https://github.com/outception/outception/issues">
+    Feature requests and development in public.
   </Card>
 </CardGroup>
