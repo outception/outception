@@ -47,8 +47,8 @@ const groupCode = `<ListGroup>
     <Text color="default">Name, avatar and contact details.</Text>
   </ListGroup.Item>
   <ListGroup.Item>
-    <Text variant="label">Billing</Text>
-    <Text color="default">Payment methods and invoices.</Text>
+    <Text variant="label">Notifications</Text>
+    <Text color="default">Email and push preferences.</Text>
   </ListGroup.Item>
 </ListGroup>`
 
@@ -179,10 +179,10 @@ export default function ListPage() {
                 <Text>Overview</Text>
               </ListItem>
               <ListItem size="small" onSelect={() => {}}>
-                <Text>Customers</Text>
+                <Text>Sources</Text>
               </ListItem>
               <ListItem size="small" onSelect={() => {}}>
-                <Text>Invoices</Text>
+                <Text>Promotions</Text>
               </ListItem>
             </List>
           </Box>
@@ -204,8 +204,8 @@ export default function ListPage() {
               </ListGroup.Item>
               <ListGroup.Item>
                 <Box flexDirection="column" rowGap="xs">
-                  <Text variant="label">Billing</Text>
-                  <Text color="default">Payment methods and invoices.</Text>
+                  <Text variant="label">Notifications</Text>
+                  <Text color="default">Email and push preferences.</Text>
                 </Box>
               </ListGroup.Item>
             </ListGroup>

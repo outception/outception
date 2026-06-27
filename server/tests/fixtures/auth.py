@@ -17,10 +17,6 @@ class AuthSubjectFixture:
             "user_second",
             "organization",
             "organization_second",
-            "customer",
-            "member_owner",
-            "member_billing_manager",
-            "member",
         ] = "user",
         scopes: set[Scope] = set(Scope),
     ):
