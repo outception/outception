@@ -1,17 +1,15 @@
-from datetime import UTC, datetime
-from enum import IntEnum, StrEnum
-from typing import TYPE_CHECKING, Any, Literal, Self, TypedDict
+from datetime import datetime
+from enum import StrEnum
+from typing import TYPE_CHECKING, Any, Literal, TypedDict
 from urllib.parse import urlparse
 
 from sqlalchemy import (
     TIMESTAMP,
-    CheckConstraint,
     ColumnElement,
     Integer,
     String,
     UniqueConstraint,
     and_,
-    or_,
 )
 from sqlalchemy.dialects.postgresql import CITEXT, JSONB
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -80,62 +78,15 @@ OrganizationLegalEntity = (
 
 class OrganizationStatus(StrEnum):
     CREATED = "created"
-    REVIEW = "review"
-    SNOOZED = "snoozed"
-    DENIED = "denied"
     ACTIVE = "active"
     BLOCKED = "blocked"
-    OFFBOARDING = "offboarding"
 
     def get_display_name(self) -> str:
         return {
             OrganizationStatus.CREATED: "Created",
-            OrganizationStatus.REVIEW: "Review",
-            OrganizationStatus.SNOOZED: "Snoozed",
-            OrganizationStatus.DENIED: "Denied",
             OrganizationStatus.ACTIVE: "Active",
             OrganizationStatus.BLOCKED: "Blocked",
-            OrganizationStatus.OFFBOARDING: "Offboarding",
         }[self]
-
-    @classmethod
-    def review_statuses(cls) -> set[Self]:
-        return {cls.REVIEW, cls.SNOOZED}  # pyright: ignore
-
-
-class SnoozeType(StrEnum):
-    TIME_BASED = "time_based"
-    NEXT_SALE = "next_sale"
-
-    def get_display_name(self) -> str:
-        return {
-            SnoozeType.TIME_BASED: "Auto re-review after X days",
-            SnoozeType.NEXT_SALE: "Re-review on next sale after X days",
-        }[self]
-
-
-class SupportTier(IntEnum):
-    """Named support tiers, keyed by the benefit's metadata ``level``."""
-
-    pro = 2
-    growth = 3
-    scale = 4
-
-    def get_display_name(self) -> str:
-        return self.name.capitalize()
-
-    @classmethod
-    def from_level(cls, level: int | None) -> "SupportTier | None":
-        """Map a benefit's metadata ``level`` to a known tier, or ``None``.
-
-        Only the self-serve tiers are recognized.
-        """
-        if level is None:
-            return None
-        try:
-            return cls(level)
-        except ValueError:
-            return None
 
 
 class OrganizationCapabilities(TypedDict):
@@ -179,44 +130,10 @@ STATUS_CAPABILITIES: dict[OrganizationStatus, OrganizationCapabilities] = {
         "api_access": True,
         "dashboard_access": True,
     },
-    OrganizationStatus.REVIEW: {
-        "checkout_payments": True,
-        "subscription_renewals": True,
-        # Allowed under review: the request is reserved and held until approval
-        # (see PayoutService.create), so `payouts` now means "may request".
-        "payouts": True,
-        "refunds": True,
-        "api_access": True,
-        "dashboard_access": True,
-    },
-    OrganizationStatus.SNOOZED: {
-        "checkout_payments": True,
-        "subscription_renewals": True,
-        "payouts": True,
-        "refunds": True,
-        "api_access": True,
-        "dashboard_access": True,
-    },
     OrganizationStatus.ACTIVE: {
         "checkout_payments": True,
         "subscription_renewals": True,
         "payouts": True,
-        "refunds": True,
-        "api_access": True,
-        "dashboard_access": True,
-    },
-    OrganizationStatus.DENIED: {
-        "checkout_payments": False,
-        "subscription_renewals": False,
-        "payouts": False,
-        "refunds": False,
-        "api_access": True,
-        "dashboard_access": True,
-    },
-    OrganizationStatus.OFFBOARDING: {
-        "checkout_payments": True,
-        "subscription_renewals": True,
-        "payouts": False,
         "refunds": True,
         "api_access": True,
         "dashboard_access": True,
@@ -262,78 +179,21 @@ CAPABILITY_METADATA: dict[CapabilityName, tuple[str, str]] = {
 CAPABILITY_NAMES: frozenset[str] = frozenset(CAPABILITY_METADATA.keys())
 
 
-# DENIED → ACTIVE and BLOCKED → ACTIVE additionally require a reason,
-# enforced at the service layer.
+# BLOCKED → ACTIVE additionally requires a reason, enforced at the service layer.
 ALLOWED_STATUS_TRANSITIONS: dict[OrganizationStatus, frozenset[OrganizationStatus]] = {
     OrganizationStatus.CREATED: frozenset(
-        {
-            OrganizationStatus.REVIEW,
-            OrganizationStatus.ACTIVE,
-            OrganizationStatus.DENIED,
-            OrganizationStatus.BLOCKED,
-        }
+        {OrganizationStatus.ACTIVE, OrganizationStatus.BLOCKED}
     ),
-    OrganizationStatus.REVIEW: frozenset(
-        {
-            OrganizationStatus.ACTIVE,
-            OrganizationStatus.SNOOZED,
-            OrganizationStatus.DENIED,
-            OrganizationStatus.OFFBOARDING,
-            OrganizationStatus.BLOCKED,
-        }
-    ),
-    OrganizationStatus.SNOOZED: frozenset(
-        {
-            OrganizationStatus.REVIEW,
-            OrganizationStatus.ACTIVE,
-            OrganizationStatus.DENIED,
-            OrganizationStatus.BLOCKED,
-        }
-    ),
-    OrganizationStatus.ACTIVE: frozenset(
-        {
-            OrganizationStatus.REVIEW,
-            OrganizationStatus.DENIED,
-            OrganizationStatus.BLOCKED,
-        }
-    ),
-    OrganizationStatus.DENIED: frozenset(
-        {
-            OrganizationStatus.CREATED,
-            OrganizationStatus.ACTIVE,
-            OrganizationStatus.BLOCKED,
-        }
-    ),
-    OrganizationStatus.OFFBOARDING: frozenset(
-        {
-            OrganizationStatus.REVIEW,
-            OrganizationStatus.DENIED,
-            OrganizationStatus.BLOCKED,
-        }
-    ),
+    OrganizationStatus.ACTIVE: frozenset({OrganizationStatus.BLOCKED}),
     OrganizationStatus.BLOCKED: frozenset(
-        {
-            OrganizationStatus.CREATED,
-            OrganizationStatus.ACTIVE,
-        }
+        {OrganizationStatus.CREATED, OrganizationStatus.ACTIVE}
     ),
 }
-
-# Default `next_review_threshold` (in cents). Used at organization creation,
-# as the fallback when reactivating from DENIED/BLOCKED, and as the upper
-# bound that qualifies an org as still being in its "first review" cycle
-# (alongside `initially_reviewed_at IS NULL` — either condition is enough).
-FIRST_REVIEW_THRESHOLD_CENTS = 1000
 
 
 class Organization(RateLimitGroupMixin, RecordModel):
     __tablename__ = "organizations"
-    __table_args__ = (
-        UniqueConstraint("slug"),
-        CheckConstraint(
-            "next_review_threshold >= 0", name="next_review_threshold_positive"
-        ),
-    )
+    __table_args__ = (UniqueConstraint("slug"),)
 
     name: Mapped[str] = mapped_column(String, nullable=False, index=True)
     slug: Mapped[str] = mapped_column(CITEXT, nullable=False, unique=True)
@@ -385,26 +245,6 @@ class Organization(RateLimitGroupMixin, RecordModel):
         nullable=False,
         default=OrganizationStatus.CREATED,
     )
-    next_review_threshold: Mapped[int] = mapped_column(
-        Integer, nullable=False, default=FIRST_REVIEW_THRESHOLD_CENTS
-    )
-    status_updated_at: Mapped[datetime | None] = mapped_column(
-        TIMESTAMP(timezone=True), nullable=True
-    )
-    initially_reviewed_at: Mapped[datetime | None] = mapped_column(
-        TIMESTAMP(timezone=True), nullable=True
-    )
-
-    snoozed_until: Mapped[datetime | None] = mapped_column(
-        TIMESTAMP(timezone=True), nullable=True, default=None
-    )
-    snooze_type: Mapped[SnoozeType | None] = mapped_column(
-        StringEnum(SnoozeType), nullable=True, default=None
-    )
-
-    # Support priority tier — the benefit's metadata ``level``, denormalized
-    # from the active Outception support grant (see SupportTier). NULL = free; only
-    # paid tiers are persisted, higher level = higher priority.
 
     onboarded_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
     ai_onboarding_completed_at: Mapped[datetime | None] = mapped_column(
@@ -542,35 +382,7 @@ class Organization(RateLimitGroupMixin, RecordModel):
         ):
             raise InvalidStatusTransitionError(self.status, status)
         self.status = status
-        self.status_updated_at = datetime.now(UTC)
         self.capabilities = {**STATUS_CAPABILITIES[status]}
-
-    @hybrid_property
-    def is_under_review(self) -> bool:
-        return self.status in OrganizationStatus.review_statuses()
-
-    @is_under_review.inplace.expression
-    @classmethod
-    def _is_under_review_expression(cls) -> ColumnElement[bool]:
-        return cls.status.in_(OrganizationStatus.review_statuses())
-
-    @hybrid_property
-    def is_first_review(self) -> bool:
-        return self.status == OrganizationStatus.REVIEW and (
-            self.initially_reviewed_at is None
-            or self.next_review_threshold <= FIRST_REVIEW_THRESHOLD_CENTS
-        )
-
-    @is_first_review.inplace.expression
-    @classmethod
-    def _is_first_review_expression(cls) -> ColumnElement[bool]:
-        return and_(
-            cls.status == OrganizationStatus.REVIEW,
-            or_(
-                cls.initially_reviewed_at.is_(None),
-                cls.next_review_threshold <= FIRST_REVIEW_THRESHOLD_CENTS,
-            ),
-        )
 
     @property
     def outception_site_url(self) -> str:

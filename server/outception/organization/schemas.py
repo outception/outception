@@ -353,12 +353,8 @@ class LegacyOrganizationStatus(StrEnum):
     def from_status(cls, status: OrganizationStatus) -> "LegacyOrganizationStatus":
         mapping = {
             OrganizationStatus.CREATED: LegacyOrganizationStatus.CREATED,
-            OrganizationStatus.REVIEW: LegacyOrganizationStatus.UNDER_REVIEW,
-            OrganizationStatus.SNOOZED: LegacyOrganizationStatus.UNDER_REVIEW,
-            OrganizationStatus.DENIED: LegacyOrganizationStatus.DENIED,
             OrganizationStatus.ACTIVE: LegacyOrganizationStatus.ACTIVE,
             OrganizationStatus.BLOCKED: LegacyOrganizationStatus.DENIED,
-            OrganizationStatus.OFFBOARDING: LegacyOrganizationStatus.ACTIVE,
         }
         try:
             return mapping[status]
