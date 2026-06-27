@@ -130,14 +130,6 @@
         ]
       },
       {
-        "tab": "Changelog",
-        "icon": "signal-stream",
-        "pages": [
-          "changelog/recent",
-          "changelog/api"
-        ]
-      },
-      {
         "tab": "Support",
         "icon": "square-question",
         "pages": [

@@ -23,13 +23,7 @@ You'll then need to create a dedicated user account and organization, the same w
 
 ### Testing payments
 
-The sandbox environment allows you to experience the complete customer funnel, including checkout. You can perform test payments using Stripe's [test card numbers](https://docs.stripe.com/testing#cards).
-
-The easiest one to test a successful payment is to use the following card number with a future expiration date and random CVC:
-
-```
-4242 4242 4242 4242
-```
+The sandbox environment lets you test the full promotion flow, including payment. Promotion payments run through [polar.sh](https://polar.sh)'s hosted checkout — use its sandbox/test mode to make test payments without any real charge.
 
 ## API
 
@@ -39,5 +33,5 @@ To make requests to our API, all you need to do is to switch the base URL from `
 
 The limitations listed below only apply to sandbox and doesn't reflect the behavior in production.
 
-* Customer-facing emails (order confirmations, subscription renewal reminders, etc.) are only delivered to recipients who are members of your organization. Manage these in [**Settings → Members**](https://outception.com/to/dashboard/settings/members). Sub-addressing aliases like `you+test@example.com` are accepted.
+* Customer-facing emails (promotion confirmations, etc.) are only delivered to recipients who are members of your organization. Manage these in [**Settings → Members**](https://outception.com/to/dashboard/settings/members). Sub-addressing aliases like `you+test@example.com` are accepted.
 
