@@ -105,70 +105,52 @@
             "group": "Core API",
             "pages": [
               {
-                "group": "Files",
+                "group": "News",
                 "pages": [
-                  "api-reference/files/create",
-                  "api-reference/files/list",
-                  "api-reference/files/update",
-                  "api-reference/files/delete",
-                  "api-reference/files/complete-upload"
+                  "api-reference/news/sources",
+                  "api-reference/news/get-source",
+                  "api-reference/news/search",
+                  "api-reference/news/batch"
+                ]
+              },
+              {
+                "group": "Promotions",
+                "pages": [
+                  "api-reference/promotions/get-featured",
+                  "api-reference/promotions/get-pricing",
+                  "api-reference/promotions/get-category",
+                  "api-reference/promotions/click"
                 ]
               },
               {
                 "group": "Organizations",
                 "pages": [
-                  "api-reference/organizations/get",
                   "api-reference/organizations/list",
-                  "api-reference/organizations/create",
+                  "api-reference/organizations/get",
                   "api-reference/organizations/update"
                 ]
               },
               {
-                "group": "Metrics",
+                "group": "Organization Access Tokens",
                 "pages": [
-                  "api-reference/metrics/get",
-                  "api-reference/metrics/get-limits"
-                ]
-              }
-            ]
-          },
-          {
-            "group": "Webhook Events",
-            "pages": [
-              {
-                "group": "Organization Events",
-                "pages": [
-                  {
-                    "group": "Organization",
-                    "pages": [
-                      "api-reference/webhooks/organization.updated"
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "group": "Integrations",
-            "pages": [
-              {
-                "group": "OpenID Connect",
-                "pages": [
-                  "api-reference/oauth2/connect/authorize",
-                  "api-reference/oauth2/connect/request-token",
-                  "api-reference/oauth2/connect/introspect-token",
-                  "api-reference/oauth2/connect/revoke-token",
-                  "api-reference/oauth2/connect/get-user-info"
+                  "api-reference/organization-access-tokens/list",
+                  "api-reference/organization-access-tokens/create",
+                  "api-reference/organization-access-tokens/update",
+                  "api-reference/organization-access-tokens/delete"
                 ]
               },
               {
-                "group": "Webhooks",
+                "group": "OAuth2",
                 "pages": [
-                  "api-reference/webhooks/endpoints/create",
-                  "api-reference/webhooks/endpoints/get",
-                  "api-reference/webhooks/endpoints/list",
-                  "api-reference/webhooks/endpoints/update",
-                  "api-reference/webhooks/endpoints/delete"
+                  "api-reference/oauth2/authorize",
+                  "api-reference/oauth2/token",
+                  "api-reference/oauth2/userinfo",
+                  "api-reference/oauth2/introspect",
+                  "api-reference/oauth2/revoke",
+                  "api-reference/oauth2/register",
+                  "api-reference/oauth2/get-client",
+                  "api-reference/oauth2/update-client",
+                  "api-reference/oauth2/delete-client"
                 ]
               }
             ]

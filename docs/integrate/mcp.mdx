@@ -22,8 +22,8 @@ You need a MCP-capable agent environment to use Outception over MCP. A few of th
 
 Outception provides two MCP servers:
 
-- **Production**: `https://mcp.polar.sh/mcp/polar-mcp` - Connect to your live Outception organization
-- **Sandbox**: `https://mcp.polar.sh/mcp/polar-sandbox` - Connect to the Outception sandbox environment for testing
+- **Production**: `https://mcp.outception.com/mcp/outception-mcp` - Connect to your live Outception organization
+- **Sandbox**: `https://mcp.outception.com/mcp/outception-sandbox` - Connect to the Outception sandbox environment for testing
 
 When you can specify a MCP URL, use one of the URLs above depending on your environment.
 
@@ -32,9 +32,9 @@ If you have to specify a command, use:
 ```json
 {
   "mcpServers": {
-    "Polar": {
+    "Outception": {
       "command": "npx",
-      "args": ["mcp-remote", "https://mcp.polar.sh/mcp/polar-mcp"]
+      "args": ["mcp-remote", "https://mcp.outception.com/mcp/outception-mcp"]
     }
   }
 }
@@ -45,9 +45,9 @@ For sandbox:
 ```json
 {
   "mcpServers": {
-    "Polar Sandbox": {
+    "Outception Sandbox": {
       "command": "npx",
-      "args": ["mcp-remote", "https://mcp.polar.sh/mcp/polar-sandbox"]
+      "args": ["mcp-remote", "https://mcp.outception.com/mcp/outception-sandbox"]
     }
   }
 }
@@ -60,8 +60,8 @@ In `.cursor/mcp.json`, add:
 ```json
 {
   "mcpServers": {
-    "Polar": {
-      "url": "https://mcp.polar.sh/mcp/polar-mcp"
+    "Outception": {
+      "url": "https://mcp.outception.com/mcp/outception-mcp"
     }
   }
 }
@@ -72,8 +72,8 @@ For sandbox:
 ```json
 {
   "mcpServers": {
-    "Polar Sandbox": {
-      "url": "https://mcp.polar.sh/mcp/polar-sandbox"
+    "Outception Sandbox": {
+      "url": "https://mcp.outception.com/mcp/outception-sandbox"
     }
   }
 }
@@ -86,9 +86,9 @@ In `mcp_config.json`, add:
 ```json
 {
   "mcpServers": {
-    "Polar": {
+    "Outception": {
       "command": "npx",
-      "args": ["mcp-remote", "https://mcp.polar.sh/mcp/polar-mcp"]
+      "args": ["mcp-remote", "https://mcp.outception.com/mcp/outception-mcp"]
     }
   }
 }
@@ -99,9 +99,9 @@ For sandbox:
 ```json
 {
   "mcpServers": {
-    "Polar Sandbox": {
+    "Outception Sandbox": {
       "command": "npx",
-      "args": ["mcp-remote", "https://mcp.polar.sh/mcp/polar-sandbox"]
+      "args": ["mcp-remote", "https://mcp.outception.com/mcp/outception-sandbox"]
     }
   }
 }
@@ -115,15 +115,15 @@ Add the following to your `~/.codex/config.toml`:
 [features]
 rmcp_client = true
 
-[mcp_servers.polar]
+[mcp_servers.outception]
 type = "http"
-url = "https://mcp.polar.sh/mcp/polar-mcp"
+url = "https://mcp.outception.com/mcp/outception-mcp"
 ```
 
 Then run:
 
 ```sh
-codex mcp login polar
+codex mcp login outception
 ```
 
 For sandbox:
@@ -132,15 +132,15 @@ For sandbox:
 [features]
 rmcp_client = true
 
-[mcp_servers.polar_sandbox]
+[mcp_servers.outception_sandbox]
 type = "http"
-url = "https://mcp.polar.sh/mcp/polar-sandbox"
+url = "https://mcp.outception.com/mcp/outception-sandbox"
 ```
 
 Then run:
 
 ```sh
-codex mcp login polar_sandbox
+codex mcp login outception_sandbox
 ```
 
 ### Claude Code
@@ -148,13 +148,13 @@ codex mcp login polar_sandbox
 Run the following command:
 
 ```
-claude mcp add --transport http "Polar" "https://mcp.polar.sh/mcp/polar-mcp"
+claude mcp add --transport http "Outception" "https://mcp.outception.com/mcp/outception-mcp"
 ```
 
 For sandbox:
 
 ```
-claude mcp add --transport http "Polar-Sandbox" "https://mcp.polar.sh/mcp/polar-sandbox"
+claude mcp add --transport http "Outception-Sandbox" "https://mcp.outception.com/mcp/outception-sandbox"
 ```
 
 ### OpenCode
@@ -165,9 +165,9 @@ In `opencode.jsonc`, add:
 {
   "$schema": "https://opencode.ai/config.json",
   "mcp": {
-    "Polar": {
+    "Outception": {
       "type": "remote",
-      "url": "https://mcp.polar.sh/mcp/polar-mcp"
+      "url": "https://mcp.outception.com/mcp/outception-mcp"
     }
   }
 }
@@ -179,9 +179,9 @@ For sandbox:
 {
   "$schema": "https://opencode.ai/config.json",
   "mcp": {
-    "Polar Sandbox": {
+    "Outception Sandbox": {
       "type": "remote",
-      "url": "https://mcp.polar.sh/mcp/polar-sandbox"
+      "url": "https://mcp.outception.com/mcp/outception-sandbox"
     }
   }
 }
@@ -191,16 +191,16 @@ For sandbox:
 
 MCP is only available for paid users in beta on ChatGPT web, by enabling Developer Mode.
 
-Once Developer Mode is enabled, go to _Settings_ → _Connectors_ and add the MCP server using `https://mcp.polar.sh/mcp/polar-mcp`.
+Once Developer Mode is enabled, go to _Settings_ → _Connectors_ and add the MCP server using `https://mcp.outception.com/mcp/outception-mcp`.
 
-For sandbox, use `https://mcp.polar.sh/mcp/polar-sandbox` instead.
+For sandbox, use `https://mcp.outception.com/mcp/outception-sandbox` instead.
 
 ### Claude Desktop
 
 Go to _Settings_ → _Connectors_ and click _Add custom connector_.
 
-Name it "Outception" and add `https://mcp.polar.sh/mcp/polar-mcp` as the server URL.
+Name it "Outception" and add `https://mcp.outception.com/mcp/outception-mcp` as the server URL.
 
-For sandbox, use `https://mcp.polar.sh/mcp/polar-sandbox` as the server URL instead.
+For sandbox, use `https://mcp.outception.com/mcp/outception-sandbox` as the server URL instead.
 
 Save, and click _Connect_ to connect to your Outception organization.
