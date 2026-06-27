@@ -69,19 +69,6 @@ class UserUpdate(Schema):
     promotion_emails_enabled: bool | None = None
 
 
-class UserIdentityVerification(Schema):
-    id: str
-    client_secret: str
-
-
-class UserSetAccount(Schema):
-    account_id: UUID4
-
-
-class UserStripePortalSession(Schema):
-    url: str
-
-
 class UserScopes(Schema):
     scopes: list[Scope]
 
