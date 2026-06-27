@@ -99,13 +99,13 @@ class TestEmailSend:
             email_headers=None,
             reply_to_name=None,
             reply_to_email_addr=None,
-            template="order_confirmation",
+            template="login_code",
             props_json=props_json,
         )
 
         result = await session.execute(select(EmailLog))
         log = result.scalar_one()
-        assert log.email_template == "order_confirmation"
+        assert log.email_template == "login_code"
         assert str(log.organization_id) == org_id
         assert log.email_props["organization"]["name"] == "Test Org"
 

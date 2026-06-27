@@ -1,35 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from outception.enums import SubscriptionProrationBehavior
-from outception.kit.currency import PresentmentCurrency
-from outception.models.organization import OrganizationSubscriptionSettings
 from outception.organization.schemas import OrganizationCreate, OrganizationUpdate
-
-
-def test_reset_proration_behavior_accepted_in_schema() -> None:
-    org = OrganizationCreate(
-        name="Test Org",
-        slug="test-org",
-        email=None,
-        website=None,
-        socials=None,
-        details=None,
-        country=None,
-        subscription_settings=OrganizationSubscriptionSettings(
-            allow_multiple_subscriptions=True,
-            proration_behavior=SubscriptionProrationBehavior.reset,
-            benefit_revocation_grace_period=1,
-            prevent_trial_abuse=True,
-            allow_customer_updates=True,
-        ),
-        default_presentment_currency=PresentmentCurrency.usd,
-    )
-    assert org.subscription_settings is not None
-    assert (
-        org.subscription_settings["proration_behavior"]
-        == SubscriptionProrationBehavior.reset
-    )
 
 
 class TestBlockedWords:

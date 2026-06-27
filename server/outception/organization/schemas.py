@@ -18,7 +18,7 @@ from pydantic.networks import HttpUrl
 
 from outception.auth.permission import OrganizationPermission
 from outception.config import settings
-from outception.enums import SubscriptionProrationBehavior, TaxBehaviorOption
+from outception.enums import TaxBehaviorOption
 from outception.kit.address import CountryAlpha2, CountryAlpha2Input
 from outception.kit.currency import PresentmentCurrency
 from outception.kit.email import EmailStrDNS
@@ -33,10 +33,7 @@ from outception.kit.schemas import (
     TimestampedSchema,
 )
 from outception.models.organization import (
-    OrganizationCustomerEmailSettings,
-    OrganizationCustomerPortalSettings,
     OrganizationStatus,
-    OrganizationSubscriptionSettings,
 )
 from outception.models.user_organization import (
     OrganizationNotificationSettings,
@@ -315,13 +312,6 @@ class OrganizationBase(IDSchema, TimestampedSchema):
     avatar_url: str | None = Field(
         description="Avatar URL shown in checkout, customer portal, emails etc."
     )
-    proration_behavior: SubscriptionProrationBehavior = Field(
-        description="Proration behavior applied when customer updates their subscription from the portal.",
-    )
-    allow_customer_updates: bool = Field(
-        description="Whether customers can update their subscriptions from the customer portal.",
-    )
-
     # Deprecated attributes
     bio: SkipJsonSchema[str | None] = Field(..., deprecated="")
     company: SkipJsonSchema[str | None] = Field(
@@ -390,8 +380,6 @@ class OrganizationPublicBase(OrganizationBase):
     details_submitted_at: SkipJsonSchema[datetime | None]
 
     feature_settings: SkipJsonSchema[OrganizationFeatureSettings | None]
-    subscription_settings: SkipJsonSchema[OrganizationSubscriptionSettings]
-    customer_email_settings: SkipJsonSchema[OrganizationCustomerEmailSettings]
 
 
 class Organization(OrganizationBase):
@@ -417,15 +405,6 @@ class Organization(OrganizationBase):
     )
     feature_settings: OrganizationFeatureSettings | None = Field(
         description="Organization feature settings",
-    )
-    subscription_settings: OrganizationSubscriptionSettings = Field(
-        description="Settings related to subscriptions management",
-    )
-    customer_email_settings: OrganizationCustomerEmailSettings = Field(
-        description="Settings related to customer emails",
-    )
-    customer_portal_settings: OrganizationCustomerPortalSettings = Field(
-        description="Settings related to the customer portal",
     )
     country: CountryAlpha2 | None = Field(
         None, description="Two-letter country code (ISO 3166-1 alpha-2)."
@@ -519,9 +498,6 @@ class OrganizationCreate(Schema):
         None, description="Two-letter country code (ISO 3166-1 alpha-2)."
     )
     feature_settings: OrganizationFeatureSettingsUpdate | None = None
-    subscription_settings: OrganizationSubscriptionSettings | None = None
-    customer_email_settings: OrganizationCustomerEmailSettings | None = None
-    customer_portal_settings: OrganizationCustomerPortalSettings | None = None
     default_presentment_currency: PresentmentCurrency = Field(
         PresentmentCurrency.usd,
         description="Default presentment currency for the organization",
@@ -552,9 +528,6 @@ class OrganizationUpdate(Schema):
     )
 
     feature_settings: OrganizationFeatureSettingsUpdate | None = None
-    subscription_settings: OrganizationSubscriptionSettings | None = None
-    customer_email_settings: OrganizationCustomerEmailSettings | None = None
-    customer_portal_settings: OrganizationCustomerPortalSettings | None = None
     default_presentment_currency: PresentmentCurrency | None = Field(
         None, description="Default presentment currency for the organization"
     )

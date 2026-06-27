@@ -1,9 +1,8 @@
 from datetime import UTC, datetime
 from enum import IntEnum, StrEnum
-from typing import TYPE_CHECKING, Annotated, Any, Literal, NotRequired, Self, TypedDict
+from typing import TYPE_CHECKING, Any, Literal, Self, TypedDict
 from urllib.parse import urlparse
 
-from pydantic.json_schema import WithJsonSchema
 from sqlalchemy import (
     TIMESTAMP,
     BigInteger,
@@ -22,8 +21,6 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from outception.config import settings
 from outception.enums import (
-    InvoiceNumbering,
-    SubscriptionProrationBehavior,
     TaxBehaviorOption,
 )
 from outception.exceptions import OutceptionError
@@ -58,102 +55,6 @@ class OrganizationDetails(TypedDict, total=False):
     switching: bool
     switching_from: str | None
     previous_annual_revenue: int
-
-
-class OrganizationSubscriptionSettings(TypedDict):
-    allow_multiple_subscriptions: bool
-    proration_behavior: Annotated[
-        SubscriptionProrationBehavior,
-        WithJsonSchema(
-            {
-                "enum": ["invoice", "prorate", "next_period"],
-                "title": "PublicSubscriptionProrationBehavior",
-                "type": "string",
-            }
-        ),
-    ]
-    benefit_revocation_grace_period: int
-    prevent_trial_abuse: bool
-    # Legacy - to be removed separately
-    allow_customer_updates: bool
-
-
-_default_subscription_settings: OrganizationSubscriptionSettings = {
-    "allow_multiple_subscriptions": False,
-    "allow_customer_updates": True,
-    "proration_behavior": SubscriptionProrationBehavior.prorate,
-    "benefit_revocation_grace_period": 0,
-    "prevent_trial_abuse": False,
-}
-
-
-class OrganizationOrderSettings(TypedDict):
-    invoice_numbering: InvoiceNumbering
-
-
-_default_order_settings: OrganizationOrderSettings = {
-    "invoice_numbering": InvoiceNumbering.customer,
-}
-
-
-class OrganizationCustomerEmailSettings(TypedDict):
-    order_confirmation: bool
-    subscription_cancellation: bool
-    subscription_confirmation: bool
-    subscription_cycled: bool
-    subscription_cycled_after_trial: bool
-    subscription_past_due: bool
-    subscription_renewal_reminder: bool
-    subscription_revoked: bool
-    subscription_trial_conversion_reminder: bool
-    subscription_uncanceled: bool
-    subscription_updated: bool
-
-
-_default_customer_email_settings: OrganizationCustomerEmailSettings = {
-    "order_confirmation": True,
-    "subscription_cancellation": True,
-    "subscription_confirmation": True,
-    "subscription_cycled": True,
-    "subscription_cycled_after_trial": True,
-    "subscription_past_due": True,
-    "subscription_renewal_reminder": True,
-    "subscription_revoked": True,
-    "subscription_trial_conversion_reminder": True,
-    "subscription_uncanceled": True,
-    "subscription_updated": True,
-}
-
-
-class CustomerPortalUsageSettings(TypedDict):
-    show: bool
-
-
-class CustomerPortalSubscriptionSettings(TypedDict):
-    update_seats: bool
-    update_plan: bool
-
-
-class CustomerPortalCustomerSettings(TypedDict):
-    allow_email_change: NotRequired[bool]
-
-
-class OrganizationCustomerPortalSettings(TypedDict):
-    usage: CustomerPortalUsageSettings
-    subscription: CustomerPortalSubscriptionSettings
-    customer: NotRequired[CustomerPortalCustomerSettings]
-
-
-_default_customer_portal_settings: OrganizationCustomerPortalSettings = {
-    "usage": {"show": True},
-    "subscription": {
-        "update_seats": True,
-        "update_plan": True,
-    },
-    "customer": {
-        "allow_email_change": False,
-    },
-}
 
 
 class OrganizationCheckoutSettings(TypedDict):
@@ -536,22 +437,6 @@ class Organization(RateLimitGroupMixin, RecordModel):
         JSONB, nullable=False, default=dict
     )
 
-    subscription_settings: Mapped[OrganizationSubscriptionSettings] = mapped_column(
-        JSONB, nullable=False, default=_default_subscription_settings
-    )
-
-    order_settings: Mapped[OrganizationOrderSettings] = mapped_column(
-        JSONB, nullable=False, default=_default_order_settings
-    )
-
-    customer_email_settings: Mapped[OrganizationCustomerEmailSettings] = mapped_column(
-        JSONB, nullable=False, default=_default_customer_email_settings
-    )
-
-    customer_portal_settings: Mapped[OrganizationCustomerPortalSettings] = (
-        mapped_column(JSONB, nullable=False, default=_default_customer_portal_settings)
-    )
-
     checkout_settings: Mapped[OrganizationCheckoutSettings] = mapped_column(
         JSONB, nullable=False, default=_default_checkout_settings
     )
@@ -559,10 +444,6 @@ class Organization(RateLimitGroupMixin, RecordModel):
     legal_entity: Mapped[OrganizationLegalEntity | None] = mapped_column(
         JSONB, nullable=True, default=None
     )
-
-    @property
-    def allow_customer_updates(self) -> bool:
-        return self.customer_portal_settings["subscription"]["update_plan"]
 
     #
     # Feature Flags
@@ -712,40 +593,6 @@ class Organization(RateLimitGroupMixin, RecordModel):
     @property
     def account_url(self) -> str:
         return f"{settings.FRONTEND_BASE_URL}/dashboard/{self.slug}/finance/account"
-
-    @property
-    def allow_multiple_subscriptions(self) -> bool:
-        return self.subscription_settings["allow_multiple_subscriptions"]
-
-    @property
-    def proration_behavior(self) -> SubscriptionProrationBehavior:
-        return SubscriptionProrationBehavior(
-            self.subscription_settings["proration_behavior"]
-        )
-
-    @property
-    def benefit_revocation_grace_period(self) -> int:
-        return self.subscription_settings["benefit_revocation_grace_period"]
-
-    @property
-    def prevent_trial_abuse(self) -> bool:
-        return self.subscription_settings.get("prevent_trial_abuse", False)
-
-    @property
-    def invoice_numbering(self) -> InvoiceNumbering:
-        return InvoiceNumbering(self.order_settings["invoice_numbering"])
-
-    @property
-    def customer_portal_subscription_update_seats(self) -> bool:
-        return self.customer_portal_settings.get("subscription", {}).get(
-            "update_seats", True
-        )
-
-    @property
-    def customer_portal_subscription_update_plan(self) -> bool:
-        return self.customer_portal_settings.get("subscription", {}).get(
-            "update_plan", True
-        )
 
     @property
     def checkout_require_3ds(self) -> bool:
