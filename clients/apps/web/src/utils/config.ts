@@ -19,9 +19,6 @@ const defaults = {
     process.env.NEXT_PUBLIC_GITHUB_BADGE_EMBED_DEFAULT_LABEL || 'Fund',
   SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN || undefined,
   POSTHOG_TOKEN: process.env.NEXT_PUBLIC_POSTHOG_TOKEN || '',
-  APPLE_DOMAIN_ASSOCIATION:
-    process.env.NEXT_PUBLIC_APPLE_DOMAIN_ASSOCIATION ||
-    '<Replace with Apple Pay Domain Association>',
   SANDBOX_FRONTEND_BASE_URL:
     process.env.NEXT_PUBLIC_SANDBOX_FRONTEND_BASE_URL ||
     'http://127.0.0.1:3000',
