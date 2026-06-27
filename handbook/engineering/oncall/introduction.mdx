@@ -8,10 +8,6 @@ This guide contains manual procedures that on-call engineers may need to perform
 ## Available Procedures
 
 <CardGroup cols={2}>
-  <Card title="Merge Accounts" icon="user-group" href="/engineering/oncall/merge-accounts">
-    Merge multiple merchant accounts when orders are split across accounts
-  </Card>
-
   <Card title="Deploy Infra Changes" icon="server" href="/engineering/oncall/deploy-infra">
     Sync infrastructure changes via Render blueprint
   </Card>
@@ -32,7 +28,7 @@ This guide contains manual procedures that on-call engineers may need to perform
 
 ## Safety Guidelines
 
-- Double-check account IDs, transaction IDs, and other identifiers before executing queries
+- Double-check identifiers before executing queries
 - Test queries on staging environment when possible
 - Document all manual operations in the on-call log
 - Notify the team after performing manual operations
@@ -52,7 +48,7 @@ Only BetterStack itself makes the phone call as it knows who and what to call. B
 
 BetterStack reacts to these sources of data:
 
-- BetterStack itself (uptime monitoring of the API and checking that the “Pay” button is visible in Checkout)
+- BetterStack itself (uptime monitoring of the API and the web app)
 - Sentry alerts
     - Repeated errors “anomaly” – **not** the more common ones that are sent to Slack
 
@@ -69,7 +65,7 @@ BetterStack reacts to these sources of data:
 **When?**
 
 - For minor incidents – do try and resolve yourself, but if you’re unable to resolve and the incident is ongoing do escalate. If the incident resolves itself we can investigate the following day.
-- For major incidents – i.e. all of Outception is down or we’ve had more than 5 minutes of checkout downtime then always escalate to other team members – don’t try to be the hero.
+- For major incidents – i.e. all of Outception is down or we’ve had more than 5 minutes of downtime then always escalate to other team members – don’t try to be the hero.
 
 **How?**
 
