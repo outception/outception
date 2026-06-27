@@ -22,9 +22,5 @@ if [[ ! -f "server/.env" ]]; then
     ./dev/setup-environment
 fi
 
-# Build backoffice
-echo "Building backoffice..."
-(cd server && uv run task backoffice)
-
 # Start all services in detached mode (instance auto-detected from CONDUCTOR_PORT)
 ./dev/cli/dev docker up --detach

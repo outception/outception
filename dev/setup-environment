@@ -304,10 +304,6 @@ def _write_server_env_file(
     replacements = {**replacements, **central_secrets}
 
     # Map backend secrets to frontend env vars (used by Docker web container)
-    if "OUTCEPTION_STRIPE_PUBLISHABLE_KEY" in replacements:
-        replacements["NEXT_PUBLIC_STRIPE_KEY"] = replacements[
-            "OUTCEPTION_STRIPE_PUBLISHABLE_KEY"
-        ]
     if "OUTCEPTION_GITHUB_APP_NAMESPACE" in replacements:
         replacements["NEXT_PUBLIC_GITHUB_APP_NAMESPACE"] = replacements[
             "OUTCEPTION_GITHUB_APP_NAMESPACE"
@@ -341,10 +337,6 @@ def _write_apps_web_env_file(github_app: dict[str, typing.Any] | None = None) ->
     replacements: dict[str, str] = {}
 
     central_secrets = _load_central_secrets()
-    if "OUTCEPTION_STRIPE_PUBLISHABLE_KEY" in central_secrets:
-        replacements["NEXT_PUBLIC_STRIPE_KEY"] = central_secrets[
-            "OUTCEPTION_STRIPE_PUBLISHABLE_KEY"
-        ]
 
     if github_app is not None:
         replacements = {
