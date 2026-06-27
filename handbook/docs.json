@@ -85,7 +85,6 @@
             "group": "On-Call Procedures",
             "pages": [
               "engineering/oncall/introduction",
-              "engineering/oncall/developer-faq",
               "engineering/oncall/merge-accounts",
               "engineering/oncall/deploy-infra",
               "engineering/oncall/trigger-webhooks",
