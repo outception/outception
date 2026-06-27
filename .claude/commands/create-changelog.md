@@ -49,11 +49,11 @@ When in doubt, leave it out. It is much better to ship a short changelog than a 
 
 ## Verifying scope claims
 
-PR descriptions and design docs frequently list the _eventual_ scope of a feature alongside what was actually shipped in that PR. If you take the prose at face value, you will hallucinate scope. Before writing copy that names specific surfaces (checkout, customer portal, emails, dashboard, mobile app, API, webhooks, invoices, etc.):
+PR descriptions and design docs frequently list the _eventual_ scope of a feature alongside what was actually shipped in that PR. If you take the prose at face value, you will hallucinate scope. Before writing copy that names specific surfaces (news feed, promotions, emails, dashboard, mobile app, API, webhooks, etc.):
 
 1. List the changed files in the PR (`gh pr view <n> --json files`).
-2. Confirm each surface you name has a matching file in the diff. Customer portal copy lives under `clients/apps/web/src/components/CustomerPortal` and similar; emails live under `server/emails` and `clients/packages/email`; checkout under `clients/packages/checkout` and `clients/apps/web/src/app/(checkout)`; etc.
-3. If a surface is mentioned in the PR description but not touched in the diff, either drop the surface from your copy or frame the entry as scoped to what shipped (e.g. "Korean checkout" instead of "Korean checkout, portal, and emails").
+2. Confirm each surface you name has a matching file in the diff. News surfaces live under `clients/apps/web/src/components/News`; promotions under `clients/apps/web/src/components/Promotions` and `server/outception/promotion`; emails under `server/emails`; etc.
+3. If a surface is mentioned in the PR description but not touched in the diff, either drop the surface from your copy or frame the entry as scoped to what shipped (e.g. "Korean promotions" instead of "Korean promotions, news, and emails").
 
 Do not paraphrase a PR description that lists future surfaces alongside the shipped one. Copy only what you can prove from the diff.
 

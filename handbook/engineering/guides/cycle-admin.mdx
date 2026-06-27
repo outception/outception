@@ -5,7 +5,7 @@ description: "How to configure Outception Cycle, the Slack bot that announces PR
 
 Outception Cycle is the small Slack bot that posts PR threads in `#pull-requests` and picks a primary reviewer whenever a team is requested for review. It runs on Vercel at [outception-cycle.vercel.app](https://outception-cycle.vercel.app), with a tiny admin UI for the bits we need to tweak day to day.
 
-This guide covers what the admin panel does and the most common tasks you will run from it. The implementation lives in [`polarsource/cycle`](https://github.com/outception/cycle).
+This guide covers what the admin panel does and the most common tasks you will run from it. The implementation lives in [`outception/cycle`](https://github.com/outception/cycle).
 
 ## What Cycle does
 
@@ -38,7 +38,7 @@ Go to [outception-cycle.vercel.app/admin](https://outception-cycle.vercel.app/ad
 
 ### Sign in with GitHub
 
-Click **Sign in with GitHub**. You must be a member of `@polarsource` — Cycle calls the GitHub API with your token to verify org membership before issuing a session. Anyone in the org can sign in and edit configuration; there are no further role checks.
+Click **Sign in with GitHub**. You must be a member of `@outception` — Cycle calls the GitHub API with your token to verify org membership before issuing a session. Anyone in the org can sign in and edit configuration; there are no further role checks.
 
 Sessions are signed cookies that last 7 days. Use **Sign out** in the top right to clear yours.
 
@@ -56,7 +56,7 @@ There is exactly one channel for the whole bot. Changing it affects every repo C
 
 ### Repositories
 
-A newline-separated list of `owner/repo` slugs that Cycle should listen to (e.g. `polarsource/polar`). Cycle ignores webhooks for any repo not in this list, so adding a new repo here is the switch that turns Cycle on for it.
+A newline-separated list of `owner/repo` slugs that Cycle should listen to (e.g. `outception/outception`). Cycle ignores webhooks for any repo not in this list, so adding a new repo here is the switch that turns Cycle on for it.
 
 <Note>
   Webhooks are configured at the GitHub App level (separately from this panel). If you add a
@@ -123,7 +123,7 @@ They are missing from the **GitHub → Slack mapping** table, or the mapped Slac
 
 ## Reference
 
-- Source: [`polarsource/cycle`](https://github.com/outception/cycle)
+- Source: [`outception/cycle`](https://github.com/outception/cycle)
 - Admin URL: https://outception-cycle.vercel.app/admin
 - Storage: Upstash Redis (configured via Vercel env vars)
-- Auth: GitHub OAuth, restricted to `@polarsource` org members, signed-cookie sessions (7-day TTL)
+- Auth: GitHub OAuth, restricted to `@outception` org members, signed-cookie sessions (7-day TTL)
