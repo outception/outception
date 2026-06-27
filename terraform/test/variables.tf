@@ -250,12 +250,6 @@ variable "tinybird_read_token" {
   sensitive   = true
 }
 
-variable "firecrawl_api_key" {
-  description = "Firecrawl Cloud API key"
-  type        = string
-  sensitive   = true
-}
-
 variable "backend_discord_proxy_url" {
   description = "Discord Proxy URL"
   type        = string

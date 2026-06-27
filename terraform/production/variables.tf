@@ -367,12 +367,6 @@ variable "tailscale_advertise_routes" {
   type        = string
 }
 
-variable "firecrawl_api_key" {
-  description = "Firecrawl Cloud API key"
-  type        = string
-  sensitive   = true
-}
-
 # Vercel frontend secrets
 
 variable "pydantic_ai_gateway_api_key" {

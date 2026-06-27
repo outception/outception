@@ -57,7 +57,6 @@ resource "render_env_group" "backend" {
       OUTCEPTION_DISCORD_PROXY_URL                    = { value = var.backend_secrets.discord_proxy_url }
       OUTCEPTION_RESEND_API_KEY                       = { value = var.backend_secrets.resend_api_key }
       OUTCEPTION_RESEND_WEBHOOK_SECRET                = { value = var.backend_secrets.resend_webhook_secret }
-      OUTCEPTION_FIRECRAWL_API_KEY                    = { value = var.backend_secrets.firecrawl_api_key }
       OUTCEPTION_LOGO_DEV_PUBLISHABLE_KEY             = { value = var.backend_secrets.logo_dev_publishable_key }
       OUTCEPTION_SECRET                               = { value = var.backend_secrets.secret }
       OUTCEPTION_SENTRY_DSN                           = { value = var.backend_secrets.sentry_dsn }

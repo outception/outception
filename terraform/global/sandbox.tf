@@ -308,14 +308,6 @@ resource "tfe_variable" "tinybird_read_token_sandbox" {
   variable_set_id = tfe_variable_set.sandbox.id
 }
 
-resource "tfe_variable" "firecrawl_api_key_sandbox" {
-  key             = "firecrawl_api_key"
-  category        = "terraform"
-  description     = "Firecrawl Cloud API key for sandbox"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.sandbox.id
-}
-
 # Vercel frontend
 resource "tfe_variable" "vercel_pydantic_ai_gateway_api_key_sandbox" {
   key             = "pydantic_ai_gateway_api_key"

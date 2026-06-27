@@ -382,14 +382,6 @@ resource "tfe_variable" "tailscale_advertise_routes_production" {
   variable_set_id = tfe_variable_set.production.id
 }
 
-resource "tfe_variable" "firecrawl_api_key_production" {
-  key             = "firecrawl_api_key"
-  category        = "terraform"
-  description     = "Firecrawl Cloud API key for production"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.production.id
-}
-
 # Vercel frontend
 resource "tfe_variable" "vercel_pydantic_ai_gateway_api_key_production" {
   key             = "pydantic_ai_gateway_api_key"

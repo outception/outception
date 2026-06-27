@@ -257,14 +257,6 @@ resource "tfe_variable" "tinybird_read_token_test" {
   variable_set_id = tfe_variable_set.test.id
 }
 
-resource "tfe_variable" "firecrawl_api_key_test" {
-  key             = "firecrawl_api_key"
-  category        = "terraform"
-  description     = "Firecrawl Cloud API key for test"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.test.id
-}
-
 resource "tfe_variable" "backend_discord_proxy_url_test" {
   key             = "backend_discord_proxy_url"
   category        = "terraform"

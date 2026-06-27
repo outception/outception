@@ -53,12 +53,7 @@ ENV RELEASE_VERSION=${RELEASE_VERSION}
 
 CMD ["uv", "run", "uvicorn", "outception.app:app", "--host", "0.0.0.0", "--port", "10000", "--limit-max-requests", "50000", "--limit-max-requests-jitter", "10000", "--timeout-graceful-shutdown", "30"]
 
-# Stage 3: Playwright image (for browser automation workers)
-FROM production AS playwright
-
-RUN uv run playwright install --with-deps chromium
-
-# Stage 4: AWS Lambda image (SQS-driven background tasks, POC)
+# Stage 3: AWS Lambda image (SQS-driven background tasks, POC)
 FROM production AS lambda
 
 RUN uv pip install awslambdaric
