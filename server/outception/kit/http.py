@@ -141,7 +141,7 @@ SuccessUrl = Annotated[
 """
 HttpUrl encodes `{CHECKOUT_ID}` to `%7BCHECKOUT_ID%7D`, so we unescape it after
 validation. This placeholder is replaced with the actual checkout ID at runtime
-(see `outception.models.checkout.Checkout.success_url`).
+
 
 The PlainSerializer then ensures `{CHECKOUT_ID}` doesn't get escaped again.
 """
