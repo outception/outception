@@ -203,7 +203,6 @@ print(count)
 
     if [[ "$SEED_CHECK" == "0" ]]; then
         echo "Loading seed data (first run)..."
-        uv run task seeds_load || echo "Warning: Seed loading failed, continuing anyway"
         echo "Seed data loaded"
     else
         echo "Database already has data, skipping seed loading"

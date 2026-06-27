@@ -37,13 +37,6 @@ else
     echo "@outception-com/ui already built"
 fi
 
-if [[ ! -d "packages/checkout/dist" ]]; then
-    echo "Building @outception-com/checkout..."
-    pnpm --filter @outception-com/checkout build
-else
-    echo "@outception-com/checkout already built"
-fi
-
 # Start the requested mode
 case "${1:-dev}" in
     dev)
