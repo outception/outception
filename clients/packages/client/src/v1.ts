@@ -2047,17 +2047,17 @@ export interface components {
       id: string
       /**
        * Name
-       * @description Organization name shown in checkout, customer portal, emails etc.
+       * @description Organization name shown in promotions, emails, etc.
        */
       name: string
       /**
        * Slug
-       * @description Unique organization slug in checkout, customer portal and credit card statements.
+       * @description Unique organization slug used in promotions and credit card statements.
        */
       slug: string
       /**
        * Avatar Url
-       * @description Avatar URL shown in checkout, customer portal, emails etc.
+       * @description Avatar URL shown in promotions, emails, etc.
        */
       avatar_url: string | null
       /**
@@ -2079,10 +2079,10 @@ export interface components {
       status: components['schemas']['OrganizationStatus']
       /**
        * Default Presentment Currency
-       * @description Default presentment currency. Used as fallback in checkout and customer portal, if the customer's local currency is not available.
+       * @description Default presentment currency. Used as a fallback, if the customer's local currency is not available.
        */
       default_presentment_currency: string
-      /** @description Default tax behavior applied on products. */
+      /** @description Default tax behavior applied on promotions. */
       default_tax_behavior: components['schemas']['TaxBehaviorOption']
       /** @description Two-letter country code (ISO 3166-1 alpha-2). */
       country?:
@@ -2818,7 +2818,7 @@ export interface components {
       default_presentment_currency?:
         | components['schemas']['PresentmentCurrency']
         | null
-      /** @description Default tax behavior applied on products. */
+      /** @description Default tax behavior applied on promotions. */
       default_tax_behavior?: components['schemas']['TaxBehaviorOption'] | null
     }
     /**
@@ -2846,17 +2846,17 @@ export interface components {
       id: string
       /**
        * Name
-       * @description Organization name shown in checkout, customer portal, emails etc.
+       * @description Organization name shown in promotions, emails, etc.
        */
       name: string
       /**
        * Slug
-       * @description Unique organization slug in checkout, customer portal and credit card statements.
+       * @description Unique organization slug used in promotions and credit card statements.
        */
       slug: string
       /**
        * Avatar Url
-       * @description Avatar URL shown in checkout, customer portal, emails etc.
+       * @description Avatar URL shown in promotions, emails, etc.
        */
       avatar_url: string | null
       /**
@@ -2878,10 +2878,10 @@ export interface components {
       status: components['schemas']['OrganizationStatus']
       /**
        * Default Presentment Currency
-       * @description Default presentment currency. Used as fallback in checkout and customer portal, if the customer's local currency is not available.
+       * @description Default presentment currency. Used as a fallback, if the customer's local currency is not available.
        */
       default_presentment_currency: string
-      /** @description Default tax behavior applied on products. */
+      /** @description Default tax behavior applied on promotions. */
       default_tax_behavior: components['schemas']['TaxBehaviorOption']
       /** @description Two-letter country code (ISO 3166-1 alpha-2). */
       country?:
