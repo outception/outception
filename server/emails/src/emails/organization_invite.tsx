@@ -27,8 +27,7 @@ export function OrganizationInvite({
       </Intro>
       <Text>
         As a member of {organization_name} you're now able to manage{' '}
-        {organization_name}'s products, customers, and subscriptions on{' '}
-        {BRAND_NAME}.
+        {organization_name}'s promotions and settings on {BRAND_NAME}.
       </Text>
       <Button href={invite_url}>Go to the {BRAND_NAME} dashboard</Button>
       <Footer email={email} />
