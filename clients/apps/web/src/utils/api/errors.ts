@@ -45,7 +45,7 @@ export const setProductValidationErrors = <TFieldValues extends FieldValues>(
     let loc = error.loc.slice(slice)
 
     // Filter out discriminator fields from the path
-    loc = loc.filter((segment, index, array) => {
+    loc = loc.filter((segment) => {
       const segmentStr = String(segment)
 
       // Skip if in explicit discriminators list
@@ -68,37 +68,6 @@ export const setProductValidationErrors = <TFieldValues extends FieldValues>(
         !segmentStr.match(/^[A-Z]{2,}/) // Allow acronyms like "ID"
       ) {
         return false
-      }
-
-      // Skip ProductCreate discriminator tags (from callable Discriminator)
-      if (segmentStr === 'one_time' || segmentStr === 'recurring') {
-        // Only filter at the top level (index 0 after slice)
-        if (index === 0) {
-          return false
-        }
-      }
-
-      // Skip discriminator values for ProductPriceCreate union, but ONLY in the specific context
-      // After adding Discriminator("amount_type"), Pydantic includes the discriminator value in the path
-      // e.g., ["prices", 0, "seat_based", "seat_tiers", "tiers"]
-      // We only want to filter out "seat_based" if it appears after "prices" and a number
-      const priceDiscriminatorValues = [
-        'fixed',
-        'custom',
-        'free',
-        'seat_based',
-        'metered_unit',
-      ]
-      if (priceDiscriminatorValues.includes(segmentStr)) {
-        // Check if previous segments match the pattern: "prices", then a number
-        if (index >= 2) {
-          const prev2 = String(array[index - 2])
-          const prev1 = array[index - 1]
-          // Only filter if pattern is: prices.[number].[discriminator]
-          if (prev2 === 'prices' && typeof prev1 === 'number') {
-            return false
-          }
-        }
       }
 
       return true

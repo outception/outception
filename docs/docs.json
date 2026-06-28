@@ -230,164 +230,8 @@
       "destination": "/introduction"
     },
     {
-      "source": "/documentation/basics/create-product",
-      "destination": "/features/products"
-    },
-    {
-      "source": "/documentation/basics/create-checkout-link",
-      "destination": "/features/checkout/links"
-    },
-    {
-      "source": "/documentation/basics/withdraw-money",
-      "destination": "/features/finance/payouts"
-    },
-    {
-      "source": "/documentation/features/products",
-      "destination": "/features/products"
-    },
-    {
       "source": "/documentation/support",
       "destination": "/support"
-    },
-    {
-      "source": "/documentation/features/benefits",
-      "destination": "/features/benefits/introduction"
-    },
-    {
-      "source": "/documentation/features/benefits/license-keys",
-      "destination": "/features/benefits/license-keys"
-    },
-    {
-      "source": "/documentation/features/benefits/discord-server-roles",
-      "destination": "/features/benefits/discord-access"
-    },
-    {
-      "source": "/documentation/features/benefits/github-repository-access",
-      "destination": "/features/benefits/github-access"
-    },
-    {
-      "source": "/documentation/features/benefits/file-downloads",
-      "destination": "/features/benefits/file-downloads"
-    },
-    {
-      "source": "/documentation/features/benefits/custom-benefit",
-      "destination": "/features/benefits/custom"
-    },
-    {
-      "source": "/documentation/features/checkouts/checkout-links",
-      "destination": "/features/checkout/links"
-    },
-    {
-      "source": "/documentation/tools/checkout-link",
-      "destination": "/features/checkout/links#checkout-links-cli"
-    },
-    {
-      "source": "/documentation/features/checkouts/checkout-embed",
-      "destination": "/features/checkout/embed"
-    },
-    {
-      "source": "/documentation/features/checkouts/checkout-sessions",
-      "destination": "/features/checkout/session"
-    },
-    {
-      "source": "/documentation/features/products/discounts",
-      "destination": "/features/discounts"
-    },
-    {
-      "source": "/documentation/features/orders-subscriptions",
-      "destination": "/features/orders"
-    },
-    {
-      "source": "/documentation/features/refunds",
-      "destination": "/features/refunds"
-    },
-    {
-      "source": "/documentation/features/analytics",
-      "destination": "/features/analytics"
-    },
-    {
-      "source": "/documentation/features/customer-management",
-      "destination": "/features/customer-management"
-    },
-    {
-      "source": "/documentation/features/customer-portal",
-      "destination": "/features/customer-portal/introduction"
-    },
-    {
-      "source": "/guides/disable-subscription-changes-in-customer-portal",
-      "destination": "/features/customer-portal/settings"
-    },
-    {
-      "source": "/guides/subscription-upgrades",
-      "destination": "/features/subscriptions/manage"
-    },
-    {
-      "source": "/guides/subscription-downgrades",
-      "destination": "/features/subscriptions/manage"
-    },
-    {
-      "source": "/guides/proration-for-subscription-changes",
-      "destination": "/features/subscriptions/proration"
-    },
-    {
-      "source": "/features/trials",
-      "destination": "/features/subscriptions/trials"
-    },
-    {
-      "source": "/docs/features/trials",
-      "destination": "/features/subscriptions/trials"
-    },
-    {
-      "source": "/docs/guides/subscription-upgrades",
-      "destination": "/features/subscriptions/manage"
-    },
-    {
-      "source": "/docs/guides/subscription-downgrades",
-      "destination": "/features/subscriptions/manage"
-    },
-    {
-      "source": "/docs/guides/proration-for-subscription-changes",
-      "destination": "/features/subscriptions/proration"
-    },
-    {
-      "source": "/features/customer-portal",
-      "destination": "/features/customer-portal/introduction"
-    },
-    {
-      "source": "/features/customer-portal/faq",
-      "destination": "/features/customer-portal/introduction#faq"
-    },
-    {
-      "source": "/docs/features/customer-portal",
-      "destination": "/features/customer-portal/introduction"
-    },
-    {
-      "source": "/documentation/features/finance/accounts",
-      "destination": "/features/finance/accounts"
-    },
-    {
-      "source": "/documentation/features/finance/balance",
-      "destination": "/features/finance/balance"
-    },
-    {
-      "source": "/documentation/features/finance/payouts",
-      "destination": "/features/finance/payouts"
-    },
-    {
-      "source": "/documentation/integrations/outception-for-raycast",
-      "destination": "/features/integrations/raycast"
-    },
-    {
-      "source": "/documentation/integrations/outception-for-framer",
-      "destination": "/features/integrations/framer"
-    },
-    {
-      "source": "/documentation/integrations/outception-for-zapier",
-      "destination": "/features/integrations/zapier"
-    },
-    {
-      "source": "/documentation/features/products/purchasing-power-parity",
-      "destination": "/features/integrations/paritydeals"
     },
     {
       "source": "/documentation/integration-guides/webhooks",
@@ -400,14 +244,6 @@
     {
       "source": "/documentation/integration-guides/authenticating-with-outception",
       "destination": "/integrate/authentication"
-    },
-    {
-      "source": "/documentation/integration-guides/nextjs",
-      "destination": "/guides/nextjs"
-    },
-    {
-      "source": "/documentation/integration-guides/laravel",
-      "destination": "/guides/laravel"
     },
     {
       "source": "/documentation/sdks/typescript-sdk",
@@ -470,22 +306,6 @@
       "destination": "/integrate/webhooks/endpoints"
     },
     {
-      "source": "/finance/accounts",
-      "destination": "/features/finance/accounts"
-    },
-    {
-      "source": "/docs/finance/accounts",
-      "destination": "/features/finance/accounts"
-    },
-    {
-      "source": "/finance/balance",
-      "destination": "/features/finance/balance"
-    },
-    {
-      "source": "/docs/finance/balance",
-      "destination": "/features/finance/balance"
-    },
-    {
       "source": "/developers/sdk",
       "destination": "/integrate/sdk/typescript"
     },
@@ -494,80 +314,12 @@
       "destination": "/integrate/sdk/typescript"
     },
     {
-      "source": "/products",
-      "destination": "/features/products"
-    },
-    {
-      "source": "/docs/products",
-      "destination": "/features/products"
-    },
-    {
-      "source": "/subscriptions",
-      "destination": "/features/subscriptions/introduction"
-    },
-    {
-      "source": "/docs/subscriptions",
-      "destination": "/features/subscriptions/introduction"
-    },
-    {
       "source": "/onboarding",
       "destination": "/introduction#quickstart"
     },
     {
       "source": "/docs/onboarding",
       "destination": "/introduction#quickstart"
-    },
-    {
-      "source": "/benefits",
-      "destination": "/features/benefits/introduction"
-    },
-    {
-      "source": "/benefits/discord",
-      "destination": "/features/benefits/discord-access"
-    },
-    {
-      "source": "/benefits/license-keys",
-      "destination": "/features/benefits/license-keys"
-    },
-    {
-      "source": "/benefits/github-repositories",
-      "destination": "/features/benefits/github-access"
-    },
-    {
-      "source": "/benefits/file-downloads",
-      "destination": "/features/benefits/file-downloads"
-    },
-    {
-      "source": "/benefits/custom",
-      "destination": "/features/benefits/custom"
-    },
-    {
-      "source": "/docs/benefits",
-      "destination": "/features/benefits/introduction"
-    },
-    {
-      "source": "/docs/benefits/discord",
-      "destination": "/features/benefits/discord-access"
-    },
-    {
-      "source": "/docs/benefits/license-keys",
-      "destination": "/features/benefits/license-keys"
-    },
-    {
-      "source": "/docs/benefits/github-repositories",
-      "destination": "/features/benefits/github-access"
-    },
-    {
-      "source": "/docs/benefits/file-downloads",
-      "destination": "/features/benefits/file-downloads"
-    },
-    {
-      "source": "/docs/benefits/custom",
-      "destination": "/features/benefits/custom"
-    },
-    {
-      "source": "/docs/features/customers",
-      "destination": "/features/customer-management"
     },
     {
       "source": "/features/integrations/evendeals",
