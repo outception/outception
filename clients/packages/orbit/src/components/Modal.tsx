@@ -84,7 +84,9 @@ export const Modal: FunctionComponent<ModalProps> = ({
             onClick={onInnerClick}
           >
             <div className="flex flex-row items-center justify-between pt-1 pr-1 pb-0 pl-4 text-sm">
-              <span className="dark:text-outception-500 text-gray-500">{title}</span>
+              <span className="dark:text-outception-500 text-gray-500">
+                {title}
+              </span>
               <Button
                 variant="ghost"
                 size="sm"
