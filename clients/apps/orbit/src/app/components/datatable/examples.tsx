@@ -12,77 +12,77 @@ import {
 } from '@outception-com/orbit'
 import { useMemo, useState } from 'react'
 
-interface Order {
+interface Promotion {
   id: string
-  customer: string
+  advertiser: string
   email: string
   amount: number
-  status: 'paid' | 'pending' | 'refunded'
+  status: 'active' | 'queued' | 'expired'
 }
 
-const ORDERS: Order[] = [
+const PROMOTIONS: Promotion[] = [
   {
-    id: 'ord_01',
-    customer: 'Acme AI',
+    id: 'promo_01',
+    advertiser: 'Acme AI',
     email: 'ops@acme.ai',
     amount: 4900,
-    status: 'paid',
+    status: 'active',
   },
   {
-    id: 'ord_02',
-    customer: 'Nimbus Labs',
+    id: 'promo_02',
+    advertiser: 'Nimbus Labs',
     email: 'billing@nimbus.dev',
     amount: 1200,
-    status: 'pending',
+    status: 'queued',
   },
   {
-    id: 'ord_03',
-    customer: 'Quanta',
+    id: 'promo_03',
+    advertiser: 'Quanta',
     email: 'finance@quanta.io',
     amount: 9900,
-    status: 'paid',
+    status: 'active',
   },
   {
-    id: 'ord_04',
-    customer: 'Helix',
+    id: 'promo_04',
+    advertiser: 'Helix',
     email: 'team@helix.sh',
     amount: 2500,
-    status: 'refunded',
+    status: 'expired',
   },
   {
-    id: 'ord_05',
-    customer: 'Orbit Tools',
+    id: 'promo_05',
+    advertiser: 'Orbit Tools',
     email: 'hi@orbit.tools',
     amount: 7300,
-    status: 'paid',
+    status: 'active',
   },
   {
-    id: 'ord_06',
-    customer: 'Vector',
+    id: 'promo_06',
+    advertiser: 'Vector',
     email: 'pay@vector.ai',
     amount: 1800,
-    status: 'pending',
+    status: 'queued',
   },
   {
-    id: 'ord_07',
-    customer: 'Drift',
+    id: 'promo_07',
+    advertiser: 'Drift',
     email: 'accounts@drift.app',
     amount: 6400,
-    status: 'paid',
+    status: 'active',
   },
   {
-    id: 'ord_08',
-    customer: 'Pulse',
+    id: 'promo_08',
+    advertiser: 'Pulse',
     email: 'billing@pulse.co',
     amount: 3100,
-    status: 'refunded',
+    status: 'expired',
   },
 ]
 
-const statusColor: Record<Order['status'], StatusColor> = {
-  paid: 'green',
-  pending: 'yellow',
-  refunded: 'gray',
+const statusColor: Record<Promotion['status'], StatusColor> = {
+  active: 'green',
+  queued: 'yellow',
+  expired: 'gray',
 }
 
 const formatAmount = (cents: number) =>
@@ -90,13 +90,13 @@ const formatAmount = (cents: number) =>
     cents / 100,
   )
 
-const columns: DataTableColumnDef<Order>[] = [
+const columns: DataTableColumnDef<Promotion>[] = [
   {
-    accessorKey: 'customer',
+    accessorKey: 'advertiser',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Customer" />
+      <DataTableColumnHeader column={column} title="Advertiser" />
     ),
-    cell: ({ row }) => <Text>{row.original.customer}</Text>,
+    cell: ({ row }) => <Text>{row.original.advertiser}</Text>,
   },
   {
     accessorKey: 'email',
@@ -127,7 +127,7 @@ const columns: DataTableColumnDef<Order>[] = [
   },
 ]
 
-export function OrdersTableDemo() {
+export function PromotionsTableDemo() {
   const [pagination, setPagination] = useState<DataTablePaginationState>({
     pageIndex: 0,
     pageSize: 20,
@@ -136,10 +136,10 @@ export function OrdersTableDemo() {
 
   const sorted = useMemo(() => {
     const sort = sorting[0]
-    if (!sort) return ORDERS
-    const rows = [...ORDERS]
+    if (!sort) return PROMOTIONS
+    const rows = [...PROMOTIONS]
     rows.sort((a, b) => {
-      const key = sort.id as keyof Order
+      const key = sort.id as keyof Promotion
       if (a[key] < b[key]) return sort.desc ? 1 : -1
       if (a[key] > b[key]) return sort.desc ? -1 : 1
       return 0
@@ -156,7 +156,7 @@ export function OrdersTableDemo() {
     <DataTable
       columns={columns}
       data={page}
-      rowCount={ORDERS.length}
+      rowCount={PROMOTIONS.length}
       isLoading={false}
       pagination={pagination}
       onPaginationChange={setPagination}

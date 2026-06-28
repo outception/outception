@@ -9,7 +9,7 @@ import {
   PropsTable,
   Section,
 } from '@/components/docs'
-import { OrdersTableDemo } from './examples'
+import { PromotionsTableDemo } from './examples'
 
 const columnsCode = `const columns: DataTableColumnDef<Order>[] = [
   {
@@ -147,7 +147,7 @@ export default function DataTablePage() {
         description="An orders table with a sortable Customer and Amount header, status chips and pagination. Sorting and pagination are held in local state."
       >
         <Example align="stretch">
-          <OrdersTableDemo />
+          <PromotionsTableDemo />
         </Example>
       </Section>
 
