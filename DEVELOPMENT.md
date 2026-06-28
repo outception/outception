@@ -20,7 +20,7 @@ flowchart TD
     subgraph "Frontend"
         WEB["Web client"]
     end
-    STRIPE_WH["Stripe Webhooks"]
+    POLAR_WH["polar.sh Webhooks"]
     USERS["Users"]
 
     WEB --> API
@@ -31,7 +31,7 @@ flowchart TD
     API --> S3
     WEB --> S3
 
-    STRIPE_WH -.-> API
+    POLAR_WH -.-> API
     USERS -.-> API
     USERS -.-> WEB
 ```
@@ -51,8 +51,8 @@ The `dev up` command will:
 - Install missing prerequisites (Homebrew, Docker, uv, pnpm, Node.js)
 - Generate environment files and starts infrastructure (PostgreSQL, Redis, MinIO)
 - Install Python and JS dependencies, builds packages
-- Walk you through GitHub App and Stripe setup interactively
-- Run database migrations and builds email templates and backoffice
+- Walk you through GitHub App setup interactively
+- Run database migrations and builds email templates
 
 After `dev up` completes, start the services you need:
 
@@ -60,7 +60,6 @@ After `dev up` completes, start the services you need:
 dev api              # Start backend API server (http://127.0.0.1:8000)
 dev worker           # Start background job worker
 dev web              # Start frontend Next.js dev server (http://127.0.0.1:3000)
-dev stripe           # Start Stripe webhook listener
 ```
 
 Running `dev up` after pulling new code is also recommended to make sure dependencies and DB migrations are up-to-date.
@@ -89,64 +88,13 @@ Your browser will open a new page and you'll be prompted to **create a GitHub Ap
 
 **Shared secrets (multi-worktree development)**
 
-If you work with multiple Git worktrees, secrets (GitHub, Stripe) are automatically shared via `~/.config/outception/secrets.env`:
+If you work with multiple Git worktrees, secrets (GitHub) are automatically shared via `~/.config/outception/secrets.env`:
 
 1. Run `./dev/setup-environment` in your first worktree
 2. If you set up a GitHub App with `--setup-github-app`, credentials are saved automatically to the central file
-3. For Stripe, edit `~/.config/outception/secrets.env` and add your keys (see template at `dev/secrets.env.template`)
-4. Run `./dev/setup-environment` in each additional worktree - secrets are merged automatically
+3. Run `./dev/setup-environment` in each additional worktree - secrets are merged automatically
 
 You can override the secrets file location with `OUTCEPTION_SECRETS_FILE` environment variable.
-
-**Optional: setup Stripe**
-
-> [!NOTE]
-> Some functions, such as product creation, may not work as expected due to missing Stripe environment variables.
-
-If you want to work with payments and subscriptions, you'll need to set up a Stripe development environment:
-
-> [!IMPORTANT]
-> Put all Stripe values in the central secrets file `~/.config/outception/secrets.env`, **not** in `server/.env`.
-> Whenever `setup-environment` regenerates `server/.env` (a fresh clone or worktree, `dev up --clean`,
-> `dev stripe`, or a manual run), it rebuilds the file from the central secrets and those values win — so
-> edits made directly to `server/.env` are overwritten.
->
-> Do **not** rely on `dev stripe` for the webhook secrets when using the dashboard-endpoint flow below: it
-> derives the secret from `stripe listen --print-secret` (the Stripe CLI listener, a different secret) and
-> writes that one value to *both* `OUTCEPTION_STRIPE_WEBHOOK_SECRET` and `OUTCEPTION_STRIPE_CONNECT_WEBHOOK_SECRET`,
-> clobbering your two distinct dashboard secrets. Set those by hand in the central file.
-
-1. **Create a Stripe account** at [https://dashboard.stripe.com/register](https://dashboard.stripe.com/register)
-
-2. **Copy your API keys** from the [Stripe API Keys page](https://dashboard.stripe.com/test/apikeys) and add them to your `~/.config/outception/secrets.env` file:
-
-    ```
-    OUTCEPTION_STRIPE_SECRET_KEY=sk_test_...
-    OUTCEPTION_STRIPE_PUBLISHABLE_KEY=pk_test_...
-    ```
-
-3. **Enable tax calculation** by visiting [https://dashboard.stripe.com/test/tax](https://dashboard.stripe.com/test/tax)
-
-4. **Create webhook endpoints** to handle Stripe events:
-    - Go to [Stripe Webhooks](https://dashboard.stripe.com/test/webhooks)
-    - Click "Add destination"
-    - Select "Your account"
-    - Set API version to the latest (not the preview)
-    - Set enabled events to only the events listed in `DIRECT_IMPLEMENTED_WEBHOOKS` (see `outception/integrations/stripe/endpoints.py`)
-    - Click continue, Select Webhook endpoint
-    - Set the endpoint URL to: `https://your-domain.ngrok-free.app/v1/integrations/stripe/webhook`
-    - Copy the webhook signing secret and add it to your `~/.config/outception/secrets.env` file:
-        ```
-        OUTCEPTION_STRIPE_WEBHOOK_SECRET=whsec_...
-        ```
-    - Restart the same operation with:
-        - events listed in `CONNECT_IMPLEMENTED_WEBHOOKS` (see `outception/integrations/stripe/endpoints.py`)
-        - Set the endpoint URL to: `https://your-domain.ngrok-free.app/v1/integrations/stripe/webhook-connect`
-        - Copy the webhook signing secret and add it to your `~/.config/outception/secrets.env` file:
-            ```
-            OUTCEPTION_STRIPE_CONNECT_WEBHOOK_SECRET=whsec_...
-            ```
-
 
 ### Setup backend
 
