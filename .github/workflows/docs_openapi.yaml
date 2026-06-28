@@ -1,4 +1,4 @@
-name: Update docs OpenAPI schema and webhooks
+name: Update docs OpenAPI schema
 
 on:
   workflow_dispatch:
@@ -13,10 +13,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: ${{ github.workspace }}/docs
-
     permissions:
       contents: write
       pull-requests: write
@@ -25,13 +21,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6.0.3
 
-      - name: Run update script
-        run: ./update-schema.sh https://spec.speakeasy.com/outception/outception/outception-oas-with-code-samples
+      - name: Update OpenAPI schema
+        run: |
+          curl -s "https://spec.speakeasy.com/outception/outception/outception-oas-with-code-samples" \
+            | jq -M '.' > clients/apps/web/content/openapi.yaml
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
         with:
-          add-paths: docs/
+          add-paths: clients/apps/web/content/openapi.yaml
           commit-message: "docs: update OpenAPI schema"
           title: "docs: update OpenAPI schema"
           branch: "docs/update-openapi-schema"

@@ -32,20 +32,6 @@ export async function generateMetadata(): Promise<Metadata> {
     },
   }
 
-  if (CONFIG.IS_SANDBOX) {
-    return {
-      ...baseMetadata,
-      robots: {
-        index: false,
-        follow: false,
-        googleBot: {
-          index: false,
-          follow: false,
-        },
-      },
-    }
-  }
-
   return {
     ...baseMetadata,
     robots: {

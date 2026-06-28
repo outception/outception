@@ -5,12 +5,12 @@ from outception.config import INSECURE_DEFAULT_SECRET, Environment, Settings
 
 
 class TestRequireStrongSecret:
-    @pytest.mark.parametrize("env", [Environment.production, Environment.sandbox])
+    @pytest.mark.parametrize("env", [Environment.production])
     def test_hosted_env_rejects_default_secret(self, env: Environment) -> None:
         with pytest.raises(ValidationError):
             Settings(ENV=env, SECRET=INSECURE_DEFAULT_SECRET)
 
-    @pytest.mark.parametrize("env", [Environment.production, Environment.sandbox])
+    @pytest.mark.parametrize("env", [Environment.production])
     def test_hosted_env_accepts_strong_secret(self, env: Environment) -> None:
         settings = Settings(ENV=env, SECRET="a-strong-unique-secret-value")
         assert settings.SECRET == "a-strong-unique-secret-value"

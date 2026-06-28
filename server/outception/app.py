@@ -38,7 +38,6 @@ from outception.middlewares import (
     LogCorrelationIdMiddleware,
     OperationalErrorMiddleware,
     PathRewriteMiddleware,
-    SandboxResponseHeaderMiddleware,
 )
 from outception.oauth2.endpoints.well_known import router as well_known_router
 from outception.oauth2.exception_handlers import (
@@ -193,8 +192,6 @@ def create_app() -> FastAPI:
     )
 
     app.add_middleware(OperationalErrorMiddleware)
-    if settings.is_sandbox():
-        app.add_middleware(SandboxResponseHeaderMiddleware)
     app.add_middleware(APIVersionMiddleware, current=CURRENT_API_VERSION)
     if not settings.is_testing():
         rate_limit_redis = create_redis("rate-limit")

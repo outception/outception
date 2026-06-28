@@ -9,7 +9,6 @@ export default defineConfig({
     exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**'],
     env: {
       NEXT_PUBLIC_FRONTEND_BASE_URL: 'https://outception.com',
-      NEXT_PUBLIC_SANDBOX_FRONTEND_BASE_URL: 'https://sandbox.outception.com',
     },
   },
 })

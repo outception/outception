@@ -341,14 +341,6 @@ resource "tfe_variable" "vercel_gram_api_key_production" {
   variable_set_id = tfe_variable_set.production.id
 }
 
-resource "tfe_variable" "vercel_mintlify_assistant_api_key_production" {
-  key             = "mintlify_assistant_api_key"
-  category        = "terraform"
-  description     = "Mintlify assistant API key for the Vercel production frontend"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.production.id
-}
-
 resource "tfe_variable" "vercel_mcp_oauth2_client_id_production" {
   key             = "mcp_oauth2_client_id"
   category        = "terraform"

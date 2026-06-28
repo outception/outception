@@ -10,7 +10,6 @@ from outception.config import settings
 from outception.enums import RateLimitGroup
 from outception.rate_limit import (
     _PRODUCTION_RULES,
-    _SANDBOX_RULES,
     _authenticate,
     _bearer_token,
     _identity_cache_key,
@@ -248,7 +247,7 @@ _SENSITIVE_PATHS: list[tuple[str, str]] = [
 ]
 
 
-@pytest.mark.parametrize("rules", [_PRODUCTION_RULES, _SANDBOX_RULES])
+@pytest.mark.parametrize("rules", [_PRODUCTION_RULES])
 @pytest.mark.parametrize(("path", "expected_zone"), _SENSITIVE_PATHS)
 @pytest.mark.parametrize("group", [RateLimitGroup.default, RateLimitGroup.pending_auth])
 class TestSensitiveEndpointZoneIsolation:
@@ -275,7 +274,7 @@ class TestSensitiveEndpointZoneIsolation:
         )
 
 
-@pytest.mark.parametrize("rules", [_PRODUCTION_RULES, _SANDBOX_RULES])
+@pytest.mark.parametrize("rules", [_PRODUCTION_RULES])
 @pytest.mark.parametrize(("path", "expected_zone"), _SENSITIVE_PATHS)
 @pytest.mark.parametrize("group", [RateLimitGroup.default, RateLimitGroup.pending_auth])
 class TestSensitiveEndpointLimitsStayTight:

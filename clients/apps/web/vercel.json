@@ -6,57 +6,7 @@
       "main": false
     }
   },
-  "redirects": [
-    {
-      "source": "/docs",
-      "destination": "https://outception.com/docs",
-      "has": [{ "type": "host", "value": "sandbox.outception.com" }],
-      "permanent": true
-    },
-    {
-      "source": "/docs/:path+",
-      "destination": "https://outception.com/docs/:path+",
-      "has": [{ "type": "host", "value": "sandbox.outception.com" }],
-      "permanent": true
-    }
-  ],
   "rewrites": [
-    {
-      "source": "/_mintlify/api/:path+",
-      "destination": "https://outception.mintlify.app/_mintlify/api/:path+"
-    },
-    {
-      "source": "/api/request",
-      "destination": "https://outception.mintlify.app/_mintlify/api/request"
-    },
-    {
-      "source": "/docs",
-      "destination": "https://outception.mintlify.dev/docs"
-    },
-    {
-      "source": "/docs/llms.txt",
-      "destination": "https://outception.mintlify.app/llms.txt"
-    },
-    {
-      "source": "/docs/llms-full.txt",
-      "destination": "https://outception.mintlify.app/llms-full.txt"
-    },
-    {
-      "source": "/docs/sitemap.xml",
-      "destination": "https://outception.mintlify.app/sitemap.xml"
-    },
-    {
-      "source": "/docs/robots.txt",
-      "destination": "https://outception.mintlify.app/robots.txt"
-    },
-    {
-      "source": "/docs/:path*",
-      "destination": "https://outception.mintlify.dev/docs/:path*"
-    },
-    {
-      "source": "/mintlify-assets/:path+",
-      "destination": "https://outception.mintlify.app/mintlify-assets/:path+"
-    },
     {
       "source": "/ingest/static/(.*)",
       "destination": "https://us-assets.i.posthog.com/static/$1"

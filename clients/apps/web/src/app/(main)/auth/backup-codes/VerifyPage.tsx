@@ -2,7 +2,6 @@
 
 import { useBackupCodesVerify } from '@/hooks'
 import { setValidationErrors } from '@/utils/api/errors'
-import { CONFIG } from '@/utils/config'
 import { isValidationError } from '@outception-com/client'
 import { Button } from '@outception-com/orbit'
 import { Input } from '@outception-com/orbit'
@@ -75,7 +74,6 @@ const VerifyPage = () => {
         />
         <Button type="submit" size="lg" className="w-full" loading={loading}>
           Sign in
-          {CONFIG.IS_SANDBOX && ' to Sandbox'}
         </Button>
       </form>
     </Form>

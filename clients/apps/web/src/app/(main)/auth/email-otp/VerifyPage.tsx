@@ -2,7 +2,6 @@
 
 import { useEmailOTPVerify } from '@/hooks'
 import { setValidationErrors } from '@/utils/api/errors'
-import { CONFIG } from '@/utils/config'
 import { isValidationError } from '@outception-com/client'
 import { Button } from '@outception-com/orbit'
 import {
@@ -95,7 +94,6 @@ const VerifyPage = ({ intent = 'login' }: { intent?: 'login' | 'signup' }) => {
         />
         <Button type="submit" size="lg" className="w-full" loading={loading}>
           {intent === 'signup' ? 'Sign up' : 'Sign in'}
-          {CONFIG.IS_SANDBOX && ' to Sandbox'}
         </Button>
       </form>
     </Form>

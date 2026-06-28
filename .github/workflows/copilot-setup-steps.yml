@@ -109,9 +109,3 @@ jobs:
         run: |
           uv sync --dev --frozen
           uv run task generate_dev_jwks
-
-      - name: 📚 Setup documentation
-        working-directory: ./docs
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm exec mintlify update

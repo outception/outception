@@ -9,7 +9,7 @@ prefix (e.g. the setting `SECRET` → env var `OUTCEPTION_SECRET`).
 
 | Env var | Notes |
 | --- | --- |
-| `OUTCEPTION_ENV` | `production` or `sandbox`. The app **refuses to boot** in these envs if `OUTCEPTION_SECRET` is still the dev default (see below). |
+| `OUTCEPTION_ENV` | `production`. The app **refuses to boot** in production if `OUTCEPTION_SECRET` is still the dev default (see below). |
 | `OUTCEPTION_SECRET` | **Strong, unique value.** Keys all token hashing (PATs, OAuth codes, OTPs, sessions). Must not be the dev default. |
 | `OUTCEPTION_JWKS` | Path to a JWKS file. Generate one with `uv run task generate_dev_jwks`, or supply a real key set. |
 | `OUTCEPTION_POSTGRES_*` | `USER`, `PWD`, `HOST`, `PORT`, `DATABASE` (+ optional `POSTGRES_READ_*` for a read replica). |
@@ -69,7 +69,7 @@ Without these, promotion analytics fall back to Postgres-only counters.
 | --- | --- |
 | `NEXT_PUBLIC_FRONTEND_BASE_URL` | Your web domain. Now **drives `metadataBase` + canonical** automatically (no longer hardcoded). |
 | `NEXT_PUBLIC_API_URL` | This deployment's backend. |
-| `NEXT_PUBLIC_ENVIRONMENT` | `production` / `sandbox`. |
+| `NEXT_PUBLIC_ENVIRONMENT` | `production`. |
 
 Only remaining manual item: **OG/social image** — the Outception-branded image was removed.
 Add an Outception social-preview image (a static asset, or reference the existing

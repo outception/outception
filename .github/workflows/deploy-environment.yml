@@ -6,7 +6,7 @@ on:
   workflow_call:
     inputs:
       environment:
-        description: "Environment to deploy to (sandbox or production)"
+        description: "Environment to deploy to (production)"
         required: true
         type: string
       render-api-service-id:
@@ -117,7 +117,7 @@ jobs:
     # No `environment:` here on purpose. A standalone job that references a
     # protected GitHub Environment (required reviewers / wait timer) would
     # PAUSE for approval, and because this job lives inside the reusable
-    # workflow, a pending approval would stall deploy-sandbox and block
+    # workflow, a pending approval would stall the caller and block
     # deploy-production. The Sentry-side environment label is passed via the
     # action's own `environment:` input below, so tracking is unaffected.
     # Sentry release is best-effort: a missing annotation is observability

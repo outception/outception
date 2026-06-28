@@ -127,25 +127,6 @@ class PathRewriteMiddleware:
         await send(message)
 
 
-class SandboxResponseHeaderMiddleware:
-    def __init__(self, app: ASGIApp) -> None:
-        self.app = app
-
-    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        if scope["type"] not in ("http", "websocket"):
-            await self.app(scope, receive, send)
-            return
-
-        async def send_wrapper(message: Message) -> None:
-            if message["type"] == "http.response.start":
-                message.setdefault("headers", [])
-                headers = MutableHeaders(scope=message)
-                headers["X-Outception-Sandbox"] = "1"
-            await send(message)
-
-        await self.app(scope, receive, send_wrapper)
-
-
 class OperationalErrorMiddleware:
     def __init__(self, app: ASGIApp) -> None:
         self.app = app

@@ -1,10 +1,10 @@
 variable "environment" {
-  description = "Environment name (production, sandbox)"
+  description = "Environment name (production)"
   type        = string
 
   validation {
-    condition     = contains(["production", "sandbox"], var.environment)
-    error_message = "Must be either \"production\" or \"sandbox\"."
+    condition     = contains(["production"], var.environment)
+    error_message = "Must be \"production\"."
   }
 }
 

@@ -1,7 +1,6 @@
 'use client'
 
 import { useExperiment } from '@/experiments/client'
-import { CONFIG } from '@/utils/config'
 import { schemas } from '@outception-com/client'
 import { usePostHog } from 'posthog-js/react'
 import { useCallback, useMemo } from 'react'
@@ -93,7 +92,7 @@ export const useOnboardingTracking = (): UseOnboardingTrackingReturn => {
     trackExposure: false,
   })
 
-  const mode = CONFIG.IS_SANDBOX ? 'sandbox' : 'production'
+  const mode = 'production'
 
   const captureEvent = useCallback(
     (

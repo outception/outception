@@ -1,0 +1,78 @@
+---
+title: "Outception"
+sidebarTitle: "Introduction"
+description: "A live news wall with pay-to-promote. A public feed from 250+ sources, plus paid in-feed promotions."
+---
+
+## What is Outception?
+
+Outception is a **live news wall** aggregating headlines from 250+ sources,
+combined with **pay-to-promote** placements: anyone can pay to feature a
+promotion in the feed. The public news API is open; promotion payments are
+handled externally by [polar.sh](https://polar.sh) as the merchant of record.
+
+<CardGroup cols={2}>
+  <Card title="Live News Feed" icon="newspaper">
+    A continuously updated wall of headlines aggregated from 250+ sources,
+    searchable and grouped by category.
+  </Card>
+  <Card title="Pay to Promote" icon="bullhorn">
+    Buy a featured slot to surface a promotion as a "Promoted" card in the
+    feed, charged through polar.sh.
+  </Card>
+</CardGroup>
+
+## API
+
+The Outception API is organized around two public surfaces — **News** and
+**Promotions** — plus organization management and authentication.
+
+<CardGroup cols={2}>
+  <Card title="API Overview" icon="book" href="/api-reference/introduction">
+    Base URLs, authentication, pagination, and rate limits.
+  </Card>
+  <Card title="News" icon="newspaper" href="/api-reference/news/sources">
+    List sources, search headlines, and fetch news in batches.
+  </Card>
+  <Card title="Promotions" icon="bullhorn" href="/api-reference/promotions/get-featured">
+    Read featured promotions, pricing, and category placements.
+  </Card>
+  <Card title="Organizations" icon="building" href="/api-reference/organizations/list">
+    Manage organizations and their settings.
+  </Card>
+</CardGroup>
+
+## Authentication
+
+<CardGroup cols={2}>
+  <Card title="Organization Access Tokens" icon="key" href="/integrate/oat">
+    Authenticate server-side requests with an OAT.
+  </Card>
+  <Card title="OAuth 2.0" icon="user-lock" href="/integrate/oauth2/introduction">
+    Authenticate users via the OAuth 2.0 authorization flow.
+  </Card>
+</CardGroup>
+
+## Integrate
+
+<CardGroup cols={3}>
+  <Card title="Webhooks" icon="link" href="/integrate/webhooks/endpoints">
+    Register endpoints and handle incoming events.
+  </Card>
+  <Card title="MCP" icon="robot" href="/integrate/mcp">
+    Connect AI tools to your Outception organization.
+  </Card>
+</CardGroup>
+
+## Open Source
+
+Outception is developed in the open under the Apache 2.0 license.
+
+<CardGroup cols={2}>
+  <Card title="Source Code" icon="github" href="https://github.com/outception/outception">
+    Browse the codebase and contribute.
+  </Card>
+  <Card title="Issues & Roadmap" icon="users" href="https://github.com/outception/outception/issues">
+    Feature requests and development in public.
+  </Card>
+</CardGroup>

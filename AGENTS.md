@@ -41,7 +41,6 @@ outception/
 │   ├── packages/client/        # Generated API client + data hooks
 │   └── packages/i18n/          # Translations
 ├── dev/                    # Dev scripts and tooling
-├── docs/                   # User/developer docs (Mintlify)
 ├── sdk/overlays/           # OpenAPI Overlay tweaks for Speakeasy-generated SDKs
 └── .claude/                # Claude Code config (settings, hooks, commands)
 ```
@@ -122,10 +121,13 @@ job auto-translates the rest. Don't edit other locale files. (More in `clients/A
 
 ## Documentation
 
-- **Handbook**: https://handbook.outception.com/engineering/
-- **Design docs**: https://handbook.outception.com/engineering/design-documents/
-- **API guidelines**: https://handbook.outception.com/engineering/rest-api-guidelines
-- **User/developer docs**: `docs/` (Mintlify) — `cd docs && pnpm dev` to serve locally.
+Docs are self-hosted inside the Next.js web app (no Mintlify). MDX content lives in
+`clients/apps/web/content/{docs,handbook}`; the OpenAPI API reference renders from
+`clients/apps/web/content/openapi.yaml`. Run `pnpm dev` in `clients` and browse:
+
+- **User/developer docs** (public): `/docs` — guides + generated OpenAPI API reference.
+- **Engineering handbook** (login-gated): `/handbook` — incl. design docs, REST API
+  guidelines, on-call procedures.
 
 ## Key Integrations
 

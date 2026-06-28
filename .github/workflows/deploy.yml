@@ -33,14 +33,10 @@ jobs:
     permissions:
       contents: read
     outputs:
-      # Per-component-per-environment outputs: each diffs HEAD against the
-      # SHA of the last successful deploy for that component + environment
-      # (tracked via deployed/{component}-{environment} git tags). Falls
-      # back to HEAD~1 if no tag exists and the push has no parent SHA.
-      #
-      # Why per-env: sandbox can be ahead of production (failed prod deploy
-      # leaves sandbox tag advanced while prod tag stays). Each env needs its
-      # own diff base to compute its own pending changes correctly.
+      # Per-component outputs: each diffs HEAD against the SHA of the last
+      # successful production deploy for that component (tracked via
+      # deployed/{component}-production git tags). Falls back to HEAD~1 if no
+      # tag exists and the push has no parent SHA.
       #
       # Why per-component: a frontend-only push must not advance the backend
       # tag, otherwise a later cancelled backend run's commits would be lost.
@@ -49,9 +45,6 @@ jobs:
       # successful backend deploy would be permanently dropped from future
       # diffs (its pending frontend changes sit "before" the backend tag).
       # This is why each component has its own paths-filter invocation.
-      backend-sandbox: ${{ steps.filter-backend-sandbox.outputs.backend }}
-      migrations-sandbox: ${{ steps.filter-backend-sandbox.outputs.migrations }}
-      frontend-sandbox: ${{ steps.filter-frontend-sandbox.outputs.frontend }}
       backend-production: ${{ steps.filter-backend-production.outputs.backend }}
       migrations-production: ${{ steps.filter-backend-production.outputs.migrations }}
       frontend-production: ${{ steps.filter-frontend-production.outputs.frontend }}
@@ -109,41 +102,14 @@ jobs:
             fi
           }
           {
-            echo "backend-sandbox=$(resolve deployed/backend-sandbox)"
-            echo "frontend-sandbox=$(resolve deployed/frontend-sandbox)"
             echo "backend-production=$(resolve deployed/backend-production)"
             echo "frontend-production=$(resolve deployed/frontend-production)"
           } >> "$GITHUB_OUTPUT"
 
-      # Four paths-filter invocations: one per component per env. We can't
-      # combine them because dorny/paths-filter@v4 uses a single base for
-      # all filters in one invocation, but our design requires the frontend
-      # filter to diff against the frontend tag, not the backend tag.
-      - name: Detect backend changes since last sandbox backend deploy
-        uses: dorny/paths-filter@v4
-        id: filter-backend-sandbox
-        with:
-          base: ${{ steps.bases.outputs.backend-sandbox }}
-          filters: |
-            backend:
-              - 'server/**'
-              - '.github/workflows/deploy.yml'
-              - '.github/workflows/deploy-environment.yml'
-              - '.github/workflows/deploy_server.sh'
-            migrations:
-              - 'server/migrations/**'
-
-      - name: Detect frontend changes since last sandbox frontend deploy
-        uses: dorny/paths-filter@v4
-        id: filter-frontend-sandbox
-        with:
-          base: ${{ steps.bases.outputs.frontend-sandbox }}
-          filters: |
-            frontend:
-              - 'clients/**'
-              - '.github/workflows/deploy.yml'
-              - '.github/workflows/deploy-environment.yml'
-
+      # Two paths-filter invocations: one per component. We can't combine them
+      # because dorny/paths-filter@v4 uses a single base for all filters in one
+      # invocation, but our design requires the frontend filter to diff against
+      # the frontend tag, not the backend tag.
       - name: Detect backend changes since last production backend deploy
         uses: dorny/paths-filter@v4
         id: filter-backend-production
@@ -172,11 +138,8 @@ jobs:
   build:
     name: "Build Docker Image 🐳"
     needs: changes
-    # Build if EITHER environment needs backend deployed. Most common case is
-    # both flip together (sandbox and prod tags advance in lockstep), but if a
-    # sandbox deploy succeeded and prod failed previously, only prod still
-    # needs the build.
-    if: needs.changes.outputs.backend-sandbox == 'true' || needs.changes.outputs.backend-production == 'true' || github.event_name == 'workflow_dispatch'
+    # Build if production needs the backend deployed.
+    if: needs.changes.outputs.backend-production == 'true' || github.event_name == 'workflow_dispatch'
     timeout-minutes: 20
     runs-on: blacksmith-4vcpu-ubuntu-2404
     permissions:
@@ -228,7 +191,7 @@ jobs:
   build-lambda-worker:
     name: "Build Lambda Worker Image (ECR) λ"
     needs: changes
-    if: github.ref == 'refs/heads/main' && (needs.changes.outputs.backend-sandbox == 'true' || needs.changes.outputs.backend-production == 'true' || github.event_name == 'workflow_dispatch')
+    if: github.ref == 'refs/heads/main' && (needs.changes.outputs.backend-production == 'true' || github.event_name == 'workflow_dispatch')
     timeout-minutes: 20
     runs-on: blacksmith-4vcpu-ubuntu-2404
     permissions:
@@ -257,8 +220,7 @@ jobs:
         id: push-lambda-worker
         with:
           push: true
-          # Sandbox/prod repos — add into the tags block once they exist:
-          #   ${{ steps.login-ecr.outputs.registry }}/outception-sandbox-lambda-worker:sha-${{ github.sha }}
+          # Prod repo — add into the tags block once it exists:
           #   ${{ steps.login-ecr.outputs.registry }}/outception-production-lambda-worker:sha-${{ github.sha }}
           tags: |
             ${{ steps.login-ecr.outputs.registry }}/outception-test-lambda-worker:sha-${{ github.sha }}
@@ -270,33 +232,9 @@ jobs:
             RELEASE_VERSION=${{ github.sha }}
           secrets: |
 
-  # deploy-lambda-sandbox:
-  #   name: "Deploy Lambda Worker to Sandbox 🧪"
-  #   needs: [changes, build-lambda-worker]
-  #   if: always() && !failure() && !cancelled() && needs.build-lambda-worker.result == 'success' && (needs.changes.outputs.backend-sandbox == 'true' || github.event_name == 'workflow_dispatch')
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     contents: read
-  #     id-token: write
-  #   steps:
-  #     - name: Configure AWS credentials
-  #       uses: aws-actions/configure-aws-credentials@v6.2.0
-  #       with:
-  #         role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-  #         aws-region: us-east-2
-  #     - name: Log in to Amazon ECR
-  #       id: login-ecr
-  #       uses: aws-actions/amazon-ecr-login@v2
-  #     - name: Update sandbox Lambda function code
-  #       run: |
-  #         aws lambda update-function-code \
-  #           --function-name outception-sandbox-lambda-worker \
-  #           --image-uri "${{ steps.login-ecr.outputs.registry }}/outception-sandbox-lambda-worker:sha-${{ github.sha }}" \
-  #           --publish
-
   # deploy-lambda-production:
   #   name: "Deploy Lambda Worker to Production 🚀"
-  #   needs: [changes, build-lambda-worker, deploy-lambda-sandbox]
+  #   needs: [changes, build-lambda-worker]
   #   if: always() && !failure() && !cancelled() && needs.build-lambda-worker.result == 'success' && (needs.changes.outputs.backend-production == 'true' || github.event_name == 'workflow_dispatch')
   #   runs-on: ubuntu-latest
   #   permissions:
@@ -318,33 +256,13 @@ jobs:
   #           --image-uri "${{ steps.login-ecr.outputs.registry }}/outception-production-lambda-worker:sha-${{ github.sha }}" \
   #           --publish
 
-  deploy-sandbox:
-    name: "Deploy to Sandbox 🧪"
-    needs: [changes, build]
-    # `!failure() && !cancelled()` mirrors deploy-production: if the `changes`
-    # job fails, `build` is skipped (no `if: always()`), and on a
-    # workflow_dispatch the OR-clause below would otherwise let this job run
-    # against an image that was never built. Guarding on !failure() blocks that path.
-    if: always() && !failure() && !cancelled() && (needs.build.result == 'success' || needs.build.result == 'skipped') && (needs.changes.outputs.backend-sandbox == 'true' || needs.changes.outputs.frontend-sandbox == 'true' || github.event_name == 'workflow_dispatch')
-    uses: ./.github/workflows/deploy-environment.yml
-    with:
-      environment: sandbox
-      render-api-service-id: "srv-crkocgbtq21c73ddsdbg"
-      render-worker-service-ids: "srv-d62q7vh4tr6s73fk44ng,srv-d733cp15pdvs73f6vqng,srv-d7unnjhj2pic73c2vr60"
-      has-migrations: ${{ needs.changes.outputs.migrations-sandbox == 'true' || github.event_name == 'workflow_dispatch' }}
-      skip-backend: ${{ needs.changes.outputs.backend-sandbox != 'true' && github.event_name != 'workflow_dispatch' }}
-      skip-frontend: ${{ needs.changes.outputs.frontend-sandbox != 'true' && github.event_name != 'workflow_dispatch' }}
-    secrets:
-      RENDER_API_TOKEN: ${{ secrets.RENDER_API_TOKEN }}
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-      SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-
   deploy-production:
     name: "Deploy to Production 🚀"
-    needs: [changes, build, deploy-sandbox]
+    needs: [changes, build]
+    # `!failure() && !cancelled()`: if the `changes` job fails, `build` is
+    # skipped (no `if: always()`), and on a workflow_dispatch the OR-clause
+    # below would otherwise let this job run against an image that was never
+    # built. Guarding on !failure() blocks that path.
     if: always() && !failure() && !cancelled() && (needs.build.result == 'success' || needs.build.result == 'skipped') && (needs.changes.outputs.backend-production == 'true' || needs.changes.outputs.frontend-production == 'true' || github.event_name == 'workflow_dispatch')
     uses: ./.github/workflows/deploy-environment.yml
     with:
@@ -364,8 +282,8 @@ jobs:
 
   notify-failure:
     name: "Notify Failure 🚨"
-    needs: [build, deploy-sandbox, deploy-production]
-    if: always() && (needs.build.result == 'failure' || needs.deploy-sandbox.result == 'failure' || needs.deploy-production.result == 'failure')
+    needs: [build, deploy-production]
+    if: always() && (needs.build.result == 'failure' || needs.deploy-production.result == 'failure')
     runs-on: ubuntu-latest
     steps:
       - name: Announce in Slack
@@ -383,7 +301,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":rotating_light: *Deploy failed* — triggered by *${{ github.actor }}*\n*Failed jobs:*${{ needs.build.result == 'failure' && ' `build`' || '' }}${{ needs.deploy-sandbox.result == 'failure' && ' `deploy-sandbox`' || '' }}${{ needs.deploy-production.result == 'failure' && ' `deploy-production`' || '' }}\n*Commit:* `${{ github.sha }}`\n*<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View workflow run>*"
+                    "text": ":rotating_light: *Deploy failed* — triggered by *${{ github.actor }}*\n*Failed jobs:*${{ needs.build.result == 'failure' && ' `build`' || '' }}${{ needs.deploy-production.result == 'failure' && ' `deploy-production`' || '' }}\n*Commit:* `${{ github.sha }}`\n*<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View workflow run>*"
                   }
                 }
               ]

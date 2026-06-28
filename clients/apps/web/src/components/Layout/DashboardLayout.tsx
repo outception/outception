@@ -5,8 +5,7 @@ import { Modal } from '@outception-com/orbit'
 import { useModal } from '@/components/Modal/useModal'
 import { useAuth } from '@/hooks/auth'
 import { OrganizationContext } from '@/providers/maintainerOrganization'
-import { CONFIG } from '@/utils/config'
-import { setLastVisitedEnv, setLastVisitedOrg } from '@/utils/cookies'
+import { setLastVisitedOrg } from '@/utils/cookies'
 import ViewSidebarOutlined from '@mui/icons-material/ViewSidebarOutlined'
 import { schemas } from '@outception-com/client'
 import { Button } from '@outception-com/orbit'
@@ -42,7 +41,6 @@ const DashboardLayout = (
   const { organization, organizations } = useContext(OrganizationContext)
 
   useEffect(() => {
-    setLastVisitedEnv(CONFIG.IS_SANDBOX ? 'sandbox' : 'production')
     if (organization) {
       setLastVisitedOrg(organization.slug)
     }

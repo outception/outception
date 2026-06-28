@@ -25,9 +25,7 @@ from outception.kit.jwk import JWKSFile
 class Environment(StrEnum):
     development = "development"
     testing = "testing"  # Used for running tests
-    sandbox = "sandbox"
     production = "production"
-    test = "test"  # Used for the test environment in Render
 
 
 def _validate_email_renderer_binary_path(value: Path) -> Path:
@@ -48,8 +46,6 @@ def _validate_email_renderer_binary_path(value: Path) -> Path:
 env = Environment(os.getenv("OUTCEPTION_ENV", Environment.development))
 if env == Environment.testing:
     env_file = ".env.testing"
-elif env == Environment.test:
-    env_file = ".env.test"
 else:
     env_file = ".env"
 file_extension = ".exe" if os.name == "nt" else ""
@@ -440,7 +436,7 @@ class Settings(BaseSettings):
         # SECRET — it keys all token hashing, so a known value makes every
         # credential forgeable. Fail fast at startup rather than serve traffic.
         if (
-            self.ENV in {Environment.production, Environment.sandbox}
+            self.ENV == Environment.production
             and self.SECRET == INSECURE_DEFAULT_SECRET
         ):
             raise ValueError(
@@ -458,17 +454,11 @@ class Settings(BaseSettings):
     def is_testing(self) -> bool:
         return self.is_environment({Environment.testing})
 
-    def is_sandbox(self) -> bool:
-        return self.is_environment({Environment.sandbox, Environment.test})
-
     def is_production(self) -> bool:
         return self.is_environment({Environment.production})
 
     def is_tinybird_configured(self) -> bool:
         return bool(self.TINYBIRD_API_URL and self.TINYBIRD_API_TOKEN)
-
-    def is_test(self) -> bool:
-        return self.is_environment({Environment.test})
 
     def generate_external_url(self, path: str) -> str:
         return f"{self.BASE_URL}{path}"

@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { useTOTPVerify } from '@/hooks'
 import { setValidationErrors } from '@/utils/api/errors'
-import { CONFIG } from '@/utils/config'
 import { isValidationError } from '@outception-com/client'
 import { Button } from '@outception-com/orbit'
 import {
@@ -96,7 +95,6 @@ const VerifyPage = () => {
         />
         <Button type="submit" size="lg" className="w-full" loading={loading}>
           Sign in
-          {CONFIG.IS_SANDBOX && ' to Sandbox'}
         </Button>
         <div className="mt-4 text-center">
           <Link

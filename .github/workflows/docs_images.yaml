@@ -3,10 +3,10 @@ name: Compress docs images
 on:
   pull_request:
     paths:
-      - "docs/**.png"
-      - "docs/**.jpg"
-      - "docs/**.jpeg"
-      - "docs/**.webp"
+      - "clients/apps/web/content/**.png"
+      - "clients/apps/web/content/**.jpg"
+      - "clients/apps/web/content/**.jpeg"
+      - "clients/apps/web/content/**.webp"
 
 jobs:
   compress:

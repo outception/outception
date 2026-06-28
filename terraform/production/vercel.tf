@@ -68,7 +68,7 @@ module "vercel" {
   name     = "outception"
   git_repo = "outception/outception"
 
-  # Production runs functions in cle1 (sandbox uses the module default, iad1).
+  # Production runs functions in cle1.
   resource_config = {
     function_default_regions = ["cle1"]
   }
@@ -131,7 +131,6 @@ module "vercel" {
 
   secrets = {
     pydantic_ai_gateway_api_key = var.pydantic_ai_gateway_api_key
-    mintlify_assistant_api_key  = var.mintlify_assistant_api_key
     gram_api_key                = var.gram_api_key
     sentry_auth_token           = var.sentry_auth_token
     outception_preview_access_token  = var.outception_preview_access_token
@@ -140,7 +139,6 @@ module "vercel" {
   # Environment-specific or target-varies-by-env.
   environment_variables = [
     { key = "NEXT_PUBLIC_FRONTEND_BASE_URL", value = "https://outception.com", target = ["production"] },
-    { key = "NEXT_PUBLIC_SANDBOX_FRONTEND_BASE_URL", value = "https://sandbox.outception.com" },
     { key = "NEXT_PUBLIC_GOOGLE_ANALYTICS_ID", value = "G-MBYW1QZFHE" },
     { key = "MCP_OAUTH2_CLIENT_ID", value = var.mcp_oauth2_client_id, target = ["production", "preview"] },
     { key = "MCP_OAUTH2_CLIENT_SECRET", value = var.mcp_oauth2_client_secret, target = ["production", "preview"] },

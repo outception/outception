@@ -55,21 +55,6 @@ const oauth2CSP = `
   frame-ancestors 'none';
 `
 
-// We rewrite Mintlify docs to outception.com/docs, so we need a specific CSP for them
-// Ref: https://www.mintlify.com/docs/guides/csp-configuration#content-security-policy-csp-configuration
-const docsCSP = `
-  default-src 'self';
-  script-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net www.googletagmanager.com cdn.segment.com plausible.io
-  us.posthog.com tag.clearbitscripts.com cdn.heapanalytics.com chat.cdn-plain.com chat-assets.frontapp.com
-  browser.sentry-cdn.com js.sentry-cdn.com;
-  style-src 'self' 'unsafe-inline' d4tuoctqmanu0.cloudfront.net fonts.googleapis.com;
-  font-src 'self' d4tuoctqmanu0.cloudfront.net fonts.googleapis.com;
-  img-src 'self' data: blob: d3gk2c5xim1je2.cloudfront.net mintcdn.com *.mintcdn.com cdn.jsdelivr.net mintlify.s3.us-west-1.amazonaws.com;
-  connect-src 'self' *.mintlify.dev *.mintlify.com d1ctpt7j8wusba.cloudfront.net mintcdn.com *.mintcdn.com
-  api.mintlifytrieve.com www.googletagmanager.com cdn.segment.com plausible.io us.posthog.com browser.sentry-cdn.com;
-  frame-src 'self' *.mintlify.dev https://outception-public-assets.s3.us-east-2.amazonaws.com;
-`
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   allowedDevOrigins: ['127.0.0.1'],
@@ -91,6 +76,19 @@ const nextConfig = {
 
   // This is required to support PostHog trailing slash API requests
   skipTrailingSlashRedirect: true,
+
+  // Docs/handbook routes read MDX + the OpenAPI spec from `content/` via fs at
+  // request time (dynamic fallbacks, the handbook search index). Trace those
+  // files into the serverless bundle so they exist at runtime on Vercel.
+  outputFileTracingIncludes: {
+    '/docs/[[...slug]]': ['./content/docs/**', './content/openapi.yaml'],
+    '/handbook/[[...slug]]': ['./content/handbook/**'],
+    '/docs/llms.txt': ['./content/docs/**'],
+    '/docs/llms-full.txt': ['./content/docs/**'],
+    '/docs/search-index.json': ['./content/docs/**'],
+    '/handbook/search-index.json': ['./content/handbook/**'],
+    '/sitemap.xml': ['./content/docs/**'],
+  },
 
   webpack: (config, { dev }) => {
     if (config.cache && !dev) {
@@ -226,6 +224,59 @@ const nextConfig = {
         ],
       },
 
+      // Legacy documentation redirects (migrated from the former Mintlify
+      // docs.json). Stale Polar-era SDK/adapter targets that don't exist in
+      // this docs set were dropped; the rest map to real pages under /docs.
+      { source: '/api', destination: '/docs/api-reference', permanent: true },
+      { source: '/api/:path*', destination: '/docs/api-reference', permanent: true },
+      { source: '/docs/api', destination: '/docs/api-reference', permanent: true },
+      {
+        source: '/docs/api/:path*',
+        destination: '/docs/api-reference',
+        permanent: true,
+      },
+      {
+        source: '/developers/webhooks',
+        destination: '/docs/integrate/webhooks/endpoints',
+        permanent: true,
+      },
+      {
+        source: '/docs/developers/webhooks',
+        destination: '/docs/integrate/webhooks/endpoints',
+        permanent: true,
+      },
+      {
+        source: '/developers/:path*',
+        destination: '/docs/integrate/authentication',
+        permanent: true,
+      },
+      {
+        source: '/docs/developers/:path*',
+        destination: '/docs/integrate/authentication',
+        permanent: true,
+      },
+      { source: '/onboarding', destination: '/docs/introduction', permanent: true },
+      {
+        source: '/docs/onboarding',
+        destination: '/docs/introduction',
+        permanent: true,
+      },
+      {
+        source: '/documentation/support',
+        destination: '/docs/support',
+        permanent: true,
+      },
+      {
+        source: '/documentation/integration-guides/webhooks',
+        destination: '/docs/integrate/webhooks/endpoints',
+        permanent: true,
+      },
+      {
+        source: '/documentation/:path*',
+        destination: '/docs/introduction',
+        permanent: true,
+      },
+
       // Logged-in user redirections
       {
         source: '/',
@@ -353,17 +404,9 @@ const nextConfig = {
       },
     ]
 
-    // Add X-Robots-Tag header for sandbox environment
-    if (ENVIRONMENT === 'sandbox') {
-      baseHeaders.push({
-        key: 'X-Robots-Tag',
-        value: 'noindex, nofollow, noarchive, nosnippet, noimageindex',
-      })
-    }
-
     return [
       {
-        source: '/((?!oauth2|docs).*)',
+        source: '/((?!oauth2).*)',
         headers: baseHeaders,
       },
       {
@@ -382,42 +425,6 @@ const nextConfig = {
             key: 'X-Frame-Options',
             value: 'DENY',
           },
-          ...(ENVIRONMENT === 'sandbox'
-            ? [
-                {
-                  key: 'X-Robots-Tag',
-                  value:
-                    'noindex, nofollow, noarchive, nosnippet, noimageindex',
-                },
-              ]
-            : []),
-        ],
-      },
-      {
-        source: '/docs/:path*',
-        headers: [
-          {
-            key: 'Content-Security-Policy',
-            value: docsCSP.replace(/\n/g, ''),
-          },
-          {
-            key: 'Permissions-Policy',
-            value:
-              'payment=(), publickey-credentials-get=(), camera=(), microphone=(), geolocation=()',
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          ...(ENVIRONMENT === 'sandbox'
-            ? [
-                {
-                  key: 'X-Robots-Tag',
-                  value:
-                    'noindex, nofollow, noarchive, nosnippet, noimageindex',
-                },
-              ]
-            : []),
         ],
       },
     ]

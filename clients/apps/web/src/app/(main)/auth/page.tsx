@@ -1,5 +1,4 @@
 import LogoIcon from '@/components/Brand/logos/LogoIcon'
-import { CONFIG } from '@/utils/config'
 import { Metadata } from 'next'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
@@ -49,19 +48,10 @@ export default async function Page(props: {
           </Link>
           <div className="flex flex-col gap-4">
             <h2 className="text-2xl text-black dark:text-white">
-              {CONFIG.IS_SANDBOX
-                ? 'Welcome to the Outception Sandbox'
-                : 'Welcome to Outception'}
+              Welcome to Outception
             </h2>
             <span className="dark:text-outception-400 text-lg text-balance text-gray-500">
-              {CONFIG.IS_SANDBOX ? (
-                <>
-                  This is a testing environment. Changes here won&rsquo;t affect
-                  your live account and payments are not processed.
-                </>
-              ) : (
-                'Live news, pay to promote'
-              )}
+              Live news, pay to promote
             </span>
           </div>
           {searchParams.error && (

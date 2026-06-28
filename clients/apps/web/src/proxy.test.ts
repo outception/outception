@@ -70,44 +70,24 @@ describe('proxy matcher configuration', () => {
     ).toBe(false)
   })
 
-  it('should NOT run for Mintlify docs', () => {
-    expect(
-      unstable_doesMiddlewareMatch({
-        config,
-        nextConfig,
-        url: '/docs/overview',
-      }),
-    ).toBe(false)
-  })
-
-  it('should NOT run for nested docs paths', () => {
+  it('should run for self-hosted docs', () => {
     expect(
       unstable_doesMiddlewareMatch({
         config,
         nextConfig,
         url: '/docs/integrate/mcp',
       }),
-    ).toBe(false)
+    ).toBe(true)
   })
 
-  it('should NOT run for _mintlify routes', () => {
+  it('should run for the auth-gated handbook', () => {
     expect(
       unstable_doesMiddlewareMatch({
         config,
         nextConfig,
-        url: '/_mintlify/test',
+        url: '/handbook/engineering/introduction',
       }),
-    ).toBe(false)
-  })
-
-  it('should NOT run for mintlify-assets', () => {
-    expect(
-      unstable_doesMiddlewareMatch({
-        config,
-        nextConfig,
-        url: '/mintlify-assets/test',
-      }),
-    ).toBe(false)
+    ).toBe(true)
   })
 
   it('should NOT run for Next.js static files', () => {
@@ -210,6 +190,16 @@ describe('middleware function', () => {
     expect(response.status).toBe(307)
     expect(response.headers.get('location')).toContain('/auth')
     expect(response.headers.get('location')).toContain('return_to=%2Fdashboard')
+  })
+
+  it('should redirect unauthenticated users from the handbook', async () => {
+    const request = new NextRequest('https://example.com/handbook')
+
+    const response = await proxy(request)
+
+    expect(response.status).toBe(307)
+    expect(response.headers.get('location')).toContain('/auth')
+    expect(response.headers.get('location')).toContain('return_to=%2Fhandbook')
   })
 
   it('should forward the authenticated user to server components', async () => {
@@ -349,69 +339,5 @@ describe('middleware function', () => {
     expect(location).toContain(
       'return_to=%2Fto%2Fdashboard%2Fsettings%2Fbilling',
     )
-  })
-})
-
-describe('the /to/ dance', () => {
-  it('bounces /to/* to the sandbox host when outception_env cookie does not match the current env', async () => {
-    const request = new NextRequest(
-      'https://outception.com/to/dashboard/products',
-    )
-    request.cookies.set('outception_env', 'sandbox')
-
-    const response = await proxy(request)
-
-    expect(response.status).toBe(307)
-    expect(response.headers.get('location')).toBe(
-      'https://sandbox.outception.com/to/dashboard/products',
-    )
-  })
-
-  it('preserves query string when bouncing /to/*', async () => {
-    const request = new NextRequest(
-      'https://outception.com/to/dashboard/products?foo=bar',
-    )
-    request.cookies.set('outception_env', 'sandbox')
-
-    const response = await proxy(request)
-
-    expect(response.status).toBe(307)
-    expect(response.headers.get('location')).toBe(
-      'https://sandbox.outception.com/to/dashboard/products?foo=bar',
-    )
-  })
-
-  it('does not bounce when outception_env cookie matches the current env', async () => {
-    const request = new NextRequest(
-      'https://outception.com/to/dashboard/products',
-    )
-    request.cookies.set('outception_env', 'production')
-
-    const response = await proxy(request)
-
-    expect(response.status).toBe(307)
-    expect(response.headers.get('location')).toContain('/auth')
-  })
-
-  it('ignores invalid outception_env cookie values', async () => {
-    const request = new NextRequest(
-      'https://outception.com/to/dashboard/products',
-    )
-    request.cookies.set('outception_env', 'narnia')
-
-    const response = await proxy(request)
-
-    expect(response.status).toBe(307)
-    expect(response.headers.get('location')).toContain('/auth')
-  })
-
-  it('does not bounce non-/to/ paths even with a mismatching cookie', async () => {
-    const request = new NextRequest('https://outception.com/dashboard')
-    request.cookies.set('outception_env', 'sandbox')
-
-    const response = await proxy(request)
-
-    expect(response.status).toBe(307)
-    expect(response.headers.get('location')).toContain('/auth')
   })
 })

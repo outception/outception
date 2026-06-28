@@ -277,20 +277,6 @@ resource "render_web_service" "api" {
         percentage = 90
       }
     }
-    } : var.environment == "sandbox" ? {
-    enabled = true
-    min     = 2
-    max     = 2
-    criteria = {
-      cpu = {
-        enabled    = true
-        percentage = 90
-      }
-      memory = {
-        enabled    = true
-        percentage = 90
-      }
-    }
   } : null
 
   custom_domains = var.api_service_config.custom_domains

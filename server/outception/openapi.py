@@ -4,7 +4,7 @@ from typing import Any, NotRequired, TypedDict
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 
-from outception.config import Environment, settings
+from outception.config import settings
 from outception.kit.metadata import add_metadata_query_schema
 from outception.oauth2.schemas import add_oauth2_form_schemas
 
@@ -70,24 +70,15 @@ class OpenAPIParameters(TypedDict):
 OPENAPI_PARAMETERS: OpenAPIParameters = {
     "title": "Outception API",
     "summary": "Outception HTTP and Webhooks API",
-    "description": "Read the docs at https://outception.com/docs/api-reference",
-    "docs_url": None
-    if settings.is_environment({Environment.sandbox, Environment.production})
-    else "/docs",
-    "redoc_url": None
-    if settings.is_environment({Environment.sandbox, Environment.production})
-    else "/redoc",
+    "description": "Read the docs at https://outception.com/docs/api-reference/introduction",
+    "docs_url": None if settings.is_production() else "/docs",
+    "redoc_url": None if settings.is_production() else "/redoc",
     "openapi_tags": APITag.metadata(),  # type: ignore
     "servers": [
         {
             "url": "https://api.outception.com",
             "description": "Production environment",
             "x-speakeasy-server-id": "production",
-        },
-        {
-            "url": "https://sandbox-api.outception.com",
-            "description": "Sandbox environment",
-            "x-speakeasy-server-id": "sandbox",
         },
     ],
 }

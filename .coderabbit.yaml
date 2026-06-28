@@ -32,7 +32,7 @@ reviews:
     - "!**/pnpm-lock.yaml"
     - "!server/uv.lock"
     - "!flake.lock"
-    - "!docs/openapi.yaml"
+    - "!clients/apps/web/content/openapi.yaml"
     - "!server/emails/src/types/openapi.ts"
     - "!clients/packages/client/src/v1.ts"
     - "!**/__snapshots__/**"

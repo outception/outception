@@ -1,3 +1,4 @@
+import { docsMdxComponents } from '@/components/Docs/mdx'
 import { StaticImage } from '@/components/Image/StaticImage'
 import ProseWrapper from '@/components/MDX/ProseWrapper'
 import { Table } from '@outception-com/orbit/ui/table'
@@ -16,6 +17,7 @@ interface ImportedImageSrc {
 export function useMDXComponents(components: MDXComponents): MDXComponents {
   return {
     ...components,
+    ...docsMdxComponents,
     BodyWrapper(props) {
       return (
         <ProseWrapper className="flex w-full flex-col items-center md:max-w-7xl!">

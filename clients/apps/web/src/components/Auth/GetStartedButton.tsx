@@ -1,7 +1,6 @@
 'use client'
 
 import { usePostHog } from '@/hooks/posthog'
-import { CONFIG } from '@/utils/config'
 import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight'
 import { Button } from '@outception-com/orbit'
 import { ComponentProps, FormEvent, useCallback, useState } from 'react'
@@ -40,15 +39,6 @@ const GetStartedButton = ({
     [onClick],
   )
 
-  const handleSandbox = () => {
-    posthog.capture(
-      'dashboard:onboarding:mode:click',
-      { mode: 'sandbox', source: 'landing_modal' },
-      { send_instantly: true },
-    )
-    window.location.href = `${CONFIG.SANDBOX_FRONTEND_BASE_URL}/auth?return_to=/onboarding/start`
-  }
-
   const handleGetStarted = () => {
     posthog.capture('dashboard:onboarding:mode:click', {
       mode: 'production',
@@ -67,7 +57,6 @@ const GetStartedButton = ({
   const modalContents = {
     choose: (
       <GetStartedChoose
-        onSandbox={handleSandbox}
         onGetStarted={handleGetStarted}
         onLogin={() => setView('login')}
       />
@@ -108,10 +97,8 @@ const GetStartedButton = ({
 }
 
 function GetStartedChoose({
-  onSandbox,
   onGetStarted,
 }: {
-  onSandbox: () => void
   onGetStarted: () => void
   onLogin: () => void
 }) {
@@ -131,19 +118,6 @@ function GetStartedChoose({
           </Button>
           <p className="dark:text-outception-500 mt-2 text-center text-xs text-gray-400">
             Create your organization and start accepting payments.
-          </p>
-        </div>
-        <div className="flex w-full flex-row items-center gap-6">
-          <div className="dark:border-outception-700 grow border-t border-gray-200" />
-          <div className="text-sm text-gray-500">or</div>
-          <div className="dark:border-outception-700 grow border-t border-gray-200" />
-        </div>
-        <div>
-          <Button fullWidth variant="secondary" onClick={onSandbox}>
-            Try the sandbox
-          </Button>
-          <p className="dark:text-outception-500 mt-2 text-center text-xs text-gray-400">
-            Test data and mock payments. No setup required.
           </p>
         </div>
       </div>

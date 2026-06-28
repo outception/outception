@@ -1,0 +1,124 @@
+---
+title: Outception over Model Context Protocol (MCP)
+description: Extend the capabilities of your AI agents with Outception's MCP Server
+sidebarTitle: Model Context Protocol (MCP)
+---
+
+Supercharge your AI agents with Outception as a Model Context Protocol (MCP) server.
+
+## What is MCP?
+
+MCP is a protocol for integrating tools with AI agents. It can greatly enhance the capabilities of your AI agents by providing them with real-time data and context.
+
+Outception offers a remote MCP server that you can connect to from most AI clients.
+
+## How does it work?
+
+You need a MCP-capable agent environment to use Outception over MCP. A few of them are Claude Desktop and Cursor.
+
+## Connecting to Outception MCP
+
+Outception provides a remote MCP server:
+
+- **Production**: `https://mcp.outception.com/mcp/outception-mcp` - Connect to your live Outception organization
+
+When you can specify a MCP URL, use the URL above.
+
+If you have to specify a command, use:
+
+```json
+{
+  "mcpServers": {
+    "Outception": {
+      "command": "npx",
+      "args": ["mcp-remote", "https://mcp.outception.com/mcp/outception-mcp"]
+    }
+  }
+}
+```
+
+### Cursor
+
+In `.cursor/mcp.json`, add:
+
+```json
+{
+  "mcpServers": {
+    "Outception": {
+      "url": "https://mcp.outception.com/mcp/outception-mcp"
+    }
+  }
+}
+```
+
+### Windsurf
+
+In `mcp_config.json`, add:
+
+```json
+{
+  "mcpServers": {
+    "Outception": {
+      "command": "npx",
+      "args": ["mcp-remote", "https://mcp.outception.com/mcp/outception-mcp"]
+    }
+  }
+}
+```
+
+### Codex
+
+Add the following to your `~/.codex/config.toml`:
+
+```toml
+[features]
+rmcp_client = true
+
+[mcp_servers.outception]
+type = "http"
+url = "https://mcp.outception.com/mcp/outception-mcp"
+```
+
+Then run:
+
+```sh
+codex mcp login outception
+```
+
+### Claude Code
+
+Run the following command:
+
+```
+claude mcp add --transport http "Outception" "https://mcp.outception.com/mcp/outception-mcp"
+```
+
+### OpenCode
+
+In `opencode.jsonc`, add:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "Outception": {
+      "type": "remote",
+      "url": "https://mcp.outception.com/mcp/outception-mcp"
+    }
+  }
+}
+```
+
+### ChatGPT
+
+MCP is only available for paid users in beta on ChatGPT web, by enabling Developer Mode.
+
+Once Developer Mode is enabled, go to _Settings_ → _Connectors_ and add the MCP server using `https://mcp.outception.com/mcp/outception-mcp`.
+
+### Claude Desktop
+
+Go to _Settings_ → _Connectors_ and click _Add custom connector_.
+
+Name it "Outception" and add `https://mcp.outception.com/mcp/outception-mcp` as the server URL.
+
+Save, and click _Connect_ to connect to your Outception organization.

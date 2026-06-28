@@ -4,8 +4,8 @@ variable "environment" {
   type        = string
 
   validation {
-    condition     = contains(["production", "sandbox", "test"], var.environment)
-    error_message = "Must be either \"production\", \"sandbox\" or \"test\"."
+    condition     = contains(["production"], var.environment)
+    error_message = "Must be \"production\"."
   }
 }
 
@@ -26,7 +26,7 @@ variable "api_service_config" {
   description = "API service configuration"
   type = object({
     allowed_hosts          = string # "[\"outception.com\", \"backoffice.outception.com\"]"
-    cors_origins           = string # "[\"https://outception.com\", \"https://github.com\", \"https://docs.outception.com\"]"
+    cors_origins           = string # "[\"https://outception.com\", \"https://github.com\"]"
     custom_domains         = list(object({ name = string }))
     image_url              = optional(string, "ghcr.io/outception/outception")
     web_concurrency        = optional(string, "2")

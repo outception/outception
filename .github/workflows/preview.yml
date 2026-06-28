@@ -137,7 +137,7 @@ jobs:
         id: vercel_url
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_PROJECT: outception-sandbox
+          VERCEL_PROJECT: outception
           VERCEL_TEAM: outception-com
         run: |
           set -euo pipefail

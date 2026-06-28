@@ -133,7 +133,6 @@ variable "secrets" {
   description = "Sensitive env vars common to every environment"
   type = object({
     pydantic_ai_gateway_api_key = string
-    mintlify_assistant_api_key  = string
     gram_api_key                = string
     sentry_auth_token           = string
     outception_preview_access_token  = string

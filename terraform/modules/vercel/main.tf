@@ -1,6 +1,6 @@
 # Outception Vercel project setup
 #
-# One Vercel project per environment (production, sandbox), its custom domains
+# One Vercel project per environment (production), its custom domains
 # and its environment variables. Env vars are managed via the dedicated
 # vercel_project_environment_variable resources, so the project's inline
 # `environment` is intentionally left unmanaged (see lifecycle below).
@@ -60,7 +60,6 @@ locals {
   # Secrets present in every environment.
   secret_environment_variables = [
     { key = "PYDANTIC_AI_GATEWAY_API_KEY", value = var.secrets.pydantic_ai_gateway_api_key, target = ["production", "preview"], sensitive = true },
-    { key = "MINTLIFY_ASSISTANT_API_KEY", value = var.secrets.mintlify_assistant_api_key, target = ["production", "preview"], sensitive = true },
     { key = "GRAM_API_KEY", value = var.secrets.gram_api_key, target = ["production", "preview"], sensitive = false },
     { key = "SENTRY_AUTH_TOKEN", value = var.secrets.sentry_auth_token, target = ["production", "preview"], sensitive = false },
     { key = "OUTCEPTION_PREVIEW_ACCESS_TOKEN", value = var.secrets.outception_preview_access_token, target = ["preview"], sensitive = true },

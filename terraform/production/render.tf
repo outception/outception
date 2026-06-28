@@ -42,15 +42,6 @@ resource "render_project" "outception" {
       id               = "evm-cj3pgodiuie55pmjh2l0"
       name             = "Production"
       protected_status = "unprotected"
-    },
-    "Sandbox" : {
-      id               = "evm-crkmmujv2p9s73e47bn0"
-      name             = "Sandbox"
-      protected_status = "unprotected"
-    },
-    "Test" : {
-      name             = "Test"
-      protected_status = "unprotected"
     }
   }
 
@@ -143,7 +134,7 @@ module "production" {
     postgres_database      = "outception_cpit_p9lf"
     postgres_read_database = "outception_cpit_p9lf"
     allowed_hosts          = "[\"outception.com\", \"backoffice.outception.com\"]"
-    cors_origins           = "[\"https://outception.com\", \"https://github.com\", \"https://docs.outception.com\"]"
+    cors_origins           = "[\"https://outception.com\", \"https://github.com\"]"
     custom_domains         = [{ name = "api.outception.com" }, { name = "api-alt.outception.com" }, { name = "buy.outception.com" }, { name = "backoffice.outception.com" }]
     plan                   = "pro_plus"
     web_concurrency        = "6"

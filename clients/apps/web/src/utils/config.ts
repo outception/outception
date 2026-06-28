@@ -17,13 +17,9 @@ const defaults = {
     process.env.NEXT_PUBLIC_GITHUB_APP_NAMESPACE || 'outception-com',
   SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN || undefined,
   POSTHOG_TOKEN: process.env.NEXT_PUBLIC_POSTHOG_TOKEN || '',
-  SANDBOX_FRONTEND_BASE_URL:
-    process.env.NEXT_PUBLIC_SANDBOX_FRONTEND_BASE_URL ||
-    'http://127.0.0.1:3000',
 }
 
 export const CONFIG = {
   ...defaults,
   GITHUB_INSTALLATION_URL: `https://github.com/apps/${defaults.GITHUB_APP_NAMESPACE}/installations/new`,
-  IS_SANDBOX: defaults.ENVIRONMENT === 'sandbox',
 }

@@ -5,31 +5,9 @@ import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { COOKIE_MAX_AGE, DISTINCT_ID_COOKIE } from './experiments/constants'
 import { createServerSideAPI } from './utils/client'
-import { CONFIG } from './utils/config'
-import { OUTCEPTION_ENV_COOKIE } from './utils/cookies'
 
 const OUTCEPTION_AUTH_COOKIE_KEY =
   process.env.OUTCEPTION_AUTH_COOKIE_KEY || 'outception_session'
-
-const IS_SANDBOX =
-  (process.env.NEXT_PUBLIC_ENVIRONMENT ||
-    process.env.VERCEL_ENV ||
-    process.env.NEXT_PUBLIC_VERCEL_ENV) === 'sandbox'
-
-// App routes allowed on sandbox — everything else (marketing, docs) is blocked
-// Strings match by prefix, RegExps are tested directly
-const SANDBOX_ALLOWED_PATHS: (string | RegExp)[] = [
-  '/login',
-  '/auth',
-  '/dashboard',
-  '/start',
-  '/settings',
-  '/oauth2',
-  '/verify-email',
-  '/api',
-  '/to',
-  /^\/favicon[\w-]*\.\w+$/, // /favicon.png, /favicon-dark.png, etc.
-]
 
 const AUTHENTICATED_ROUTES = [
   new RegExp('^/start(/.*)?$'),
@@ -37,6 +15,8 @@ const AUTHENTICATED_ROUTES = [
   new RegExp('^/settings(/.*)?$'),
   new RegExp('^/oauth2(/.*)?$'),
   new RegExp('^/to(/.*)?$'),
+  // The engineering handbook contains internal ops procedures — require login.
+  new RegExp('^/handbook(/.*)?$'),
 ]
 
 const getOrCreateDistinctId = (
@@ -50,18 +30,6 @@ const getOrCreateDistinctId = (
 }
 
 const isForwardedRoute = (request: NextRequest): boolean => {
-  if (request.nextUrl.pathname.startsWith('/docs/')) {
-    return true
-  }
-
-  if (request.nextUrl.pathname.startsWith('/mintlify-assets/')) {
-    return true
-  }
-
-  if (request.nextUrl.pathname.startsWith('/_mintlify/')) {
-    return true
-  }
-
   if (request.nextUrl.pathname.startsWith('/ingest/')) {
     return true
   }
@@ -94,48 +62,6 @@ export async function proxy(request: NextRequest) {
   // doesn't appear to be working consistently with Vercel rewrites
   if (isForwardedRoute(request)) {
     return NextResponse.next()
-  }
-
-  if (request.nextUrl.pathname.startsWith('/to/')) {
-    const lastEnv = request.cookies.get(OUTCEPTION_ENV_COOKIE)?.value
-    const currentEnv = IS_SANDBOX ? 'sandbox' : 'production'
-    if (
-      (lastEnv === 'sandbox' || lastEnv === 'production') &&
-      lastEnv !== currentEnv
-    ) {
-      const targetBase =
-        lastEnv === 'sandbox'
-          ? CONFIG.SANDBOX_FRONTEND_BASE_URL
-          : CONFIG.FRONTEND_BASE_URL
-      return NextResponse.redirect(
-        `${targetBase}${request.nextUrl.pathname}${request.nextUrl.search}`,
-      )
-    }
-  }
-
-  // Sandbox: rewrite root to login, block non-app routes
-  if (IS_SANDBOX) {
-    const { pathname } = request.nextUrl
-
-    if (pathname === '/') {
-      const url = request.nextUrl.clone()
-      url.pathname = '/auth'
-      url.search = ''
-      return NextResponse.redirect(url)
-    }
-
-    const isAllowed = SANDBOX_ALLOWED_PATHS.some((path) =>
-      typeof path === 'string'
-        ? pathname === path || pathname.startsWith(`${path}/`)
-        : path.test(pathname),
-    )
-
-    if (!isAllowed) {
-      // Rewrite to a non-existent path so Next.js renders the not-found page
-      const url = request.nextUrl.clone()
-      url.pathname = '/_sandbox_blocked'
-      return NextResponse.rewrite(url, { status: 404 })
-    }
   }
 
   let user: schemas['UserRead'] | undefined = undefined
@@ -215,11 +141,10 @@ export const config = {
      * - fonts (static font files)
      * - ingest (Posthog)
      * - monitoring (Sentry)
-     * - docs, _mintlify, mintlify-assets (Mintlify)
      * - assets (static asset files)
      * - _next (Next.js internals: static files, image optimization, data)
      * - favicon.ico, sitemap.xml, robots.txt (metadata files)
      */
-    '/((?!api|fonts|ingest|monitoring|docs|_mintlify|mintlify-assets|assets|_next|favicon.ico|sitemap.xml|robots.txt).*)',
+    '/((?!api|fonts|ingest|monitoring|assets|_next|favicon.ico|sitemap.xml|robots.txt).*)',
   ],
 }
