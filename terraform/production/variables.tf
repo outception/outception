@@ -389,18 +389,6 @@ variable "mintlify_assistant_api_key" {
   sensitive   = true
 }
 
-variable "attio_api_key" {
-  description = "Attio API key for the Vercel frontend"
-  type        = string
-  sensitive   = true
-}
-
-variable "attio_startup_list_id" {
-  description = "Attio startup list ID for the Vercel frontend"
-  type        = string
-  sensitive   = true
-}
-
 variable "mcp_oauth2_client_id" {
   description = "MCP OAuth2 client ID for the Vercel frontend"
   type        = string

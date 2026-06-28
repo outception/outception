@@ -141,14 +141,9 @@ module "vercel" {
   environment_variables = [
     { key = "NEXT_PUBLIC_FRONTEND_BASE_URL", value = "https://outception.com", target = ["production"] },
     { key = "NEXT_PUBLIC_SANDBOX_FRONTEND_BASE_URL", value = "https://sandbox.outception.com" },
-    { key = "NEXT_PUBLIC_POSTHOG_HOST", value = "https://outception.com/ingest" },
-    { key = "NEXT_PUBLIC_SENTRY_ENABLED", value = "true" },
     { key = "NEXT_PUBLIC_GOOGLE_ANALYTICS_ID", value = "G-MBYW1QZFHE" },
-    { key = "NEXT_PUBLIC_GITHUB_INSTALLATION_URL", value = "https://github.com/apps/outception-com/installations/new" },
     { key = "MCP_OAUTH2_CLIENT_ID", value = var.mcp_oauth2_client_id, target = ["production", "preview"] },
     { key = "MCP_OAUTH2_CLIENT_SECRET", value = var.mcp_oauth2_client_secret, target = ["production", "preview"] },
-    { key = "ATTIO_API_KEY", value = var.attio_api_key, target = ["production", "preview"], sensitive = true },
-    { key = "ATTIO_STARTUP_LIST_ID", value = var.attio_startup_list_id, target = ["production", "preview"], sensitive = true },
   ]
 }
 
