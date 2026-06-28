@@ -118,13 +118,11 @@ variable "config" {
     next_public_sentry_dsn                          = string
     next_public_posthog_token                       = string
     next_public_apple_domain_association            = string
-    next_public_checkout_embed_script_src           = string
     s3_public_images_bucket_protocol                = string
     s3_public_images_bucket_hostname                = string
     s3_public_images_bucket_port                    = string
     s3_public_images_bucket_pathname                = string
     s3_upload_origins                               = string
-    outception_checkout_embed_script_allowed_origins     = string
     outception_openapi_schema_url                        = string
     enable_experimental_corepack                    = string
   })

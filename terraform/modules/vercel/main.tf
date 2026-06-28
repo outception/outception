@@ -48,13 +48,11 @@ locals {
     { key = "NEXT_PUBLIC_SENTRY_DSN", value = var.config.next_public_sentry_dsn },
     { key = "NEXT_PUBLIC_POSTHOG_TOKEN", value = var.config.next_public_posthog_token },
     { key = "NEXT_PUBLIC_APPLE_DOMAIN_ASSOCIATION", value = var.config.next_public_apple_domain_association },
-    { key = "NEXT_PUBLIC_CHECKOUT_EMBED_SCRIPT_SRC", value = var.config.next_public_checkout_embed_script_src },
     { key = "S3_PUBLIC_IMAGES_BUCKET_PROTOCOL", value = var.config.s3_public_images_bucket_protocol },
     { key = "S3_PUBLIC_IMAGES_BUCKET_HOSTNAME", value = var.config.s3_public_images_bucket_hostname },
     { key = "S3_PUBLIC_IMAGES_BUCKET_PORT", value = var.config.s3_public_images_bucket_port },
     { key = "S3_PUBLIC_IMAGES_BUCKET_PATHNAME", value = var.config.s3_public_images_bucket_pathname },
     { key = "S3_UPLOAD_ORIGINS", value = var.config.s3_upload_origins },
-    { key = "OUTCEPTION_CHECKOUT_EMBED_SCRIPT_ALLOWED_ORIGINS", value = var.config.outception_checkout_embed_script_allowed_origins },
     { key = "OUTCEPTION_OPENAPI_SCHEMA_URL", value = var.config.outception_openapi_schema_url },
     { key = "ENABLE_EXPERIMENTAL_COREPACK", value = var.config.enable_experimental_corepack },
   ]

@@ -81,8 +81,6 @@ resource "render_env_group" "backend_production" {
   environment_id = var.render_environment_id
   name           = "backend-production-only"
   env_vars = {
-    OUTCEPTION_BACKOFFICE_HOST                = { value = var.backend_config.backoffice_host }
-    OUTCEPTION_CHECKOUT_LINK_HOST             = { value = var.backend_config.checkout_link_host }
     OUTCEPTION_DISCORD_WEBHOOK_URL            = { value = var.backend_secrets.discord_webhook_url }
     OUTCEPTION_POSTHOG_PROJECT_API_KEY        = { value = var.backend_secrets.posthog_project_api_key }
     OUTCEPTION_PLAIN_REQUEST_SIGNING_SECRET   = { value = var.backend_secrets.plain_request_signing_secret }

@@ -120,13 +120,11 @@ module "vercel" {
     next_public_sentry_dsn                          = var.next_public_sentry_dsn
     next_public_posthog_token                       = var.next_public_posthog_token
     next_public_apple_domain_association            = var.next_public_apple_domain_association
-    next_public_checkout_embed_script_src           = "https://cdn.jsdelivr.net/npm/@outception-com/checkout@0.1/dist/embed.global.js"
     s3_public_images_bucket_protocol                = "https"
     s3_public_images_bucket_hostname                = "outception-public-files.s3.amazonaws.com"
     s3_public_images_bucket_port                    = null
     s3_public_images_bucket_pathname                = "/product_media/**"
     s3_upload_origins                               = "https://outception-production-files.s3.amazonaws.com https://outception-public-files.s3.amazonaws.com"
-    outception_checkout_embed_script_allowed_origins     = "https://outception.com,https://sandbox.outception.com"
     outception_openapi_schema_url                        = "https://api.outception.com/openapi.json"
     enable_experimental_corepack                    = "1"
   }
@@ -143,7 +141,6 @@ module "vercel" {
   environment_variables = [
     { key = "NEXT_PUBLIC_FRONTEND_BASE_URL", value = "https://outception.com", target = ["production"] },
     { key = "NEXT_PUBLIC_SANDBOX_FRONTEND_BASE_URL", value = "https://sandbox.outception.com" },
-    { key = "NEXT_PUBLIC_PRODUCT_LINK_BASE_URL", value = "https://buy.outception.com/", target = ["production"] },
     { key = "NEXT_PUBLIC_POSTHOG_HOST", value = "https://outception.com/ingest" },
     { key = "NEXT_PUBLIC_SENTRY_ENABLED", value = "true" },
     { key = "NEXT_PUBLIC_GOOGLE_ANALYTICS_ID", value = "G-MBYW1QZFHE" },

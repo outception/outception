@@ -1,3 +1,11 @@
-# `@outception-com/checkout`
+# `@outception-com/client`
 
-This package contains JavaScript utilities to easily integrate Outception Checkout into your website or application.
+The generated TypeScript API client for Outception, plus the TanStack Query
+data hooks the web and mobile apps use to talk to the backend.
+
+The client is generated from the backend's OpenAPI schema. After changing the
+API, regenerate it:
+
+```bash
+pnpm run generate
+```

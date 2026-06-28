@@ -221,8 +221,6 @@ module "production" {
 
   backend_config = {
     base_url                             = "https://api.outception.com"
-    backoffice_host                      = "backoffice.outception.com"
-    checkout_link_host                   = "buy.outception.com"
     user_session_cookie_domain           = "outception.com"
     authentication_session_cookie_domain = "outception.com"
     oauth2_session_state_cookie_domain   = "outception.com"

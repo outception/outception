@@ -49,4 +49,3 @@ jobs:
           cwd: ${{ github.workspace }}/clients
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OUTCEPTION_CHECKOUT_EMBED_SCRIPT_ALLOWED_ORIGINS: "https://outception.com,https://sandbox.outception.com"

@@ -108,8 +108,6 @@ variable "backend_config" {
   type = object({
     environment                          = optional(string, null) # Default to the environment variable
     base_url                             = string                 # "https://api.outception.com"
-    backoffice_host                      = optional(string, null) # "backoffice.outception.com"
-    checkout_link_host                   = optional(string, null) # "buy.outception.com"
     user_session_cookie_domain           = string                 # "outception.com"
     user_session_cookie_key              = optional(string, "")
     authentication_session_cookie_domain = string               # "outception.com"

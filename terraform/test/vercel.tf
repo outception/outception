@@ -30,13 +30,11 @@ module "vercel" {
     next_public_sentry_dsn                          = var.next_public_sentry_dsn
     next_public_posthog_token                       = var.next_public_posthog_token
     next_public_apple_domain_association            = var.next_public_apple_domain_association
-    next_public_checkout_embed_script_src           = "https://cdn.jsdelivr.net/npm/@outception-com/checkout@0.1/dist/embed.global.js"
     s3_public_images_bucket_protocol                = "https"
     s3_public_images_bucket_hostname                = "outception-test-public-files.s3.amazonaws.com"
     s3_public_images_bucket_port                    = null
     s3_public_images_bucket_pathname                = "/product_media/**"
     s3_upload_origins                               = "https://outception-test-files.s3.amazonaws.com https://outception-test-files.s3.us-east-2.amazonaws.com https://outception-test-public-files.s3.amazonaws.com https://outception-test-public-files.s3.us-east-2.amazonaws.com"
-    outception_checkout_embed_script_allowed_origins     = "https://outception.com,https://sandbox.outception.com,https://test.outception.com"
     outception_openapi_schema_url                        = "https://api.outception.com/openapi.json"
     enable_experimental_corepack                    = "1"
   }
@@ -54,7 +52,6 @@ module "vercel" {
     { key = "NEXT_PUBLIC_FRONTEND_BASE_URL", value = "https://test.outception.com" },
     { key = "NEXT_PUBLIC_ENVIRONMENT", value = "test" },
     { key = "OUTCEPTION_AUTH_COOKIE_KEY", value = "outception_test_session" },
-    { key = "NEXT_PUBLIC_PRODUCT_LINK_BASE_URL", value = "https://test.outception.com/api/checkout?price=" },
     { key = "OUTCEPTION_PREVIEW_BACKEND_HOST", value = "", target = ["preview"] },
     { key = "MCP_OAUTH2_CLIENT_ID", value = var.mcp_oauth2_client_id, target = ["production", "preview", "development"] },
     { key = "MCP_OAUTH2_CLIENT_SECRET", value = var.mcp_oauth2_client_secret, target = ["production", "preview", "development"] },
