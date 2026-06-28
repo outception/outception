@@ -93,7 +93,6 @@ async def delete_authenticated_user(
     - User's email is anonymized
     - User's avatar and metadata are cleared
     - User's OAuth accounts are deleted (cascade)
-    - User's Account (payout account) is deleted if present
     """
     return await user_service.request_deletion(session, auth_subject.subject)
 

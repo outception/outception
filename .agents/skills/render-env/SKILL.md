@@ -82,7 +82,7 @@ Report to the user:
 - The six files touched (or fewer if they skipped an env).
 - That the variable is now declared but **not yet consumed**. To consume it, they need to:
   1. **Add a field to the relevant config/secrets object in `terraform/modules/render_service/variables.tf`.** Pick by purpose:
-     - `backend_config` — non-sensitive backend env vars (URLs, flags, log level, tax processor list).
+     - `backend_config` — non-sensitive backend env vars (URLs, flags, log level, payment gateway base URL).
      - `backend_secrets` — sensitive backend env vars (API keys, tokens, signing secrets).
      - Themed `render_env_group` blocks (`github`, `logfire`, `tinybird`, `aws_s3`, `apple`, `prometheus`, `slo_report`, `google`, `openai`, etc.) each have their own object — use the matching one when the var belongs to a clear bucket.
      - Use `optional(string, "<default>")` if you want a module-level default; otherwise plain `string`.

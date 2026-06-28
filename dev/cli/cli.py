@@ -146,7 +146,7 @@ def up(
     ] = False,
     skip_integrations: Annotated[
         bool,
-        typer.Option("--skip-integrations", help="Skip GitHub/Stripe setup prompts"),
+        typer.Option("--skip-integrations", help="Skip GitHub setup prompts"),
     ] = False,
     skip_tinybird: Annotated[
         bool,
@@ -163,7 +163,7 @@ def up(
     Prepare the development environment.
 
     Installs dependencies, starts infrastructure, runs migrations,
-    and prompts to configure GitHub and Stripe integrations.
+    and prompts to configure the GitHub integration.
     """
     console.print()
     console.print(
@@ -206,7 +206,7 @@ def up(
     next_steps.add_row("[dim]Recommended", "")
     next_steps.add_row()
     next_steps.add_row("[dim]Start all services", "")
-    next_steps.add_row("dev start", "API, worker, web, and Stripe in a tmux session")
+    next_steps.add_row("dev start", "API, worker, and web in a tmux session")
     next_steps.add_row()
     next_steps.add_row("[dim]Start specific services", "")
     next_steps.add_row("dev api", "API server")

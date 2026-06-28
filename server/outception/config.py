@@ -233,9 +233,6 @@ class Settings(BaseSettings):
     PYDANTIC_AI_GATEWAY_API_KEY: str = "DummyKey"
     PYDANTIC_AI_GATEWAY_MODEL: str = "openai:gpt-5.5"
 
-    # Stripe statement descriptor (prefix on the payment statement)
-    STRIPE_STATEMENT_DESCRIPTOR: str = "OUTCEPTION"
-
     # Sentry
     SENTRY_DSN: str | None = None
 
@@ -314,9 +311,6 @@ class Settings(BaseSettings):
 
     MINIO_USER: str = "outception"
     MINIO_PWD: str = "outceptionoutception"
-
-    # Chargeback Stop
-    CHARGEBACK_STOP_WEBHOOK_SECRET: str = ""
 
     # Outception's usage of Outception
     OUTCEPTION_ACCESS_TOKEN: str = ""
@@ -485,10 +479,6 @@ class Settings(BaseSettings):
     @property
     def frontend_hostname(self) -> str:
         return urlparse(self.FRONTEND_BASE_URL).hostname or "outception.com"
-
-    @property
-    def stripe_descriptor_suffix_max_length(self) -> int:
-        return 22 - len("* ") - len(self.STRIPE_STATEMENT_DESCRIPTOR)
 
     def get_pydantic_gateway_model(
         self, model: str | None = None

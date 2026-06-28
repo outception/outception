@@ -283,27 +283,11 @@ class Organization(RateLimitGroupMixin, RecordModel):
     def outception_site_url(self) -> str:
         return f"{settings.FRONTEND_BASE_URL}/{self.slug}"
 
-    @property
-    def account_url(self) -> str:
-        return f"{settings.FRONTEND_BASE_URL}/dashboard/{self.slug}/finance/account"
-
     def is_blocked(self) -> bool:
         return self.status == OrganizationStatus.BLOCKED
 
     def is_active(self) -> bool:
         return self.status == OrganizationStatus.ACTIVE
-
-    def statement_descriptor(self, suffix: str = "") -> str:
-        max_length = settings.stripe_descriptor_suffix_max_length
-        if suffix:
-            space_for_slug = max_length - len(suffix)
-            return self.slug[:space_for_slug] + suffix
-        return self.slug[:max_length]
-
-    @property
-    def statement_descriptor_prefixed(self) -> str:
-        # Cannot use *. Setting separator to # instead.
-        return f"{settings.STRIPE_STATEMENT_DESCRIPTOR}# {self.statement_descriptor()}"
 
     @property
     def email_from_reply(self) -> "EmailFromReply":

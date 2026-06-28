@@ -421,7 +421,7 @@ if __name__ == "__main__":
         # Ensure central secrets file exists
         if _ensure_secrets_file():
             spinner.write(f"📝 Created {SECRETS_FILE_PATH}")
-            spinner.write("   Edit this file with your credentials (Stripe, etc.)")
+            spinner.write("   Edit this file with your credentials (GitHub, etc.)")
 
         # Load existing secrets info
         central_secrets = _load_central_secrets()
