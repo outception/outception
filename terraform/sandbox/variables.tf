@@ -45,30 +45,6 @@ variable "backend_current_jwk_kid_sandbox" {
   sensitive   = true
 }
 
-variable "backend_discord_bot_token_sandbox" {
-  description = "Discord Bot Token for sandbox"
-  type        = string
-  sensitive   = true
-}
-
-variable "backend_discord_client_id_sandbox" {
-  description = "Discord Client ID for sandbox"
-  type        = string
-  sensitive   = true
-}
-
-variable "backend_discord_client_secret_sandbox" {
-  description = "Discord Client Secret for sandbox"
-  type        = string
-  sensitive   = true
-}
-
-variable "backend_discord_proxy_url" {
-  description = "Discord Proxy URL"
-  type        = string
-  sensitive   = true
-}
-
 variable "backend_resend_api_key_sandbox" {
   description = "Resend API Key for sandbox"
   type        = string
@@ -214,16 +190,6 @@ variable "outception_webhook_secret" {
 
 variable "outception_organization_id" {
   description = "Outception organization ID"
-  type        = string
-}
-
-variable "outception_free_product_id" {
-  description = "Outception free-tier product ID"
-  type        = string
-}
-
-variable "outception_scale_product_id" {
-  description = "Outception Scale-tier product ID"
   type        = string
 }
 

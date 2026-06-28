@@ -47,7 +47,6 @@ x-common-backend-env: &common-backend-env
   OUTCEPTION_CORS_ORIGINS: '["http://localhost:${WEB_PORT:-3000}", "http://127.0.0.1:${WEB_PORT:-3000}", "http://web:3000"]'
   OUTCEPTION_ALLOWED_HOSTS: '["localhost:${WEB_PORT:-3000}", "127.0.0.1:${WEB_PORT:-3000}"]'
   OUTCEPTION_FRONTEND_BASE_URL: http://localhost:${WEB_PORT:-3000}
-  OUTCEPTION_CHECKOUT_BASE_URL: http://localhost:${API_PORT:-8000}/v1/checkout-links/{client_secret}/redirect
   OUTCEPTION_USER_SESSION_COOKIE_DOMAIN: localhost
   # Tinybird — shared instance. Queries filter by organization_id and each
   # instance has its own postgres DB, so org UUIDs are globally disjoint and

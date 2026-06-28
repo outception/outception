@@ -128,11 +128,6 @@ variable "backend_secrets" {
   description = "Backend secrets (sensitive)"
   type = object({
     current_jwk_kid                = string
-    discord_bot_token              = string
-    discord_client_id              = string
-    discord_client_secret          = string
-    discord_proxy_url              = optional(string, "")
-    discord_webhook_url            = optional(string, "")
     posthog_project_api_key        = optional(string, "")
     resend_api_key                 = string
     resend_webhook_secret          = optional(string, "")
@@ -246,8 +241,6 @@ variable "outception_self_config" {
     access_token     = string
     webhook_secret   = string
     organization_id  = string
-    free_product_id  = string
-    scale_product_id = string
     api_url          = string
   })
   default   = null

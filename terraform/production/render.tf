@@ -236,11 +236,6 @@ module "production" {
 
   backend_secrets = {
     current_jwk_kid                = var.backend_current_jwk_kid_production
-    discord_bot_token              = var.backend_discord_bot_token_production
-    discord_client_id              = var.backend_discord_client_id_production
-    discord_client_secret          = var.backend_discord_client_secret_production
-    discord_proxy_url              = var.backend_discord_proxy_url
-    discord_webhook_url            = var.backend_discord_webhook_url_production
     posthog_project_api_key        = var.backend_posthog_project_api_key_production
     resend_api_key                 = var.backend_resend_api_key_production
     resend_webhook_secret          = var.backend_resend_webhook_secret
@@ -315,8 +310,6 @@ module "production" {
     access_token     = var.outception_access_token
     webhook_secret   = var.outception_webhook_secret
     organization_id  = var.outception_organization_id
-    free_product_id  = var.outception_free_product_id
-    scale_product_id = var.outception_scale_product_id
     api_url          = "https://api.outception.com"
   }
 

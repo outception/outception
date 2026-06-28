@@ -52,30 +52,6 @@ resource "tfe_variable" "backend_current_jwk_kid_test" {
   variable_set_id = tfe_variable_set.test.id
 }
 
-resource "tfe_variable" "backend_discord_bot_token_test" {
-  key             = "backend_discord_bot_token"
-  category        = "terraform"
-  description     = "Discord Bot Token for test"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.test.id
-}
-
-resource "tfe_variable" "backend_discord_client_id_test" {
-  key             = "backend_discord_client_id"
-  category        = "terraform"
-  description     = "Discord Client ID for test"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.test.id
-}
-
-resource "tfe_variable" "backend_discord_client_secret_test" {
-  key             = "backend_discord_client_secret"
-  category        = "terraform"
-  description     = "Discord Client Secret for test"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.test.id
-}
-
 resource "tfe_variable" "backend_resend_api_key_test" {
   key             = "backend_resend_api_key"
   category        = "terraform"
@@ -257,14 +233,6 @@ resource "tfe_variable" "tinybird_read_token_test" {
   variable_set_id = tfe_variable_set.test.id
 }
 
-resource "tfe_variable" "backend_discord_proxy_url_test" {
-  key             = "backend_discord_proxy_url"
-  category        = "terraform"
-  description     = "Discord Proxy URL for test"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.test.id
-}
-
 resource "tfe_variable" "outception_access_token_test" {
   key             = "outception_access_token"
   category        = "terraform"
@@ -290,24 +258,6 @@ resource "tfe_variable" "outception_organization_id_test" {
   lifecycle {
     ignore_changes = [value]
   }
-}
-
-resource "tfe_variable" "outception_free_product_id_test" {
-  key             = "outception_free_product_id"
-  category        = "terraform"
-  description     = "Outception free-tier product ID"
-  variable_set_id = tfe_variable_set.test.id
-
-  lifecycle {
-    ignore_changes = [value]
-  }
-}
-
-resource "tfe_variable" "outception_scale_product_id_test" {
-  key             = "outception_scale_product_id"
-  category        = "terraform"
-  description     = "Outception Scale-tier product ID for test"
-  variable_set_id = tfe_variable_set.test.id
 }
 
 # Vercel frontend

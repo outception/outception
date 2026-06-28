@@ -51,10 +51,6 @@ resource "render_env_group" "backend" {
       OUTCEPTION_TESTING                              = { value = var.backend_config.testing }
       OUTCEPTION_AUTH_COOKIE_DOMAIN                   = { value = var.backend_config.auth_cookie_domain }
       OUTCEPTION_CURRENT_JWK_KID                      = { value = var.backend_secrets.current_jwk_kid }
-      OUTCEPTION_DISCORD_BOT_TOKEN                    = { value = var.backend_secrets.discord_bot_token }
-      OUTCEPTION_DISCORD_CLIENT_ID                    = { value = var.backend_secrets.discord_client_id }
-      OUTCEPTION_DISCORD_CLIENT_SECRET                = { value = var.backend_secrets.discord_client_secret }
-      OUTCEPTION_DISCORD_PROXY_URL                    = { value = var.backend_secrets.discord_proxy_url }
       OUTCEPTION_RESEND_API_KEY                       = { value = var.backend_secrets.resend_api_key }
       OUTCEPTION_RESEND_WEBHOOK_SECRET                = { value = var.backend_secrets.resend_webhook_secret }
       OUTCEPTION_LOGO_DEV_PUBLISHABLE_KEY             = { value = var.backend_secrets.logo_dev_publishable_key }
@@ -81,7 +77,6 @@ resource "render_env_group" "backend_production" {
   environment_id = var.render_environment_id
   name           = "backend-production-only"
   env_vars = {
-    OUTCEPTION_DISCORD_WEBHOOK_URL            = { value = var.backend_secrets.discord_webhook_url }
     OUTCEPTION_POSTHOG_PROJECT_API_KEY        = { value = var.backend_secrets.posthog_project_api_key }
     OUTCEPTION_PLAIN_REQUEST_SIGNING_SECRET   = { value = var.backend_secrets.plain_request_signing_secret }
     OUTCEPTION_PLAIN_TOKEN                    = { value = var.backend_secrets.plain_token }
@@ -200,9 +195,7 @@ resource "render_env_group" "outception_self" {
     OUTCEPTION_OUTCEPTION_ACCESS_TOKEN     = { value = var.outception_self_config.access_token }
     OUTCEPTION_OUTCEPTION_WEBHOOK_SECRET   = { value = var.outception_self_config.webhook_secret }
     OUTCEPTION_OUTCEPTION_ORGANIZATION_ID  = { value = var.outception_self_config.organization_id }
-    OUTCEPTION_OUTCEPTION_FREE_PRODUCT_ID  = { value = var.outception_self_config.free_product_id }
     OUTCEPTION_OUTCEPTION_API_URL          = { value = var.outception_self_config.api_url }
-    OUTCEPTION_OUTCEPTION_SCALE_PRODUCT_ID = { value = var.outception_self_config.scale_product_id }
   }
 }
 

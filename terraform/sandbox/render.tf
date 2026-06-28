@@ -162,10 +162,6 @@ module "sandbox" {
 
   backend_secrets = {
     current_jwk_kid          = var.backend_current_jwk_kid_sandbox
-    discord_bot_token        = var.backend_discord_bot_token_sandbox
-    discord_client_id        = var.backend_discord_client_id_sandbox
-    discord_client_secret    = var.backend_discord_client_secret_sandbox
-    discord_proxy_url        = var.backend_discord_proxy_url
     resend_api_key           = var.backend_resend_api_key_sandbox
     resend_webhook_secret    = var.backend_resend_webhook_secret
     logo_dev_publishable_key = var.backend_logo_dev_publishable_key_sandbox
@@ -227,8 +223,6 @@ module "sandbox" {
     access_token     = var.outception_access_token
     webhook_secret   = var.outception_webhook_secret
     organization_id  = var.outception_organization_id
-    free_product_id  = var.outception_free_product_id
-    scale_product_id = var.outception_scale_product_id
     api_url          = "https://sandbox-api.outception.com"
   }
 

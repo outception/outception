@@ -52,38 +52,6 @@ resource "tfe_variable" "backend_current_jwk_kid_sandbox" {
   variable_set_id = tfe_variable_set.sandbox.id
 }
 
-resource "tfe_variable" "backend_discord_bot_token_sandbox" {
-  key             = "backend_discord_bot_token_sandbox"
-  category        = "terraform"
-  description     = "Discord Bot Token for sandbox"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.sandbox.id
-}
-
-resource "tfe_variable" "backend_discord_client_id_sandbox" {
-  key             = "backend_discord_client_id_sandbox"
-  category        = "terraform"
-  description     = "Discord Client ID for sandbox"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.sandbox.id
-}
-
-resource "tfe_variable" "backend_discord_client_secret_sandbox" {
-  key             = "backend_discord_client_secret_sandbox"
-  category        = "terraform"
-  description     = "Discord Client Secret for sandbox"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.sandbox.id
-}
-
-resource "tfe_variable" "backend_discord_proxy_url_sandbox" {
-  key             = "backend_discord_proxy_url"
-  category        = "terraform"
-  description     = "Discord Proxy URL for sandbox"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.sandbox.id
-}
-
 resource "tfe_variable" "backend_resend_api_key_sandbox" {
   key             = "backend_resend_api_key_sandbox"
   category        = "terraform"
@@ -245,24 +213,6 @@ resource "tfe_variable" "outception_organization_id_sandbox" {
   lifecycle {
     ignore_changes = [value]
   }
-}
-
-resource "tfe_variable" "outception_free_product_id_sandbox" {
-  key             = "outception_free_product_id"
-  category        = "terraform"
-  description     = "Outception free-tier product ID"
-  variable_set_id = tfe_variable_set.sandbox.id
-
-  lifecycle {
-    ignore_changes = [value]
-  }
-}
-
-resource "tfe_variable" "outception_scale_product_id_sandbox" {
-  key             = "outception_scale_product_id"
-  category        = "terraform"
-  description     = "Outception Scale-tier product ID for sandbox"
-  variable_set_id = tfe_variable_set.sandbox.id
 }
 
 resource "tfe_variable" "tinybird_api_token_sandbox" {

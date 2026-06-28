@@ -52,46 +52,6 @@ resource "tfe_variable" "backend_current_jwk_kid_production" {
   variable_set_id = tfe_variable_set.production.id
 }
 
-resource "tfe_variable" "backend_discord_bot_token_production" {
-  key             = "backend_discord_bot_token_production"
-  category        = "terraform"
-  description     = "Discord Bot Token for production"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.production.id
-}
-
-resource "tfe_variable" "backend_discord_client_id_production" {
-  key             = "backend_discord_client_id_production"
-  category        = "terraform"
-  description     = "Discord Client ID for production"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.production.id
-}
-
-resource "tfe_variable" "backend_discord_client_secret_production" {
-  key             = "backend_discord_client_secret_production"
-  category        = "terraform"
-  description     = "Discord Client Secret for production"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.production.id
-}
-
-resource "tfe_variable" "backend_discord_proxy_url_production" {
-  key             = "backend_discord_proxy_url"
-  category        = "terraform"
-  description     = "Discord Proxy URL for production"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.production.id
-}
-
-resource "tfe_variable" "backend_discord_webhook_url_production" {
-  key             = "backend_discord_webhook_url_production"
-  category        = "terraform"
-  description     = "Discord Webhook URL for production"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.production.id
-}
-
 resource "tfe_variable" "backend_posthog_project_api_key_production" {
   key             = "backend_posthog_project_api_key_production"
   category        = "terraform"
@@ -346,24 +306,6 @@ resource "tfe_variable" "outception_organization_id_production" {
   lifecycle {
     ignore_changes = [value]
   }
-}
-
-resource "tfe_variable" "outception_free_product_id_production" {
-  key             = "outception_free_product_id"
-  category        = "terraform"
-  description     = "Outception free-tier product ID"
-  variable_set_id = tfe_variable_set.production.id
-
-  lifecycle {
-    ignore_changes = [value]
-  }
-}
-
-resource "tfe_variable" "outception_scale_product_id_production" {
-  key             = "outception_scale_product_id"
-  category        = "terraform"
-  description     = "Outception Scale-tier product ID for production"
-  variable_set_id = tfe_variable_set.production.id
 }
 
 resource "tfe_variable" "tailscale_authkey_production" {

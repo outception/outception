@@ -180,10 +180,6 @@ module "test" {
 
   backend_secrets = {
     current_jwk_kid          = var.backend_current_jwk_kid
-    discord_bot_token        = var.backend_discord_bot_token
-    discord_client_id        = var.backend_discord_client_id
-    discord_client_secret    = var.backend_discord_client_secret
-    discord_proxy_url        = var.backend_discord_proxy_url
     resend_api_key           = var.backend_resend_api_key
     resend_webhook_secret    = var.backend_resend_webhook_secret
     logo_dev_publishable_key = var.backend_logo_dev_publishable_key
@@ -241,8 +237,6 @@ module "test" {
     access_token     = var.outception_access_token
     webhook_secret   = var.outception_webhook_secret
     organization_id  = var.outception_organization_id
-    free_product_id  = var.outception_free_product_id
-    scale_product_id = var.outception_scale_product_id
     api_url          = "https://test-api.outception.com"
   }
 

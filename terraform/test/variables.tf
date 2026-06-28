@@ -44,24 +44,6 @@ variable "backend_current_jwk_kid" {
   sensitive   = true
 }
 
-variable "backend_discord_bot_token" {
-  description = "Discord Bot Token for production"
-  type        = string
-  sensitive   = true
-}
-
-variable "backend_discord_client_id" {
-  description = "Discord Client ID for production"
-  type        = string
-  sensitive   = true
-}
-
-variable "backend_discord_client_secret" {
-  description = "Discord Client Secret for production"
-  type        = string
-  sensitive   = true
-}
-
 variable "backend_resend_api_key" {
   description = "Resend API Key for test"
   type        = string
@@ -250,12 +232,6 @@ variable "tinybird_read_token" {
   sensitive   = true
 }
 
-variable "backend_discord_proxy_url" {
-  description = "Discord Proxy URL"
-  type        = string
-  sensitive   = true
-}
-
 variable "outception_access_token" {
   description = "Outception API access token"
   type        = string
@@ -270,16 +246,6 @@ variable "outception_webhook_secret" {
 
 variable "outception_organization_id" {
   description = "Outception organization ID"
-  type        = string
-}
-
-variable "outception_free_product_id" {
-  description = "Outception free-tier product ID"
-  type        = string
-}
-
-variable "outception_scale_product_id" {
-  description = "Outception Scale-tier product ID"
   type        = string
 }
 

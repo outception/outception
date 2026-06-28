@@ -48,36 +48,6 @@ variable "backend_current_jwk_kid_production" {
   sensitive   = true
 }
 
-variable "backend_discord_bot_token_production" {
-  description = "Discord Bot Token for production"
-  type        = string
-  sensitive   = true
-}
-
-variable "backend_discord_client_id_production" {
-  description = "Discord Client ID for production"
-  type        = string
-  sensitive   = true
-}
-
-variable "backend_discord_client_secret_production" {
-  description = "Discord Client Secret for production"
-  type        = string
-  sensitive   = true
-}
-
-variable "backend_discord_proxy_url" {
-  description = "Discord Proxy URL"
-  type        = string
-  sensitive   = true
-}
-
-variable "backend_discord_webhook_url_production" {
-  description = "Discord Webhook URL for production"
-  type        = string
-  sensitive   = true
-}
-
 variable "backend_posthog_project_api_key_production" {
   description = "PostHog Project API Key for production"
   type        = string
@@ -342,16 +312,6 @@ variable "outception_webhook_secret" {
 
 variable "outception_organization_id" {
   description = "Outception organization ID"
-  type        = string
-}
-
-variable "outception_free_product_id" {
-  description = "Outception free-tier product ID"
-  type        = string
-}
-
-variable "outception_scale_product_id" {
-  description = "Outception Scale-tier product ID"
   type        = string
 }
 
