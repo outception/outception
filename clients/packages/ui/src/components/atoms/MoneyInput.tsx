@@ -1,4 +1,7 @@
-import { getCurrencyDecimalFactor, isDecimalCurrency } from '@outception-com/currency'
+import {
+  getCurrencyDecimalFactor,
+  isDecimalCurrency,
+} from '@outception-com/currency'
 import { ChangeEvent, FocusEvent, useCallback, useMemo, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { Input } from '@outception-com/orbit'

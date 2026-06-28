@@ -1,5 +1,10 @@
 import { BRAND_NAME } from '../components/brand'
-import { Footer, Intro, Text, WrapperOutception } from '../components/foundation'
+import {
+  Footer,
+  Intro,
+  Text,
+  WrapperOutception,
+} from '../components/foundation'
 import OTPCode from '../components/OTPCode'
 import type { schemas } from '../types'
 

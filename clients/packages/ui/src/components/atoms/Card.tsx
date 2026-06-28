@@ -55,7 +55,10 @@ const CardDescription = ({
 }: React.ComponentProps<typeof CardDescriptionPrimitive>) => (
   <CardDescriptionPrimitive
     ref={ref}
-    className={twMerge('dark:text-outception-400 text-sm text-gray-400', className)}
+    className={twMerge(
+      'dark:text-outception-400 text-sm text-gray-400',
+      className,
+    )}
     {...props}
   />
 )
