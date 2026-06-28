@@ -364,14 +364,6 @@ async def create(...) -> Resource:   # ORM model, not the schema
     return await resource_service.create(...)
 ```
 
-## Tax ID Validation
-
-When adding or modifying tax ID validators in `outception/tax/tax_id.py`:
-- Keep validators minimal — no lengthy docstrings; the code should be self-explanatory.
-- Follow existing patterns (e.g. `CLTINValidator`, `TRTINValidator`).
-- Use the `stdnum` library when a module exists for the tax ID type.
-- Add a few representative valid-format tests and only one invalid case per type — no excessive negatives.
-
 ## Key Files Reference
 
 - Repository base: `outception/kit/repository/base.py`

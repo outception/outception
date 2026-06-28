@@ -24,8 +24,6 @@ updates:
         dependency-type: "production"
         patterns:
           - "*"
-        exclude-patterns:
-          - "stripe"
       server-development:
         dependency-type: "development"
         patterns:

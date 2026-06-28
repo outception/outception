@@ -27,8 +27,6 @@ read -rp "Tailscale auth key (tskey-auth-...): " TAILSCALE_AUTH_KEY
 read -rp "Tailscale tags (e.g. tag:preview) [tag:preview]: " TAILSCALE_TAGS
 TAILSCALE_TAGS="${TAILSCALE_TAGS:-tag:preview}"
 read -rp "Vercel bypass secret (from Vercel project settings): " VERCEL_BYPASS_SECRET
-read -rp "Stripe test-mode secret key (sk_test_...): " STRIPE_SECRET_KEY
-read -rp "Stripe test-mode webhook secret (whsec_...): " STRIPE_WEBHOOK_SECRET
 read -rp "Pydantic AI gateway API key: " PYDANTIC_AI_GATEWAY_API_KEY
 
 echo ""
@@ -92,14 +90,9 @@ if [[ ! -f /etc/caddy/env ]]; then
 OUTCEPTION_PREVIEW_ACCESS_TOKEN=${PREVIEW_ACCESS_TOKEN}
 VERCEL_BYPASS_SECRET=${VERCEL_BYPASS_SECRET}
 ENVFILE
-    cat > /etc/preview-secrets/stripe.env <<ENVFILE
-OUTCEPTION_STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
-OUTCEPTION_STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
-ENVFILE
     cat > /etc/preview-secrets/pydantic_ai.env <<ENVFILE
 OUTCEPTION_PYDANTIC_AI_GATEWAY_API_KEY=${PYDANTIC_AI_GATEWAY_API_KEY}
 ENVFILE
-    chmod 600 /etc/preview-secrets/stripe.env
     chmod 600 /etc/preview-secrets/pydantic_ai.env
     chmod 600 /etc/caddy/env
     echo ""
@@ -111,14 +104,6 @@ else
     if ! grep -q VERCEL_BYPASS_SECRET /etc/caddy/env; then
         echo "VERCEL_BYPASS_SECRET=${VERCEL_BYPASS_SECRET}" >> /etc/caddy/env
     fi
-fi
-
-if [[ ! -f /etc/preview-secrets/stripe.env ]]; then
-    cat > /etc/preview-secrets/stripe.env <<ENVFILE
-OUTCEPTION_STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
-OUTCEPTION_STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
-ENVFILE
-    chmod 600 /etc/preview-secrets/stripe.env
 fi
 
 if [[ ! -f /etc/preview-secrets/pydantic_ai.env ]]; then
