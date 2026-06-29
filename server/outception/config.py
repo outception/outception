@@ -105,8 +105,7 @@ class Settings(BaseSettings):
     # browser-like UA to avoid bot detection by CDNs.
     OUTCEPTION_USER_AGENT: str = "Outception/1.0 (+https://outception.com)"
 
-    # Base URL for the backend. Used by generate_external_url to
-    # generate URLs to the backend accessible from the outside.
+    # Base URL for the backend, accessible from the outside.
     BASE_URL: str = "http://127.0.0.1:8000"
 
     # URL to frontend app.
@@ -442,9 +441,6 @@ class Settings(BaseSettings):
 
     def is_tinybird_configured(self) -> bool:
         return bool(self.TINYBIRD_API_URL and self.TINYBIRD_API_TOKEN)
-
-    def generate_external_url(self, path: str) -> str:
-        return f"{self.BASE_URL}{path}"
 
     def generate_frontend_url(self, path: str) -> str:
         return f"{self.FRONTEND_BASE_URL}{path}"
