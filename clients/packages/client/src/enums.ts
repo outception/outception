@@ -1,5 +1,1 @@
-export {
-  availableScopeValues,
-  presentmentCurrencyValues,
-  taxBehaviorOptionValues,
-} from './v1'
+export { availableScopeValues } from './v1'

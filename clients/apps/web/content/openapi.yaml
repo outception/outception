@@ -3,7 +3,7 @@
   "info": {
     "title": "Outception API",
     "summary": "Outception HTTP and Webhooks API",
-    "description": "Read the docs at https://outception.com/docs/api-reference",
+    "description": "Read the docs at https://outception.com/docs/api-reference/introduction",
     "version": "2026-04"
   },
   "servers": [
@@ -14,6 +14,406 @@
     }
   ],
   "paths": {
+    "/v1/users/me": {
+      "get": {
+        "tags": [
+          "users",
+          "private"
+        ],
+        "summary": "Get Authenticated",
+        "operationId": "users:get_authenticated",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserRead"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "oidc": []
+          },
+          {
+            "pat": []
+          }
+        ],
+        "x-speakeasy-group": "users",
+        "x-speakeasy-name-override": "get_authenticated",
+        "x-speakeasy-ignore": true
+      },
+      "delete": {
+        "tags": [
+          "users",
+          "private"
+        ],
+        "summary": "Delete Authenticated User",
+        "description": "Delete the authenticated user account.\n\nA user can only be deleted if all organizations they are members of have been\ndeleted first. If the user has active organizations, the response will include\nthe list of organizations that must be deleted before the user account can be\nremoved.\n\nWhen deleted:\n- User's email is anonymized\n- User's avatar and metadata are cleared\n- User's OAuth accounts are deleted (cascade)\n\n**Scopes**: `user:write`",
+        "operationId": "users:delete_authenticated_user",
+        "responses": {
+          "200": {
+            "description": "Deletion result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDeletionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "oidc": [
+              "user:write"
+            ]
+          },
+          {
+            "pat": [
+              "user:write"
+            ]
+          }
+        ],
+        "x-outception-allowed-subjects": [
+          "User"
+        ],
+        "x-speakeasy-group": "users",
+        "x-speakeasy-name-override": "delete_authenticated_user",
+        "x-speakeasy-ignore": true
+      },
+      "patch": {
+        "tags": [
+          "users",
+          "private"
+        ],
+        "summary": "Update Authenticated",
+        "operationId": "users:update_authenticated",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "oidc": []
+          },
+          {
+            "pat": []
+          }
+        ],
+        "x-speakeasy-group": "users",
+        "x-speakeasy-name-override": "update_authenticated",
+        "x-speakeasy-ignore": true
+      }
+    },
+    "/v1/users/me/scopes": {
+      "get": {
+        "tags": [
+          "users",
+          "private"
+        ],
+        "summary": "Scopes",
+        "operationId": "users:scopes",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserScopes"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "oidc": []
+          },
+          {
+            "pat": []
+          }
+        ],
+        "x-speakeasy-group": "users",
+        "x-speakeasy-name-override": "scopes",
+        "x-speakeasy-ignore": true
+      }
+    },
+    "/v1/users/me/oauth-accounts/{platform}": {
+      "delete": {
+        "tags": [
+          "users",
+          "private"
+        ],
+        "summary": "Disconnect Oauth Account",
+        "description": "Disconnect an OAuth account (GitHub or Google) from the authenticated user.\n\nThis allows users to unlink their OAuth provider while keeping their Outception account.\nThey can still authenticate using other methods (email magic link or other OAuth providers).\n\nNote: You cannot disconnect your last authentication method if your email is not verified.",
+        "operationId": "users:disconnect_oauth_account",
+        "security": [
+          {
+            "oidc": []
+          },
+          {
+            "pat": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "platform",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/OAuthPlatform"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "OAuth account not found"
+          },
+          "400": {
+            "description": "Cannot disconnect last authentication method"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-speakeasy-group": "users",
+        "x-speakeasy-name-override": "disconnect_oauth_account",
+        "x-speakeasy-ignore": true
+      }
+    },
+    "/v1/personal_access_tokens/": {
+      "post": {
+        "tags": [
+          "personal_access_token",
+          "private"
+        ],
+        "summary": "Create Personal Access Token",
+        "description": "Create a personal access token. The raw token is returned only once.",
+        "operationId": "personal_access_token:create_personal_access_token",
+        "security": [
+          {
+            "oidc": []
+          },
+          {
+            "pat": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonalAccessTokenCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonalAccessTokenCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-speakeasy-group": "personal_access_token",
+        "x-speakeasy-name-override": "create_personal_access_token",
+        "x-speakeasy-ignore": true
+      },
+      "get": {
+        "tags": [
+          "personal_access_token",
+          "private"
+        ],
+        "summary": "List Personal Access Tokens",
+        "description": "List personal access tokens.",
+        "operationId": "personal_access_token:list_personal_access_tokens",
+        "security": [
+          {
+            "oidc": []
+          },
+          {
+            "pat": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "description": "Page number, defaults to 1.",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "Page number, defaults to 1."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "description": "Size of a page, defaults to 10. Maximum is 100.",
+              "default": 10,
+              "title": "Limit"
+            },
+            "description": "Size of a page, defaults to 10. Maximum is 100."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResource_PersonalAccessToken_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-speakeasy-pagination": {
+          "type": "offsetLimit",
+          "inputs": [
+            {
+              "name": "page",
+              "in": "parameters",
+              "type": "page"
+            },
+            {
+              "name": "limit",
+              "in": "parameters",
+              "type": "limit"
+            }
+          ],
+          "outputs": {
+            "results": "$.items",
+            "numPages": "$.pagination.max_page"
+          }
+        },
+        "x-speakeasy-group": "personal_access_token",
+        "x-speakeasy-name-override": "list_personal_access_tokens",
+        "x-speakeasy-ignore": true
+      }
+    },
+    "/v1/personal_access_tokens/{id}": {
+      "delete": {
+        "tags": [
+          "personal_access_token",
+          "private"
+        ],
+        "summary": "Delete Personal Access Token",
+        "operationId": "personal_access_token:delete_personal_access_token",
+        "security": [
+          {
+            "oidc": []
+          },
+          {
+            "pat": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid4",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-speakeasy-group": "personal_access_token",
+        "x-speakeasy-name-override": "delete_personal_access_token",
+        "x-speakeasy-ignore": true
+      }
+    },
     "/v1/organizations/": {
       "get": {
         "tags": [
@@ -347,6 +747,598 @@
         "x-speakeasy-name-override": "update"
       }
     },
+    "/v1/auth/logout": {
+      "get": {
+        "tags": [
+          "auth",
+          "private"
+        ],
+        "summary": "Logout",
+        "operationId": "auth:logout",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-speakeasy-group": "auth",
+        "x-speakeasy-name-override": "logout",
+        "x-speakeasy-ignore": true
+      }
+    },
+    "/v1/auth/start": {
+      "post": {
+        "tags": [
+          "auth",
+          "private"
+        ],
+        "summary": "Start",
+        "operationId": "auth:start",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthenticationSessionStart"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationSession"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-speakeasy-group": "auth",
+        "x-speakeasy-name-override": "start",
+        "x-speakeasy-ignore": true
+      }
+    },
+    "/v1/auth/status": {
+      "get": {
+        "tags": [
+          "auth",
+          "private"
+        ],
+        "summary": "Status",
+        "operationId": "auth:status",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationSession"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No active authentication session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidAuthenticationSession"
+                }
+              }
+            }
+          }
+        },
+        "x-speakeasy-group": "auth",
+        "x-speakeasy-name-override": "status",
+        "x-speakeasy-ignore": true
+      }
+    },
+    "/v1/auth/email-otp/request": {
+      "post": {
+        "tags": [
+          "auth",
+          "private"
+        ],
+        "summary": "Email Otp Request",
+        "operationId": "auth:email_otp_request",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailOTPRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-speakeasy-group": "auth",
+        "x-speakeasy-name-override": "email_otp_request",
+        "x-speakeasy-ignore": true
+      }
+    },
+    "/v1/auth/email-otp/verify": {
+      "post": {
+        "tags": [
+          "auth",
+          "private"
+        ],
+        "summary": "Email Otp Verify",
+        "operationId": "auth:email_otp_verify",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailOTPVerify"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationSession"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Invalid or expired OTP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotPermitted"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-speakeasy-group": "auth",
+        "x-speakeasy-name-override": "email_otp_verify",
+        "x-speakeasy-ignore": true
+      }
+    },
+    "/v1/auth/totp": {
+      "get": {
+        "tags": [
+          "auth",
+          "private"
+        ],
+        "summary": "Totp Status",
+        "operationId": "auth:totp_status",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TOTPStatus"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "TOTP factor not enrolled"
+          }
+        },
+        "security": [
+          {
+            "oidc": []
+          },
+          {
+            "pat": []
+          }
+        ],
+        "x-speakeasy-group": "auth",
+        "x-speakeasy-name-override": "totp_status",
+        "x-speakeasy-ignore": true
+      },
+      "post": {
+        "tags": [
+          "auth",
+          "private"
+        ],
+        "summary": "Totp Enroll",
+        "operationId": "auth:totp_enroll",
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TOTPEnrollment"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "oidc": []
+          },
+          {
+            "pat": []
+          }
+        ],
+        "x-speakeasy-group": "auth",
+        "x-speakeasy-name-override": "totp_enroll",
+        "x-speakeasy-ignore": true
+      },
+      "delete": {
+        "tags": [
+          "auth",
+          "private"
+        ],
+        "summary": "Totp Delete",
+        "operationId": "auth:totp_delete",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "oidc": []
+          },
+          {
+            "pat": []
+          }
+        ],
+        "x-speakeasy-group": "auth",
+        "x-speakeasy-name-override": "totp_delete",
+        "x-speakeasy-ignore": true
+      }
+    },
+    "/v1/auth/totp/enable": {
+      "post": {
+        "tags": [
+          "auth",
+          "private"
+        ],
+        "summary": "Totp Enable",
+        "operationId": "auth:totp_enable",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TOTPEnable"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "oidc": []
+          },
+          {
+            "pat": []
+          }
+        ],
+        "x-speakeasy-group": "auth",
+        "x-speakeasy-name-override": "totp_enable",
+        "x-speakeasy-ignore": true
+      }
+    },
+    "/v1/auth/totp/verify": {
+      "post": {
+        "tags": [
+          "auth",
+          "private"
+        ],
+        "summary": "Totp Verify",
+        "operationId": "auth:totp_verify",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TOTPEnable"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationSession"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-speakeasy-group": "auth",
+        "x-speakeasy-name-override": "totp_verify",
+        "x-speakeasy-ignore": true
+      }
+    },
+    "/v1/auth/backup-codes": {
+      "get": {
+        "tags": [
+          "auth",
+          "private"
+        ],
+        "summary": "Backup Codes Status",
+        "operationId": "auth:backup_codes_status",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackupCodesStatus"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Backup codes factor not enrolled"
+          }
+        },
+        "security": [
+          {
+            "oidc": []
+          },
+          {
+            "pat": []
+          }
+        ],
+        "x-speakeasy-group": "auth",
+        "x-speakeasy-name-override": "backup_codes_status",
+        "x-speakeasy-ignore": true
+      },
+      "post": {
+        "tags": [
+          "auth",
+          "private"
+        ],
+        "summary": "Backup Codes Enroll",
+        "operationId": "auth:backup_codes_enroll",
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackupCodesEnrollment"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "oidc": []
+          },
+          {
+            "pat": []
+          }
+        ],
+        "x-speakeasy-group": "auth",
+        "x-speakeasy-name-override": "backup_codes_enroll",
+        "x-speakeasy-ignore": true
+      }
+    },
+    "/v1/auth/backup-codes/verify": {
+      "post": {
+        "tags": [
+          "auth",
+          "private"
+        ],
+        "summary": "Backup Codes Verify",
+        "operationId": "auth:backup_codes_verify",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BackupCodesVerify"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationSession"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-speakeasy-group": "auth",
+        "x-speakeasy-name-override": "backup_codes_verify",
+        "x-speakeasy-ignore": true
+      }
+    },
+    "/v1/oauth2/": {
+      "get": {
+        "tags": [
+          "oauth2",
+          "clients",
+          "private"
+        ],
+        "summary": "List Clients",
+        "description": "List OAuth2 clients.",
+        "operationId": "oauth2:clients:list",
+        "security": [
+          {
+            "oidc": []
+          },
+          {
+            "pat": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "description": "Page number, defaults to 1.",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "Page number, defaults to 1."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "description": "Size of a page, defaults to 10. Maximum is 100.",
+              "default": 10,
+              "title": "Limit"
+            },
+            "description": "Size of a page, defaults to 10. Maximum is 100."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResource_OAuth2Client_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-speakeasy-pagination": {
+          "type": "offsetLimit",
+          "inputs": [
+            {
+              "name": "page",
+              "in": "parameters",
+              "type": "page"
+            },
+            {
+              "name": "limit",
+              "in": "parameters",
+              "type": "limit"
+            }
+          ],
+          "outputs": {
+            "results": "$.items",
+            "numPages": "$.pagination.max_page"
+          }
+        },
+        "x-speakeasy-group": "oauth2.clients",
+        "x-speakeasy-name-override": "list",
+        "x-speakeasy-ignore": true
+      }
+    },
     "/v1/oauth2/register": {
       "post": {
         "tags": [
@@ -629,6 +1621,57 @@
         ],
         "x-speakeasy-group": "oauth2",
         "x-speakeasy-name-override": "authorize"
+      }
+    },
+    "/v1/oauth2/consent": {
+      "post": {
+        "tags": [
+          "oauth2",
+          "private"
+        ],
+        "summary": "Consent",
+        "operationId": "oauth2:consent",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_oauth2_consent"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "oidc": []
+          },
+          {
+            "pat": []
+          }
+        ],
+        "x-speakeasy-group": "oauth2",
+        "x-speakeasy-name-override": "consent",
+        "x-speakeasy-ignore": true
       }
     },
     "/v1/oauth2/token": {
@@ -1159,6 +2202,126 @@
         "x-speakeasy-name-override": "delete"
       }
     },
+    "/v1/email-update/request": {
+      "post": {
+        "tags": [
+          "email-update",
+          "private"
+        ],
+        "summary": "Request Email Update",
+        "operationId": "email-update:request_email_update",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "oidc": []
+          },
+          {
+            "pat": []
+          }
+        ],
+        "x-speakeasy-group": "email-update",
+        "x-speakeasy-name-override": "request_email_update",
+        "x-speakeasy-ignore": true
+      }
+    },
+    "/v1/email-update/verify": {
+      "post": {
+        "tags": [
+          "email-update",
+          "private"
+        ],
+        "summary": "Verify Email Update",
+        "operationId": "email-update:verify_email_update",
+        "security": [
+          {
+            "oidc": []
+          },
+          {
+            "pat": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "return_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Return To"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_email-update_verify_email_update"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-speakeasy-group": "email-update",
+        "x-speakeasy-name-override": "verify_email_update",
+        "x-speakeasy-ignore": true
+      }
+    },
     "/v1/news/sources": {
       "get": {
         "tags": [
@@ -1236,6 +2399,180 @@
         },
         "x-speakeasy-group": "news",
         "x-speakeasy-name-override": "search_news"
+      }
+    },
+    "/v1/news/followed": {
+      "get": {
+        "tags": [
+          "news",
+          "private"
+        ],
+        "summary": "List Followed Sources",
+        "description": "The sources the authenticated user follows (canonical ids).",
+        "operationId": "news:list_followed_sources",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowedSources"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "oidc": []
+          },
+          {
+            "pat": []
+          }
+        ],
+        "x-outception-allowed-subjects": [
+          "User"
+        ],
+        "x-speakeasy-group": "news",
+        "x-speakeasy-name-override": "list_followed_sources",
+        "x-speakeasy-ignore": true
+      }
+    },
+    "/v1/news/followed/feed": {
+      "get": {
+        "tags": [
+          "news",
+          "private"
+        ],
+        "summary": "Followed Feed",
+        "description": "A merged, freshest-first feed of cached headlines from the sources the\nuser follows (warm cache only \u2014 never triggers a fetch).",
+        "operationId": "news:followed_feed",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NewsSearchResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "oidc": []
+          },
+          {
+            "pat": []
+          }
+        ],
+        "x-outception-allowed-subjects": [
+          "User"
+        ],
+        "x-speakeasy-group": "news",
+        "x-speakeasy-name-override": "followed_feed",
+        "x-speakeasy-ignore": true
+      }
+    },
+    "/v1/news/followed/{source_id}": {
+      "put": {
+        "tags": [
+          "news",
+          "private"
+        ],
+        "summary": "Follow Source",
+        "description": "Follow a source. The id is resolved to its canonical source (so a\nredirect alias follows the real one); unknown ids are rejected.",
+        "operationId": "news:follow_source",
+        "security": [
+          {
+            "oidc": []
+          },
+          {
+            "pat": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "source_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Source Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-outception-allowed-subjects": [
+          "User"
+        ],
+        "x-speakeasy-group": "news",
+        "x-speakeasy-name-override": "follow_source",
+        "x-speakeasy-ignore": true
+      },
+      "delete": {
+        "tags": [
+          "news",
+          "private"
+        ],
+        "summary": "Unfollow Source",
+        "description": "Unfollow a source (idempotent).",
+        "operationId": "news:unfollow_source",
+        "security": [
+          {
+            "oidc": []
+          },
+          {
+            "pat": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "source_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Source Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-outception-allowed-subjects": [
+          "User"
+        ],
+        "x-speakeasy-group": "news",
+        "x-speakeasy-name-override": "unfollow_source",
+        "x-speakeasy-ignore": true
       }
     },
     "/v1/news/{source_id}": {
@@ -1477,6 +2814,224 @@
         "x-speakeasy-name-override": "get_category"
       }
     },
+    "/v1/promotions/mine": {
+      "get": {
+        "tags": [
+          "promotions",
+          "private"
+        ],
+        "summary": "List Mine",
+        "description": "The authenticated user's promotions, newest first.\n\n**Scopes**: `promotions:read` `promotions:write`",
+        "operationId": "promotions:list_mine",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PromotionMineRead"
+                  },
+                  "type": "array",
+                  "title": "Response Promotions:List Mine"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "oidc": [
+              "promotions:read",
+              "promotions:write"
+            ]
+          },
+          {
+            "pat": [
+              "promotions:read",
+              "promotions:write"
+            ]
+          }
+        ],
+        "x-outception-allowed-subjects": [
+          "User"
+        ],
+        "x-speakeasy-group": "promotions",
+        "x-speakeasy-name-override": "list_mine",
+        "x-speakeasy-ignore": true
+      }
+    },
+    "/v1/promotions/preferences": {
+      "get": {
+        "tags": [
+          "promotions",
+          "private"
+        ],
+        "summary": "Get Preferences",
+        "description": "Whether the authenticated user receives promotion lifecycle emails.\n\n**Scopes**: `promotions:read` `promotions:write`",
+        "operationId": "promotions:get_preferences",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionPreferences"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "oidc": [
+              "promotions:read",
+              "promotions:write"
+            ]
+          },
+          {
+            "pat": [
+              "promotions:read",
+              "promotions:write"
+            ]
+          }
+        ],
+        "x-outception-allowed-subjects": [
+          "User"
+        ],
+        "x-speakeasy-group": "promotions",
+        "x-speakeasy-name-override": "get_preferences",
+        "x-speakeasy-ignore": true
+      },
+      "patch": {
+        "tags": [
+          "promotions",
+          "private"
+        ],
+        "summary": "Update Preferences",
+        "description": "Turn the promotion lifecycle emails (go-live / queued / expiry) on or off.\n\nAccepts web sessions and API tokens, so both the web dashboard and the\nmobile app can set it.\n\n**Scopes**: `promotions:write`",
+        "operationId": "promotions:update_preferences",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromotionPreferences"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionPreferences"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "oidc": [
+              "promotions:write"
+            ]
+          },
+          {
+            "pat": [
+              "promotions:write"
+            ]
+          }
+        ],
+        "x-outception-allowed-subjects": [
+          "User"
+        ],
+        "x-speakeasy-group": "promotions",
+        "x-speakeasy-name-override": "update_preferences",
+        "x-speakeasy-ignore": true
+      }
+    },
+    "/v1/promotions/analytics": {
+      "get": {
+        "tags": [
+          "promotions",
+          "private"
+        ],
+        "summary": "Get Analytics",
+        "description": "Promotion analytics for the dashboard: KPI totals (spend, impressions,\nclicks, CTR) plus a daily series, scoped to the requesting user. Totals come\nfrom the Postgres counters; the daily series is read from the Tinybird\n``promotion_analytics`` pipe when configured (which adds per-day impressions\nand clicks), otherwise from a Postgres spend-only series.\n\n**Scopes**: `promotions:read` `promotions:write`",
+        "operationId": "promotions:get_analytics",
+        "security": [
+          {
+            "oidc": [
+              "promotions:read",
+              "promotions:write"
+            ]
+          },
+          {
+            "pat": [
+              "promotions:read",
+              "promotions:write"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 365,
+              "minimum": 1,
+              "description": "Trailing window for the chart.",
+              "default": 30,
+              "title": "Days"
+            },
+            "description": "Trailing window for the chart."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionAnalytics"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-outception-allowed-subjects": [
+          "User"
+        ],
+        "x-speakeasy-group": "promotions",
+        "x-speakeasy-name-override": "get_analytics",
+        "x-speakeasy-ignore": true
+      }
+    },
     "/v1/promotions/{promotion_id}/click": {
       "get": {
         "tags": [
@@ -1521,10 +3076,117 @@
         "x-speakeasy-group": "promotions",
         "x-speakeasy-name-override": "click_promotion"
       }
+    },
+    "/v1/promotions/": {
+      "post": {
+        "tags": [
+          "promotions",
+          "private"
+        ],
+        "summary": "Create Promotion",
+        "description": "Buy a promotion: creates the draft and returns a hosted checkout URL. The\npromotion joins its category's queue once the order webhook confirms\npayment.\n\n**Scopes**: `promotions:write`",
+        "operationId": "promotions:create_promotion",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromotionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionCheckout"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "oidc": [
+              "promotions:write"
+            ]
+          },
+          {
+            "pat": [
+              "promotions:write"
+            ]
+          }
+        ],
+        "x-outception-allowed-subjects": [
+          "User"
+        ],
+        "x-speakeasy-group": "promotions",
+        "x-speakeasy-name-override": "create_promotion",
+        "x-speakeasy-ignore": true
+      }
     }
   },
   "components": {
     "schemas": {
+      "AuthenticationSession": {
+        "properties": {
+          "identity_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid4"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Identity Id"
+          },
+          "available_factors": {
+            "items": {
+              "$ref": "#/components/schemas/Factor"
+            },
+            "type": "array",
+            "title": "Available Factors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "identity_id",
+          "available_factors"
+        ],
+        "title": "AuthenticationSession"
+      },
+      "AuthenticationSessionStart": {
+        "properties": {
+          "return_to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return To"
+          }
+        },
+        "type": "object",
+        "title": "AuthenticationSessionStart"
+      },
       "AuthorizeOrganization": {
         "properties": {
           "id": {
@@ -1733,6 +3395,53 @@
         ],
         "title": "AvailableScope"
       },
+      "BackupCodesEnrollment": {
+        "properties": {
+          "codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Codes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "codes"
+        ],
+        "title": "BackupCodesEnrollment"
+      },
+      "BackupCodesStatus": {
+        "properties": {
+          "codes": {
+            "type": "integer",
+            "title": "Codes"
+          },
+          "used_codes": {
+            "type": "integer",
+            "title": "Used Codes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "codes",
+          "used_codes"
+        ],
+        "title": "BackupCodesStatus"
+      },
+      "BackupCodesVerify": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "BackupCodesVerify"
+      },
       "BatchRequest": {
         "properties": {
           "sources": {
@@ -1750,6 +3459,61 @@
           "sources"
         ],
         "title": "BatchRequest"
+      },
+      "BlockingOrganization": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid4",
+            "title": "Id"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "slug",
+          "name"
+        ],
+        "title": "BlockingOrganization",
+        "description": "Organization that is blocking user deletion."
+      },
+      "Body_email-update_verify_email_update": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "title": "Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "title": "Body_email-update:verify_email_update"
+      },
+      "Body_oauth2_consent": {
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "allow",
+              "deny"
+            ],
+            "title": "Action"
+          }
+        },
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "title": "Body_oauth2:consent"
       },
       "CategoryPromotions": {
         "properties": {
@@ -2289,6 +4053,86 @@
         ],
         "title": "CountryAlpha2Input"
       },
+      "EmailOTPRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "EmailOTPRequest"
+      },
+      "EmailOTPVerify": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "EmailOTPVerify"
+      },
+      "EmailUpdateRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "return_to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return To"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "EmailUpdateRequest"
+      },
+      "Factor": {
+        "type": "string",
+        "enum": [
+          "email_otp",
+          "totp",
+          "backup_codes",
+          "apple",
+          "github",
+          "google"
+        ]
+      },
+      "FollowedSources": {
+        "properties": {
+          "sourceIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sourceids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sourceIds"
+        ],
+        "title": "FollowedSources",
+        "description": "The canonical ids of the sources the authenticated user follows."
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -2301,6 +4145,16 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "IdentityVerificationStatus": {
+        "type": "string",
+        "enum": [
+          "unverified",
+          "pending",
+          "verified",
+          "failed"
+        ],
+        "title": "IdentityVerificationStatus"
       },
       "IntrospectTokenResponse": {
         "properties": {
@@ -2363,6 +4217,48 @@
         ],
         "title": "IntrospectTokenResponse"
       },
+      "InvalidAuthenticationSession": {
+        "properties": {
+          "error": {
+            "type": "string",
+            "const": "InvalidAuthenticationSession",
+            "title": "Error",
+            "examples": [
+              "InvalidAuthenticationSession"
+            ]
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error",
+          "detail"
+        ],
+        "title": "InvalidAuthenticationSession"
+      },
+      "ListResource_OAuth2Client_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OAuth2Client"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "pagination"
+        ],
+        "title": "ListResource[OAuth2Client]"
+      },
       "ListResource_OrganizationAccessToken_": {
         "properties": {
           "items": {
@@ -2402,6 +4298,26 @@
           "pagination"
         ],
         "title": "ListResource[Organization]"
+      },
+      "ListResource_PersonalAccessToken_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PersonalAccessToken"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "pagination"
+        ],
+        "title": "ListResource[PersonalAccessToken]"
       },
       "NewsExtra": {
         "properties": {
@@ -2558,6 +4474,190 @@
         ],
         "title": "NewsSearchResponse",
         "description": "Search results: matching sources (by name) and matching cached\nheadlines."
+      },
+      "NotPermitted": {
+        "properties": {
+          "error": {
+            "type": "string",
+            "const": "NotPermitted",
+            "title": "Error",
+            "examples": [
+              "NotPermitted"
+            ]
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error",
+          "detail"
+        ],
+        "title": "NotPermitted"
+      },
+      "OAuth2Client": {
+        "properties": {
+          "redirect_uris": {
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "format": "uri"
+            },
+            "type": "array",
+            "title": "Redirect Uris"
+          },
+          "token_endpoint_auth_method": {
+            "type": "string",
+            "enum": [
+              "client_secret_basic",
+              "client_secret_post",
+              "none"
+            ],
+            "title": "Token Endpoint Auth Method",
+            "default": "client_secret_post"
+          },
+          "grant_types": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "authorization_code",
+                "refresh_token"
+              ]
+            },
+            "type": "array",
+            "title": "Grant Types",
+            "default": [
+              "authorization_code",
+              "refresh_token"
+            ]
+          },
+          "response_types": {
+            "items": {
+              "type": "string",
+              "const": "code"
+            },
+            "type": "array",
+            "title": "Response Types",
+            "default": [
+              "code"
+            ]
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope",
+            "default": "openid profile email user:read user:write organizations:read organizations:write members:read members:write organization_access_tokens:read organization_access_tokens:write promotions:read promotions:write"
+          },
+          "client_name": {
+            "type": "string",
+            "title": "Client Name"
+          },
+          "client_uri": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Uri"
+          },
+          "logo_uri": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2083,
+                "minLength": 1,
+                "format": "uri"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Uri"
+          },
+          "tos_uri": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2083,
+                "minLength": 1,
+                "format": "uri"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tos Uri"
+          },
+          "policy_uri": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2083,
+                "minLength": 1,
+                "format": "uri"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Uri"
+          },
+          "default_sub_type": {
+            "$ref": "#/components/schemas/SubType",
+            "default": "user"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp of the object."
+          },
+          "modified_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modified At",
+            "description": "Last modification timestamp of the object."
+          },
+          "client_id": {
+            "type": "string",
+            "title": "Client Id"
+          },
+          "client_secret": {
+            "type": "string",
+            "title": "Client Secret"
+          },
+          "client_id_issued_at": {
+            "type": "integer",
+            "title": "Client Id Issued At"
+          },
+          "client_secret_expires_at": {
+            "type": "integer",
+            "title": "Client Secret Expires At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "redirect_uris",
+          "client_name",
+          "created_at",
+          "modified_at",
+          "client_id",
+          "client_secret",
+          "client_id_issued_at",
+          "client_secret_expires_at"
+        ],
+        "title": "OAuth2Client"
       },
       "OAuth2ClientConfiguration": {
         "properties": {
@@ -2900,6 +5000,70 @@
         ],
         "title": "OAuth2ClientPublic"
       },
+      "OAuthAccountRead": {
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp of the object."
+          },
+          "modified_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modified At",
+            "description": "Last modification timestamp of the object."
+          },
+          "platform": {
+            "$ref": "#/components/schemas/OAuthPlatform"
+          },
+          "account_id": {
+            "type": "string",
+            "title": "Account Id"
+          },
+          "account_email": {
+            "type": "string",
+            "title": "Account Email"
+          },
+          "account_username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Username"
+          }
+        },
+        "type": "object",
+        "required": [
+          "created_at",
+          "modified_at",
+          "platform",
+          "account_id",
+          "account_email",
+          "account_username"
+        ],
+        "title": "OAuthAccountRead"
+      },
+      "OAuthPlatform": {
+        "type": "string",
+        "enum": [
+          "github",
+          "google",
+          "apple"
+        ],
+        "title": "OAuthPlatform"
+      },
       "Organization": {
         "properties": {
           "created_at": {
@@ -2930,12 +5094,12 @@
           "name": {
             "type": "string",
             "title": "Name",
-            "description": "Organization name shown in checkout, customer portal, emails etc."
+            "description": "Organization name shown in promotions, emails, etc."
           },
           "slug": {
             "type": "string",
             "title": "Slug",
-            "description": "Unique organization slug in checkout, customer portal and credit card statements."
+            "description": "Unique organization slug used in promotions and credit card statements."
           },
           "avatar_url": {
             "anyOf": [
@@ -2947,7 +5111,7 @@
               }
             ],
             "title": "Avatar Url",
-            "description": "Avatar URL shown in checkout, customer portal, emails etc."
+            "description": "Avatar URL shown in promotions, emails, etc."
           },
           "email": {
             "anyOf": [
@@ -2984,15 +5148,6 @@
           "status": {
             "$ref": "#/components/schemas/OrganizationStatus",
             "description": "Current organization status"
-          },
-          "default_presentment_currency": {
-            "type": "string",
-            "title": "Default Presentment Currency",
-            "description": "Default presentment currency. Used as fallback in checkout and customer portal, if the customer's local currency is not available."
-          },
-          "default_tax_behavior": {
-            "$ref": "#/components/schemas/TaxBehaviorOption",
-            "description": "Default tax behavior applied on products."
           },
           "country": {
             "anyOf": [
@@ -3525,8 +5680,6 @@
           "website",
           "socials",
           "status",
-          "default_presentment_currency",
-          "default_tax_behavior",
           "capabilities"
         ],
         "title": "Organization"
@@ -3763,34 +5916,6 @@
             "description": "Brief information about you and your business.",
             "deprecated": true
           },
-          "product_description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Product Description",
-            "description": "Description of digital products being sold."
-          },
-          "selling_categories": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Selling Categories",
-            "description": "Categories of products being sold."
-          },
-          "pricing_models": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Pricing Models",
-            "description": "Pricing models used by the organization."
-          },
           "intended_use": {
             "anyOf": [
               {
@@ -3813,44 +5938,11 @@
             "description": "Main customer acquisition channels.",
             "deprecated": true
           },
-          "future_annual_revenue": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Future Annual Revenue",
-            "description": "Estimated revenue in the next 12 months",
-            "deprecated": true
-          },
           "switching": {
             "type": "boolean",
             "title": "Switching",
             "description": "Switching from another platform?",
             "default": false
-          },
-          "switching_from": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": [
-                  "paddle",
-                  "lemon_squeezy",
-                  "gumroad",
-                  "stripe",
-                  "other"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Switching From",
-            "description": "Which platform the organization is migrating from."
           },
           "previous_annual_revenue": {
             "anyOf": [
@@ -3870,28 +5962,14 @@
         "type": "object",
         "title": "OrganizationDetails"
       },
-      "OrganizationNotificationSettings": {
-        "properties": {
-          "new_order": {
-            "type": "boolean",
-            "title": "New Order"
-          },
-          "new_subscription": {
-            "type": "boolean",
-            "title": "New Subscription"
-          },
-          "chargeback_prevention": {
-            "type": "boolean",
-            "title": "Chargeback Prevention"
-          }
-        },
-        "type": "object",
-        "required": [
-          "new_order",
-          "new_subscription",
-          "chargeback_prevention"
+      "OrganizationRole": {
+        "type": "string",
+        "enum": [
+          "owner",
+          "admin",
+          "member"
         ],
-        "title": "OrganizationNotificationSettings"
+        "title": "OrganizationRole"
       },
       "OrganizationSocialLink": {
         "properties": {
@@ -4537,32 +6615,636 @@
               }
             ],
             "description": "Two-letter country code (ISO 3166-1 alpha-2)."
-          },
-          "default_presentment_currency": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/PresentmentCurrency"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Default presentment currency for the organization"
-          },
-          "default_tax_behavior": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/TaxBehaviorOption"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Default tax behavior applied on products."
           }
         },
         "type": "object",
         "title": "OrganizationUpdate"
+      },
+      "OrganizationWithRole": {
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp of the object."
+          },
+          "modified_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modified At",
+            "description": "Last modification timestamp of the object."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid4",
+            "title": "Id",
+            "description": "The ID of the object."
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Organization name shown in promotions, emails, etc."
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug",
+            "description": "Unique organization slug used in promotions and credit card statements."
+          },
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url",
+            "description": "Avatar URL shown in promotions, emails, etc."
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email",
+            "description": "Public support email."
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website",
+            "description": "Official website of the organization."
+          },
+          "socials": {
+            "items": {
+              "$ref": "#/components/schemas/OrganizationSocialLink"
+            },
+            "type": "array",
+            "title": "Socials",
+            "description": "Links to social profiles."
+          },
+          "status": {
+            "$ref": "#/components/schemas/OrganizationStatus",
+            "description": "Current organization status"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "AD",
+                  "AE",
+                  "AF",
+                  "AG",
+                  "AI",
+                  "AL",
+                  "AM",
+                  "AO",
+                  "AQ",
+                  "AR",
+                  "AS",
+                  "AT",
+                  "AU",
+                  "AW",
+                  "AX",
+                  "AZ",
+                  "BA",
+                  "BB",
+                  "BD",
+                  "BE",
+                  "BF",
+                  "BG",
+                  "BH",
+                  "BI",
+                  "BJ",
+                  "BL",
+                  "BM",
+                  "BN",
+                  "BO",
+                  "BQ",
+                  "BR",
+                  "BS",
+                  "BT",
+                  "BV",
+                  "BW",
+                  "BY",
+                  "BZ",
+                  "CA",
+                  "CC",
+                  "CD",
+                  "CF",
+                  "CG",
+                  "CH",
+                  "CI",
+                  "CK",
+                  "CL",
+                  "CM",
+                  "CN",
+                  "CO",
+                  "CR",
+                  "CU",
+                  "CV",
+                  "CW",
+                  "CX",
+                  "CY",
+                  "CZ",
+                  "DE",
+                  "DJ",
+                  "DK",
+                  "DM",
+                  "DO",
+                  "DZ",
+                  "EC",
+                  "EE",
+                  "EG",
+                  "EH",
+                  "ER",
+                  "ES",
+                  "ET",
+                  "FI",
+                  "FJ",
+                  "FK",
+                  "FM",
+                  "FO",
+                  "FR",
+                  "GA",
+                  "GB",
+                  "GD",
+                  "GE",
+                  "GF",
+                  "GG",
+                  "GH",
+                  "GI",
+                  "GL",
+                  "GM",
+                  "GN",
+                  "GP",
+                  "GQ",
+                  "GR",
+                  "GS",
+                  "GT",
+                  "GU",
+                  "GW",
+                  "GY",
+                  "HK",
+                  "HM",
+                  "HN",
+                  "HR",
+                  "HT",
+                  "HU",
+                  "ID",
+                  "IE",
+                  "IL",
+                  "IM",
+                  "IN",
+                  "IO",
+                  "IQ",
+                  "IR",
+                  "IS",
+                  "IT",
+                  "JE",
+                  "JM",
+                  "JO",
+                  "JP",
+                  "KE",
+                  "KG",
+                  "KH",
+                  "KI",
+                  "KM",
+                  "KN",
+                  "KP",
+                  "KR",
+                  "KW",
+                  "KY",
+                  "KZ",
+                  "LA",
+                  "LB",
+                  "LC",
+                  "LI",
+                  "LK",
+                  "LR",
+                  "LS",
+                  "LT",
+                  "LU",
+                  "LV",
+                  "LY",
+                  "MA",
+                  "MC",
+                  "MD",
+                  "ME",
+                  "MF",
+                  "MG",
+                  "MH",
+                  "MK",
+                  "ML",
+                  "MM",
+                  "MN",
+                  "MO",
+                  "MP",
+                  "MQ",
+                  "MR",
+                  "MS",
+                  "MT",
+                  "MU",
+                  "MV",
+                  "MW",
+                  "MX",
+                  "MY",
+                  "MZ",
+                  "NA",
+                  "NC",
+                  "NE",
+                  "NF",
+                  "NG",
+                  "NI",
+                  "NL",
+                  "NO",
+                  "NP",
+                  "NR",
+                  "NU",
+                  "NZ",
+                  "OM",
+                  "PA",
+                  "PE",
+                  "PF",
+                  "PG",
+                  "PH",
+                  "PK",
+                  "PL",
+                  "PM",
+                  "PN",
+                  "PR",
+                  "PS",
+                  "PT",
+                  "PW",
+                  "PY",
+                  "QA",
+                  "RE",
+                  "RO",
+                  "RS",
+                  "RU",
+                  "RW",
+                  "SA",
+                  "SB",
+                  "SC",
+                  "SD",
+                  "SE",
+                  "SG",
+                  "SH",
+                  "SI",
+                  "SJ",
+                  "SK",
+                  "SL",
+                  "SM",
+                  "SN",
+                  "SO",
+                  "SR",
+                  "SS",
+                  "ST",
+                  "SV",
+                  "SX",
+                  "SY",
+                  "SZ",
+                  "TC",
+                  "TD",
+                  "TF",
+                  "TG",
+                  "TH",
+                  "TJ",
+                  "TK",
+                  "TL",
+                  "TM",
+                  "TN",
+                  "TO",
+                  "TR",
+                  "TT",
+                  "TV",
+                  "TW",
+                  "TZ",
+                  "UA",
+                  "UG",
+                  "UM",
+                  "US",
+                  "UY",
+                  "UZ",
+                  "VA",
+                  "VC",
+                  "VE",
+                  "VG",
+                  "VI",
+                  "VN",
+                  "VU",
+                  "WF",
+                  "WS",
+                  "YE",
+                  "YT",
+                  "ZA",
+                  "ZM",
+                  "ZW"
+                ],
+                "title": "CountryAlpha2",
+                "x-speakeasy-enums": [
+                  "AD",
+                  "AE",
+                  "AF",
+                  "AG",
+                  "AI",
+                  "AL",
+                  "AM",
+                  "AO",
+                  "AQ",
+                  "AR",
+                  "AS",
+                  "AT",
+                  "AU",
+                  "AW",
+                  "AX",
+                  "AZ",
+                  "BA",
+                  "BB",
+                  "BD",
+                  "BE",
+                  "BF",
+                  "BG",
+                  "BH",
+                  "BI",
+                  "BJ",
+                  "BL",
+                  "BM",
+                  "BN",
+                  "BO",
+                  "BQ",
+                  "BR",
+                  "BS",
+                  "BT",
+                  "BV",
+                  "BW",
+                  "BY",
+                  "BZ",
+                  "CA",
+                  "CC",
+                  "CD",
+                  "CF",
+                  "CG",
+                  "CH",
+                  "CI",
+                  "CK",
+                  "CL",
+                  "CM",
+                  "CN",
+                  "CO",
+                  "CR",
+                  "CU",
+                  "CV",
+                  "CW",
+                  "CX",
+                  "CY",
+                  "CZ",
+                  "DE",
+                  "DJ",
+                  "DK",
+                  "DM",
+                  "DO",
+                  "DZ",
+                  "EC",
+                  "EE",
+                  "EG",
+                  "EH",
+                  "ER",
+                  "ES",
+                  "ET",
+                  "FI",
+                  "FJ",
+                  "FK",
+                  "FM",
+                  "FO",
+                  "FR",
+                  "GA",
+                  "GB",
+                  "GD",
+                  "GE",
+                  "GF",
+                  "GG",
+                  "GH",
+                  "GI",
+                  "GL",
+                  "GM",
+                  "GN",
+                  "GP",
+                  "GQ",
+                  "GR",
+                  "GS",
+                  "GT",
+                  "GU",
+                  "GW",
+                  "GY",
+                  "HK",
+                  "HM",
+                  "HN",
+                  "HR",
+                  "HT",
+                  "HU",
+                  "ID",
+                  "IE",
+                  "IL",
+                  "IM",
+                  "IN",
+                  "IO",
+                  "IQ",
+                  "IR",
+                  "IS",
+                  "IT",
+                  "JE",
+                  "JM",
+                  "JO",
+                  "JP",
+                  "KE",
+                  "KG",
+                  "KH",
+                  "KI",
+                  "KM",
+                  "KN",
+                  "KP",
+                  "KR",
+                  "KW",
+                  "KY",
+                  "KZ",
+                  "LA",
+                  "LB",
+                  "LC",
+                  "LI",
+                  "LK",
+                  "LR",
+                  "LS",
+                  "LT",
+                  "LU",
+                  "LV",
+                  "LY",
+                  "MA",
+                  "MC",
+                  "MD",
+                  "ME",
+                  "MF",
+                  "MG",
+                  "MH",
+                  "MK",
+                  "ML",
+                  "MM",
+                  "MN",
+                  "MO",
+                  "MP",
+                  "MQ",
+                  "MR",
+                  "MS",
+                  "MT",
+                  "MU",
+                  "MV",
+                  "MW",
+                  "MX",
+                  "MY",
+                  "MZ",
+                  "NA",
+                  "NC",
+                  "NE",
+                  "NF",
+                  "NG",
+                  "NI",
+                  "NL",
+                  "NO",
+                  "NP",
+                  "NR",
+                  "NU",
+                  "NZ",
+                  "OM",
+                  "PA",
+                  "PE",
+                  "PF",
+                  "PG",
+                  "PH",
+                  "PK",
+                  "PL",
+                  "PM",
+                  "PN",
+                  "PR",
+                  "PS",
+                  "PT",
+                  "PW",
+                  "PY",
+                  "QA",
+                  "RE",
+                  "RO",
+                  "RS",
+                  "RU",
+                  "RW",
+                  "SA",
+                  "SB",
+                  "SC",
+                  "SD",
+                  "SE",
+                  "SG",
+                  "SH",
+                  "SI",
+                  "SJ",
+                  "SK",
+                  "SL",
+                  "SM",
+                  "SN",
+                  "SO",
+                  "SR",
+                  "SS",
+                  "ST",
+                  "SV",
+                  "SX",
+                  "SY",
+                  "SZ",
+                  "TC",
+                  "TD",
+                  "TF",
+                  "TG",
+                  "TH",
+                  "TJ",
+                  "TK",
+                  "TL",
+                  "TM",
+                  "TN",
+                  "TO",
+                  "TR",
+                  "TT",
+                  "TV",
+                  "TW",
+                  "TZ",
+                  "UA",
+                  "UG",
+                  "UM",
+                  "US",
+                  "UY",
+                  "UZ",
+                  "VA",
+                  "VC",
+                  "VE",
+                  "VG",
+                  "VI",
+                  "VN",
+                  "VU",
+                  "WF",
+                  "WS",
+                  "YE",
+                  "YT",
+                  "ZA",
+                  "ZM",
+                  "ZW"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Two-letter country code (ISO 3166-1 alpha-2)."
+          },
+          "capabilities": {
+            "$ref": "#/components/schemas/OrganizationCapabilities",
+            "description": "Capabilities currently granted to the organization."
+          },
+          "role": {
+            "$ref": "#/components/schemas/OrganizationRole",
+            "description": "The user's role on this organization."
+          }
+        },
+        "type": "object",
+        "required": [
+          "created_at",
+          "modified_at",
+          "id",
+          "name",
+          "slug",
+          "avatar_url",
+          "email",
+          "website",
+          "socials",
+          "status",
+          "capabilities",
+          "role"
+        ],
+        "title": "OrganizationWithRole",
+        "description": "Variant of `Organization` embedded on `GET /v1/users/me` that\nincludes the user's role on the organization."
       },
       "Pagination": {
         "properties": {
@@ -4582,137 +7264,405 @@
         ],
         "title": "Pagination"
       },
-      "PresentmentCurrency": {
-        "type": "string",
-        "enum": [
-          "aed",
-          "all",
-          "amd",
-          "aoa",
-          "ars",
-          "aud",
-          "awg",
-          "azn",
-          "bam",
-          "bbd",
-          "bdt",
-          "bif",
-          "bmd",
-          "bnd",
-          "bob",
-          "brl",
-          "bsd",
-          "bwp",
-          "bzd",
-          "cad",
-          "cdf",
-          "chf",
-          "clp",
-          "cny",
-          "cop",
-          "crc",
-          "cve",
-          "czk",
-          "djf",
-          "dkk",
-          "dop",
-          "dzd",
-          "egp",
-          "etb",
-          "eur",
-          "fjd",
-          "fkp",
-          "gbp",
-          "gel",
-          "gip",
-          "gmd",
-          "gnf",
-          "gtq",
-          "gyd",
-          "hkd",
-          "hnl",
-          "htg",
-          "huf",
-          "idr",
-          "ils",
-          "inr",
-          "isk",
-          "jmd",
-          "jpy",
-          "kes",
-          "kgs",
-          "khr",
-          "kmf",
-          "krw",
-          "kyd",
-          "kzt",
-          "lak",
-          "lkr",
-          "lrd",
-          "lsl",
-          "mad",
-          "mdl",
-          "mga",
-          "mkd",
-          "mnt",
-          "mop",
-          "mur",
-          "mvr",
-          "mwk",
-          "mxn",
-          "myr",
-          "mzn",
-          "nad",
-          "ngn",
-          "nio",
-          "nok",
-          "npr",
-          "nzd",
-          "pab",
-          "pen",
-          "pgk",
-          "php",
-          "pkr",
-          "pln",
-          "pyg",
-          "qar",
-          "ron",
-          "rsd",
-          "rwf",
-          "sar",
-          "sbd",
-          "scr",
-          "sek",
-          "sgd",
-          "shp",
-          "sos",
-          "srd",
-          "szl",
-          "thb",
-          "tjs",
-          "top",
-          "try",
-          "ttd",
-          "twd",
-          "tzs",
-          "uah",
-          "ugx",
-          "usd",
-          "uyu",
-          "uzs",
-          "vnd",
-          "vuv",
-          "wst",
-          "xaf",
-          "xcd",
-          "xcg",
-          "xof",
-          "xpf",
-          "yer",
-          "zar",
-          "zmw"
+      "PersonalAccessToken": {
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp of the object."
+          },
+          "modified_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modified At",
+            "description": "Last modification timestamp of the object."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid4",
+            "title": "Id"
+          },
+          "scopes": {
+            "items": {
+              "$ref": "#/components/schemas/Scope"
+            },
+            "type": "array",
+            "title": "Scopes"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "comment": {
+            "type": "string",
+            "title": "Comment"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "created_at",
+          "modified_at",
+          "id",
+          "scopes",
+          "expires_at",
+          "comment",
+          "last_used_at"
         ],
-        "title": "PresentmentCurrency"
+        "title": "PersonalAccessToken"
+      },
+      "PersonalAccessTokenCreate": {
+        "properties": {
+          "comment": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Comment"
+          },
+          "scopes": {
+            "items": {
+              "$ref": "#/components/schemas/Scope"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Scopes"
+          },
+          "expires_in": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "duration"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires In",
+            "description": "Lifetime of the token; omit for one that never expires."
+          }
+        },
+        "type": "object",
+        "required": [
+          "comment",
+          "scopes"
+        ],
+        "title": "PersonalAccessTokenCreate"
+      },
+      "PersonalAccessTokenCreateResponse": {
+        "properties": {
+          "personal_access_token": {
+            "$ref": "#/components/schemas/PersonalAccessToken"
+          },
+          "token": {
+            "type": "string",
+            "title": "Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "personal_access_token",
+          "token"
+        ],
+        "title": "PersonalAccessTokenCreateResponse"
+      },
+      "PromotionAnalytics": {
+        "properties": {
+          "total_promotions": {
+            "type": "integer",
+            "title": "Total Promotions"
+          },
+          "total_spend_cents": {
+            "type": "integer",
+            "title": "Total Spend Cents"
+          },
+          "total_impressions": {
+            "type": "integer",
+            "title": "Total Impressions"
+          },
+          "total_clicks": {
+            "type": "integer",
+            "title": "Total Clicks"
+          },
+          "ctr": {
+            "type": "number",
+            "title": "Ctr",
+            "description": "Clicks / impressions, 0 when no impressions."
+          },
+          "periods": {
+            "items": {
+              "$ref": "#/components/schemas/PromotionAnalyticsPeriod"
+            },
+            "type": "array",
+            "title": "Periods"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_promotions",
+          "total_spend_cents",
+          "total_impressions",
+          "total_clicks",
+          "ctr",
+          "periods"
+        ],
+        "title": "PromotionAnalytics",
+        "description": "Promotion analytics for the repurposed dashboard: KPI totals plus a daily\nspend series. Scoped to the requesting user's own promotions."
+      },
+      "PromotionAnalyticsPeriod": {
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "spend_cents": {
+            "type": "integer",
+            "title": "Spend Cents"
+          },
+          "promotions": {
+            "type": "integer",
+            "title": "Promotions"
+          },
+          "impressions": {
+            "type": "integer",
+            "title": "Impressions",
+            "default": 0
+          },
+          "clicks": {
+            "type": "integer",
+            "title": "Clicks",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "timestamp",
+          "spend_cents",
+          "promotions"
+        ],
+        "title": "PromotionAnalyticsPeriod",
+        "description": "One day's promotion metrics, for the dashboard chart. ``impressions`` and\n``clicks`` are only populated when sourced from Tinybird (Postgres counters\naren't time-stamped); they default to 0 otherwise."
+      },
+      "PromotionCheckout": {
+        "properties": {
+          "promotion_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Promotion Id"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "promotion_id",
+          "url"
+        ],
+        "title": "PromotionCheckout",
+        "description": "The draft promotion's id plus the hosted gateway checkout URL. The\npromotion enters the queue once the order webhook confirms payment."
+      },
+      "PromotionCreate": {
+        "properties": {
+          "category": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Category"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Body"
+          },
+          "link": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2048
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Link"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2048
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Url"
+          },
+          "blocks": {
+            "type": "integer",
+            "maximum": 144.0,
+            "minimum": 1.0,
+            "title": "Blocks",
+            "default": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "title",
+          "body"
+        ],
+        "title": "PromotionCreate",
+        "description": "Request body for buying a promotion. ``blocks`` of featured time are\npurchased; the price and duration are derived server-side."
+      },
+      "PromotionMineRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "author_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Author Id"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body"
+          },
+          "link": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Link"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Url"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "duration_minutes": {
+            "type": "integer",
+            "title": "Duration Minutes"
+          },
+          "active_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Until"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "impressions": {
+            "type": "integer",
+            "title": "Impressions"
+          },
+          "clicks": {
+            "type": "integer",
+            "title": "Clicks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "author_id",
+          "category",
+          "title",
+          "body",
+          "link",
+          "image_url",
+          "status",
+          "duration_minutes",
+          "active_until",
+          "created_at",
+          "impressions",
+          "clicks"
+        ],
+        "title": "PromotionMineRead",
+        "description": "The promoter's own view of a promotion \u2014 adds the engagement counters\n(kept off the public ``PromotionRead`` so featured cards don't leak them)."
+      },
+      "PromotionPreferences": {
+        "properties": {
+          "promotion_emails_enabled": {
+            "type": "boolean",
+            "title": "Promotion Emails Enabled"
+          }
+        },
+        "type": "object",
+        "required": [
+          "promotion_emails_enabled"
+        ],
+        "title": "PromotionPreferences",
+        "description": "The authenticated user's promotion-email preference."
       },
       "PromotionPricing": {
         "properties": {
@@ -5029,14 +7979,64 @@
         ],
         "title": "SubType"
       },
-      "TaxBehaviorOption": {
-        "type": "string",
-        "enum": [
-          "location",
-          "inclusive",
-          "exclusive"
+      "TOTPEnable": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code"
         ],
-        "title": "TaxBehaviorOption"
+        "title": "TOTPEnable"
+      },
+      "TOTPEnrollment": {
+        "properties": {
+          "secret": {
+            "type": "string",
+            "title": "Secret"
+          },
+          "algorithm": {
+            "type": "string",
+            "title": "Algorithm"
+          },
+          "digits": {
+            "type": "integer",
+            "title": "Digits"
+          },
+          "period": {
+            "type": "integer",
+            "title": "Period"
+          },
+          "provisioning_uri": {
+            "type": "string",
+            "title": "Provisioning Uri"
+          }
+        },
+        "type": "object",
+        "required": [
+          "secret",
+          "algorithm",
+          "digits",
+          "period",
+          "provisioning_uri"
+        ],
+        "title": "TOTPEnrollment"
+      },
+      "TOTPStatus": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          }
+        },
+        "type": "object",
+        "required": [
+          "enabled"
+        ],
+        "title": "TOTPStatus"
       },
       "TokenResponse": {
         "properties": {
@@ -5088,6 +8088,45 @@
           "scope"
         ],
         "title": "TokenResponse"
+      },
+      "UserDeletionBlockedReason": {
+        "type": "string",
+        "enum": [
+          "has_active_organizations"
+        ],
+        "title": "UserDeletionBlockedReason",
+        "description": "Reasons why a user account cannot be immediately deleted."
+      },
+      "UserDeletionResponse": {
+        "properties": {
+          "deleted": {
+            "type": "boolean",
+            "title": "Deleted",
+            "description": "Whether the user account was immediately deleted"
+          },
+          "blocked_reasons": {
+            "items": {
+              "$ref": "#/components/schemas/UserDeletionBlockedReason"
+            },
+            "type": "array",
+            "title": "Blocked Reasons",
+            "description": "Reasons why immediate deletion is blocked"
+          },
+          "blocking_organizations": {
+            "items": {
+              "$ref": "#/components/schemas/BlockingOrganization"
+            },
+            "type": "array",
+            "title": "Blocking Organizations",
+            "description": "Organizations that must be deleted first"
+          }
+        },
+        "type": "object",
+        "required": [
+          "deleted"
+        ],
+        "title": "UserDeletionResponse",
+        "description": "Response for user deletion request."
       },
       "UserInfoOrganization": {
         "properties": {
@@ -5158,6 +8197,742 @@
           "sub"
         ],
         "title": "UserInfoUser"
+      },
+      "UserRead": {
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Creation timestamp of the object."
+          },
+          "modified_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modified At",
+            "description": "Last modification timestamp of the object."
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "accepted_terms_of_service": {
+            "type": "boolean",
+            "title": "Accepted Terms Of Service"
+          },
+          "is_admin": {
+            "type": "boolean",
+            "title": "Is Admin"
+          },
+          "identity_verified": {
+            "type": "boolean",
+            "title": "Identity Verified"
+          },
+          "identity_verification_status": {
+            "$ref": "#/components/schemas/IdentityVerificationStatus"
+          },
+          "first_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Name"
+          },
+          "last_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Name"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "date_of_birth": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date Of Birth"
+          },
+          "promotion_emails_enabled": {
+            "type": "boolean",
+            "title": "Promotion Emails Enabled"
+          },
+          "oauth_accounts": {
+            "items": {
+              "$ref": "#/components/schemas/OAuthAccountRead"
+            },
+            "type": "array",
+            "title": "Oauth Accounts"
+          },
+          "organizations": {
+            "items": {
+              "$ref": "#/components/schemas/OrganizationWithRole"
+            },
+            "type": "array",
+            "title": "Organizations",
+            "description": "Organizations the user is a member of, with their role on each. Populated by `GET /v1/users/me`; empty otherwise."
+          },
+          "email_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Hash",
+            "readOnly": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "created_at",
+          "modified_at",
+          "email",
+          "avatar_url",
+          "id",
+          "accepted_terms_of_service",
+          "is_admin",
+          "identity_verified",
+          "identity_verification_status",
+          "first_name",
+          "last_name",
+          "country",
+          "date_of_birth",
+          "promotion_emails_enabled",
+          "oauth_accounts",
+          "email_hash"
+        ],
+        "title": "UserRead"
+      },
+      "UserScopes": {
+        "properties": {
+          "scopes": {
+            "items": {
+              "$ref": "#/components/schemas/Scope"
+            },
+            "type": "array",
+            "title": "Scopes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scopes"
+        ],
+        "title": "UserScopes"
+      },
+      "UserUpdate": {
+        "properties": {
+          "first_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Name"
+          },
+          "last_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Name"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "AD",
+                  "AE",
+                  "AF",
+                  "AG",
+                  "AI",
+                  "AL",
+                  "AM",
+                  "AO",
+                  "AQ",
+                  "AR",
+                  "AS",
+                  "AT",
+                  "AU",
+                  "AW",
+                  "AX",
+                  "AZ",
+                  "BA",
+                  "BB",
+                  "BD",
+                  "BE",
+                  "BF",
+                  "BG",
+                  "BH",
+                  "BI",
+                  "BJ",
+                  "BL",
+                  "BM",
+                  "BN",
+                  "BO",
+                  "BQ",
+                  "BR",
+                  "BS",
+                  "BT",
+                  "BV",
+                  "BW",
+                  "BY",
+                  "BZ",
+                  "CA",
+                  "CC",
+                  "CD",
+                  "CF",
+                  "CG",
+                  "CH",
+                  "CI",
+                  "CK",
+                  "CL",
+                  "CM",
+                  "CN",
+                  "CO",
+                  "CR",
+                  "CV",
+                  "CW",
+                  "CX",
+                  "CY",
+                  "CZ",
+                  "DE",
+                  "DJ",
+                  "DK",
+                  "DM",
+                  "DO",
+                  "DZ",
+                  "EC",
+                  "EE",
+                  "EG",
+                  "EH",
+                  "ER",
+                  "ES",
+                  "ET",
+                  "FI",
+                  "FJ",
+                  "FK",
+                  "FM",
+                  "FO",
+                  "FR",
+                  "GA",
+                  "GB",
+                  "GD",
+                  "GE",
+                  "GF",
+                  "GG",
+                  "GH",
+                  "GI",
+                  "GL",
+                  "GM",
+                  "GN",
+                  "GP",
+                  "GQ",
+                  "GR",
+                  "GS",
+                  "GT",
+                  "GU",
+                  "GW",
+                  "GY",
+                  "HK",
+                  "HM",
+                  "HN",
+                  "HR",
+                  "HT",
+                  "HU",
+                  "ID",
+                  "IE",
+                  "IL",
+                  "IM",
+                  "IN",
+                  "IO",
+                  "IQ",
+                  "IS",
+                  "IT",
+                  "JE",
+                  "JM",
+                  "JO",
+                  "JP",
+                  "KE",
+                  "KG",
+                  "KH",
+                  "KI",
+                  "KM",
+                  "KN",
+                  "KR",
+                  "KW",
+                  "KY",
+                  "KZ",
+                  "LA",
+                  "LB",
+                  "LC",
+                  "LI",
+                  "LK",
+                  "LR",
+                  "LS",
+                  "LT",
+                  "LU",
+                  "LV",
+                  "LY",
+                  "MA",
+                  "MC",
+                  "MD",
+                  "ME",
+                  "MF",
+                  "MG",
+                  "MH",
+                  "MK",
+                  "ML",
+                  "MM",
+                  "MN",
+                  "MO",
+                  "MP",
+                  "MQ",
+                  "MR",
+                  "MS",
+                  "MT",
+                  "MU",
+                  "MV",
+                  "MW",
+                  "MX",
+                  "MY",
+                  "MZ",
+                  "NA",
+                  "NC",
+                  "NE",
+                  "NF",
+                  "NG",
+                  "NI",
+                  "NL",
+                  "NO",
+                  "NP",
+                  "NR",
+                  "NU",
+                  "NZ",
+                  "OM",
+                  "PA",
+                  "PE",
+                  "PF",
+                  "PG",
+                  "PH",
+                  "PK",
+                  "PL",
+                  "PM",
+                  "PN",
+                  "PR",
+                  "PS",
+                  "PT",
+                  "PW",
+                  "PY",
+                  "QA",
+                  "RE",
+                  "RO",
+                  "RS",
+                  "RW",
+                  "SA",
+                  "SB",
+                  "SC",
+                  "SD",
+                  "SE",
+                  "SG",
+                  "SH",
+                  "SI",
+                  "SJ",
+                  "SK",
+                  "SL",
+                  "SM",
+                  "SN",
+                  "SO",
+                  "SR",
+                  "SS",
+                  "ST",
+                  "SV",
+                  "SX",
+                  "SZ",
+                  "TC",
+                  "TD",
+                  "TF",
+                  "TG",
+                  "TH",
+                  "TJ",
+                  "TK",
+                  "TL",
+                  "TM",
+                  "TN",
+                  "TO",
+                  "TR",
+                  "TT",
+                  "TV",
+                  "TW",
+                  "TZ",
+                  "UA",
+                  "UG",
+                  "UM",
+                  "US",
+                  "UY",
+                  "UZ",
+                  "VA",
+                  "VC",
+                  "VE",
+                  "VG",
+                  "VI",
+                  "VN",
+                  "VU",
+                  "WF",
+                  "WS",
+                  "YE",
+                  "YT",
+                  "ZA",
+                  "ZM",
+                  "ZW"
+                ],
+                "title": "CountryAlpha2Input",
+                "x-speakeasy-enums": [
+                  "AD",
+                  "AE",
+                  "AF",
+                  "AG",
+                  "AI",
+                  "AL",
+                  "AM",
+                  "AO",
+                  "AQ",
+                  "AR",
+                  "AS",
+                  "AT",
+                  "AU",
+                  "AW",
+                  "AX",
+                  "AZ",
+                  "BA",
+                  "BB",
+                  "BD",
+                  "BE",
+                  "BF",
+                  "BG",
+                  "BH",
+                  "BI",
+                  "BJ",
+                  "BL",
+                  "BM",
+                  "BN",
+                  "BO",
+                  "BQ",
+                  "BR",
+                  "BS",
+                  "BT",
+                  "BV",
+                  "BW",
+                  "BY",
+                  "BZ",
+                  "CA",
+                  "CC",
+                  "CD",
+                  "CF",
+                  "CG",
+                  "CH",
+                  "CI",
+                  "CK",
+                  "CL",
+                  "CM",
+                  "CN",
+                  "CO",
+                  "CR",
+                  "CV",
+                  "CW",
+                  "CX",
+                  "CY",
+                  "CZ",
+                  "DE",
+                  "DJ",
+                  "DK",
+                  "DM",
+                  "DO",
+                  "DZ",
+                  "EC",
+                  "EE",
+                  "EG",
+                  "EH",
+                  "ER",
+                  "ES",
+                  "ET",
+                  "FI",
+                  "FJ",
+                  "FK",
+                  "FM",
+                  "FO",
+                  "FR",
+                  "GA",
+                  "GB",
+                  "GD",
+                  "GE",
+                  "GF",
+                  "GG",
+                  "GH",
+                  "GI",
+                  "GL",
+                  "GM",
+                  "GN",
+                  "GP",
+                  "GQ",
+                  "GR",
+                  "GS",
+                  "GT",
+                  "GU",
+                  "GW",
+                  "GY",
+                  "HK",
+                  "HM",
+                  "HN",
+                  "HR",
+                  "HT",
+                  "HU",
+                  "ID",
+                  "IE",
+                  "IL",
+                  "IM",
+                  "IN",
+                  "IO",
+                  "IQ",
+                  "IS",
+                  "IT",
+                  "JE",
+                  "JM",
+                  "JO",
+                  "JP",
+                  "KE",
+                  "KG",
+                  "KH",
+                  "KI",
+                  "KM",
+                  "KN",
+                  "KR",
+                  "KW",
+                  "KY",
+                  "KZ",
+                  "LA",
+                  "LB",
+                  "LC",
+                  "LI",
+                  "LK",
+                  "LR",
+                  "LS",
+                  "LT",
+                  "LU",
+                  "LV",
+                  "LY",
+                  "MA",
+                  "MC",
+                  "MD",
+                  "ME",
+                  "MF",
+                  "MG",
+                  "MH",
+                  "MK",
+                  "ML",
+                  "MM",
+                  "MN",
+                  "MO",
+                  "MP",
+                  "MQ",
+                  "MR",
+                  "MS",
+                  "MT",
+                  "MU",
+                  "MV",
+                  "MW",
+                  "MX",
+                  "MY",
+                  "MZ",
+                  "NA",
+                  "NC",
+                  "NE",
+                  "NF",
+                  "NG",
+                  "NI",
+                  "NL",
+                  "NO",
+                  "NP",
+                  "NR",
+                  "NU",
+                  "NZ",
+                  "OM",
+                  "PA",
+                  "PE",
+                  "PF",
+                  "PG",
+                  "PH",
+                  "PK",
+                  "PL",
+                  "PM",
+                  "PN",
+                  "PR",
+                  "PS",
+                  "PT",
+                  "PW",
+                  "PY",
+                  "QA",
+                  "RE",
+                  "RO",
+                  "RS",
+                  "RW",
+                  "SA",
+                  "SB",
+                  "SC",
+                  "SD",
+                  "SE",
+                  "SG",
+                  "SH",
+                  "SI",
+                  "SJ",
+                  "SK",
+                  "SL",
+                  "SM",
+                  "SN",
+                  "SO",
+                  "SR",
+                  "SS",
+                  "ST",
+                  "SV",
+                  "SX",
+                  "SZ",
+                  "TC",
+                  "TD",
+                  "TF",
+                  "TG",
+                  "TH",
+                  "TJ",
+                  "TK",
+                  "TL",
+                  "TM",
+                  "TN",
+                  "TO",
+                  "TR",
+                  "TT",
+                  "TV",
+                  "TW",
+                  "TZ",
+                  "UA",
+                  "UG",
+                  "UM",
+                  "US",
+                  "UY",
+                  "UZ",
+                  "VA",
+                  "VC",
+                  "VE",
+                  "VG",
+                  "VI",
+                  "VN",
+                  "VU",
+                  "WF",
+                  "WS",
+                  "YE",
+                  "YT",
+                  "ZA",
+                  "ZM",
+                  "ZW"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "date_of_birth": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date Of Birth"
+          },
+          "accepted_terms_of_service": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted Terms Of Service"
+          },
+          "promotion_emails_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Promotion Emails Enabled"
+          }
+        },
+        "type": "object",
+        "title": "UserUpdate"
       },
       "ValidationError": {
         "properties": {

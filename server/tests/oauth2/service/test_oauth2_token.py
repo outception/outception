@@ -287,7 +287,7 @@ class TestDeleteExpired:
             issued_at=int(time.time()) - 7200,
             expires_in=3600,
         )
-        # Simulate a token without a refresh token (e.g. MCP web grant).
+        # Simulate a token without a refresh token (e.g. a public-client grant).
         expired.refresh_token = None  # pyright: ignore
         await save_fixture(expired)
 

@@ -5,14 +5,13 @@ import {
   useCreatePromotion,
   usePromotionPricing,
 } from '@/hooks/queries/promotions'
+import { useT } from '@/providers/locale'
 import { extractApiErrorMessage } from '@/utils/api/errors'
 import { isOptionalHttpUrl, PROMOTION_TOPICS } from '@/utils/promotions'
 import { Button, Input, Modal, Text, TextArea } from '@outception-com/orbit'
 import { Box } from '@outception-com/orbit/Box'
 import { useState } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
-
-const URL_ERROR = 'Enter a valid http(s) URL'
 
 const BODY_MAX = 2000
 
@@ -25,6 +24,7 @@ interface ComposeForm {
 }
 
 const ComposePromotionForm = ({ hide }: { hide: () => void }) => {
+  const t = useT()
   const { data: pricing } = usePromotionPricing()
   const createPromotion = useCreatePromotion()
   const {
@@ -61,10 +61,10 @@ const ComposePromotionForm = ({ hide }: { hide: () => void }) => {
         },
         onError: (error) => {
           toast({
-            title: 'Could not start checkout',
+            title: t('promotions.compose.errorTitle'),
             description: extractApiErrorMessage(
               error as { detail?: unknown },
-              'You may need to sign in, or promotions are not configured.',
+              t('promotions.compose.errorBody'),
             ),
             variant: 'error',
           })
@@ -76,15 +76,12 @@ const ComposePromotionForm = ({ hide }: { hide: () => void }) => {
   return (
     <Box as="form" flexDirection="column" rowGap="l" padding="xl">
       <Text variant="heading-xs" as="h2">
-        Promote a post
+        {t('promotions.compose.title')}
       </Text>
-      <Text color="muted">
-        Rent the featured slot for a topic. Payment is handled securely by
-        Outception.sh.
-      </Text>
+      <Text color="muted">{t('promotions.compose.subtitle')}</Text>
 
       <Box flexDirection="column" rowGap="s">
-        <Text variant="caption">Topic</Text>
+        <Text variant="caption">{t('promotions.compose.topic')}</Text>
         <Controller
           control={control}
           name="category"
@@ -93,9 +90,9 @@ const ComposePromotionForm = ({ hide }: { hide: () => void }) => {
               {...field}
               className="dark:border-outception-700 dark:bg-outception-800 h-10 rounded-xl border border-gray-200 bg-white px-3 text-sm dark:text-white"
             >
-              {PROMOTION_TOPICS.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.label}
+              {PROMOTION_TOPICS.map((topic) => (
+                <option key={topic.id} value={topic.id}>
+                  {topic.label}
                 </option>
               ))}
             </select>
@@ -104,19 +101,23 @@ const ComposePromotionForm = ({ hide }: { hide: () => void }) => {
       </Box>
 
       <Box flexDirection="column" rowGap="s">
-        <Text variant="caption">Title</Text>
+        <Text variant="caption">{t('promotions.compose.headline')}</Text>
         <Controller
           control={control}
           name="title"
           rules={{ required: true, maxLength: 200 }}
           render={({ field }) => (
-            <Input {...field} placeholder="Your headline" maxLength={200} />
+            <Input
+              {...field}
+              placeholder={t('promotions.compose.headlinePlaceholder')}
+              maxLength={200}
+            />
           )}
         />
       </Box>
 
       <Box flexDirection="column" rowGap="s">
-        <Text variant="caption">Body</Text>
+        <Text variant="caption">{t('promotions.compose.body')}</Text>
         <Controller
           control={control}
           name="body"
@@ -124,7 +125,7 @@ const ComposePromotionForm = ({ hide }: { hide: () => void }) => {
           render={({ field }) => (
             <TextArea
               {...field}
-              placeholder="A sentence or two about what you're promoting"
+              placeholder={t('promotions.compose.bodyPlaceholder')}
               maxLength={BODY_MAX}
             />
           )}
@@ -132,11 +133,14 @@ const ComposePromotionForm = ({ hide }: { hide: () => void }) => {
       </Box>
 
       <Box flexDirection="column" rowGap="s">
-        <Text variant="caption">Link (optional)</Text>
+        <Text variant="caption">{t('promotions.compose.link')}</Text>
         <Controller
           control={control}
           name="link"
-          rules={{ validate: (v) => isOptionalHttpUrl(v) || URL_ERROR }}
+          rules={{
+            validate: (v) =>
+              isOptionalHttpUrl(v) || t('promotions.compose.linkError'),
+          }}
           render={({ field }) => (
             <Input {...field} placeholder="https://…" type="url" />
           )}
@@ -150,7 +154,9 @@ const ComposePromotionForm = ({ hide }: { hide: () => void }) => {
 
       <Box flexDirection="row" columnGap="m" alignItems="end">
         <Box flexDirection="column" rowGap="s">
-          <Text variant="caption">Blocks ({blockMinutes} min each)</Text>
+          <Text variant="caption">
+            {t('promotions.compose.blocks', { minutes: blockMinutes })}
+          </Text>
           <Controller
             control={control}
             name="blocks"
@@ -161,21 +167,23 @@ const ComposePromotionForm = ({ hide }: { hide: () => void }) => {
           />
         </Box>
         <Text color="muted">
-          Total: ${(priceCents / 100).toFixed(2)} for {blocks * blockMinutes}{' '}
-          min
+          {t('promotions.compose.total', {
+            amount: `$${(priceCents / 100).toFixed(2)}`,
+            minutes: blocks * blockMinutes,
+          })}
         </Text>
       </Box>
 
       <Box flexDirection="row" columnGap="m" justifyContent="end">
         <Button variant="secondary" type="button" onClick={hide}>
-          Cancel
+          {t('promotions.compose.cancel')}
         </Button>
         <Button
           type="button"
           loading={createPromotion.isPending}
           onClick={handleSubmit(onSubmit)}
         >
-          Continue to payment
+          {t('promotions.compose.submit')}
         </Button>
       </Box>
     </Box>
@@ -190,18 +198,19 @@ export const ComposePromotionDialog = ({
 }: {
   trigger?: (open: () => void) => React.ReactNode
 }) => {
+  const t = useT()
   const [open, setOpen] = useState(false)
   return (
     <>
       {trigger ? (
         trigger(() => setOpen(true))
       ) : (
-        <Button onClick={() => setOpen(true)}>Promote</Button>
+        <Button onClick={() => setOpen(true)}>{t('promotions.button')}</Button>
       )}
       <Modal
         isShown={open}
         hide={() => setOpen(false)}
-        title="Promote a post"
+        title={t('promotions.compose.title')}
         modalContent={<ComposePromotionForm hide={() => setOpen(false)} />}
       />
     </>

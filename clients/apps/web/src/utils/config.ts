@@ -9,8 +9,6 @@ const defaults = {
   BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000',
   AUTH_COOKIE_KEY:
     process.env.OUTCEPTION_AUTH_COOKIE_KEY || 'outception_session',
-  AUTH_MCP_COOKIE_KEY:
-    process.env.OUTCEPTION_AUTH_MCP_COOKIE_KEY || 'outception_mcp_session',
   LOGIN_PATH: process.env.NEXT_PUBLIC_LOGIN_PATH || '/auth',
   GOOGLE_ANALYTICS_ID: process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID || undefined,
   GITHUB_APP_NAMESPACE:

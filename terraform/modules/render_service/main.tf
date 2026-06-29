@@ -77,13 +77,12 @@ resource "render_env_group" "backend_production" {
   environment_id = var.render_environment_id
   name           = "backend-production-only"
   env_vars = {
-    OUTCEPTION_POSTHOG_PROJECT_API_KEY        = { value = var.backend_secrets.posthog_project_api_key }
-    OUTCEPTION_PLAIN_REQUEST_SIGNING_SECRET   = { value = var.backend_secrets.plain_request_signing_secret }
-    OUTCEPTION_PLAIN_TOKEN                    = { value = var.backend_secrets.plain_token }
-    OUTCEPTION_PLAIN_CHAT_SECRET              = { value = var.backend_secrets.plain_chat_secret }
-    OUTCEPTION_APP_REVIEW_EMAIL               = { value = var.backend_secrets.app_review_email }
-    OUTCEPTION_APP_REVIEW_OTP_CODE            = { value = var.backend_secrets.app_review_otp_code }
-    OUTCEPTION_CHARGEBACK_STOP_WEBHOOK_SECRET = { value = var.backend_secrets.chargeback_stop_webhook_secret }
+    OUTCEPTION_POSTHOG_PROJECT_API_KEY      = { value = var.backend_secrets.posthog_project_api_key }
+    OUTCEPTION_PLAIN_REQUEST_SIGNING_SECRET = { value = var.backend_secrets.plain_request_signing_secret }
+    OUTCEPTION_PLAIN_TOKEN                  = { value = var.backend_secrets.plain_token }
+    OUTCEPTION_PLAIN_CHAT_SECRET            = { value = var.backend_secrets.plain_chat_secret }
+    OUTCEPTION_APP_REVIEW_EMAIL             = { value = var.backend_secrets.app_review_email }
+    OUTCEPTION_APP_REVIEW_OTP_CODE          = { value = var.backend_secrets.app_review_otp_code }
   }
 }
 
@@ -91,19 +90,16 @@ resource "render_env_group" "aws_s3" {
   environment_id = var.render_environment_id
   name           = "aws-s3-${var.environment}"
   env_vars = {
-    OUTCEPTION_AWS_REGION                       = { value = var.aws_s3_config.region }
-    OUTCEPTION_AWS_SIGNATURE_VERSION            = { value = var.aws_s3_config.signature_version }
-    OUTCEPTION_S3_FILES_BUCKET_NAME             = { value = "outception-${var.environment}-files" }
-    OUTCEPTION_S3_FILES_PRESIGN_TTL             = { value = var.aws_s3_config.files_presign_ttl }
-    OUTCEPTION_S3_FILES_PUBLIC_BUCKET_NAME      = { value = var.aws_s3_config.files_public_bucket_name }
-    OUTCEPTION_S3_CUSTOMER_INVOICES_BUCKET_NAME = { value = var.aws_s3_config.customer_invoices_bucket_name }
-    OUTCEPTION_S3_CUSTOMER_RECEIPTS_BUCKET_NAME = { value = var.aws_s3_config.customer_receipts_bucket_name }
-    OUTCEPTION_S3_PAYOUT_INVOICES_BUCKET_NAME   = { value = var.aws_s3_config.payout_invoices_bucket_name }
-    OUTCEPTION_S3_LOGS_BUCKET_NAME              = { value = var.aws_s3_config.logs_bucket_name }
-    OUTCEPTION_AWS_ACCESS_KEY_ID                = { value = var.aws_s3_secrets.access_key_id }
-    OUTCEPTION_AWS_SECRET_ACCESS_KEY            = { value = var.aws_s3_secrets.secret_access_key }
-    OUTCEPTION_S3_FILES_DOWNLOAD_SALT           = { value = var.aws_s3_secrets.files_download_salt }
-    OUTCEPTION_S3_FILES_DOWNLOAD_SECRET         = { value = var.aws_s3_secrets.files_download_secret }
+    OUTCEPTION_AWS_REGION                  = { value = var.aws_s3_config.region }
+    OUTCEPTION_AWS_SIGNATURE_VERSION       = { value = var.aws_s3_config.signature_version }
+    OUTCEPTION_S3_FILES_BUCKET_NAME        = { value = "outception-${var.environment}-files" }
+    OUTCEPTION_S3_FILES_PRESIGN_TTL        = { value = var.aws_s3_config.files_presign_ttl }
+    OUTCEPTION_S3_FILES_PUBLIC_BUCKET_NAME = { value = var.aws_s3_config.files_public_bucket_name }
+    OUTCEPTION_S3_LOGS_BUCKET_NAME         = { value = var.aws_s3_config.logs_bucket_name }
+    OUTCEPTION_AWS_ACCESS_KEY_ID           = { value = var.aws_s3_secrets.access_key_id }
+    OUTCEPTION_AWS_SECRET_ACCESS_KEY       = { value = var.aws_s3_secrets.secret_access_key }
+    OUTCEPTION_S3_FILES_DOWNLOAD_SALT      = { value = var.aws_s3_secrets.files_download_salt }
+    OUTCEPTION_S3_FILES_DOWNLOAD_SECRET    = { value = var.aws_s3_secrets.files_download_secret }
   }
 }
 
@@ -111,13 +107,8 @@ resource "render_env_group" "github" {
   environment_id = var.render_environment_id
   name           = "github-${var.environment}"
   env_vars = {
-    OUTCEPTION_GITHUB_CLIENT_ID                           = { value = var.github_secrets.client_id }
-    OUTCEPTION_GITHUB_CLIENT_SECRET                       = { value = var.github_secrets.client_secret }
-    OUTCEPTION_GITHUB_REPOSITORY_BENEFITS_APP_IDENTIFIER  = { value = var.github_secrets.repository_benefits_app_identifier }
-    OUTCEPTION_GITHUB_REPOSITORY_BENEFITS_APP_NAMESPACE   = { value = var.github_secrets.repository_benefits_app_namespace }
-    OUTCEPTION_GITHUB_REPOSITORY_BENEFITS_APP_PRIVATE_KEY = { value = var.github_secrets.repository_benefits_app_private_key }
-    OUTCEPTION_GITHUB_REPOSITORY_BENEFITS_CLIENT_ID       = { value = var.github_secrets.repository_benefits_client_id }
-    OUTCEPTION_GITHUB_REPOSITORY_BENEFITS_CLIENT_SECRET   = { value = var.github_secrets.repository_benefits_client_secret }
+    OUTCEPTION_GITHUB_CLIENT_ID     = { value = var.github_secrets.client_id }
+    OUTCEPTION_GITHUB_CLIENT_SECRET = { value = var.github_secrets.client_secret }
   }
 }
 

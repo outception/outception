@@ -1,9 +1,7 @@
 from enum import StrEnum
-from typing import TypedDict
 from uuid import UUID
 
 from sqlalchemy import ForeignKey, Index, Uuid
-from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, declared_attr, mapped_column, relationship
 
 from outception.kit.db.models import TimestampedModel
@@ -16,19 +14,6 @@ class OrganizationRole(StrEnum):
     owner = "owner"
     admin = "admin"
     member = "member"
-
-
-class OrganizationNotificationSettings(TypedDict):
-    new_order: bool
-    new_subscription: bool
-    chargeback_prevention: bool
-
-
-_default_notification_settings: OrganizationNotificationSettings = {
-    "new_order": True,
-    "new_subscription": True,
-    "chargeback_prevention": True,
-}
 
 
 class UserOrganization(TimestampedModel):
@@ -60,10 +45,6 @@ class UserOrganization(TimestampedModel):
         StringEnum(OrganizationRole),
         nullable=False,
         default=OrganizationRole.member,
-    )
-
-    notification_settings: Mapped[OrganizationNotificationSettings] = mapped_column(
-        JSONB, nullable=False, default=_default_notification_settings
     )
 
     @declared_attr

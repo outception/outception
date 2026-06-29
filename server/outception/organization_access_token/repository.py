@@ -12,7 +12,6 @@ from outception.kit.repository import (
 )
 from outception.kit.utils import utc_now
 from outception.models import Organization, OrganizationAccessToken
-from outception.postgres import sql
 
 
 class OrganizationAccessTokenRepository(
@@ -57,16 +56,3 @@ class OrganizationAccessTokenRepository(
         return self.get_base_statement().where(
             OrganizationAccessToken.organization_id.in_(org_ids)
         )
-
-    async def has_by_organization_id(self, organization_id: UUID) -> bool:
-        """Whether the organization has any active access token."""
-        statement = (
-            sql.select(OrganizationAccessToken.id)
-            .where(
-                OrganizationAccessToken.organization_id == organization_id,
-                OrganizationAccessToken.is_deleted.is_(False),
-            )
-            .limit(1)
-        )
-        result = await self.session.execute(statement)
-        return result.scalar_one_or_none() is not None

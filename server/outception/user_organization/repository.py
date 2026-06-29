@@ -2,7 +2,7 @@ from collections.abc import Sequence
 from typing import Self
 from uuid import UUID
 
-from sqlalchemy import select, update
+from sqlalchemy import select
 
 from outception.models import Organization, UserOrganization
 from outception.models.user_organization import OrganizationRole
@@ -45,31 +45,3 @@ class UserOrganizationRepository:
         )
         result = await self.session.execute(statement)
         return [(row[0], row[1]) for row in result.all()]
-
-    async def demote_current_owner(self, organization_id: UUID) -> UUID | None:
-        """Demote whoever currently holds `owner` on the org to `admin`.
-
-        Returns the demoted user's id, or `None` if the org had no owner.
-        """
-        result = await self.session.execute(
-            update(UserOrganization)
-            .where(
-                UserOrganization.organization_id == organization_id,
-                UserOrganization.role == OrganizationRole.owner,
-                UserOrganization.is_deleted.is_(False),
-            )
-            .values(role=OrganizationRole.admin)
-            .returning(UserOrganization.user_id)
-        )
-        return result.scalar_one_or_none()
-
-    async def promote_to_owner(self, organization_id: UUID, user_id: UUID) -> None:
-        """Promote `user_id` on the org to `owner`."""
-        await self.session.execute(
-            update(UserOrganization)
-            .where(
-                UserOrganization.organization_id == organization_id,
-                UserOrganization.user_id == user_id,
-            )
-            .values(role=OrganizationRole.owner)
-        )

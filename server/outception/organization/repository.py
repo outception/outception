@@ -52,26 +52,6 @@ class OrganizationRepository(
 
         return await self.get_one_or_none(statement)
 
-    async def get_by_slug(
-        self, slug: str, include_deleted: bool = False
-    ) -> Organization | None:
-        statement = self.get_base_statement(include_deleted=include_deleted).where(
-            Organization.slug == slug
-        )
-        return await self.get_one_or_none(statement)
-
-    async def slug_exists(self, slug: str) -> bool:
-        """Check if slug exists, including soft-deleted organizations.
-
-        Soft-deleted organizations are included to prevent slug reuse,
-        ensuring backoffice links continue to work.
-        """
-        statement = self.get_base_statement(include_deleted=True).where(
-            Organization.slug == slug
-        )
-        result = await self.get_one_or_none(statement)
-        return result is not None
-
     async def get_all_by_user(self, user: UUID) -> Sequence[Organization]:
         statement = (
             self.get_base_statement()
@@ -115,18 +95,3 @@ class OrganizationRepository(
         )
         result = await self.session.execute(statement)
         return result.unique().scalar_one_or_none()
-
-    async def get_all_by_owner_user(self, user_id: UUID) -> Sequence[Organization]:
-        statement = (
-            self.get_base_statement()
-            .join(
-                UserOrganization,
-                UserOrganization.organization_id == Organization.id,
-            )
-            .where(
-                UserOrganization.user_id == user_id,
-                UserOrganization.role == OrganizationRole.owner,
-                UserOrganization.is_deleted.is_(False),
-            )
-        )
-        return await self.get_all(statement)

@@ -51,9 +51,6 @@ class TimestampedModel(Model):
         TIMESTAMP(timezone=True), nullable=True, default=None, index=True
     )
 
-    def set_modified_at(self) -> None:
-        self.modified_at = utc_now()
-
     def set_deleted_at(self) -> None:
         self.deleted_at = utc_now()
 
@@ -88,10 +85,6 @@ class IDModel(Model):
             id_value = insp.identity[0]
             return f"{self.__class__.__name__}(id={id_value!r})"
         return f"{self.__class__.__name__}(id=None)"
-
-    @classmethod
-    def generate_id(cls) -> UUID:
-        return generate_uuid()
 
 
 class RecordModel(IDModel, TimestampedModel):

@@ -7,7 +7,6 @@ from outception.kit.pagination import PaginationParams
 from outception.kit.repository.base import Options
 from outception.kit.sorting import Sorting
 from outception.models import Organization as OrganizationModel
-from outception.models.organization import OrganizationStatus
 from outception.postgres import AsyncReadSession, AsyncSession
 
 from .repository import OrganizationRepository
@@ -68,18 +67,6 @@ class OrganizationService:
         repository = OrganizationRepository.from_session(session)
         update_dict = organization_update.model_dump(exclude_unset=True)
         return await repository.update(organization, update_dict=update_dict)
-
-    async def maybe_activate(
-        self, session: AsyncSession, organization: OrganizationModel
-    ) -> bool:
-        """Activate a freshly-created organization (no MoR review gate)."""
-        if organization.status != OrganizationStatus.CREATED:
-            return False
-        repository = OrganizationRepository.from_session(session)
-        await repository.update(
-            organization, update_dict={"status": OrganizationStatus.ACTIVE}
-        )
-        return True
 
 
 organization = OrganizationService()

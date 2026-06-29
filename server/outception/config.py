@@ -209,12 +209,6 @@ class Settings(BaseSettings):
     GITHUB_CLIENT_ID: str = ""
     GITHUB_CLIENT_SECRET: str = ""
 
-    # GitHub App for repository benefits
-    GITHUB_REPOSITORY_BENEFITS_APP_IDENTIFIER: str = ""
-    GITHUB_REPOSITORY_BENEFITS_APP_PRIVATE_KEY: str = ""
-    GITHUB_REPOSITORY_BENEFITS_CLIENT_ID: str = ""
-    GITHUB_REPOSITORY_BENEFITS_CLIENT_SECRET: str = ""
-
     # Google
     GOOGLE_CLIENT_ID: str = ""
     GOOGLE_CLIENT_SECRET: str = ""
@@ -277,9 +271,6 @@ class Settings(BaseSettings):
     }
     # S3 logs storage
     S3_LOGS_BUCKET_NAME: str | None = None
-
-    # Plain
-    PLAIN_CHAT_SECRET: str | None = None
 
     # AWS (File Downloads)
     AWS_ACCESS_KEY_ID: str = "outception-development"
@@ -368,14 +359,6 @@ class Settings(BaseSettings):
         "finance",
         # Misc
         ".well-known",
-    ]
-
-    # Dunning Configuration
-    DUNNING_RETRY_INTERVALS: list[timedelta] = [
-        timedelta(days=2),  # First retry after 2 days
-        timedelta(days=5),  # Second retry after 7 days (2 + 5)
-        timedelta(days=7),  # Third retry after 14 days (2 + 5 + 7)
-        timedelta(days=7),  # Fourth retry after 21 days (2 + 5 + 7 + 7)
     ]
 
     model_config = SettingsConfigDict(

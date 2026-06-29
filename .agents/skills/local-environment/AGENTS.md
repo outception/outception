@@ -1,6 +1,6 @@
 # Local Environment Management - Complete Guide
 
-This document provides comprehensive instructions for Claude to manage the Outception local development environment using Docker.
+This document provides comprehensive instructions for managing the Outception local development environment using Docker.
 
 ## Instance Auto-Detection
 

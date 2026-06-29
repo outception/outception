@@ -1,6 +1,5 @@
 import { configureRefresher, type SessionData } from '@/auth/refresher'
 import { useStorageState } from '@/hooks/storage'
-import { ExtensionStorage } from '@bacons/apple-targets'
 import {
   createContext,
   useCallback,
@@ -13,8 +12,6 @@ import {
 const ACCESS_TOKEN_KEY = 'session'
 const REFRESH_TOKEN_KEY = 'session_refresh_token'
 const EXPIRES_AT_KEY = 'session_expires_at'
-
-const widgetStorage = new ExtensionStorage('group.com.outception.Outception')
 
 type AuthContextValue = {
   setSession: (data: SessionData | null) => void
@@ -74,12 +71,6 @@ export function SessionProvider({ children }: PropsWithChildren) {
     },
     [setAccessTokenStorage, setRefreshTokenStorage, setExpiresAtStorage],
   )
-
-  useEffect(() => {
-    if (accessToken) {
-      widgetStorage.set('widget_api_token', accessToken)
-    }
-  }, [accessToken])
 
   useEffect(() => {
     configureRefresher({

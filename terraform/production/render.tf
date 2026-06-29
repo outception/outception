@@ -226,31 +226,27 @@ module "production" {
   }
 
   backend_secrets = {
-    current_jwk_kid                = var.backend_current_jwk_kid_production
-    posthog_project_api_key        = var.backend_posthog_project_api_key_production
-    resend_api_key                 = var.backend_resend_api_key_production
-    resend_webhook_secret          = var.backend_resend_webhook_secret
-    logo_dev_publishable_key       = var.backend_logo_dev_publishable_key_production
-    secret                         = var.backend_secret_production
-    sentry_dsn                     = var.backend_sentry_dsn_production
-    plain_request_signing_secret   = var.backend_plain_request_signing_secret_production
-    plain_token                    = var.backend_plain_token_production
-    plain_chat_secret              = var.backend_plain_chat_secret_production
-    jwks                           = var.backend_jwks_production
-    app_review_email               = var.backend_app_review_email
-    app_review_otp_code            = var.backend_app_review_otp_code
-    chargeback_stop_webhook_secret = var.backend_chargebackstop_webhook_secret_production
+    current_jwk_kid              = var.backend_current_jwk_kid_production
+    posthog_project_api_key      = var.backend_posthog_project_api_key_production
+    resend_api_key               = var.backend_resend_api_key_production
+    resend_webhook_secret        = var.backend_resend_webhook_secret
+    logo_dev_publishable_key     = var.backend_logo_dev_publishable_key_production
+    secret                       = var.backend_secret_production
+    sentry_dsn                   = var.backend_sentry_dsn_production
+    plain_request_signing_secret = var.backend_plain_request_signing_secret_production
+    plain_token                  = var.backend_plain_token_production
+    plain_chat_secret            = var.backend_plain_chat_secret_production
+    jwks                         = var.backend_jwks_production
+    app_review_email             = var.backend_app_review_email
+    app_review_otp_code          = var.backend_app_review_otp_code
   }
 
   aws_s3_config = {
-    region                        = "us-east-2"
-    signature_version             = "v4"
-    files_presign_ttl             = "3600"
-    files_public_bucket_name      = "outception-public-files"
-    customer_invoices_bucket_name = "outception-customer-invoices"
-    customer_receipts_bucket_name = "outception-customer-receipts"
-    payout_invoices_bucket_name   = "outception-payout-invoices"
-    logs_bucket_name              = "outception-production-logs"
+    region                   = "us-east-2"
+    signature_version        = "v4"
+    files_presign_ttl        = "3600"
+    files_public_bucket_name = "outception-public-files"
+    logs_bucket_name         = "outception-production-logs"
   }
 
   aws_s3_secrets = {
@@ -261,13 +257,8 @@ module "production" {
   }
 
   github_secrets = {
-    client_id                           = var.github_client_id_production
-    client_secret                       = var.github_client_secret_production
-    repository_benefits_app_identifier  = var.github_repository_benefits_app_identifier_production
-    repository_benefits_app_namespace   = var.github_repository_benefits_app_namespace_production
-    repository_benefits_app_private_key = var.github_repository_benefits_app_private_key_production
-    repository_benefits_client_id       = var.github_repository_benefits_client_id_production
-    repository_benefits_client_secret   = var.github_repository_benefits_client_secret_production
+    client_id     = var.github_client_id_production
+    client_secret = var.github_client_secret_production
   }
 
   logfire_config = {

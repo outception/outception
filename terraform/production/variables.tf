@@ -147,36 +147,6 @@ variable "github_client_secret_production" {
   sensitive   = true
 }
 
-variable "github_repository_benefits_app_identifier_production" {
-  description = "GitHub Repository Benefits App Identifier for production"
-  type        = string
-  sensitive   = true
-}
-
-variable "github_repository_benefits_app_namespace_production" {
-  description = "GitHub Repository Benefits App Namespace for production"
-  type        = string
-  sensitive   = true
-}
-
-variable "github_repository_benefits_app_private_key_production" {
-  description = "GitHub Repository Benefits App Private Key for production"
-  type        = string
-  sensitive   = true
-}
-
-variable "github_repository_benefits_client_id_production" {
-  description = "GitHub Repository Benefits Client ID for production"
-  type        = string
-  sensitive   = true
-}
-
-variable "github_repository_benefits_client_secret_production" {
-  description = "GitHub Repository Benefits Client Secret for production"
-  type        = string
-  sensitive   = true
-}
-
 # Logfire
 variable "logfire_token" {
   description = "Logfire Token"
@@ -260,13 +230,6 @@ variable "slo_report_slack_channel" {
   sensitive   = false
 }
 
-# ChargebackStop Webhook Secret
-variable "backend_chargebackstop_webhook_secret_production" {
-  description = "ChargebackStop Webhook Secret for production"
-  type        = string
-  sensitive   = true
-}
-
 # Tinybird
 variable "tinybird_api_token" {
   description = "Tinybird API Token"
@@ -339,18 +302,6 @@ variable "pydantic_ai_gateway_api_key" {
 
 variable "gram_api_key" {
   description = "Gram API key for the Vercel frontend"
-  type        = string
-  sensitive   = true
-}
-
-variable "mcp_oauth2_client_id" {
-  description = "MCP OAuth2 client ID for the Vercel frontend"
-  type        = string
-  sensitive   = true
-}
-
-variable "mcp_oauth2_client_secret" {
-  description = "MCP OAuth2 client secret for the Vercel frontend"
   type        = string
   sensitive   = true
 }

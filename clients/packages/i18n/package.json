@@ -39,7 +39,6 @@
     "dist"
   ],
   "devDependencies": {
-    "@ai-sdk/google": "^2.0.69",
     "@ai-sdk/openai": "^3.0.53",
     "@outception-com/eslint-config": "workspace:*",
     "@outception-com/typescript-config": "workspace:*",

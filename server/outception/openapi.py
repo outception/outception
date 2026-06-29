@@ -5,7 +5,6 @@ from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 
 from outception.config import settings
-from outception.kit.metadata import add_metadata_query_schema
 from outception.oauth2.schemas import add_oauth2_form_schemas
 
 
@@ -105,7 +104,6 @@ def set_openapi_generator(app: FastAPI) -> None:
             separate_input_output_schemas=app.separate_input_output_schemas,
         )
 
-        openapi_schema = add_metadata_query_schema(openapi_schema)
         openapi_schema = add_oauth2_form_schemas(openapi_schema)
 
         return openapi_schema

@@ -80,11 +80,6 @@ class OutceptionRedirectionError(OutceptionError):
         super().__init__(message, status_code)
 
 
-class BadRequest(OutceptionError):
-    def __init__(self, message: str = "Bad request", status_code: int = 400) -> None:
-        super().__init__(message, status_code)
-
-
 class NotPermitted(OutceptionError):
     def __init__(self, message: str = "Not permitted", status_code: int = 403) -> None:
         super().__init__(message, status_code)
@@ -101,13 +96,6 @@ class Unauthorized(OutceptionError):
         )
 
 
-class InternalServerError(OutceptionError):
-    def __init__(
-        self, message: str = "Internal Server Error", status_code: int = 500
-    ) -> None:
-        super().__init__(message, status_code)
-
-
 class ResourceNotFound(OutceptionError):
     def __init__(self, message: str = "Not found", status_code: int = 404) -> None:
         super().__init__(message, status_code)
@@ -119,25 +107,6 @@ class ResourceNotModified(Exception):
 
     def __init__(self) -> None:
         self.status_code = 304
-
-
-class ResourceUnavailable(OutceptionError):
-    def __init__(self, message: str = "Unavailable", status_code: int = 410) -> None:
-        super().__init__(message, status_code)
-
-
-class ResourceAlreadyExists(OutceptionError):
-    def __init__(self, message: str = "Already exists", status_code: int = 409) -> None:
-        super().__init__(message, status_code)
-
-
-class PaymentNotReady(OutceptionError):
-    def __init__(
-        self,
-        message: str = "Organization is not ready to accept payments",
-        status_code: int = 403,
-    ) -> None:
-        super().__init__(message, status_code)
 
 
 class ValidationError(TypedDict):

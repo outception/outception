@@ -26,8 +26,6 @@ TYPE = Literal[
     "apple_oauth",
     "discord_guild_token",
     "auth",
-    "github_repository_benefit_oauth",
-    "customer_oauth",
     "slack_integration_oauth",
 ]
 

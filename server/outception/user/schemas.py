@@ -1,17 +1,14 @@
-import hashlib
-import hmac
 import uuid
 from datetime import date
 from enum import StrEnum
 from typing import Annotated, Literal
 
 from fastapi import Depends
-from pydantic import UUID4, EmailStr, Field, computed_field
+from pydantic import UUID4, EmailStr, Field
 
 from outception.auth.scope import Scope
-from outception.config import settings
 from outception.kit.address import CountryAlpha2Input
-from outception.kit.schemas import Schema, TimestampedSchema, UUID4ToStr
+from outception.kit.schemas import Schema, TimestampedSchema
 from outception.models.user import IdentityVerificationStatus, OAuthPlatform
 from outception.organization.schemas import OrganizationWithRole
 
@@ -48,17 +45,6 @@ class UserRead(UserBase, TimestampedSchema):
         ),
     )
 
-    @computed_field
-    def email_hash(self) -> str | None:
-        if settings.PLAIN_CHAT_SECRET is None:
-            return None
-        message = hmac.new(
-            settings.PLAIN_CHAT_SECRET.encode("utf-8"),
-            self.email.encode("utf-8"),
-            hashlib.sha256,
-        )
-        return message.hexdigest()
-
 
 class UserUpdate(Schema):
     first_name: str | None = None
@@ -82,18 +68,11 @@ class UserSignupAttribution(Schema):
     intent: (
         Literal[
             "creator",
-            "pledge",
             "purchase",
-            "subscription",
-            "newsletter_subscription",
         ]
         | None
     ) = None
 
-    # Flywheel sources
-    order: UUID4ToStr | None = None
-    subscription: UUID4ToStr | None = None
-    pledge: UUID4ToStr | None = None
     # Website source
     path: str | None = None
     host: str | None = None

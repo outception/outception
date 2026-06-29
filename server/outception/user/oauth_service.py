@@ -31,16 +31,6 @@ class CannotDisconnectLastAuthMethod(OAuthError):
 
 
 class OAuthAccountService(ResourceServiceReader[OAuthAccount]):
-    async def get_by_platform_and_account_id(
-        self, session: AsyncSession, platform: OAuthPlatform, account_id: str
-    ) -> OAuthAccount | None:
-        stmt = select(OAuthAccount).where(
-            OAuthAccount.platform == platform,
-            OAuthAccount.account_id == account_id,
-        )
-        result = await session.execute(stmt)
-        return result.scalars().one_or_none()
-
     async def disconnect_platform(
         self, session: AsyncSession, user: User, platform: OAuthPlatform
     ) -> None:

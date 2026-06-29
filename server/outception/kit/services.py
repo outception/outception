@@ -4,14 +4,12 @@ from collections.abc import Sequence
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy.orm import InstrumentedAttribute
 from sqlalchemy.sql.base import ExecutableOption
 
 from outception.kit.utils import utc_now
 
 from .db.models import RecordModel
 from .db.postgres import AsyncSession, sql
-from .schemas import Schema
 
 
 class ResourceServiceReader[ModelType: RecordModel]:
@@ -49,62 +47,3 @@ class ResourceServiceReader[ModelType: RecordModel]:
         )
         await session.execute(stmt)
         await session.flush()
-
-
-class ResourceService[
-    ModelType: RecordModel,
-    CreateSchemaType: Schema,
-    UpdateSchemaType: Schema,
-](
-    ResourceServiceReader[ModelType],
-):
-    # Ideally, actions would only contain class methods since there is
-    # no state to retain. Unable to achieve this with mapping the model
-    # and schema as class attributes though without breaking typing.
-
-    # TODO: Investigate new bulk methods in SQLALchemy 2.0 for upsert_many
-    async def upsert_many(
-        self,
-        session: AsyncSession,
-        create_schemas: list[CreateSchemaType],
-        constraints: list[InstrumentedAttribute[Any]],
-        mutable_keys: set[str],
-        autocommit: bool = True,
-    ) -> Sequence[ModelType]:
-        return await self._db_upsert_many(
-            session,
-            create_schemas,
-            constraints=constraints,
-            mutable_keys=mutable_keys,
-            autocommit=autocommit,
-        )
-
-    async def _db_upsert_many(
-        self,
-        session: AsyncSession,
-        objects: list[CreateSchemaType],
-        constraints: list[InstrumentedAttribute[Any]],
-        mutable_keys: set[str],
-        autocommit: bool = True,
-    ) -> Sequence[ModelType]:
-        values = [obj.model_dump(by_alias=True) for obj in objects]
-        if not values:
-            raise ValueError("Zero values provided")
-
-        insert_stmt = sql.insert(self.model).values(values)
-
-        # Update the insert statement with what to update on conflict, i.e mutable keys.
-        upsert_stmt = (
-            insert_stmt.on_conflict_do_update(
-                index_elements=constraints,
-                set_={k: getattr(insert_stmt.excluded, k) for k in mutable_keys},
-            )
-            .returning(self.model)
-            .execution_options(populate_existing=True)
-        )
-
-        res = await session.execute(upsert_stmt)
-        instances = res.scalars().all()
-        if autocommit:
-            await session.commit()
-        return instances

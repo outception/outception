@@ -180,47 +180,6 @@ resource "tfe_variable" "github_client_secret_production" {
   variable_set_id = tfe_variable_set.production.id
 }
 
-resource "tfe_variable" "github_repository_benefits_app_identifier_production" {
-  key             = "github_repository_benefits_app_identifier_production"
-  category        = "terraform"
-  description     = "GitHub Repository Benefits App Identifier for production"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.production.id
-}
-
-resource "tfe_variable" "github_repository_benefits_app_namespace_production" {
-  key             = "github_repository_benefits_app_namespace_production"
-  category        = "terraform"
-  description     = "GitHub Repository Benefits App Namespace for production"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.production.id
-}
-
-resource "tfe_variable" "github_repository_benefits_app_private_key_production" {
-  key             = "github_repository_benefits_app_private_key_production"
-  category        = "terraform"
-  description     = "GitHub Repository Benefits App Private Key for production"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.production.id
-}
-
-resource "tfe_variable" "github_repository_benefits_client_id_production" {
-  key             = "github_repository_benefits_client_id_production"
-  category        = "terraform"
-  description     = "GitHub Repository Benefits Client ID for production"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.production.id
-}
-
-resource "tfe_variable" "github_repository_benefits_client_secret_production" {
-  key             = "github_repository_benefits_client_secret_production"
-  category        = "terraform"
-  description     = "GitHub Repository Benefits Client Secret for production"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.production.id
-}
-
-
 
 resource "tfe_variable" "backend_app_review_email" {
   key             = "backend_app_review_email"
@@ -337,22 +296,6 @@ resource "tfe_variable" "vercel_gram_api_key_production" {
   key             = "gram_api_key"
   category        = "terraform"
   description     = "Gram API key for the Vercel production frontend"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.production.id
-}
-
-resource "tfe_variable" "vercel_mcp_oauth2_client_id_production" {
-  key             = "mcp_oauth2_client_id"
-  category        = "terraform"
-  description     = "MCP OAuth2 client ID for the Vercel production frontend"
-  sensitive       = true
-  variable_set_id = tfe_variable_set.production.id
-}
-
-resource "tfe_variable" "vercel_mcp_oauth2_client_secret_production" {
-  key             = "mcp_oauth2_client_secret"
-  category        = "terraform"
-  description     = "MCP OAuth2 client secret for the Vercel production frontend"
   sensitive       = true
   variable_set_id = tfe_variable_set.production.id
 }

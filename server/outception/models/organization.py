@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any, Literal, TypedDict
+from typing import Any, Literal, TypedDict
 from urllib.parse import urlparse
 
 from sqlalchemy import (
@@ -15,16 +15,9 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column
 
 from outception.config import settings
-from outception.enums import (
-    TaxBehaviorOption,
-)
 from outception.exceptions import OutceptionError
-from outception.kit.currency import PresentmentCurrency
 from outception.kit.db.models import RateLimitGroupMixin, RecordModel
 from outception.kit.extensions.sqlalchemy import StringEnum
-
-if TYPE_CHECKING:
-    from outception.email.sender import EmailFromReply
 
 
 class OrganizationSocials(TypedDict):
@@ -34,29 +27,10 @@ class OrganizationSocials(TypedDict):
 
 class OrganizationDetails(TypedDict, total=False):
     about: str
-    product_description: str
-    selling_categories: list[str]
-    pricing_models: list[str]
     intended_use: str
     customer_acquisition: list[str]
-    future_annual_revenue: int
     switching: bool
-    switching_from: str | None
     previous_annual_revenue: int
-
-
-class OrganizationIndividualLegalEntity(TypedDict):
-    type: Literal["individual"]
-
-
-class OrganizationCompanyLegalEntity(TypedDict):
-    type: Literal["company"]
-    registered_name: str
-
-
-OrganizationLegalEntity = (
-    OrganizationIndividualLegalEntity | OrganizationCompanyLegalEntity
-)
 
 
 class OrganizationStatus(StrEnum):
@@ -144,9 +118,6 @@ class Organization(RateLimitGroupMixin, RecordModel):
 
     name: Mapped[str] = mapped_column(String, nullable=False, index=True)
     slug: Mapped[str] = mapped_column(CITEXT, nullable=False, unique=True)
-    slug_history: Mapped[list[dict[str, Any]]] = mapped_column(
-        JSONB, nullable=False, default=list, server_default="[]"
-    )
     _avatar_url: Mapped[str | None] = mapped_column(
         String, name="avatar_url", nullable=True
     )
@@ -202,28 +173,12 @@ class Organization(RateLimitGroupMixin, RecordModel):
         JSONB, nullable=False, default=dict
     )
 
-    legal_entity: Mapped[OrganizationLegalEntity | None] = mapped_column(
-        JSONB, nullable=True, default=None
-    )
-
     #
     # Feature Flags
     #
 
     feature_settings: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, default=dict
-    )
-
-    #
-    # Currency and tax settings
-    #
-    default_presentment_currency: Mapped[PresentmentCurrency] = mapped_column(
-        String(3), nullable=False, default="usd"
-    )
-    default_tax_behavior: Mapped[TaxBehaviorOption] = mapped_column(
-        StringEnum(TaxBehaviorOption),
-        nullable=False,
-        default=TaxBehaviorOption.location,
     )
 
     #
@@ -278,23 +233,3 @@ class Organization(RateLimitGroupMixin, RecordModel):
             raise InvalidStatusTransitionError(self.status, status)
         self.status = status
         self.capabilities = {**STATUS_CAPABILITIES[status]}
-
-    @property
-    def outception_site_url(self) -> str:
-        return f"{settings.FRONTEND_BASE_URL}/{self.slug}"
-
-    def is_blocked(self) -> bool:
-        return self.status == OrganizationStatus.BLOCKED
-
-    def is_active(self) -> bool:
-        return self.status == OrganizationStatus.ACTIVE
-
-    @property
-    def email_from_reply(self) -> "EmailFromReply":
-        return {
-            "from_name": f"{self.name} (via {settings.EMAIL_FROM_NAME})",
-            "from_email_addr": f"{self.slug}@{settings.EMAIL_FROM_DOMAIN}",
-            "reply_to_name": self.name,
-            "reply_to_email_addr": self.email
-            or settings.EMAIL_DEFAULT_REPLY_TO_EMAIL_ADDRESS,
-        }

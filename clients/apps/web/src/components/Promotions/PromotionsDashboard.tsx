@@ -4,9 +4,11 @@ import {
   useMyPromotions,
   usePromotionAnalytics,
 } from '@/hooks/queries/promotions'
+import { useT } from '@/providers/locale'
 import { topicLabel } from '@/utils/promotions'
-import { Pill, Spinner, Text } from '@outception-com/orbit'
+import { Button, Pill, Spinner, Text } from '@outception-com/orbit'
 import { Box } from '@outception-com/orbit/Box'
+import { ComposePromotionDialog } from './ComposePromotionDialog'
 import { PromotionAnalyticsChart } from './PromotionAnalyticsChart'
 
 const formatCents = (cents: number) => `$${(cents / 100).toFixed(2)}`
@@ -37,19 +39,27 @@ const statusColor = (status: string): 'green' | 'blue' | 'gray' | 'yellow' => {
 
 /** Promoter-facing analytics + promotion list, scoped to the signed-in user. */
 export const PromotionsDashboard = () => {
+  const t = useT()
   const { data: analytics, isLoading: analyticsLoading } =
     usePromotionAnalytics(30)
   const { data: promotions, isLoading: promotionsLoading } = useMyPromotions()
 
   return (
     <Box flexDirection="column" rowGap="xl" padding="xl">
-      <Box flexDirection="column" rowGap="xs">
-        <Text variant="heading-s" as="h1">
-          Promotions
-        </Text>
-        <Text color="muted">
-          Your featured-slot purchases and how they&apos;re performing.
-        </Text>
+      <Box
+        flexDirection={{ base: 'column', sm: 'row' }}
+        alignItems={{ base: 'start', sm: 'center' }}
+        justifyContent="between"
+        rowGap="m"
+        columnGap="m"
+      >
+        <Box flexDirection="column" rowGap="xs">
+          <Text variant="heading-s" as="h1">
+            {t('promotions.dashboard.title')}
+          </Text>
+          <Text color="muted">{t('promotions.dashboard.subtitle')}</Text>
+        </Box>
+        <ComposePromotionDialog />
       </Box>
 
       {analyticsLoading ? (
@@ -67,19 +77,19 @@ export const PromotionsDashboard = () => {
           gap="m"
         >
           <KpiCard
-            label="Total spend (lifetime)"
+            label={t('promotions.dashboard.spend')}
             value={formatCents(analytics?.total_spend_cents ?? 0)}
           />
           <KpiCard
-            label="Impressions"
+            label={t('promotions.dashboard.impressions')}
             value={(analytics?.total_impressions ?? 0).toLocaleString()}
           />
           <KpiCard
-            label="Clicks"
+            label={t('promotions.dashboard.clicks')}
             value={(analytics?.total_clicks ?? 0).toLocaleString()}
           />
           <KpiCard
-            label="CTR"
+            label={t('promotions.dashboard.ctr')}
             value={`${((analytics?.ctr ?? 0) * 100).toFixed(1)}%`}
           />
         </Box>
@@ -89,7 +99,7 @@ export const PromotionsDashboard = () => {
 
       <Box flexDirection="column" rowGap="m">
         <Text variant="body" as="h2">
-          Your promotions
+          {t('promotions.dashboard.listTitle')}
         </Text>
         {promotionsLoading ? (
           <Box justifyContent="center" padding="l">
@@ -102,10 +112,15 @@ export const PromotionsDashboard = () => {
             paddingVertical="3xl"
             rowGap="s"
           >
-            <Text color="muted">No promotions yet.</Text>
+            <Text color="muted">{t('promotions.dashboard.empty')}</Text>
             <Text variant="caption" color="muted">
-              Promote a post from the news wall to get started.
+              {t('promotions.dashboard.emptyHint')}
             </Text>
+            <ComposePromotionDialog
+              trigger={(open) => (
+                <Button onClick={open}>{t('promotions.compose.title')}</Button>
+              )}
+            />
           </Box>
         ) : (
           <Box flexDirection="column" rowGap="s">
@@ -129,11 +144,15 @@ export const PromotionsDashboard = () => {
                 </Box>
                 <Box flexDirection="column" alignItems="end" rowGap="xs">
                   <Text variant="caption" color="muted">
-                    {p.duration_minutes} min
+                    {t('promotions.dashboard.minutes', {
+                      minutes: p.duration_minutes,
+                    })}
                   </Text>
                   <Text variant="caption" color="muted">
-                    {p.impressions.toLocaleString()} views ·{' '}
-                    {p.clicks.toLocaleString()} clicks
+                    {t('promotions.dashboard.stats', {
+                      views: p.impressions.toLocaleString(),
+                      clicks: p.clicks.toLocaleString(),
+                    })}
                   </Text>
                 </Box>
               </Box>

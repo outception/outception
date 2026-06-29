@@ -69,7 +69,7 @@ export default function Promote() {
         <Text variant="titleLarge">Promote a post</Text>
         <Text variant="body" color="subtext">
           Rent a topic&apos;s featured slot. Payment is handled securely by
-          Outception.sh.
+          Outception.com.
         </Text>
 
         <Box gap="spacing-8">

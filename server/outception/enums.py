@@ -1,12 +1,6 @@
 from enum import StrEnum
 
 
-class TaxBehaviorOption(StrEnum):
-    location = "location"
-    inclusive = "inclusive"
-    exclusive = "exclusive"
-
-
 class TokenType(StrEnum):
     client_secret = "outception_client_secret"
     client_registration_token = "outception_client_registration_token"
@@ -21,7 +15,6 @@ class TokenType(StrEnum):
 class EmailSender(StrEnum):
     logger = "logger"
     resend = "resend"
-    plain = "plain"
 
 
 class RateLimitGroup(StrEnum):

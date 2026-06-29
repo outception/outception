@@ -28,7 +28,6 @@ export interface paths {
      *     - User's email is anonymized
      *     - User's avatar and metadata are cleared
      *     - User's OAuth accounts are deleted (cascade)
-     *     - User's Account (payout account) is deleted if present
      *
      *     **Scopes**: `user:write`
      */
@@ -2025,7 +2024,7 @@ export interface components {
      * OAuthPlatform
      * @enum {string}
      */
-    OAuthPlatform: 'github' | 'github_repository_benefit' | 'google' | 'apple'
+    OAuthPlatform: 'github' | 'google' | 'apple'
     /** Organization */
     Organization: {
       /**
@@ -2077,13 +2076,6 @@ export interface components {
       socials: components['schemas']['OrganizationSocialLink'][]
       /** @description Current organization status */
       status: components['schemas']['OrganizationStatus']
-      /**
-       * Default Presentment Currency
-       * @description Default presentment currency. Used as a fallback, if the customer's local currency is not available.
-       */
-      default_presentment_currency: string
-      /** @description Default tax behavior applied on promotions. */
-      default_tax_behavior: components['schemas']['TaxBehaviorOption']
       /** @description Two-letter country code (ISO 3166-1 alpha-2). */
       country?:
         | (
@@ -2434,21 +2426,6 @@ export interface components {
        */
       about?: string | null
       /**
-       * Product Description
-       * @description Description of digital products being sold.
-       */
-      product_description?: string | null
-      /**
-       * Selling Categories
-       * @description Categories of products being sold.
-       */
-      selling_categories?: string[]
-      /**
-       * Pricing Models
-       * @description Pricing models used by the organization.
-       */
-      pricing_models?: string[]
-      /**
        * Intended Use
        * @deprecated
        * @description How the organization will integrate and use Outception.
@@ -2461,39 +2438,17 @@ export interface components {
        */
       customer_acquisition?: string[]
       /**
-       * Future Annual Revenue
-       * @deprecated
-       * @description Estimated revenue in the next 12 months
-       */
-      future_annual_revenue?: number | null
-      /**
        * Switching
        * @description Switching from another platform?
        * @default false
        */
       switching: boolean
       /**
-       * Switching From
-       * @description Which platform the organization is migrating from.
-       */
-      switching_from?:
-        | ('paddle' | 'lemon_squeezy' | 'gumroad' | 'stripe' | 'other')
-        | null
-      /**
        * Previous Annual Revenue
        * @deprecated
        * @description Revenue from last year if applicable.
        */
       previous_annual_revenue?: number | null
-    }
-    /** OrganizationNotificationSettings */
-    OrganizationNotificationSettings: {
-      /** New Order */
-      new_order: boolean
-      /** New Subscription */
-      new_subscription: boolean
-      /** Chargeback Prevention */
-      chargeback_prevention: boolean
     }
     /**
      * OrganizationRole
@@ -2814,12 +2769,6 @@ export interface components {
             | 'ZW'
           )
         | null
-      /** @description Default presentment currency for the organization */
-      default_presentment_currency?:
-        | components['schemas']['PresentmentCurrency']
-        | null
-      /** @description Default tax behavior applied on promotions. */
-      default_tax_behavior?: components['schemas']['TaxBehaviorOption'] | null
     }
     /**
      * OrganizationWithRole
@@ -2876,13 +2825,6 @@ export interface components {
       socials: components['schemas']['OrganizationSocialLink'][]
       /** @description Current organization status */
       status: components['schemas']['OrganizationStatus']
-      /**
-       * Default Presentment Currency
-       * @description Default presentment currency. Used as a fallback, if the customer's local currency is not available.
-       */
-      default_presentment_currency: string
-      /** @description Default tax behavior applied on promotions. */
-      default_tax_behavior: components['schemas']['TaxBehaviorOption']
       /** @description Two-letter country code (ISO 3166-1 alpha-2). */
       country?:
         | (
@@ -3195,137 +3137,6 @@ export interface components {
       token: string
     }
     /**
-     * PresentmentCurrency
-     * @enum {string}
-     */
-    PresentmentCurrency:
-      | 'aed'
-      | 'all'
-      | 'amd'
-      | 'aoa'
-      | 'ars'
-      | 'aud'
-      | 'awg'
-      | 'azn'
-      | 'bam'
-      | 'bbd'
-      | 'bdt'
-      | 'bif'
-      | 'bmd'
-      | 'bnd'
-      | 'bob'
-      | 'brl'
-      | 'bsd'
-      | 'bwp'
-      | 'bzd'
-      | 'cad'
-      | 'cdf'
-      | 'chf'
-      | 'clp'
-      | 'cny'
-      | 'cop'
-      | 'crc'
-      | 'cve'
-      | 'czk'
-      | 'djf'
-      | 'dkk'
-      | 'dop'
-      | 'dzd'
-      | 'egp'
-      | 'etb'
-      | 'eur'
-      | 'fjd'
-      | 'fkp'
-      | 'gbp'
-      | 'gel'
-      | 'gip'
-      | 'gmd'
-      | 'gnf'
-      | 'gtq'
-      | 'gyd'
-      | 'hkd'
-      | 'hnl'
-      | 'htg'
-      | 'huf'
-      | 'idr'
-      | 'ils'
-      | 'inr'
-      | 'isk'
-      | 'jmd'
-      | 'jpy'
-      | 'kes'
-      | 'kgs'
-      | 'khr'
-      | 'kmf'
-      | 'krw'
-      | 'kyd'
-      | 'kzt'
-      | 'lak'
-      | 'lkr'
-      | 'lrd'
-      | 'lsl'
-      | 'mad'
-      | 'mdl'
-      | 'mga'
-      | 'mkd'
-      | 'mnt'
-      | 'mop'
-      | 'mur'
-      | 'mvr'
-      | 'mwk'
-      | 'mxn'
-      | 'myr'
-      | 'mzn'
-      | 'nad'
-      | 'ngn'
-      | 'nio'
-      | 'nok'
-      | 'npr'
-      | 'nzd'
-      | 'pab'
-      | 'pen'
-      | 'pgk'
-      | 'php'
-      | 'pkr'
-      | 'pln'
-      | 'pyg'
-      | 'qar'
-      | 'ron'
-      | 'rsd'
-      | 'rwf'
-      | 'sar'
-      | 'sbd'
-      | 'scr'
-      | 'sek'
-      | 'sgd'
-      | 'shp'
-      | 'sos'
-      | 'srd'
-      | 'szl'
-      | 'thb'
-      | 'tjs'
-      | 'top'
-      | 'try'
-      | 'ttd'
-      | 'twd'
-      | 'tzs'
-      | 'uah'
-      | 'ugx'
-      | 'usd'
-      | 'uyu'
-      | 'uzs'
-      | 'vnd'
-      | 'vuv'
-      | 'wst'
-      | 'xaf'
-      | 'xcd'
-      | 'xcg'
-      | 'xof'
-      | 'xpf'
-      | 'yer'
-      | 'zar'
-      | 'zmw'
-    /**
      * PromotionAnalytics
      * @description Promotion analytics for the repurposed dashboard: KPI totals plus a daily
      *     spend series. Scoped to the requesting user's own promotions.
@@ -3608,11 +3419,6 @@ export interface components {
       /** Enabled */
       enabled: boolean
     }
-    /**
-     * TaxBehaviorOption
-     * @enum {string}
-     */
-    TaxBehaviorOption: 'location' | 'inclusive' | 'exclusive'
     /** TokenResponse */
     TokenResponse: {
       /** Access Token */
@@ -6390,7 +6196,7 @@ export const oAuth2ClientConfigurationUpdateGrant_typesValues: ReadonlyArray<
 > = ['authorization_code', 'refresh_token']
 export const oAuthPlatformValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OAuthPlatform']
-> = ['github', 'github_repository_benefit', 'google', 'apple']
+> = ['github', 'google', 'apple']
 export const organizationCountryAnyOf0Values: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Organization']['country']
 > = [
@@ -6656,9 +6462,6 @@ export const organizationAccessTokenSortPropertyValues: ReadonlyArray<
   'organization_id',
   '-organization_id',
 ]
-export const organizationDetailsSwitching_fromAnyOf0Values: ReadonlyArray<
-  FlattenedDeepRequired<components>['schemas']['OrganizationDetails']['switching_from']
-> = ['paddle', 'lemon_squeezy', 'gumroad', 'stripe', 'other']
 export const organizationRoleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OrganizationRole']
 > = ['owner', 'admin', 'member']
@@ -7183,136 +6986,6 @@ export const organizationWithRoleCountryAnyOf0Values: ReadonlyArray<
   'ZM',
   'ZW',
 ]
-export const presentmentCurrencyValues: ReadonlyArray<
-  FlattenedDeepRequired<components>['schemas']['PresentmentCurrency']
-> = [
-  'aed',
-  'all',
-  'amd',
-  'aoa',
-  'ars',
-  'aud',
-  'awg',
-  'azn',
-  'bam',
-  'bbd',
-  'bdt',
-  'bif',
-  'bmd',
-  'bnd',
-  'bob',
-  'brl',
-  'bsd',
-  'bwp',
-  'bzd',
-  'cad',
-  'cdf',
-  'chf',
-  'clp',
-  'cny',
-  'cop',
-  'crc',
-  'cve',
-  'czk',
-  'djf',
-  'dkk',
-  'dop',
-  'dzd',
-  'egp',
-  'etb',
-  'eur',
-  'fjd',
-  'fkp',
-  'gbp',
-  'gel',
-  'gip',
-  'gmd',
-  'gnf',
-  'gtq',
-  'gyd',
-  'hkd',
-  'hnl',
-  'htg',
-  'huf',
-  'idr',
-  'ils',
-  'inr',
-  'isk',
-  'jmd',
-  'jpy',
-  'kes',
-  'kgs',
-  'khr',
-  'kmf',
-  'krw',
-  'kyd',
-  'kzt',
-  'lak',
-  'lkr',
-  'lrd',
-  'lsl',
-  'mad',
-  'mdl',
-  'mga',
-  'mkd',
-  'mnt',
-  'mop',
-  'mur',
-  'mvr',
-  'mwk',
-  'mxn',
-  'myr',
-  'mzn',
-  'nad',
-  'ngn',
-  'nio',
-  'nok',
-  'npr',
-  'nzd',
-  'pab',
-  'pen',
-  'pgk',
-  'php',
-  'pkr',
-  'pln',
-  'pyg',
-  'qar',
-  'ron',
-  'rsd',
-  'rwf',
-  'sar',
-  'sbd',
-  'scr',
-  'sek',
-  'sgd',
-  'shp',
-  'sos',
-  'srd',
-  'szl',
-  'thb',
-  'tjs',
-  'top',
-  'try',
-  'ttd',
-  'twd',
-  'tzs',
-  'uah',
-  'ugx',
-  'usd',
-  'uyu',
-  'uzs',
-  'vnd',
-  'vuv',
-  'wst',
-  'xaf',
-  'xcd',
-  'xcg',
-  'xof',
-  'xpf',
-  'yer',
-  'zar',
-  'zmw',
-]
 export const scopeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Scope']
 > = [
@@ -7339,9 +7012,6 @@ export const sourceResponseStatusValues: ReadonlyArray<
 export const subTypeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SubType']
 > = ['user', 'organization']
-export const taxBehaviorOptionValues: ReadonlyArray<
-  FlattenedDeepRequired<components>['schemas']['TaxBehaviorOption']
-> = ['location', 'inclusive', 'exclusive']
 export const userDeletionBlockedReasonValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['UserDeletionBlockedReason']
 > = ['has_active_organizations']

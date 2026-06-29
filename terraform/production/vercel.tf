@@ -140,8 +140,6 @@ module "vercel" {
   environment_variables = [
     { key = "NEXT_PUBLIC_FRONTEND_BASE_URL", value = "https://outception.com", target = ["production"] },
     { key = "NEXT_PUBLIC_GOOGLE_ANALYTICS_ID", value = "G-MBYW1QZFHE" },
-    { key = "MCP_OAUTH2_CLIENT_ID", value = var.mcp_oauth2_client_id, target = ["production", "preview"] },
-    { key = "MCP_OAUTH2_CLIENT_SECRET", value = var.mcp_oauth2_client_secret, target = ["production", "preview"] },
   ]
 }
 

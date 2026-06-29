@@ -48,9 +48,6 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning className="antialiased">
-      <head>
-        <link href="/assets/brand/top-spin.webp" rel="icon" />
-      </head>
       <body style={{ textRendering: 'optimizeLegibility' }}>
         <ExperimentProvider experiments={experimentVariants}>
           <UserContextProvider

@@ -1,17 +1,9 @@
 import { useLogout } from '@/hooks/auth'
 import { useDeleteUser } from '@/hooks/outception/users'
-import { schemas } from '@outception-com/client'
 import { useCallback, useState } from 'react'
 import { Alert } from 'react-native'
 
-interface UseSettingsActionsOptions {
-  selectedOrganization: schemas['Organization'] | undefined
-  organizations: schemas['Organization'][]
-  setOrganization: (organization: schemas['Organization']) => void
-  refetch: () => Promise<unknown>
-}
-
-export const useSettingsActions = (_options: UseSettingsActionsOptions) => {
+export const useSettingsActions = () => {
   const logout = useLogout()
   const deleteUser = useDeleteUser()
 
@@ -41,7 +33,7 @@ export const useSettingsActions = (_options: UseSettingsActionsOptions) => {
         setIsDeletingAccount(false)
         showErrorAlert(
           'Unable to delete account',
-          'Your account could not be deleted. You may need to leave your organizations first.',
+          'Your account could not be deleted. Please try again.',
         )
       }
     } catch (err) {

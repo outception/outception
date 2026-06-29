@@ -55,18 +55,6 @@ locals {
 #   }
 # }
 
-resource "aws_s3_bucket" "customer_invoices" {
-  bucket = "${local.name_prefix}-customer-invoices"
-}
-
-resource "aws_s3_bucket" "customer_receipts" {
-  bucket = "${local.name_prefix}-customer-receipts"
-}
-
-resource "aws_s3_bucket" "payout_invoices" {
-  bucket = "${local.name_prefix}-payout-invoices"
-}
-
 resource "aws_s3_bucket" "files" {
   bucket = "${local.full_name_prefix}-files"
 }

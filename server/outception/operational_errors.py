@@ -8,7 +8,6 @@ import sentry_sdk
 import structlog
 from sqlalchemy.exc import DBAPIError
 
-from outception.locker import TimeoutLockError
 from outception.logging import Logger
 from outception.observability import OPERATIONAL_ERROR_TOTAL
 
@@ -59,10 +58,6 @@ def _sql_deadlock_error_matcher(exc: BaseException) -> bool:
     return False
 
 
-def _timeout_lock_error_matcher(exc: BaseException) -> bool:
-    return isinstance(exc, TimeoutLockError)
-
-
 def _email_sender_operational_error_matcher(exc: BaseException) -> bool:
     # Import deferred to avoid circular dependency
     from outception.email.sender import EmailSenderOperationalError
@@ -74,7 +69,6 @@ _operation_error_matchers: dict[str, OperationalErrorMatcher] = {
     "sql_timeout_error": _sql_timeout_error_matcher,
     "sql_lock_not_available_error": _sql_lock_not_available_error_matcher,
     "sql_deadlock_error": _sql_deadlock_error_matcher,
-    "timeout_lock_error": _timeout_lock_error_matcher,
     "email_sender_operational_error": _email_sender_operational_error_matcher,
 }
 

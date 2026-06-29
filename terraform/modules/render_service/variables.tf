@@ -127,20 +127,19 @@ variable "backend_config" {
 variable "backend_secrets" {
   description = "Backend secrets (sensitive)"
   type = object({
-    current_jwk_kid                = string
-    posthog_project_api_key        = optional(string, "")
-    resend_api_key                 = string
-    resend_webhook_secret          = optional(string, "")
-    logo_dev_publishable_key       = optional(string, "")
-    secret                         = string
-    sentry_dsn                     = string
-    plain_request_signing_secret   = optional(string, "")
-    plain_token                    = optional(string, "")
-    plain_chat_secret              = optional(string, "")
-    jwks                           = string
-    app_review_email               = optional(string, "")
-    app_review_otp_code            = optional(string, "")
-    chargeback_stop_webhook_secret = optional(string, "")
+    current_jwk_kid              = string
+    posthog_project_api_key      = optional(string, "")
+    resend_api_key               = string
+    resend_webhook_secret        = optional(string, "")
+    logo_dev_publishable_key     = optional(string, "")
+    secret                       = string
+    sentry_dsn                   = string
+    plain_request_signing_secret = optional(string, "")
+    plain_token                  = optional(string, "")
+    plain_chat_secret            = optional(string, "")
+    jwks                         = string
+    app_review_email             = optional(string, "")
+    app_review_otp_code          = optional(string, "")
   })
   sensitive = true
 }
@@ -148,14 +147,11 @@ variable "backend_secrets" {
 variable "aws_s3_config" {
   description = "AWS S3 environment configuration (non-sensitive)"
   type = object({
-    region                        = string # "us-east-2"
-    signature_version             = string # "v4"
-    files_presign_ttl             = string # "600"
-    files_public_bucket_name      = string # "outception-public-files"
-    customer_invoices_bucket_name = string # "outception-customer-invoices"
-    customer_receipts_bucket_name = string # "outception-customer-receipts"
-    payout_invoices_bucket_name   = string # "outception-payout-invoices"
-    logs_bucket_name              = string # "outception-logs"
+    region                   = string # "us-east-2"
+    signature_version        = string # "v4"
+    files_presign_ttl        = string # "600"
+    files_public_bucket_name = string # "outception-public-files"
+    logs_bucket_name         = string # "outception-logs"
   })
 }
 
@@ -173,13 +169,8 @@ variable "aws_s3_secrets" {
 variable "github_secrets" {
   description = "GitHub secrets (sensitive)"
   type = object({
-    client_id                           = string
-    client_secret                       = string
-    repository_benefits_app_identifier  = string
-    repository_benefits_app_namespace   = string
-    repository_benefits_app_private_key = string
-    repository_benefits_client_id       = string
-    repository_benefits_client_secret   = string
+    client_id     = string
+    client_secret = string
   })
   sensitive = true
 }

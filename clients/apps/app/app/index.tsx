@@ -24,18 +24,32 @@ export default function Home() {
         <Text variant="titleLarge">The Wall</Text>
         <Box flexDirection="row" alignItems="center" gap="spacing-8">
           {session ? (
-            <Touchable onPress={() => router.push('/promotions')}>
-              <Box
-                paddingVertical="spacing-8"
-                paddingHorizontal="spacing-16"
-                borderRadius="border-radius-999"
-                backgroundColor="card"
-              >
-                <Text variant="caption" color="text">
-                  My promos
-                </Text>
-              </Box>
-            </Touchable>
+            <>
+              <Touchable onPress={() => router.push('/settings')}>
+                <Box
+                  paddingVertical="spacing-8"
+                  paddingHorizontal="spacing-16"
+                  borderRadius="border-radius-999"
+                  backgroundColor="card"
+                >
+                  <Text variant="caption" color="text">
+                    Settings
+                  </Text>
+                </Box>
+              </Touchable>
+              <Touchable onPress={() => router.push('/promotions')}>
+                <Box
+                  paddingVertical="spacing-8"
+                  paddingHorizontal="spacing-16"
+                  borderRadius="border-radius-999"
+                  backgroundColor="card"
+                >
+                  <Text variant="caption" color="text">
+                    My promos
+                  </Text>
+                </Box>
+              </Touchable>
+            </>
           ) : null}
           <Touchable
             onPress={() => router.push(session ? '/promote' : '/login')}

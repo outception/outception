@@ -3,7 +3,6 @@ from typing import Any
 
 import structlog
 
-from outception.exceptions import OutceptionError
 from outception.kit.anonymization import anonymize_email_for_deletion
 from outception.models import User
 from outception.organization.repository import OrganizationRepository
@@ -20,9 +19,6 @@ from .schemas import (
 )
 
 log = structlog.get_logger()
-
-
-class UserError(OutceptionError): ...
 
 
 class UserService:

@@ -9,7 +9,7 @@ metadata:
 
 # Local Environment Skill
 
-This skill enables Claude to help manage the Outception local development environment using Docker. Use this when the user needs to start, stop, debug, or understand the local development stack.
+This skill helps manage the Outception local development environment using Docker. Use this when the user needs to start, stop, debug, or understand the local development stack.
 
 ## Instance Auto-Detection
 

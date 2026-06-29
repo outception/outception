@@ -1,5 +1,3 @@
-const IS_WIDGET_BUILD = process.env.EXPO_WIDGET_BUILD === '1'
-
 const plugins = [
   'expo-router',
   [
@@ -14,7 +12,6 @@ const plugins = [
   ],
   'expo-secure-store',
   'expo-font',
-  'expo-notifications',
   [
     'expo-asset',
     {
@@ -22,23 +19,15 @@ const plugins = [
     },
   ],
   'expo-web-browser',
-]
-
-// Only include Sentry plugin for non-widget builds
-// The Sentry plugin fails with @bacons/apple-targets blank template
-// because it expects the "Bundle React Native code and images" build phase to exist
-if (!IS_WIDGET_BUILD) {
-  plugins.push([
+  [
     '@sentry/react-native/expo',
     {
       url: 'https://sentry.io/',
       project: 'outception-app',
       organization: 'outception-com',
     },
-  ])
-}
-
-plugins.push('@bacons/apple-targets')
+  ],
+]
 
 module.exports = {
   expo: {
@@ -61,9 +50,6 @@ module.exports = {
       icon: './assets/images/ios-dark.png',
       entitlements: {
         'com.apple.developer.applesignin': ['Default'],
-        'com.apple.security.application-groups': [
-          'group.com.outception.Outception',
-        ],
       },
       associatedDomains: ['applinks:outception.godetour.link'],
     },

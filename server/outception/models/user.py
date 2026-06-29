@@ -1,4 +1,3 @@
-import time
 from datetime import date, datetime
 from enum import StrEnum
 from typing import Any
@@ -32,7 +31,6 @@ from outception.kit.schemas import Schema
 class OAuthPlatform(StrEnum):
     # maximum allowed length is 32 chars
     github = "github"
-    github_repository_benefit = "github_repository_benefit"
     google = "google"
     apple = "apple"
 
@@ -82,20 +80,6 @@ class OAuthAccount(RecordModel):
     )
 
     user: Mapped["User"] = relationship("User", back_populates="oauth_accounts")
-
-    def is_access_token_expired(self) -> bool:
-        if self.expires_at is None:
-            return False
-        return time.time() > self.expires_at
-
-    def should_refresh_access_token(self, unless_ttl_gt: int = 60 * 30) -> bool:
-        if (
-            self.expires_at
-            and self.refresh_token
-            and self.expires_at <= (time.time() + unless_ttl_gt)
-        ):
-            return True
-        return False
 
     def to_dataclass(self, scope: list[str]) -> OAuth2EnrollmentDataclass:
         return OAuth2EnrollmentDataclass(
@@ -177,11 +161,6 @@ class User(RecordModel):
         Date, nullable=True, default=None
     )
 
-    @property
-    def full_name(self) -> str | None:
-        parts = [p for p in (self.first_name, self.last_name) if p]
-        return " ".join(parts) if parts else None
-
     @hybrid_property
     def can_authenticate(self) -> bool:
         return not self.is_deleted and self.blocked_at is None
@@ -208,40 +187,5 @@ class User(RecordModel):
         self.meta = meta
 
     @property
-    def had_creator_signup_intent(self) -> bool:
-        return self.signup_attribution.get("intent") == "creator"
-
-    @property
-    def campaign_code(self) -> str | None:
-        return self.signup_attribution.get("campaign")
-
-    def get_oauth_account(self, platform: OAuthPlatform) -> OAuthAccount | None:
-        return next(
-            (
-                account
-                for account in self.oauth_accounts
-                if account.platform == platform
-            ),
-            None,
-        )
-
-    def get_github_account(self) -> OAuthAccount | None:
-        return self.get_oauth_account(OAuthPlatform.github)
-
-    @property
     def posthog_distinct_id(self) -> str:
         return f"user:{self.id}"
-
-    @property
-    def public_name(self) -> str:
-        github_oauth_account = self.get_github_account()
-        if github_oauth_account is not None and github_oauth_account.account_username:
-            return github_oauth_account.account_username
-        return self.email[0]
-
-    @property
-    def github_username(self) -> str | None:
-        github_oauth_account = self.get_github_account()
-        if github_oauth_account is not None:
-            return github_oauth_account.account_username
-        return None

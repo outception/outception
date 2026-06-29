@@ -75,7 +75,7 @@ describe('proxy matcher configuration', () => {
       unstable_doesMiddlewareMatch({
         config,
         nextConfig,
-        url: '/docs/integrate/mcp',
+        url: '/docs/integrate/authentication',
       }),
     ).toBe(true)
   })

@@ -1,3 +1,5 @@
+name: outception
+
 services:
   redis:
     image: redis:alpine

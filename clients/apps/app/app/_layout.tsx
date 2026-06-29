@@ -3,7 +3,6 @@ import theme from '@/design-system/theme'
 import { OutceptionClientProvider } from '@/providers/OutceptionClientProvider'
 import { OutceptionQueryClientProvider } from '@/providers/OutceptionQueryClientProvider'
 import { SessionProvider } from '@/providers/SessionProvider'
-import { ExtensionStorage } from '@bacons/apple-targets'
 import { InstrumentSerif_400Regular } from '@expo-google-fonts/instrument-serif/400Regular'
 import { useFonts } from '@expo-google-fonts/instrument-serif/useFonts'
 import NetInfo from '@react-native-community/netinfo'
@@ -13,8 +12,7 @@ import { ThemeProvider } from '@shopify/restyle'
 import { onlineManager } from '@tanstack/react-query'
 import { Slot } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
-import React, { useCallback, useEffect } from 'react'
-import { AppState } from 'react-native'
+import React, { useCallback } from 'react'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 
@@ -70,16 +68,6 @@ export default Sentry.wrap(function RootLayout() {
   const [fontsLoaded] = useFonts({
     InstrumentSerif_400Regular,
   })
-
-  useEffect(() => {
-    const subscription = AppState.addEventListener('change', (state) => {
-      if (state === 'background') {
-        ExtensionStorage.reloadWidget()
-      }
-    })
-
-    return () => subscription.remove()
-  }, [])
 
   const onLayoutRootView = useCallback(() => {
     if (fontsLoaded) {

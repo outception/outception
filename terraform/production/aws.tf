@@ -441,12 +441,9 @@ module "application_access_production" {
   source   = "../modules/application_access"
   username = "outception-production-files"
   buckets = {
-    customer_invoices = { name = "outception-customer-invoices" }
-    customer_receipts = { name = "outception-customer-receipts" }
-    payout_invoices   = { name = "outception-payout-invoices" }
-    files             = { name = "outception-production-files", description = "Policy used by our app for downloadable benefits. Keep permissions to a bare minimum." }
-    public_files      = { name = "outception-public-files", description = "Policy used by our app for public uploads -products medias and such-. Keep permissions to a bare minimum." }
-    logs              = { name = "outception-production-logs", description = "Policy used by our app to write OpenTelemetry spans to S3 for long-term backup." }
+    files        = { name = "outception-production-files", description = "Policy used by our app for file storage. Keep permissions to a bare minimum." }
+    public_files = { name = "outception-public-files", description = "Policy used by our app for public uploads -products medias and such-. Keep permissions to a bare minimum." }
+    logs         = { name = "outception-production-logs", description = "Policy used by our app to write OpenTelemetry spans to S3 for long-term backup." }
   }
 }
 
