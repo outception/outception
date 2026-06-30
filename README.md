@@ -1,82 +1,71 @@
-<div align="center">
-
 # Outception
 
-### A live wall of the world's news — and a spot you can pay to stand on.
+A live news wall with pay-to-promote. Read the headlines for free, or pay to
+feature your post at the top of a topic for a while.
 
-Read the headlines for free. When you've got something worth seeing, pay to
-pin it to the top of any topic for a while.
+## What it is
 
-</div>
+Outception is two things in one app:
 
----
+A public news wall. An open, no-login feed that pulls headlines from 250+ sources
+(Hacker News, Reddit, mainstream news, plus tech, finance, sports, science,
+gaming and more) and lays them out in topic columns. Open it and read.
 
-## What is this?
+Pay-to-promote. Signed-in users can buy a topic's featured slot for a block of
+time. Slots run as a first-come queue with one promotion live per topic at a
+time, and the post shows up as a labelled "Promoted" card on the wall. Payment
+goes through an external payment provider and is confirmed with a signed webhook,
+so a promotion only goes live once the payment clears.
 
-Outception is two things sharing one home:
+## Features
 
-- **A news wall.** An open, no-login feed that pulls headlines from 250+ sources —
-  Hacker News, Reddit, mainstream news, plus tech, finance, sports, science,
-  gaming and more — and lays them out in tidy topic columns. Just open it and read.
+- Public news wall on web and mobile, organised by topic
+- Sign in, compose a promotion, check out, and it goes live
+- Promotion queue with a clear lifecycle: pending, queued, active, expired
+- Analytics for spend, impressions, clicks and CTR, with an optional
+  [Tinybird](https://www.tinybird.co) pipeline for per-day time series
+- Promoter dashboard on web and an analytics screen on mobile
+- OAuth2 and web-session auth, organizations, and API tokens
 
-- **Pay-to-promote.** Got a post you want people to notice? Sign in, pick a topic,
-  and buy its featured slot for a block of time. Slots run as a fair first-come
-  queue (one promotion live per topic at a time), and your post shows up as a
-  clearly-labelled **"Promoted"** card on the wall. Payment goes through an
-  external payment provider and is confirmed with a signed webhook, so a promotion
-  only goes live once the money's actually in.
+## Architecture
 
-That's the whole idea: the news is free, attention is the thing you can buy.
+A single monorepo:
 
-## Highlights
-
-- 📰 **Public news wall** on web and mobile, organised by topic
-- 💸 **Promote in a few clicks** — sign in, compose, checkout, done
-- 🎟️ **Fair queue** — promotions move through `pending → queued → active → expired`
-- 📊 **Real analytics** — spend, impressions, clicks and CTR, with an optional
-  [Tinybird](https://www.tinybird.co) pipeline for day-by-day time series
-- 📈 **Dashboards** — a promoter dashboard on web and an analytics screen on mobile
-- 🔐 **Accounts done right** — OAuth2 / web-session auth, organizations, API tokens
-
-## How it's built
-
-It's a single monorepo:
-
-| Where | Stack | What lives there |
+| Path | Stack | What it holds |
 | --- | --- | --- |
-| `server/` | Python 3.14 · FastAPI | The API (`outception`), SQLAlchemy, Alembic, Dramatiq workers, Redis |
-| `clients/apps/web/` | Next.js | The public news wall + the promoter dashboard |
-| `clients/apps/app/` | Expo · React Native | News feed, promote flow and analytics for iOS + Android |
-| `clients/packages/client/` | TypeScript | API client, generated from the backend's OpenAPI |
-| `clients/packages/orbit/` | — | Orbit, the design system the web app is built on |
+| `server/` | Python 3.14, FastAPI | API (`outception`), SQLAlchemy, Alembic, Dramatiq workers, Redis |
+| `clients/apps/web/` | Next.js | Public news wall and promoter dashboard |
+| `clients/apps/app/` | Expo, React Native | News feed, promote flow and analytics (iOS and Android) |
+| `clients/packages/client/` | TypeScript | API client generated from the backend OpenAPI |
+| `clients/packages/orbit/` | | Orbit design system used by the web app |
 
 ## Getting started
 
-You'll need Docker, [uv](https://docs.astral.sh/uv/) and [pnpm](https://pnpm.io).
+You need Docker, [uv](https://docs.astral.sh/uv/) and [pnpm](https://pnpm.io).
 
 ```bash
 ./dev/setup-environment        # generates your .env files
 
-# Backend → http://127.0.0.1:8000 (run from server/)
+# Backend at http://127.0.0.1:8000 (run from server/)
 docker compose up -d           # Postgres, Redis, Minio
 uv sync
 uv run task generate_dev_jwks
 uv run task emails
 uv run alembic upgrade head
 uv run task api                # the API
-uv run task worker             # background jobs (in a second terminal)
+uv run task worker             # background jobs (second terminal)
 
-# Frontend → http://127.0.0.1:3000 (run from clients/)
+# Frontend at http://127.0.0.1:3000 (run from clients/)
 pnpm install && pnpm dev
 ```
 
-Changed the API? Regenerate the typed client with `pnpm run generate` in
+After changing the API, regenerate the typed client with `pnpm run generate` in
 `clients/packages/client`.
 
 ## Configuration
 
-Promotions and analytics are wired up through `server/.env` — keep your secrets
-there and never commit it:
+Promotions and analytics are configured in `server/.env`. Keep secrets there and
+do not commit the file.
 
 ```bash
 # Promotions (external payment gateway)
@@ -90,9 +79,8 @@ OUTCEPTION_TINYBIRD_API_URL=""
 OUTCEPTION_TINYBIRD_API_TOKEN=""
 ```
 
-Leave them blank and everything still runs — the news wall works as usual,
-paid checkout simply stays switched off, and analytics fall back to plain
-Postgres counters.
+Leave them blank and the app still runs. The news wall works as usual, paid
+checkout stays off, and analytics fall back to Postgres counters.
 
 ## Developing
 
@@ -100,7 +88,7 @@ Postgres counters.
 # Backend (from server/)
 uv run task test                               # tests
 uv run task lint && uv run task lint_types     # ruff + mypy
-uv run alembic revision --autogenerate -m "…"  # new migration
+uv run alembic revision --autogenerate -m "..."  # new migration
 
 # Frontend
 cd clients/apps/web && pnpm typecheck          # web
@@ -109,9 +97,9 @@ cd clients/apps/app && pnpm typecheck          # mobile
 
 ## Contributing
 
-Issues and pull requests are welcome. If you're planning something bigger, open
-an issue first so we can talk it through.
+Issues and pull requests are welcome. For anything bigger, open an issue first so
+we can discuss it.
 
 ## License
 
-Released under the [Apache License 2.0](LICENSE).
+Apache License 2.0. See [LICENSE](LICENSE).
