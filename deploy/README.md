@@ -65,11 +65,18 @@ $EDITOR .env.prod          # fill EVERY blank — see checklist below
 ### Generate the secrets
 
 ```bash
-openssl rand -hex 32                       # OUTCEPTION_SECRET
-# OUTCEPTION_JWKS: generate a real JWKS (RS256). Locally, from server/:
-#   uv run task generate_dev_jwks   # then copy .jwks.json contents inline
-# (Use a freshly generated key for production, not the dev one.)
+# OUTCEPTION_SECRET — strong random value:
+openssl rand -hex 32
+
+# OUTCEPTION_JWKS — a JWKS *file* (RS256), mounted into the containers.
+# Generate one (from server/) and place it where compose expects it:
+cd server && uv run task generate_dev_jwks      # writes server/.jwks.json
+mkdir -p ../deploy/secrets && mv .jwks.json ../deploy/secrets/jwks.json
+# .env.prod already points OUTCEPTION_JWKS at /run/secrets/jwks.json and
+# CURRENT_JWK_KID at "outception_dev" (the kid the generator uses).
 ```
+
+`deploy/secrets/` is gitignored — the keypair never gets committed.
 
 ## 4. First boot
 

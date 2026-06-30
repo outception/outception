@@ -16,6 +16,13 @@ x-app-env: &app-env
   env_file:
     - .env.prod
 
+# Production JWKS keypair (RS256). Placed on the host at deploy/secrets/jwks.json
+# (gitignored, NOT committed) and mounted read-only. OUTCEPTION_JWKS in .env.prod
+# must point at /run/secrets/jwks.json.
+x-app-secrets: &app-secrets
+  volumes:
+    - ./secrets/jwks.json:/run/secrets/jwks.json:ro
+
 services:
   db:
     image: postgres:15.1-bullseye
@@ -51,7 +58,7 @@ services:
 
   # One-shot: run DB migrations before api/worker start, then exit 0.
   migrate:
-    <<: [*app-image, *app-env]
+    <<: [*app-image, *app-env, *app-secrets]
     command: ["uv", "run", "python", "-m", "scripts.db", "upgrade"]
     depends_on:
       db:
@@ -59,7 +66,7 @@ services:
     restart: "no"
 
   api:
-    <<: [*app-image, *app-env]
+    <<: [*app-image, *app-env, *app-secrets]
     # Dockerfile CMD already runs uvicorn on :10000; kept explicit here.
     command:
       - uv
@@ -99,7 +106,7 @@ services:
   # To scale workers, drop the `-f ...scheduler:start` here and run a separate
   # single-replica scheduler service instead.
   worker:
-    <<: [*app-image, *app-env]
+    <<: [*app-image, *app-env, *app-secrets]
     command:
       - uv
       - run
