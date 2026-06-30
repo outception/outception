@@ -33,7 +33,40 @@ export const palette = {
   indigoDark: '#1e1b4b',
 } as const
 
-export const colors = {
+// The semantic colour set. Light and dark provide the same keys with different
+// values, so component colour tokens stay valid in both themes.
+type ColorSet = {
+  'background-regular': string
+  'foreground-regular': string
+  background: string
+  text: string
+  subtext: string
+  primary: string
+  secondary: string
+  border: string
+  card: string
+  monochrome: string
+  monochromeInverted: string
+  error: string
+  errorSubtle: string
+  overlay: string
+  disabled: string
+  inputBackground: string
+  inputPlaceholder: string
+  statusGreen: string
+  statusGreenBg: string
+  statusYellow: string
+  statusYellowBg: string
+  statusRed: string
+  statusRedBg: string
+  statusBlue: string
+  statusBlueBg: string
+  statusGray: string
+  statusGrayBg: string
+}
+
+// Dark palette (the app's original look) — mirrors the web app's dark mode.
+export const darkColors: ColorSet = {
   'background-regular': palette.gray900,
   'foreground-regular': palette.pureWhite,
 
@@ -67,7 +100,46 @@ export const colors = {
   statusBlueBg: palette.indigoDark,
   statusGray: palette.gray100,
   statusGrayBg: palette.gray600,
-} as const
+}
+
+// Light palette — mirrors the web app's light mode (warm cream surfaces, dark
+// text, black primary buttons). Keys MUST stay identical to darkColors.
+export const lightColors: ColorSet = {
+  'background-regular': '#fdfaf4',
+  'foreground-regular': '#111111',
+
+  background: '#fdfaf4',
+  text: '#111111',
+  subtext: '#6c6e7f',
+  primary: palette.blue,
+  secondary: '#efe9de',
+  border: '#e6e0d4',
+  card: '#ffffff',
+  // Inverted vs dark so primary buttons read black-on-light (like web/dub).
+  monochrome: palette.pureWhite,
+  monochromeInverted: palette.pureBlack,
+  error: palette.red,
+  errorSubtle: '#fde8e8',
+
+  overlay: palette.blackOverlay,
+  disabled: '#00000014',
+  inputBackground: 'rgba(0, 0, 0, 0.04)',
+  inputPlaceholder: 'rgba(0, 0, 0, 0.4)',
+
+  statusGreen: palette.green,
+  statusGreenBg: '#dcfce7',
+  statusYellow: '#a16207',
+  statusYellowBg: '#fef9c3',
+  statusRed: palette.red,
+  statusRedBg: '#fee2e2',
+  statusBlue: palette.indigo,
+  statusBlueBg: '#e0e7ff',
+  statusGray: '#374151',
+  statusGrayBg: '#e5e7eb',
+}
+
+// `colors` stays the dark set so existing ColorToken typing is unchanged.
+export const colors = darkColors
 
 export const dimension = {
   'dimension-1': 1,
@@ -127,17 +199,21 @@ export const borderRadii = {
   'border-radius-full': 9999,
 } as const
 
-const theme = createTheme({
-  colors,
+const sharedTheme = {
   dimension,
   spacing,
   borderRadii,
   textVariants,
   buttonVariants,
-})
+}
 
-export type Theme = typeof theme
-export default theme
+export const darkTheme = createTheme({ colors: darkColors, ...sharedTheme })
+export const lightTheme = createTheme({ colors: lightColors, ...sharedTheme })
+
+export type Theme = typeof darkTheme
+// Default stays dark for any non-themed importer; the root layout picks light or
+// dark from the system setting via useColorScheme.
+export default darkTheme
 export type ColorToken = keyof typeof colors
 export type SpacingToken = keyof typeof spacing
 export type BorderRadiiToken = keyof typeof borderRadii

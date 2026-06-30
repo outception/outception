@@ -8,10 +8,15 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ compose?: string }>
+}) {
+  const { compose } = await searchParams
   return (
     <DashboardBody title={null}>
-      <PromotionsDashboard />
+      <PromotionsDashboard defaultCompose={compose === '1'} />
     </DashboardBody>
   )
 }

@@ -34,7 +34,9 @@ export const ParamField = ({
       borderColor="border-secondary"
     >
       <Box alignItems="baseline" columnGap="s" flexWrap="wrap">
-        {name ? <code className="font-mono text-sm font-medium">{name}</code> : null}
+        {name ? (
+          <code className="font-mono text-sm font-medium">{name}</code>
+        ) : null}
         {type ? (
           <Text variant="caption" color="muted">
             {type}
@@ -52,11 +54,10 @@ export const ParamField = ({
         ) : null}
       </Box>
       {children ? (
-        <Box
-          flexDirection="column"
-          className="[&>:first-child]:mt-0 [&>:last-child]:mb-0"
-        >
-          {children}
+        <Box flexDirection="column">
+          <div className="contents [&>:first-child]:mt-0 [&>:last-child]:mb-0">
+            {children}
+          </div>
         </Box>
       ) : null}
     </Box>

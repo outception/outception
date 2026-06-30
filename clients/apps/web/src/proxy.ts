@@ -12,6 +12,7 @@ const OUTCEPTION_AUTH_COOKIE_KEY =
 const AUTHENTICATED_ROUTES = [
   new RegExp('^/start(/.*)?$'),
   new RegExp('^/dashboard(/.*)?$'),
+  new RegExp('^/promote(/.*)?$'),
   new RegExp('^/settings(/.*)?$'),
   new RegExp('^/oauth2(/.*)?$'),
   new RegExp('^/to(/.*)?$'),
@@ -57,9 +58,9 @@ const getLoginResponse = (request: NextRequest): NextResponse => {
 }
 
 export async function proxy(request: NextRequest) {
-  // Do not run middleware for forwarded routes
-  // @pieterbeulque added this because the `config.matcher` behavior below
-  // doesn't appear to be working consistently with Vercel rewrites
+  // Do not run middleware for forwarded routes — the `config.matcher`
+  // behavior below doesn't appear to be working consistently with Vercel
+  // rewrites
   if (isForwardedRoute(request)) {
     return NextResponse.next()
   }

@@ -3,7 +3,6 @@ name: OpenAPI Client Regeneration Check
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-  merge_group:
 
 concurrency:
   group: openapi-generate-check-${{ github.event.pull_request.number || github.ref }}

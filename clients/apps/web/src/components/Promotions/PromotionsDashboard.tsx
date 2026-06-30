@@ -38,7 +38,11 @@ const statusColor = (status: string): 'green' | 'blue' | 'gray' | 'yellow' => {
 }
 
 /** Promoter-facing analytics + promotion list, scoped to the signed-in user. */
-export const PromotionsDashboard = () => {
+export const PromotionsDashboard = ({
+  defaultCompose = false,
+}: {
+  defaultCompose?: boolean
+}) => {
   const t = useT()
   const { data: analytics, isLoading: analyticsLoading } =
     usePromotionAnalytics(30)
@@ -59,7 +63,7 @@ export const PromotionsDashboard = () => {
           </Text>
           <Text color="muted">{t('promotions.dashboard.subtitle')}</Text>
         </Box>
-        <ComposePromotionDialog />
+        <ComposePromotionDialog defaultOpen={defaultCompose} />
       </Box>
 
       {analyticsLoading ? (

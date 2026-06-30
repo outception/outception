@@ -38,12 +38,20 @@ function MethodBadge({ method, path }: { method: string; path: string }) {
       >
         <code className="font-mono text-xs font-bold uppercase">{method}</code>
       </Box>
-      <code className="text-muted-foreground font-mono text-sm break-all">{path}</code>
+      <code className="text-muted-foreground font-mono text-sm break-all">
+        {path}
+      </code>
     </Box>
   )
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string
+  children: React.ReactNode
+}) {
   return (
     <Box flexDirection="column" rowGap="s" marginTop="xl">
       <Text variant="heading-xs" as="h2">
@@ -89,11 +97,11 @@ function ParamGroup({ title, params }: { title: string; params: ApiParam[] }) {
   if (params.length === 0) return null
   return (
     <Section title={title}>
-      <Box as="ul" flexDirection="column" className="list-none pl-0">
+      <ul className="flex list-none flex-col pl-0">
         {params.map((param) => (
           <ParamRow key={`${param.in}-${param.name}`} param={param} />
         ))}
-      </Box>
+      </ul>
     </Section>
   )
 }
@@ -170,16 +178,23 @@ export async function ApiReference({ operation }: { operation: string }) {
 
       {errors.length > 0 ? (
         <Section title="Errors">
-          <Box as="ul" flexDirection="column" rowGap="xs" className="list-none pl-0">
+          <ul className="flex list-none flex-col gap-1 pl-0">
             {errors.map((response) => (
-              <Box as="li" key={response.status} columnGap="s" alignItems="baseline">
-                <code className="font-mono text-sm font-medium">{response.status}</code>
+              <Box
+                as="li"
+                key={response.status}
+                columnGap="s"
+                alignItems="baseline"
+              >
+                <code className="font-mono text-sm font-medium">
+                  {response.status}
+                </code>
                 <Text variant="body" color="muted">
                   {response.description ?? ''}
                 </Text>
               </Box>
             ))}
-          </Box>
+          </ul>
         </Section>
       ) : null}
     </Box>

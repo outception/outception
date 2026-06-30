@@ -3,7 +3,7 @@ import { extractHeadings, readDoc } from '@/lib/docs/content'
 import { firstLeafUnder, getManifest } from '@/lib/docs/manifest'
 import { rehypePlugins, remarkPlugins } from '@/lib/docs/mdx-options'
 import type { DocSet } from '@/lib/docs/types'
-import { useMDXComponents } from '@/mdx-components'
+import { getMDXComponents } from '@/mdx-components'
 import { Text } from '@outception-com/orbit'
 import { Box } from '@outception-com/orbit/Box'
 import type { Metadata } from 'next'
@@ -43,11 +43,16 @@ export async function DocArticle({ set, slug }: DocArticleProps) {
   }
 
   const headings = extractHeadings(doc.content)
-  const components = useMDXComponents({})
+  const components = getMDXComponents({})
   const { title, description, openapi } = doc.frontmatter
 
   return (
-    <Box flexGrow={1} justifyContent="center" columnGap="2xl" paddingHorizontal="xl">
+    <Box
+      flexGrow={1}
+      justifyContent="center"
+      columnGap="2xl"
+      paddingHorizontal="xl"
+    >
       <Box
         as="article"
         flexDirection="column"

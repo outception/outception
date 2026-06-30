@@ -2,14 +2,14 @@
 * @outception/engineering
 
 # Backend
-server/** @frankie567 @outception/engineering
+server/** @outception/engineering
 
 # Infrastructure
-terraform/** @Yopi
-infra/** @Yopi
+terraform/** @outception/engineering
+infra/** @outception/engineering
 
 # Frontend
-clients/packages/orbit/** @emilwidlund @sebastianekstrom
+clients/packages/orbit/** @outception/engineering
 
 # Docs
-/docs/ @pieterbeulque
+/docs/ @outception/engineering

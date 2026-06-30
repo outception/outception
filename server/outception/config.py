@@ -1,4 +1,3 @@
-import functools
 import os
 import tempfile
 from datetime import timedelta
@@ -14,8 +13,6 @@ from pydantic import (
     PostgresDsn,
     model_validator,
 )
-from pydantic_ai.models import Model, infer_model, parse_model_id
-from pydantic_ai.providers.gateway import gateway_provider
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from outception.enums import EmailSender
@@ -60,11 +57,9 @@ INSECURE_DEFAULT_SECRET = "super secret jwt secret"
 class Settings(BaseSettings):
     ENV: Environment = Environment.development
     SQLALCHEMY_DEBUG: bool = False
-    POSTHOG_DEBUG: bool = False
-    LOG_LEVEL: str = "DEBUG"
+    LOG_LEVEL: str = "INFO"
     TESTING: bool = False
 
-    WORKER_HEALTH_CHECK_INTERVAL: timedelta = timedelta(seconds=30)
     WORKER_MAX_RETRIES: int = 20
     WORKER_MIN_BACKOFF_MILLISECONDS: int = 2_000
     WORKER_PROMETHEUS_DIR: Path = Path(tempfile.gettempdir()) / "prometheus_multiproc"
@@ -77,15 +72,6 @@ class Settings(BaseSettings):
     GRAFANA_CLOUD_PROMETHEUS_QUERY_URL: str | None = None
     GRAFANA_CLOUD_PROMETHEUS_QUERY_USER: str | None = None
     GRAFANA_CLOUD_PROMETHEUS_QUERY_KEY: str | None = None
-
-    # SLO Report
-    SLO_REPORT_ENABLED: bool = True
-
-    WEBHOOK_MAX_RETRIES: int = 10
-    WEBHOOK_FIFO_GUARD_DELAY_MS: int = 300  # p95 is 236ms
-    WEBHOOK_FIFO_GUARD_MAX_AGE: timedelta = timedelta(minutes=1)
-    WEBHOOK_EVENT_RETENTION_PERIOD: timedelta = timedelta(days=90)
-    WEBHOOK_FAILURE_THRESHOLD: int = 10
 
     WORKER_DEFAULT_DEBOUNCE_MIN_THRESHOLD: timedelta = timedelta(seconds=15)
     WORKER_DEFAULT_DEBOUNCE_MAX_THRESHOLD: timedelta = timedelta(minutes=15)
@@ -155,10 +141,6 @@ class Settings(BaseSettings):
 
     # Customer session
 
-    # Impersonation session
-    IMPERSONATION_COOKIE_KEY: str = "outception_original_session"
-    IMPERSONATION_INDICATOR_COOKIE_KEY: str = "outception_is_impersonating"
-
     # Email verification
     EMAIL_VERIFICATION_TTL_SECONDS: int = 60 * 30  # 30 minutes
 
@@ -197,7 +179,6 @@ class Settings(BaseSettings):
     EMAIL_SENDER: EmailSender = EmailSender.logger
     RESEND_API_KEY: str = ""
     RESEND_API_BASE_URL: str = "https://api.resend.com"
-    RESEND_WEBHOOK_SECRET: str = ""
     EMAIL_FROM_NAME: str = "Outception"
     EMAIL_FROM_DOMAIN: str = "notifications.outception.com"
     EMAIL_FROM_LOCAL: str = "mail"
@@ -220,13 +201,9 @@ class Settings(BaseSettings):
 
     # Pydantic AI Gateway
     PYDANTIC_AI_GATEWAY_API_KEY: str = "DummyKey"
-    PYDANTIC_AI_GATEWAY_MODEL: str = "openai:gpt-5.5"
 
     # Sentry
     SENTRY_DSN: str | None = None
-
-    # Posthog
-    POSTHOG_PROJECT_API_KEY: str = ""
 
     # Tinybird
     TINYBIRD_API_URL: str = "http://localhost:7181"
@@ -239,23 +216,6 @@ class Settings(BaseSettings):
     TINYBIRD_BRANCH: str | None = None
     # Logo.dev (for company logo avatars)
     LOGO_DEV_PUBLISHABLE_KEY: str | None = None
-    PERSONAL_EMAIL_DOMAINS: set[str] = {
-        "gmail.com",
-        "yahoo.com",
-        "hotmail.com",
-        "outlook.com",
-        "aol.com",
-        "icloud.com",
-        "mail.com",
-        "protonmail.com",
-        "proton.me",
-        "zoho.com",
-        "gmx.com",
-        "yandex.com",
-        "msn.com",
-        "live.com",
-        "qq.com",
-    }
 
     # Memory Profiling
     MEMORY_PROFILE_ENABLED: bool = False
@@ -448,23 +408,6 @@ class Settings(BaseSettings):
     @property
     def frontend_hostname(self) -> str:
         return urlparse(self.FRONTEND_BASE_URL).hostname or "outception.com"
-
-    def get_pydantic_gateway_model(
-        self, model: str | None = None
-    ) -> tuple[Model, str, str]:
-        model = model or settings.PYDANTIC_AI_GATEWAY_MODEL
-        model_provider, model_name = parse_model_id(model)
-        assert model_provider is not None
-        return (
-            infer_model(
-                model,
-                provider_factory=functools.partial(
-                    gateway_provider, api_key=self.PYDANTIC_AI_GATEWAY_API_KEY
-                ),
-            ),
-            model_provider,
-            model_name,
-        )
 
 
 settings = Settings()

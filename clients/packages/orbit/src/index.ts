@@ -59,14 +59,6 @@ export { Truncated } from './components/Truncated'
 export type { Props as TruncatedProps } from './components/Truncated'
 
 // ─── Tokens ───────────────────────────────────────────────────────────────────
-export { animationDelays, animations } from './tokens/animations'
-export type {
-  AnimationDelay,
-  AnimationEasing,
-  AnimationName,
-  AnimationProperties,
-  AnimationToken,
-} from './tokens/animations'
 export type { DurationToken, EasingToken } from './tokens/tokens.stylex'
 export type { TransitionProperty } from './utils/types'
 

@@ -18,7 +18,7 @@
       "dark": "#131316"
     }
   },
-  "favicon": "/logo/top-spin.webp",
+  "favicon": "/logo.svg",
   "integrations": {
     "ga4": {
       "measurementId": "G-MBYW1QZFHE"
@@ -137,8 +137,8 @@
     ]
   },
   "logo": {
-    "light": "/logo/top-spin.webp",
-    "dark": "/logo/top-spin.webp",
+    "light": "/logo.svg",
+    "dark": "/logo.svg",
     "href": "https://outception.com"
   },
   "navbar": {
@@ -168,7 +168,7 @@
     "socials": {
       "x": "https://x.com/outception_sh",
       "github": "https://github.com/outception/outception",
-      "discord": "https://dub.sh/outception-discord"
+      "discord": "https://discord.gg/jZVk5aeMV"
     }
   },
   "redirects": [

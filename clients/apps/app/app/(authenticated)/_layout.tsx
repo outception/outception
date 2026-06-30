@@ -5,12 +5,16 @@ import DeepLinkProvider from '@/providers/DeepLinkProvider'
 import { useSession } from '@/providers/SessionProvider'
 import { ToastProvider } from '@/providers/ToastProvider'
 import { UserProvider } from '@/providers/UserProvider'
-import { DarkTheme, ThemeProvider } from '@react-navigation/native'
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from '@react-navigation/native'
 import { useQueryClient } from '@tanstack/react-query'
 import { Redirect, Stack, useRouter } from 'expo-router'
 import { PropsWithChildren } from 'react'
 import { ErrorBoundary as ErrorBoundaryComponent } from 'react-error-boundary'
-import { StatusBar } from 'react-native'
+import { StatusBar, useColorScheme } from 'react-native'
 
 const AuthenticatedErrorBoundary = ({ children }: PropsWithChildren) => {
   const queryClient = useQueryClient()
@@ -34,6 +38,7 @@ const AuthenticatedErrorBoundary = ({ children }: PropsWithChildren) => {
 const RootLayout = () => {
   const theme = useTheme()
   const { session } = useSession()
+  const scheme = useColorScheme()
 
   useAppOpenTracking()
 
@@ -43,7 +48,9 @@ const RootLayout = () => {
 
   return (
     <>
-      <StatusBar barStyle="light-content" />
+      <StatusBar
+        barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'}
+      />
       <Stack
         screenOptions={{
           headerStyle: {
@@ -62,8 +69,9 @@ const RootLayout = () => {
 }
 
 export default function Providers() {
+  const scheme = useColorScheme()
   return (
-    <ThemeProvider value={DarkTheme}>
+    <ThemeProvider value={scheme === 'dark' ? DarkTheme : DefaultTheme}>
       <DeepLinkProvider>
         <AuthenticatedErrorBoundary>
           <UserProvider>

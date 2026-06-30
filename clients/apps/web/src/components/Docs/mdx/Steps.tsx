@@ -35,14 +35,15 @@ export const Step = ({
       flexGrow={1}
       minWidth={0}
       paddingBottom="m"
-      className="[&>:first-child]:mt-0 [&>:last-child]:mb-0"
     >
-      {title ? (
-        <Text variant="heading-xs" as="h3">
-          {title}
-        </Text>
-      ) : null}
-      {children}
+      <div className="contents [&>:first-child]:mt-0 [&>:last-child]:mb-0">
+        {title ? (
+          <Text variant="heading-xs" as="h3">
+            {title}
+          </Text>
+        ) : null}
+        {children}
+      </div>
     </Box>
   </Box>
 )
@@ -50,12 +51,7 @@ export const Step = ({
 export const Steps = ({ children }: { children?: ReactNode }) => {
   const steps = Children.toArray(children).filter(isValidElement)
   return (
-    <Box
-      as="ol"
-      flexDirection="column"
-      marginVertical="l"
-      className="list-none pl-0"
-    >
+    <ol className="my-4 flex list-none flex-col pl-0">
       {steps.map((step, index) => (
         <Step
           key={step.key ?? index}
@@ -63,6 +59,6 @@ export const Steps = ({ children }: { children?: ReactNode }) => {
           {...(step.props as { title?: string; children?: ReactNode })}
         />
       ))}
-    </Box>
+    </ol>
   )
 }

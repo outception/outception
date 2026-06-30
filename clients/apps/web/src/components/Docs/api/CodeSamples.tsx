@@ -53,11 +53,12 @@ export function CodeSamples({ samples }: { samples: RenderedSample[] }) {
               cursor="pointer"
               borderBottomWidth={2}
               borderStyle="solid"
-              borderColor={index === active ? 'border-primary' : 'border-secondary'}
+              borderColor={
+                index === active ? 'border-primary' : 'border-secondary'
+              }
               color={index === active ? 'text-primary' : 'text-secondary'}
-              className="text-sm whitespace-nowrap"
             >
-              {sample.label}
+              <span className="text-sm whitespace-nowrap">{sample.label}</span>
             </Box>
           ))}
         </Box>
@@ -75,11 +76,12 @@ export function CodeSamples({ samples }: { samples: RenderedSample[] }) {
           {copied ? <Check size={16} /> : <Copy size={16} />}
         </Box>
       </Box>
-      <Box
-        overflowX="auto"
-        className="[&>pre]:my-0 [&>pre]:rounded-none [&>pre]:border-none [&>pre]:p-4"
-        dangerouslySetInnerHTML={{ __html: current.html }}
-      />
+      <div className="[&_pre]:my-0 [&_pre]:rounded-none [&_pre]:border-none [&_pre]:p-4">
+        <Box
+          overflowX="auto"
+          dangerouslySetInnerHTML={{ __html: current.html }}
+        />
+      </div>
     </Box>
   )
 }

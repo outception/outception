@@ -34,16 +34,6 @@ export const createClientSideAPI = (token?: string): Client => {
 
 export const api = createClientSideAPI()
 
-export const getSSRHeaders = (): Record<string, string> => {
-  const headers: Record<string, string> = { ...CLIENT_VERSION_HEADERS }
-
-  if (process.env.OUTCEPTION_PREVIEW_ACCESS_TOKEN) {
-    headers['X-Preview-Token'] = process.env.OUTCEPTION_PREVIEW_ACCESS_TOKEN
-  }
-
-  return headers
-}
-
 export const createServerSideAPI = async (
   headers: NextRequest['headers'],
   cookies: ReadonlyRequestCookies,

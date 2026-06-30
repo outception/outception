@@ -63,7 +63,9 @@ const curlSample = (op: ApiOperation): string => {
 
 const tsSample = (op: ApiOperation): string => {
   const init: string[] = [`  method: '${op.method.toUpperCase()}',`]
-  const headers = [`    Authorization: \`Bearer \${process.env.OUTCEPTION_TOKEN}\`,`]
+  const headers = [
+    `    Authorization: \`Bearer \${process.env.OUTCEPTION_TOKEN}\`,`,
+  ]
   if (hasJsonBody(op)) headers.push(`    'Content-Type': 'application/json',`)
   init.push(`  headers: {\n${headers.join('\n')}\n  },`)
   if (hasJsonBody(op)) {
@@ -88,7 +90,9 @@ const pySample = (op: ApiOperation): string => {
     `headers = {"Authorization": f"Bearer {os.environ['OUTCEPTION_TOKEN']}"}`,
   ]
   if (hasJsonBody(op)) {
-    lines.push(`payload = ${bodyJson(op).replace(/true/g, 'True').replace(/false/g, 'False')}`)
+    lines.push(
+      `payload = ${bodyJson(op).replace(/true/g, 'True').replace(/false/g, 'False')}`,
+    )
   }
   lines.push(
     ``,

@@ -10,9 +10,12 @@ import remarkGfm from 'remark-gfm'
 // so the tabbed <CodeGroup> can label each snippet.
 const codeTitleTransformer = {
   name: 'docs:code-title',
-  pre(this: { options: { meta?: { __raw?: string } } }, node: {
-    properties: Record<string, unknown>
-  }) {
+  pre(
+    this: { options: { meta?: { __raw?: string } } },
+    node: {
+      properties: Record<string, unknown>
+    },
+  ) {
     const raw = this.options.meta?.__raw?.trim()
     if (raw) node.properties['data-code-title'] = raw
   },

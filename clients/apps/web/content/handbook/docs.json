@@ -1,10 +1,10 @@
 {
   "theme": "maple",
   "name": "Outception Handbook",
-  "favicon": "/images/favicon.png",
+  "favicon": "/logo.svg",
   "logo": {
-    "light": "/images/light.png",
-    "dark": "/images/dark.png"
+    "light": "/logo.svg",
+    "dark": "/logo.svg"
   },
   "appearance": {
     "default": "system"

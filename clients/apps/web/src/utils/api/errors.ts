@@ -1,4 +1,3 @@
-import { useToast } from '@/components/Toast/use-toast'
 import { schemas } from '@outception-com/client'
 import { FieldPath, FieldValues, UseFormSetError } from 'react-hook-form'
 
@@ -93,21 +92,6 @@ export const extractApiErrorMessage = (
   return fallback
 }
 
-export const apiErrorToast = (
-  error:
-    | schemas['HTTPValidationError']
-    | schemas['ResourceNotFound']
-    | schemas['NotPermitted'],
-  toast: ReturnType<typeof useToast>['toast'],
-  options: Parameters<ReturnType<typeof useToast>['toast']>[0] = {},
-): void => {
-  toast({
-    title: 'Error',
-    description: extractApiErrorMessage(error),
-    ...options,
-  })
-}
-
 /**
  * Recursively searches a react-hook-form FieldErrors object for the first
  * error message string. Handles nested fields like `prices.0.price_amount`.
@@ -129,20 +113,3 @@ export const findFirstErrorMessage = (
   }
   return undefined
 }
-
-export const normalizeValidationErrors = (
-  errors: schemas['ValidationError'][],
-): schemas['ValidationError'][] =>
-  errors.map((error) => ({
-    ...error,
-    loc: error.loc.map((segment) => {
-      const s = String(segment)
-      if (s.startsWith('function-after[') || s.startsWith('function-before[')) {
-        const lastComma = s.lastIndexOf(',')
-        if (lastComma !== -1) {
-          return s.slice(lastComma + 1, -1).trim()
-        }
-      }
-      return segment
-    }),
-  }))

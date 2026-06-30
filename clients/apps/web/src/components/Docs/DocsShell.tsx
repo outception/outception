@@ -14,7 +14,11 @@ export function DocsShell({
   children,
 }: PropsWithChildren<{ manifest: DocsManifest }>) {
   return (
-    <Box flexDirection="column" minHeight="100vh" backgroundColor="background-primary">
+    <Box
+      flexDirection="column"
+      minHeight="100vh"
+      backgroundColor="background-primary"
+    >
       <Box
         as="header"
         position="sticky"

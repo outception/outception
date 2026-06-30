@@ -23,13 +23,10 @@ export const Accordion = ({
         />
         {title}
       </summary>
-      <Box
-        paddingHorizontal="l"
-        paddingBottom="m"
-        flexDirection="column"
-        className="[&>:first-child]:mt-0 [&>:last-child]:mb-0"
-      >
-        {children}
+      <Box paddingHorizontal="l" paddingBottom="m" flexDirection="column">
+        <div className="contents [&>:first-child]:mt-0 [&>:last-child]:mb-0">
+          {children}
+        </div>
       </Box>
     </details>
   </Box>

@@ -56,7 +56,13 @@ const queryIndex = (index: DocsIndex, query: string): SearchEntry[] => {
   return results
 }
 
-export function DocsSearch({ set, basePath }: { set: string; basePath: string }) {
+export function DocsSearch({
+  set,
+  basePath,
+}: {
+  set: string
+  basePath: string
+}) {
   void set
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -116,25 +122,24 @@ export function DocsSearch({ set, basePath }: { set: string; basePath: string })
         borderWidth={1}
         borderStyle="solid"
         borderColor="border-primary"
-        backgroundColor={{ base: 'background-secondary', hover: 'background-card' }}
+        backgroundColor={{
+          base: 'background-secondary',
+          hover: 'background-card',
+        }}
         color="text-secondary"
         cursor="pointer"
-        className="text-sm"
       >
         <Search size={16} />
-        <Box flexGrow={1}>Search…</Box>
+        <Box flexGrow={1}>
+          <span className="text-sm">Search…</span>
+        </Box>
         <kbd className="text-xs opacity-60">⌘K</kbd>
       </Box>
 
       {open ? (
-        <Box
-          position="fixed"
-          inset={0}
-          zIndex={50}
-          justifyContent="center"
-          paddingTop="5xl"
+        <div
+          className="fixed inset-0 z-50 flex justify-center bg-black/40 pt-24"
           onClick={() => setOpen(false)}
-          className="bg-black/40"
         >
           <Box
             flexDirection="column"
@@ -202,7 +207,7 @@ export function DocsSearch({ set, basePath }: { set: string; basePath: string })
               ) : null}
             </Box>
           </Box>
-        </Box>
+        </div>
       ) : null}
     </>
   )

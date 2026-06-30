@@ -195,11 +195,13 @@ const ComposePromotionForm = ({ hide }: { hide: () => void }) => {
  * standard "Promote" button. */
 export const ComposePromotionDialog = ({
   trigger,
+  defaultOpen = false,
 }: {
   trigger?: (open: () => void) => React.ReactNode
+  defaultOpen?: boolean
 }) => {
   const t = useT()
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(defaultOpen)
   return (
     <>
       {trigger ? (

@@ -12,8 +12,6 @@ from outception.oauth2.exceptions import InsufficientScopeError
 from outception.organization.schemas import OrganizationID
 from outception.postgres import AsyncSession, get_db_session
 
-from .policies import members
-from .policies import organization as org_policy
 from .service import get_accessible_organization
 from .types import PolicyFn
 
@@ -91,89 +89,8 @@ def OrgPolicyGuard(
     return dependency
 
 
-AuthorizeMembersRead = Annotated[
-    AuthzContext[User | Organization],
-    Depends(
-        OrgPolicyGuard(
-            members.can_read,
-            required_scopes={
-                Scope.organizations_read,
-                Scope.organizations_write,
-            },
-        )
-    ),
-]
-# Both `AuthorizeMembersManage` and `AuthorizeMembersSetRole` enforce the
-# same `members:manage` policy; they differ only by the OAuth scope they
-# accept. `members:manage` covers invite/remove (general member admin);
-# `members:set_role` is a separate scope for the narrower role-change
-# action so callers can opt into the lesser privilege.
-AuthorizeMembersManage = Annotated[
-    AuthzContext[User],
-    Depends(
-        OrgPolicyGuard(
-            members.can_manage,
-            allowed_subjects={User},
-            required_scopes={Scope.organizations_write},
-        )
-    ),
-]
-AuthorizeMembersSetRole = Annotated[
-    AuthzContext[User],
-    Depends(
-        OrgPolicyGuard(
-            members.can_manage,
-            allowed_subjects={User},
-            required_scopes={Scope.members_write},
-        )
-    ),
-]
-AuthorizeOrgManage = Annotated[
-    AuthzContext[User | Organization],
-    Depends(
-        OrgPolicyGuard(
-            org_policy.can_manage,
-            required_scopes={Scope.organizations_write},
-        )
-    ),
-]
-# Read-only counterpart to `AuthorizeOrgManage`: same `can_manage` policy
-# (so the endpoint is still gated to org admins) but accepts either the
-# read or write scope, so read-only sessions (e.g. backoffice impersonation)
-# can hit GET endpoints that expose admin-only data.
-AuthorizeOrgManageRead = Annotated[
-    AuthzContext[User | Organization],
-    Depends(
-        OrgPolicyGuard(
-            org_policy.can_manage,
-            required_scopes={
-                Scope.organizations_read,
-                Scope.organizations_write,
-            },
-        )
-    ),
-]
-AuthorizeOrgManageUser = Annotated[
-    AuthzContext[User],
-    Depends(
-        OrgPolicyGuard(
-            org_policy.can_manage,
-            allowed_subjects={User},
-            required_scopes={Scope.organizations_write},
-        )
-    ),
-]
 AuthorizeOrgAccess = Annotated[
     AuthzContext[User | Organization], Depends(OrgPolicyGuard())
-]
-AuthorizeOrgAccessUser = Annotated[
-    AuthzContext[User],
-    Depends(
-        OrgPolicyGuard(
-            allowed_subjects={User},
-            required_scopes={Scope.organizations_write},
-        )
-    ),
 ]
 
 
@@ -229,15 +146,6 @@ AuthorizeWebUserWrite = Annotated[
 
 # ``Authorize{User}{Read,Write}`` — any User subject (web, PAT, OAuth2) +
 # scope check. Use these only for endpoints that need to accept API tokens.
-AuthorizeUserRead = Annotated[
-    AuthSubject[User],
-    Depends(
-        Authenticator(
-            allowed_subjects={User},
-            required_scopes={Scope.user_read, Scope.user_write},
-        )
-    ),
-]
 AuthorizeUserWrite = Annotated[
     AuthSubject[User],
     Depends(

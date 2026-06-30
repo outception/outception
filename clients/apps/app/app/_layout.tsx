@@ -1,5 +1,6 @@
+import { SpectraBackground } from '@/components/Layout/SpectraBackground'
 import { Box } from '@/components/Shared/Box'
-import theme from '@/design-system/theme'
+import { darkTheme, lightTheme } from '@/design-system/theme'
 import { OutceptionClientProvider } from '@/providers/OutceptionClientProvider'
 import { OutceptionQueryClientProvider } from '@/providers/OutceptionQueryClientProvider'
 import { SessionProvider } from '@/providers/SessionProvider'
@@ -13,6 +14,7 @@ import { onlineManager } from '@tanstack/react-query'
 import { Slot } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
 import React, { useCallback } from 'react'
+import { useColorScheme } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 
@@ -69,6 +71,10 @@ export default Sentry.wrap(function RootLayout() {
     InstrumentSerif_400Regular,
   })
 
+  // Follow the device's system setting (light/dark). Falls back to light.
+  const scheme = useColorScheme()
+  const theme = scheme === 'dark' ? darkTheme : lightTheme
+
   const onLayoutRootView = useCallback(() => {
     if (fontsLoaded) {
       // This tells the splash screen to hide immediately! If we call this after
@@ -96,6 +102,7 @@ export default Sentry.wrap(function RootLayout() {
                   backgroundColor="background"
                   onLayout={onLayoutRootView}
                 >
+                  <SpectraBackground />
                   <Slot />
                 </Box>
               </OutceptionQueryClientProvider>

@@ -121,7 +121,8 @@ class EmailOTPFactor(EmailOTPFactorBase):
         )
 
         if (
-            email_otp.email == settings.APP_REVIEW_EMAIL
+            not settings.is_production()
+            and email_otp.email == settings.APP_REVIEW_EMAIL
             and settings.APP_REVIEW_OTP_CODE is not None
         ):
             log.info("App review login, hard-coding OTP code")

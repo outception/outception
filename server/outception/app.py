@@ -61,7 +61,6 @@ from outception.postgres import (
     create_async_read_engine,
     create_sync_engine,
 )
-from outception.posthog import configure_posthog
 from outception.redis import Redis, create_redis
 from outception.sentry import configure_sentry
 from outception.version import CURRENT_API_VERSION, APIVersionMiddleware
@@ -228,8 +227,6 @@ def create_app() -> FastAPI:
 configure_sentry()
 configure_logfire("server")
 configure_logging(logfire=True)
-configure_posthog()
-
 app = create_app()
 instrument_fastapi(app)
 instrument_httpx()

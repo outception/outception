@@ -3,17 +3,21 @@ import { Box } from '@/components/Shared/Box'
 import { Text } from '@/components/Shared/Text'
 import { Touchable } from '@/components/Shared/Touchable'
 import { useSession } from '@/providers/SessionProvider'
+import { openPromoteOnWeb } from '@/utils/promote'
 import { useRouter } from 'expo-router'
-import { StatusBar } from 'react-native'
+import { StatusBar, useColorScheme } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function Home() {
   const { session } = useSession()
   const router = useRouter()
+  const scheme = useColorScheme()
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar
+        barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'}
+      />
       <Box
         flexDirection="row"
         alignItems="center"
@@ -52,7 +56,9 @@ export default function Home() {
             </>
           ) : null}
           <Touchable
-            onPress={() => router.push(session ? '/promote' : '/login')}
+            onPress={() =>
+              session ? openPromoteOnWeb() : router.push('/login')
+            }
           >
             <Box
               paddingVertical="spacing-8"

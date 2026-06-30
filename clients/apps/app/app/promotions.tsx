@@ -6,7 +6,8 @@ import { Text } from '@/components/Shared/Text'
 import { useTheme } from '@/design-system/useTheme'
 import { topicLabel, useMyPromotions } from '@/hooks/outception/promotions'
 import { useSession } from '@/providers/SessionProvider'
-import { Redirect, useRouter } from 'expo-router'
+import { openPromoteOnWeb } from '@/utils/promote'
+import { Redirect } from 'expo-router'
 import { ActivityIndicator, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -21,7 +22,6 @@ const statusColor = (status: string): PillColor => {
 
 export default function Promotions() {
   const theme = useTheme()
-  const router = useRouter()
   const { session } = useSession()
   const { data: promotions, isLoading } = useMyPromotions(!!session)
 
@@ -43,7 +43,7 @@ export default function Promotions() {
           justifyContent="space-between"
         >
           <Text variant="titleLarge">Promotions</Text>
-          <Button size="small" onPress={() => router.push('/promote')}>
+          <Button size="small" onPress={openPromoteOnWeb}>
             New
           </Button>
         </Box>

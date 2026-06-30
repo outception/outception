@@ -3,6 +3,9 @@ import outceptionPlugin from './eslint-rules/index.mjs'
 
 /** @type {import("eslint").Linter.Config} */
 export default [
+  {
+    ignores: ['shiki.config.mjs', 'shiki.config.d.ts'],
+  },
   ...nextJsConfig,
   {
     plugins: {

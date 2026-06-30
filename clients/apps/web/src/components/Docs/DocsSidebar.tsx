@@ -9,16 +9,21 @@ import { usePathname } from 'next/navigation'
 function NavTree({ nodes, depth = 0 }: { nodes: NavNode[]; depth?: number }) {
   const pathname = usePathname()
   return (
-    <Box as="ul" flexDirection="column" rowGap="xs" className="list-none pl-0">
+    <ul className="flex list-none flex-col gap-1 pl-0">
       {nodes.map((node, index) => {
         if (node.kind === 'group') {
           return (
-            <Box as="li" key={`${node.title}-${index}`} flexDirection="column" rowGap="xs">
-              <Box className="uppercase tracking-wide">
+            <Box
+              as="li"
+              key={`${node.title}-${index}`}
+              flexDirection="column"
+              rowGap="xs"
+            >
+              <div className="tracking-wide uppercase">
                 <Text variant="caption" color="muted">
                   {node.title}
                 </Text>
-              </Box>
+              </div>
               <NavTree nodes={node.items} depth={depth + 1} />
             </Box>
           )
@@ -34,7 +39,10 @@ function NavTree({ nodes, depth = 0 }: { nodes: NavNode[]; depth?: number }) {
                 backgroundColor={
                   active
                     ? 'background-secondary'
-                    : { base: 'background-primary', hover: 'background-secondary' }
+                    : {
+                        base: 'background-primary',
+                        hover: 'background-secondary',
+                      }
                 }
                 color={active ? 'text-primary' : 'text-secondary'}
               >
@@ -46,7 +54,7 @@ function NavTree({ nodes, depth = 0 }: { nodes: NavNode[]; depth?: number }) {
           </Box>
         )
       })}
-    </Box>
+    </ul>
   )
 }
 

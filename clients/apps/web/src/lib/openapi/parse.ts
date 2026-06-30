@@ -24,7 +24,10 @@ interface RawOperation {
   }
   responses?: Record<
     string,
-    { description?: string; content?: Record<string, { schema?: SchemaObject }> }
+    {
+      description?: string
+      content?: Record<string, { schema?: SchemaObject }>
+    }
   >
 }
 

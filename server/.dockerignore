@@ -9,5 +9,5 @@ tests/
 emails/node_modules/
 
 .env*
-.jkws.json
+.jwks.json
 .DS_Store

@@ -80,7 +80,7 @@ export function SchemaProperties({
   if (!target?.properties) return null
   const required = new Set(target.required ?? [])
   return (
-    <Box as="ul" flexDirection="column" className="list-none pl-0">
+    <ul className="flex list-none flex-col pl-0">
       {Object.entries(target.properties).map(([name, prop]) => (
         <PropertyRow
           key={name}
@@ -90,6 +90,6 @@ export function SchemaProperties({
           depth={depth}
         />
       ))}
-    </Box>
+    </ul>
   )
 }

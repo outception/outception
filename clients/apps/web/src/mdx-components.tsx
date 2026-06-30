@@ -14,7 +14,7 @@ interface ImportedImageSrc {
   blurHeight: number
 }
 
-export function useMDXComponents(components: MDXComponents): MDXComponents {
+export function getMDXComponents(components: MDXComponents): MDXComponents {
   return {
     ...components,
     ...docsMdxComponents,
@@ -78,4 +78,8 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       return <StaticImage {...props} className={className} />
     },
   }
+}
+
+export function useMDXComponents(components: MDXComponents): MDXComponents {
+  return getMDXComponents(components)
 }

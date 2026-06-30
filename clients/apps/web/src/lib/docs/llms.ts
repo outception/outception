@@ -15,7 +15,9 @@ export async function buildLlmsTxt(set: DocSet): Promise<string> {
   for (const leaf of leaves) {
     const doc = await readDoc(set, leaf.slug)
     const summary = doc?.frontmatter.description
-    lines.push(`- [${leaf.title}](${absolute(leaf.href)})${summary ? `: ${summary}` : ''}`)
+    lines.push(
+      `- [${leaf.title}](${absolute(leaf.href)})${summary ? `: ${summary}` : ''}`,
+    )
   }
   return `${lines.join('\n')}\n`
 }

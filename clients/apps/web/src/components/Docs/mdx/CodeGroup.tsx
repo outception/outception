@@ -15,7 +15,9 @@ const labelFor = (el: ReactElement, index: number): string => {
 }
 
 export const CodeGroup = ({ children }: { children?: ReactNode }) => {
-  const tabs = Children.toArray(children).filter(isValidElement) as ReactElement[]
+  const tabs = Children.toArray(children).filter(
+    isValidElement,
+  ) as ReactElement[]
   const [active, setActive] = useState(0)
 
   if (tabs.length === 0) return null
@@ -49,20 +51,22 @@ export const CodeGroup = ({ children }: { children?: ReactNode }) => {
             cursor="pointer"
             borderBottomWidth={2}
             borderStyle="solid"
-            borderColor={index === active ? 'border-primary' : 'border-secondary'}
+            borderColor={
+              index === active ? 'border-primary' : 'border-secondary'
+            }
             color={index === active ? 'text-primary' : 'text-secondary'}
             onClick={() => setActive(index)}
-            className="text-sm whitespace-nowrap"
           >
-            {labelFor(tab, index)}
+            <span className="text-sm whitespace-nowrap">
+              {labelFor(tab, index)}
+            </span>
           </Box>
         ))}
       </Box>
-      <Box
-        padding="s"
-        className="[&>pre]:my-0 [&>pre]:border-none [&>pre]:rounded-none"
-      >
-        {tabs[active]}
+      <Box padding="s">
+        <div className="contents [&>pre]:my-0 [&>pre]:rounded-none [&>pre]:border-none">
+          {tabs[active]}
+        </div>
       </Box>
     </Box>
   )

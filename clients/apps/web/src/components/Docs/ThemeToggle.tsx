@@ -8,6 +8,9 @@ import { useEffect, useState } from 'react'
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  // next-themes hydration guard: the resolved theme is only known on the client,
+  // so we flip `mounted` once after mount to avoid a server/client icon mismatch.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setMounted(true), [])
 
   const isDark = resolvedTheme === 'dark'

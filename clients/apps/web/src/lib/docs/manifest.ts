@@ -51,10 +51,7 @@ const titleize = (slugTail: string): string =>
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ')
 
-const buildLeaf = async (
-  set: DocSet,
-  pagePath: string,
-): Promise<NavNode> => {
+const buildLeaf = async (set: DocSet, pagePath: string): Promise<NavNode> => {
   const slug = pagePath.split('/')
   const frontmatter = await readFrontmatter(set, slug)
   let title = frontmatter?.sidebarTitle ?? frontmatter?.title
@@ -72,15 +69,10 @@ const buildLeaf = async (
   }
 }
 
-const buildPages = async (
-  set: DocSet,
-  pages: RawPage[],
-): Promise<NavNode[]> =>
+const buildPages = async (set: DocSet, pages: RawPage[]): Promise<NavNode[]> =>
   Promise.all(
     pages.map((page) =>
-      typeof page === 'string'
-        ? buildLeaf(set, page)
-        : buildGroup(set, page),
+      typeof page === 'string' ? buildLeaf(set, page) : buildGroup(set, page),
     ),
   )
 
@@ -132,7 +124,10 @@ export function firstLeafUnder(
   slug: string[],
 ): string | null {
   const prefix = `${manifest.basePath}/${slug.join('/')}/`
-  return flattenLeaves(manifest).find((leaf) => leaf.href.startsWith(prefix))?.href ?? null
+  return (
+    flattenLeaves(manifest).find((leaf) => leaf.href.startsWith(prefix))
+      ?.href ?? null
+  )
 }
 
 /** Flattened, in-order list of every leaf across all tabs. */

@@ -64,8 +64,10 @@ const Callout = ({
       <Box color={accent} paddingTop="xs" flexShrink={0}>
         <Icon size={18} aria-hidden />
       </Box>
-      <Box flexDirection="column" minWidth={0} className="[&>:first-child]:mt-0 [&>:last-child]:mb-0">
-        {children}
+      <Box flexDirection="column" minWidth={0}>
+        <div className="contents [&>:first-child]:mt-0 [&>:last-child]:mb-0">
+          {children}
+        </div>
       </Box>
     </Box>
   )
