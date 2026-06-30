@@ -1,4 +1,5 @@
 /* global process */
+import path from 'node:path'
 import createMDX from '@next/mdx'
 import { withSentryConfig } from '@sentry/nextjs'
 import { themeConfig } from './shiki.config.mjs'
@@ -57,6 +58,13 @@ const oauth2CSP = `
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Emit a self-contained server bundle (.next/standalone) so the app can be
+  // run as a plain Node server (node server.js) in a container, instead of on
+  // Vercel. See the production web Dockerfile.
+  output: 'standalone',
+  // The monorepo root is two levels up; tracing from there bundles the
+  // workspace deps the standalone server needs.
+  outputFileTracingRoot: path.join(import.meta.dirname, '../../'),
   allowedDevOrigins: ['127.0.0.1'],
   reactStrictMode: true,
   transpilePackages: ['shiki', '@outception-com/orbit'],

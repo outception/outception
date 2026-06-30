@@ -1,0 +1,21 @@
+# Reverse proxy + automatic TLS (Let's Encrypt via Cloudflare DNS-01).
+# Domains and the Cloudflare token come from the environment (see .env.prod).
+#
+# Cloudflare SSL/TLS mode for these hostnames should be "Full (strict)".
+
+{
+	# Global: use the Cloudflare DNS challenge for all sites.
+	acme_dns cloudflare {$CF_API_TOKEN}
+}
+
+# Public web app
+{$WEB_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy web:3000
+}
+
+# Backend API
+{$API_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy api:10000
+}

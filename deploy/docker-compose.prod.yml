@@ -1,0 +1,163 @@
+name: outception
+
+# Run with:
+#   docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
+# The --env-file flag is REQUIRED: it feeds ${...} interpolation below
+# (db credentials, domains, image tag). Each app service ALSO loads .env.prod
+# via env_file: so the OUTCEPTION_* settings reach the running process.
+
+x-app-image: &app-image
+  image: ghcr.io/outception/outception:${IMAGE_TAG:-latest}
+  build:
+    context: ../server
+    target: production
+
+x-app-env: &app-env
+  env_file:
+    - .env.prod
+
+services:
+  db:
+    image: postgres:15.1-bullseye
+    command: ["postgres", "-c", "max_locks_per_transaction=256"]
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${OUTCEPTION_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${OUTCEPTION_POSTGRES_PWD}
+      - POSTGRES_DB=${OUTCEPTION_POSTGRES_DATABASE}
+      - OUTCEPTION_READ_USER=${OUTCEPTION_POSTGRES_READ_USER:-outception_read}
+      - OUTCEPTION_READ_PASSWORD=${OUTCEPTION_POSTGRES_READ_PWD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+      - ../server/init-readonly-user.sql:/docker-entrypoint-initdb.d/init-readonly-user.sql:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-q", "-d", "${OUTCEPTION_POSTGRES_DATABASE}", "-U", "${OUTCEPTION_POSTGRES_USER}"]
+      interval: 5s
+      timeout: 40s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    # noeviction: the dramatiq broker must never drop queued jobs.
+    command: ["redis-server", "--maxmemory-policy", "noeviction", "--save", "60", "1"]
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+
+  # One-shot: run DB migrations before api/worker start, then exit 0.
+  migrate:
+    <<: [*app-image, *app-env]
+    command: ["uv", "run", "python", "-m", "scripts.db", "upgrade"]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    <<: [*app-image, *app-env]
+    # Dockerfile CMD already runs uvicorn on :10000; kept explicit here.
+    command:
+      - uv
+      - run
+      - uvicorn
+      - outception.app:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "10000"
+      - --limit-max-requests
+      - "50000"
+      - --limit-max-requests-jitter
+      - "10000"
+      - --timeout-graceful-shutdown
+      - "30"
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    expose:
+      - "10000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:10000/healthz').status==200 else 1)"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # Single worker WITH the scheduler embedded (-f ...scheduler:start) so cron
+  # actors (promotion.sweep, auth/oauth2 tasks) fire exactly once.
+  # IMPORTANT: do not scale this to >1 replica, or cron jobs double-fire.
+  # To scale workers, drop the `-f ...scheduler:start` here and run a separate
+  # single-replica scheduler service instead.
+  worker:
+    <<: [*app-image, *app-env]
+    command:
+      - uv
+      - run
+      - dramatiq
+      - -p
+      - "2"
+      - -t
+      - "8"
+      - -f
+      - outception.worker.scheduler:start
+      - outception.worker.run
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    image: ghcr.io/outception/outception-web:${IMAGE_TAG:-latest}
+    build:
+      context: ../clients
+      dockerfile: ../deploy/web.Dockerfile
+      args:
+        # NEXT_PUBLIC_* must be present at BUILD time (baked into the bundle).
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_FRONTEND_BASE_URL: ${NEXT_PUBLIC_FRONTEND_BASE_URL}
+        NEXT_PUBLIC_ENVIRONMENT: ${NEXT_PUBLIC_ENVIRONMENT:-production}
+    env_file:
+      - .env.prod
+    restart: unless-stopped
+    depends_on:
+      - api
+    expose:
+      - "3000"
+
+  caddy:
+    build:
+      context: .
+      dockerfile: caddy.Dockerfile
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - WEB_DOMAIN=${WEB_DOMAIN}
+      - API_DOMAIN=${API_DOMAIN}
+      - CF_API_TOKEN=${CF_API_TOKEN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+      - api
+
+volumes:
+  postgres_data:
+  redis_data:
+  caddy_data:
+  caddy_config:
