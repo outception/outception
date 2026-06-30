@@ -12,9 +12,12 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends python3 build-essential \
   && rm -rf /var/lib/apt/lists/* \
   && corepack enable
+# CI mode: pnpm never tries to interactively reconcile/remove node_modules.
+ENV CI=true
 WORKDIR /app
 
 # Copy the whole workspace (turbo prunes/builds only what web needs).
+# Host node_modules / build output are excluded via clients/.dockerignore.
 COPY . .
 
 RUN pnpm install --frozen-lockfile
