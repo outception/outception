@@ -32,9 +32,7 @@ from outception.worker._queue_metrics import collect_queue_metrics
 log = structlog.get_logger()
 
 _INSTANCE_ID = (
-    os.environ.get("RENDER_INSTANCE_ID")
-    or os.environ.get("HOSTNAME")
-    or socket.gethostname()
+    os.environ.get("INSTANCE_ID") or os.environ.get("HOSTNAME") or socket.gethostname()
 )
 
 _pusher_thread: threading.Thread | None = None

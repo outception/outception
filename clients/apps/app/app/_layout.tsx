@@ -19,7 +19,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 Sentry.init({
-  dsn: 'https://3119a20edbb1d03021076301c21ea658@o4505046560538624.ingest.us.sentry.io/4510311296073728',
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
 
   enabled: !__DEV__,
 

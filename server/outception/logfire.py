@@ -144,14 +144,12 @@ class PidSpanProcessor(SpanProcessor):
 
 
 def configure_logfire(service_name: Literal["server", "worker"]) -> None:
-    resolved_service_name = os.environ.get(
-        "SERVICE_NAME", os.environ.get("RENDER_SERVICE_NAME", service_name)
-    )
+    resolved_service_name = os.environ.get("SERVICE_NAME", service_name)
 
-    render_instance_id = os.environ.get("RENDER_INSTANCE_ID")
-    if render_instance_id:
+    instance_id = os.environ.get("INSTANCE_ID") or os.environ.get("HOSTNAME")
+    if instance_id:
         existing = os.environ.get("OTEL_RESOURCE_ATTRIBUTES", "")
-        attr = f"service.instance.id={render_instance_id}"
+        attr = f"service.instance.id={instance_id}"
         os.environ["OTEL_RESOURCE_ATTRIBUTES"] = (
             f"{existing},{attr}" if existing else attr
         )

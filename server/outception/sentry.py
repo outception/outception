@@ -53,7 +53,9 @@ def configure_sentry() -> None:
         traces_sample_rate=None,  # `0` still opts in to trace continuation
         profiles_sample_rate=None,
         release=os.environ.get("RELEASE_VERSION", "development"),
-        server_name=os.environ.get("RENDER_INSTANCE_ID", "localhost"),
+        server_name=os.environ.get(
+            "INSTANCE_ID", os.environ.get("HOSTNAME", "localhost")
+        ),
         environment=settings.ENV,
         default_integrations=False,
         auto_enabling_integrations=False,

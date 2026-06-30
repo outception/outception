@@ -16,11 +16,9 @@ from outception.kit.utils import utc_now
 log = structlog.get_logger()
 
 _INSTANCE_ID = (
-    os.environ.get("RENDER_INSTANCE_ID")
-    or os.environ.get("HOSTNAME")
-    or socket.gethostname()
+    os.environ.get("INSTANCE_ID") or os.environ.get("HOSTNAME") or socket.gethostname()
 )
-_GIT_SHA = os.environ.get("RENDER_GIT_COMMIT", "unknown")[:8]
+_GIT_SHA = os.environ.get("GIT_SHA", "unknown")[:8]
 
 _profiler_thread: threading.Thread | None = None
 _shutdown_event: threading.Event | None = None
