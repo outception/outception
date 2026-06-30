@@ -225,7 +225,7 @@ const nextConfig = {
       },
 
       // Legacy documentation redirects (migrated from the former Mintlify
-      // docs.json). Stale Polar-era SDK/adapter targets that don't exist in
+      // docs.json). Stale, unmaintained SDK/adapter targets that don't exist in
       // this docs set were dropped; the rest map to real pages under /docs.
       { source: '/api', destination: '/docs/api-reference', permanent: true },
       { source: '/api/:path*', destination: '/docs/api-reference', permanent: true },

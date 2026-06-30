@@ -41,7 +41,7 @@ class BillingService:
         webhook can activate exactly that promotion.
 
         Per-block pricing (``amount_cents`` = blocks × price) is honoured by
-        passing ``amount`` to the polar.sh checkout; PROMOTION_PRODUCT_ID must be
+        passing ``amount`` to the payment-gateway checkout; PROMOTION_PRODUCT_ID must be
         a pay-what-you-want product for the amount to apply."""
         user = auth_subject.subject
         return await payment_gateway_client.create_checkout(

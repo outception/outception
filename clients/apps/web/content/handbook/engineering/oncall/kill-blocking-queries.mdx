@@ -59,6 +59,6 @@ This releases all locks held by that session, allowing the blocked operation to 
 
 Common reasons a session holds locks for too long:
 
-- **Transaction open across external I/O** — e.g. a worker that queries the DB and then makes a slow HTTP call (Expo push, polar.sh, etc.) while still inside the same database transaction. The transaction never commits until the HTTP call returns.
+- **Transaction open across external I/O** — e.g. a worker that queries the DB and then makes a slow HTTP call (Expo push, the payment gateway, etc.) while still inside the same database transaction. The transaction never commits until the HTTP call returns.
 - **Missing `lock_timeout` on DDL migrations** — without a timeout, a `DROP TABLE` or `ALTER TABLE` will queue indefinitely behind hot-table readers, and while queued it also blocks new readers.
 - **No `idle_in_transaction_session_timeout`** — connections left idle inside a transaction are never auto-killed by the DB.

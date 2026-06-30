@@ -16,7 +16,7 @@ class PaymentGatewayClient:
         amount: int | None = None,
         metadata: dict[str, str] | None = None,
     ) -> str:
-        """Create a polar.sh hosted checkout and return its URL. ``amount`` (in
+        """Create a hosted checkout and return its URL. ``amount`` (in
         cents) sets the price for a pay-what-you-want product, which is how we
         honour per-block promotion pricing. ``metadata`` round-trips context
         back on the order webhook."""

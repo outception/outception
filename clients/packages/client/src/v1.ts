@@ -3138,7 +3138,7 @@ export interface components {
     }
     /**
      * PromotionAnalytics
-     * @description Promotion analytics for the repurposed dashboard: KPI totals plus a daily
+     * @description Promotion analytics dashboard: KPI totals plus a daily
      *     spend series. Scoped to the requesting user's own promotions.
      */
     PromotionAnalytics: {

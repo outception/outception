@@ -7433,7 +7433,7 @@
           "periods"
         ],
         "title": "PromotionAnalytics",
-        "description": "Promotion analytics for the repurposed dashboard: KPI totals plus a daily\nspend series. Scoped to the requesting user's own promotions."
+        "description": "Promotion analytics dashboard: KPI totals plus a daily\nspend series. Scoped to the requesting user's own promotions."
       },
       "PromotionAnalyticsPeriod": {
         "properties": {

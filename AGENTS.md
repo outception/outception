@@ -1,9 +1,8 @@
 # Outception
 
 A live news wall with pay-to-promote. Public news feed (250+ sources) plus login-gated paid
-promotions charged through polar.sh as an external merchant. Monorepo with a Python/FastAPI
-backend (package `outception`) and Next.js + Expo frontends. Forked from Polar; the Merchant-of-Record
-stack was removed and its auth/payments/analytics repurposed for promotions.
+promotions charged through an external payment provider. Monorepo with a Python/FastAPI
+backend (package `outception`) and Next.js + Expo frontends.
 
 This file is the entry point for AI agents working in this repo: start here, then read the
 per-area `AGENTS.md` linked from the Architecture and Conventions sections before writing code.
@@ -30,7 +29,7 @@ outception/
 │   │   ├── models/             # SQLAlchemy models (global, not per-module)
 │   │   ├── news/               # Public news aggregation (sources, cache, fetch)
 │   │   ├── promotion/          # Pay-to-promote: queue, lifecycle, analytics, events
-│   │   └── billing/            # polar.sh hosted checkout + signed webhook
+│   │   └── billing/            # external payment gateway checkout + signed webhook
 │   └── migrations/             # Alembic database migrations
 ├── clients/                # Turborepo + pnpm frontend — see clients/AGENTS.md
 │   ├── apps/web/               # Next.js dashboard
@@ -131,7 +130,7 @@ Docs are self-hosted inside the Next.js web app (no Mintlify). MDX content lives
 
 ## Key Integrations
 
-- **polar.sh**: external merchant for promotion payments (hosted checkout + signed webhook). Needs
+- **External payment gateway**: handles promotion payments (hosted checkout + signed webhook). Needs
   product id + access token + webhook secret in `server/.env`.
 - **Tinybird** (optional): promotion event ingestion + analytics pipe. Falls back to Postgres.
 - **GitHub / Google / Apple**: OAuth2 authentication.

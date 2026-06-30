@@ -20,7 +20,7 @@ flowchart TD
     subgraph "Frontend"
         WEB["Web client"]
     end
-    POLAR_WH["polar.sh Webhooks"]
+    GATEWAY_WH["Payment Gateway Webhooks"]
     USERS["Users"]
 
     WEB --> API
@@ -31,7 +31,7 @@ flowchart TD
     API --> S3
     WEB --> S3
 
-    POLAR_WH -.-> API
+    GATEWAY_WH -.-> API
     USERS -.-> API
     USERS -.-> WEB
 ```

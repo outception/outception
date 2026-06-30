@@ -17,9 +17,8 @@ from .sorting import OrganizationSortProperty
 class OrganizationService:
     """Core organization service.
 
-    The Merchant-of-Record surface (accounts, payouts, products, customers,
-    reviews, billing) was removed with the MoR teardown. This keeps the
-    membership/identity operations the dashboard and auth flows need.
+    Handles the membership/identity operations the dashboard and auth flows
+    need.
     """
 
     async def list(

@@ -20,14 +20,14 @@ prefix (e.g. the setting `SECRET` → env var `OUTCEPTION_SECRET`).
 
 Run migrations before first boot: `cd server && uv run alembic upgrade head`.
 
-## 2. Promotions — polar.sh payment gateway (`server/.env`)
+## 2. Promotions — external payment gateway (`server/.env`)
 
 Promotion checkout is disabled until these are set (the create endpoint returns 503):
 
 | Env var | Notes |
 | --- | --- |
-| `OUTCEPTION_PROMOTION_PRODUCT_ID` | A **pay-what-you-want** product on your polar.sh org. |
-| `OUTCEPTION_PAYMENT_GATEWAY_ACCESS_TOKEN` | polar.sh API token. |
+| `OUTCEPTION_PROMOTION_PRODUCT_ID` | A **pay-what-you-want** product on your payment-gateway org. |
+| `OUTCEPTION_PAYMENT_GATEWAY_ACCESS_TOKEN` | Payment-gateway API token. |
 | `OUTCEPTION_PAYMENT_GATEWAY_WEBHOOK_SECRET` | Standard-Webhooks secret for the order webhook. |
 | `OUTCEPTION_PAYMENT_GATEWAY_BASE_URL` | Defaults to `https://api.polar.sh`. |
 
@@ -35,7 +35,7 @@ Pricing/duration knobs (optional): `OUTCEPTION_PROMOTION_PRICE_CENTS` (default 1
 `OUTCEPTION_PROMOTION_BLOCK_MINUTES` (default 10), `OUTCEPTION_PROMOTION_IMPRESSION_DEDUP_SECONDS`
 (default 600).
 
-> ✅ **Underpayment check — confirmed against polar.sh's Order shape.** The order webhook
+> ✅ **Underpayment check — confirmed against the payment gateway's Order shape.** The order webhook
 > refuses to activate a promotion that paid less than `promotion.amount_cents`. outception.com's
 > Order carries `subtotal_amount` / `discount_amount` / `tax_amount` / `total_amount`
 > (the gross charged) / `net_amount` (after Outception's fee). The check reads `total_amount`

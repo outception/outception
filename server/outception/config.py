@@ -100,8 +100,8 @@ class Settings(BaseSettings):
     FRONTEND_BASE_URL: str = "http://127.0.0.1:3000"
     FRONTEND_DEFAULT_RETURN_PATH: str = "/"
 
-    # Promotions: pay-to-post featured slots, charged through polar.sh as an
-    # external payment gateway. A category's featured slot costs
+    # Promotions: pay-to-post featured slots, charged through an external
+    # payment gateway. A category's featured slot costs
     # PROMOTION_PRICE_CENTS per PROMOTION_BLOCK_MINUTES, buyable in multiples.
     # Empty PROMOTION_PRODUCT_ID disables checkout (the news wall still works).
     PROMOTION_PRODUCT_ID: str = ""
@@ -111,7 +111,7 @@ class Settings(BaseSettings):
     # within this window, so the news wall's background polling can't inflate
     # the count. 0 disables dedup.
     PROMOTION_IMPRESSION_DEDUP_SECONDS: int = 600
-    # External payment gateway (polar.sh hosted checkout + Standard Webhooks).
+    # External payment gateway (hosted checkout + Standard Webhooks).
     PAYMENT_GATEWAY_BASE_URL: str = "https://api.polar.sh"
     PAYMENT_GATEWAY_ACCESS_TOKEN: str = ""
     PAYMENT_GATEWAY_WEBHOOK_SECRET: str = ""

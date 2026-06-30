@@ -123,7 +123,7 @@ class PromotionAnalyticsPeriod(BaseModel):
 
 
 class PromotionAnalytics(BaseModel):
-    """Promotion analytics for the repurposed dashboard: KPI totals plus a daily
+    """Promotion analytics dashboard: KPI totals plus a daily
     spend series. Scoped to the requesting user's own promotions."""
 
     total_promotions: int
