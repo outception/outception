@@ -14,7 +14,9 @@ def get_client(
 ) -> "S3Client":
     return boto3.client(
         "s3",
-        endpoint_url=settings.S3_ENDPOINT_URL,
+        # Empty string makes botocore raise "Invalid endpoint"; treat a
+        # blank/unset value as "use the provider default" (real AWS).
+        endpoint_url=settings.S3_ENDPOINT_URL or None,
         aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
         aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
         config=Config(
