@@ -21,6 +21,10 @@ import {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  // Let the page (and its fixed SpectraBackground) extend under the iOS status
+  // bar / home indicator, so there's no separate band there. Content is kept
+  // clear of the notch via env(safe-area-inset-*) padding in the layout.
+  viewportFit: 'cover',
   // Tint the mobile browser chrome (iOS status bar, Safari toolbar) to match
   // the page's base colour so the top/bottom don't read as a separate band.
   // Values mirror the `body` background in globals.css.
