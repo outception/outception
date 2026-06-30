@@ -25,7 +25,7 @@ from outception.routing import APIRouter
 from . import auth as news_auth
 from . import cache, follows, registry, search
 from .fetch import NewsFetchError, fetch_text, parse_rss
-from .metadata import SOURCES
+from .metadata import SOURCES, SourceInfo
 from .schemas import (
     BatchRequest,
     FollowedSources,
@@ -39,6 +39,29 @@ from .sources.reddit import REDDIT_SUBS
 log = structlog.get_logger()
 
 router = APIRouter(prefix="/news", tags=["news"])
+
+# Default deck order: lead with mainstream/global news and sports the way a
+# news front page does, and push tech/social/niche columns lower. Sources keep
+# their registration order within a column (stable sort).
+_COLUMN_ORDER = {
+    "news": 0,
+    "world": 1,
+    "sports": 2,
+    "finance": 3,
+    "science": 4,
+    "entertainment": 5,
+    "tech": 6,
+    "social": 7,
+    "betting": 8,
+}
+
+
+def _ordered_sources() -> list[tuple[str, SourceInfo]]:
+    return sorted(
+        SOURCES.items(),
+        key=lambda kv: _COLUMN_ORDER.get(kv[1].get("column", ""), len(_COLUMN_ORDER)),
+    )
+
 
 # Cap concurrent outbound fetches so a cold-cache batch doesn't open a
 # connection per source at once.
@@ -70,7 +93,7 @@ async def list_sources() -> list[SourceMeta]:
                 },
             }
         )
-        for source_id, meta in SOURCES.items()
+        for source_id, meta in _ordered_sources()
     ]
 
 

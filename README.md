@@ -7,7 +7,7 @@ your post at the top of a topic.
 
 Two things in one app:
 
-- **News wall.** An open, no-login feed of headlines from 800+ sources (Hacker
+- **News wall.** An open, no-login feed of headlines from 2,500+ sources (Hacker
   News, Reddit, mainstream news, tech, finance, sports, science, gaming, and
   more), laid out in topic columns.
 - **Pay-to-promote.** Sign in, pick a topic, and buy its featured slot for a set
