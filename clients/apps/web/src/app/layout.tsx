@@ -24,9 +24,11 @@ export const viewport: Viewport = {
   // Tint the mobile browser chrome (iOS status bar, Safari toolbar) to match
   // the page's base colour so the top/bottom don't read as a separate band.
   // Values mirror the `body` background in globals.css.
+  // Match the SpectraBackground gradient the user actually sees (light cream /
+  // near-black), not the base colour underneath it.
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#e9dcbf' },
-    { media: '(prefers-color-scheme: dark)', color: '#211a12' },
+    { media: '(prefers-color-scheme: light)', color: '#fdf4ec' },
+    { media: '(prefers-color-scheme: dark)', color: '#0e0e0e' },
   ],
 }
 

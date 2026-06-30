@@ -1163,15 +1163,6 @@ SOURCES: dict[str, SourceInfo] = {
         "title": "World",
         "interval": 900000,
     },
-    "seattletimes": {
-        "name": "Seattle Times",
-        "color": "blue",
-        "column": "news",
-        "type": "realtime",
-        "home": "https://www.seattletimes.com",
-        "title": "Seattle",
-        "interval": 900000,
-    },
     "premiumtimes": {
         "name": "Premium Times",
         "color": "green",
@@ -1546,14 +1537,6 @@ SOURCES: dict[str, SourceInfo] = {
         "interval": 900000,
     },
     # Politics (column: news)
-    "politico": {
-        "name": "Politico",
-        "color": "red",
-        "column": "news",
-        "type": "realtime",
-        "home": "https://www.politico.com",
-        "interval": 900000,
-    },
     "thehill": {
         "name": "The Hill",
         "color": "blue",
@@ -11603,14 +11586,6 @@ SOURCES.update(
             "column": "news",
             "type": "realtime",
             "home": "https://bostonglobe.com",
-            "interval": 900000,
-        },
-        "seattletimes2": {
-            "name": "Seattle Times",
-            "color": "slate",
-            "column": "news",
-            "type": "realtime",
-            "home": "https://seattletimes.com",
             "interval": 900000,
         },
         "startribune": {

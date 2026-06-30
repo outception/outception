@@ -29,7 +29,6 @@ _FEEDS: list[tuple[str, str]] = [
     ("billboard", "https://www.billboard.com/feed/"),
     ("hollywoodreporter", "https://www.hollywoodreporter.com/feed/"),
     # Politics
-    ("politico", "https://rss.politico.com/politics-news.xml"),
     ("thehill", "https://thehill.com/news/feed/"),
     # Science
     ("sciencedaily", "https://www.sciencedaily.com/rss/all.xml"),
@@ -371,7 +370,6 @@ _FEEDS: list[tuple[str, str]] = [
     ("menshealth", "https://www.menshealth.com/rss/all.xml/"),
     ("sportskeeda", "https://www.sportskeeda.com/feed"),
     # News — regional & international (batch L)
-    ("seattletimes", "https://www.seattletimes.com/feed/"),
     ("premiumtimes", "https://www.premiumtimesng.com/feed"),
     ("mailguardian", "https://mg.co.za/feed/"),
     # Aviation & Maritime (column: entertainment/finance, batch L)
@@ -564,7 +562,6 @@ _FEEDS: list[tuple[str, str]] = [
     ("freepressjournal", "https://www.freepressjournal.in/stories.rss"),
     ("nytimes_us", "https://rss.nytimes.com/services/xml/rss/nyt/US.xml"),
     ("bostonglobe", "https://www.bostonglobe.com/rss/bigpicture"),
-    ("seattletimes2", "https://www.seattletimes.com/feed/"),
     ("startribune", "https://www.startribune.com/rss/"),
     ("oregonlive", "https://www.oregonlive.com/arc/outboundfeeds/rss/"),
     ("g1globo2", "https://g1.globo.com/rss/g1/economia/"),
