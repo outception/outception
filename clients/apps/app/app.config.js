@@ -62,7 +62,10 @@ module.exports = {
       },
       package: 'com.outception.Outception',
       scheme: 'outception',
-      googleServicesFile: './google-services.json',
+      // Not committed (gitignored). Supply via the GOOGLE_SERVICES_JSON EAS
+      // secret in CI; falls back to the local file for dev builds.
+      googleServicesFile:
+        process.env.GOOGLE_SERVICES_JSON || './google-services.json',
       intentFilters: [
         {
           action: 'VIEW',
