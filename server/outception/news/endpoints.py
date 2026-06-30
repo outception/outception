@@ -56,9 +56,53 @@ _COLUMN_ORDER = {
 }
 
 
+# Sources confirmed to consistently fail (dead feeds, paywalls, or upstreams
+# that block/timeout this server). Hidden from the wall so no broken cards show.
+DISABLED_SOURCES: frozenset[str] = frozenset(
+    {
+        "9to5linux",
+        "actucameroun",
+        "arabnews",
+        "bangkokpost",
+        "bostonglobe",
+        "cbssports",
+        "cnbc",
+        "destructoid",
+        "dotesports",
+        "fxstreet",
+        "gothamist",
+        "guardianng",
+        "herald_zw",
+        "hypebeast",
+        "jamaicaobserver",
+        "jeuneafrique",
+        "kotaku",
+        "mailguardian",
+        "politico",
+        "rte_ie",
+        "seattletimes",
+        "seattletimes2",
+        "siliconera",
+        "sportskeeda",
+        "terra_br",
+        "theatlantic",
+        "thedefiant",
+        "theinformation",
+        "timesofisrael",
+        "tmz",
+        "tvn24",
+        "ukroads",
+    }
+)
+
+
 def _ordered_sources() -> list[tuple[str, SourceInfo]]:
     return sorted(
-        SOURCES.items(),
+        (
+            (sid, meta)
+            for sid, meta in SOURCES.items()
+            if sid not in DISABLED_SOURCES
+        ),
         key=lambda kv: _COLUMN_ORDER.get(kv[1].get("column", ""), len(_COLUMN_ORDER)),
     )
 
