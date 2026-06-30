@@ -338,8 +338,8 @@ Apple Pay and Google Pay require HTTPS to work. To test these payment methods lo
     Add `https://*.ngrok-free.dev` to the `connect-src` CSP directive:
 
     ```diff
-    -    connect-src 'self' ${process.env.NEXT_PUBLIC_API_URL} ... https://prod-uk-services-attachm-attachmentsuploadbucket2-1l2e4906o2asm.s3.eu-west-2.amazonaws.com;
-    +    connect-src 'self' ${process.env.NEXT_PUBLIC_API_URL} ... https://prod-uk-services-attachm-attachmentsuploadbucket2-1l2e4906o2asm.s3.eu-west-2.amazonaws.com https://*.ngrok-free.dev;
+    -    connect-src 'self' ${process.env.NEXT_PUBLIC_API_URL} ${process.env.S3_UPLOAD_ORIGINS} https://maps.googleapis.com https://*.google-analytics.com;
+    +    connect-src 'self' ${process.env.NEXT_PUBLIC_API_URL} ${process.env.S3_UPLOAD_ORIGINS} https://maps.googleapis.com https://*.google-analytics.com https://*.ngrok-free.dev;
     ```
 
     Add an API proxy rewrite in the `rewrites` function:
