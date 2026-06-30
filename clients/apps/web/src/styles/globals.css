@@ -276,15 +276,15 @@
 
   body {
     color: var(--foreground);
-    /* Vintage-western parchment base — warm aged paper, like an old WANTED
-       poster. The drifting amber/sepia colour comes from <SpectraBackground>,
-       which sits fixed at -z-10 over this; this is just the flash-free base. */
-    background-color: #e9dcbf;
+    /* Flash-free base under <SpectraBackground>. Matched to the cream the
+       Spectra gradient resolves to (and the theme-color meta) so the iOS
+       safe-area strips behind the status bar / toolbar match the page instead
+       of showing a darker beige band. */
+    background-color: #fdf4ec;
   }
 
   .dark body {
-    /* Dark tanned-leather base — the night-time western counterpart. */
-    background-color: #211a12;
+    background-color: #0e0e0e;
   }
 
   /* Paper grain: a fixed full-bleed fractal-noise tooth over everything (below
