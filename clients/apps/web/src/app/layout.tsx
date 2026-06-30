@@ -21,6 +21,13 @@ import {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  // Tint the mobile browser chrome (iOS status bar, Safari toolbar) to match
+  // the page's base colour so the top/bottom don't read as a separate band.
+  // Values mirror the `body` background in globals.css.
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#e9dcbf' },
+    { media: '(prefers-color-scheme: dark)', color: '#211a12' },
+  ],
 }
 
 export default async function RootLayout({
