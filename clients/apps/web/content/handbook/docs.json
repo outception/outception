@@ -29,16 +29,6 @@
         "pages": ["company/about-outception"]
       },
       {
-        "group": "Working at Outception",
-        "pages": [
-          "working-at-outception/introduction",
-          "working-at-outception/onboarding",
-          "working-at-outception/how-we-work",
-          "working-at-outception/project-management-workflow",
-          "working-at-outception/recruitment-process"
-        ]
-      },
-      {
         "group": "Design",
         "pages": [
           "design/introduction",
