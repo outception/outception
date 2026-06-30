@@ -6,7 +6,8 @@ import { themeConfig } from './shiki.config.mjs'
 
 const PREVIEW_BUILD = process.env.OUTCEPTION_PREVIEW_BUILD === '1'
 
-// Vercel preview: compute basePath and API URL from PR number + Tailscale hostname
+// Optional PR-preview builds: derive basePath + API URL from the PR number.
+// Inert in production (no-op unless the preview env vars below are set).
 let previewBasePath = ''
 if (
   process.env.VERCEL_GIT_PULL_REQUEST_ID &&

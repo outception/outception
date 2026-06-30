@@ -22,12 +22,12 @@ First, fix the issue causing the failure. Then, follow this procedure to trigger
 
 ## Procedure
 
-### Step 1: SSH into Render Service
+### Step 1: SSH into the application host
 
-Connect to the main application service via SSH:
+Connect to the host running the API/worker containers via SSH:
 
 ```bash
-ssh srv-d089jj7diees73934ka0@ssh.ohio.render.com
+ssh <user>@<app-host>
 ```
 
 ### Step 2: Navigate to Application Directory
@@ -69,7 +69,7 @@ Monitor the output for any errors or failed deliveries.
 
 ## Verification
 
-After triggering webhooks, verify that https://worker-dramatiq.onrender.com/webhooks is returning status "ok".
+After triggering webhooks, verify that the worker's `/webhooks` health endpoint is returning status "ok".
 
 ## Post-Procedure
 
@@ -90,4 +90,4 @@ After triggering webhooks, verify that https://worker-dramatiq.onrender.com/webh
 
 ## Related Documentation
 
-- [Render SSH Access](https://docs.render.com/ssh-access)
+- [Deploying on Hetzner + Cloudflare + R2](https://github.com/outception/outception/blob/main/deploy/README.md)

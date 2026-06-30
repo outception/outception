@@ -55,8 +55,7 @@
           {
             "group": "Guides",
             "pages": [
-              "engineering/guides",
-              "engineering/guides/cycle-admin"
+              "engineering/guides"
             ]
           },
           {
@@ -82,9 +81,7 @@
             "group": "On-Call Procedures",
             "pages": [
               "engineering/oncall/introduction",
-              "engineering/oncall/deploy-infra",
-              "engineering/oncall/trigger-webhooks",
-              "engineering/oncall/run-one-off-jobs"
+              "engineering/oncall/trigger-webhooks"
             ]
           }
         ]
