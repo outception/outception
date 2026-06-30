@@ -198,15 +198,11 @@
     },
     {
       "source": "/docs/support",
-      "destination": "/suppport"
+      "destination": "/support"
     },
     {
       "source": "/documentation/welcome-to-outception",
       "destination": "/introduction"
-    },
-    {
-      "source": "/documentation/tools/outception-migrate",
-      "destination": "/migrate"
     },
     {
       "source": "/documentation/tools/outception-init",
@@ -222,63 +218,11 @@
     },
     {
       "source": "/documentation/integration-guides/webhooks",
-      "destination": "/integrate/webhooks/intro"
+      "destination": "/integrate/webhooks/endpoints"
     },
     {
       "source": "/documentation/integration-guides/authenticating-with-outception",
       "destination": "/integrate/authentication"
-    },
-    {
-      "source": "/documentation/sdks/typescript-sdk",
-      "destination": "/integrate/sdk/typescript"
-    },
-    {
-      "source": "/documentation/sdks/python-sdk",
-      "destination": "/integrate/sdk/python"
-    },
-    {
-      "source": "/documentation/sdks/php-sdk",
-      "destination": "/integrate/sdk/php"
-    },
-    {
-      "source": "/documentation/sdks/go-sdk",
-      "destination": "/integrate/sdk/go"
-    },
-    {
-      "source": "/documentation/adapters/outception-comnextjs",
-      "destination": "/integrate/sdk/adapters/nextjs"
-    },
-    {
-      "source": "/documentation/adapters/outception-comastro",
-      "destination": "/integrate/sdk/adapters/astro"
-    },
-    {
-      "source": "/documentation/adapters/outception-comremix",
-      "destination": "/integrate/sdk/adapters/remix"
-    },
-    {
-      "source": "/documentation/adapters/outception-comsveltekit",
-      "destination": "/integrate/sdk/adapters/sveltekit"
-    },
-    {
-      "source": "/documentation/adapters/outception-comdeno",
-      "destination": "/integrate/sdk/adapters/deno"
-    },
-    {
-      "source": "/documentation/adapters/outception-comelysia",
-      "destination": "/integrate/sdk/adapters/elysia"
-    },
-    {
-      "source": "/documentation/adapters/outception-comexpress",
-      "destination": "/integrate/sdk/adapters/express"
-    },
-    {
-      "source": "/documentation/adapters/outception-comfastify",
-      "destination": "/integrate/sdk/adapters/fastify"
-    },
-    {
-      "source": "/documentation/adapters/outception-comhono",
-      "destination": "/integrate/sdk/adapters/hono"
     },
     {
       "source": "/developers/webhooks",
@@ -289,28 +233,12 @@
       "destination": "/integrate/webhooks/endpoints"
     },
     {
-      "source": "/developers/sdk",
-      "destination": "/integrate/sdk/typescript"
-    },
-    {
-      "source": "/docs/developers/sdk",
-      "destination": "/integrate/sdk/typescript"
-    },
-    {
       "source": "/onboarding",
       "destination": "/introduction#quickstart"
     },
     {
       "source": "/docs/onboarding",
       "destination": "/introduction#quickstart"
-    },
-    {
-      "source": "/features/integrations/evendeals",
-      "destination": "https://www.evendeals.com/integrations/outception"
-    },
-    {
-      "source": "/features/integrations/refgrow",
-      "destination": "https://refgrow.com/outception-affiliate-software"
     }
   ]
 }
