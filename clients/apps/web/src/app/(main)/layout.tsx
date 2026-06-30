@@ -17,14 +17,14 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: 'Outception',
       title: 'Outception | A live news wall with pay-to-promote',
       description:
-        'Follow 250+ news sources on one live wall, and pay to promote your post to the top.',
+        'Follow 800+ news sources on one live wall, and pay to promote your post to the top.',
       locale: 'en_US',
     },
     twitter: {
       card: 'summary_large_image',
       title: 'Outception | A live news wall with pay-to-promote',
       description:
-        'Follow 250+ news sources on one live wall, and pay to promote your post to the top.',
+        'Follow 800+ news sources on one live wall, and pay to promote your post to the top.',
     },
     metadataBase: new URL(CONFIG.FRONTEND_BASE_URL),
     alternates: {
