@@ -38,7 +38,7 @@ EmailStrDNS = Annotated[EmailStr, AfterValidator(_validate_email_dns)]
 def unalias_email(email: str) -> str:
     """Strip the `+alias` suffix from the local part of an email address.
 
-    For example, `pieter+123@outception.com` becomes `pieter@outception.com`. The domain is
+    For example, `user+123@outception.com` becomes `user@outception.com`. The domain is
     preserved as-is. Used to compare email addresses while ignoring sub-addressing.
     """
     parsed = _validate_email(email, check_deliverability=False)
