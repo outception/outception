@@ -9,7 +9,7 @@ and one broken source never takes down a batch.
 import asyncio
 
 import structlog
-from fastapi import Depends, Query
+from fastapi import Depends, Query, Request
 
 from outception.exceptions import OutceptionError, ResourceNotFound
 from outception.openapi import APITag
@@ -139,6 +139,30 @@ async def list_sources() -> list[SourceMeta]:
         )
         for source_id, meta in _ordered_sources()
     ]
+
+
+# Global sources shown to everyone, and used to pad a country deck.
+_GLOBAL_DECK = ("bbc-world", "gnews-us", "nytimes", "guardian", "npr", "reuters")
+
+
+@router.get("/default-deck", response_model=list[str], tags=[APITag.public])
+async def default_deck(request: Request) -> list[str]:
+    """Source ids to seed an empty "Your deck" with, biased to the reader's
+    country (from Cloudflare's ``CF-IPCountry`` header) and padded with a few
+    global outlets. Falls back to the global deck when the country is unknown."""
+    cc = (request.headers.get("cf-ipcountry") or "").strip().lower()
+    deck: list[str] = []
+
+    def add(sid: str) -> None:
+        if sid in SOURCES and sid not in DISABLED_SOURCES and sid not in deck:
+            deck.append(sid)
+
+    # The reader's country "Top Stories" first, if we have it.
+    if cc and cc not in ("xx", "t1"):  # xx/t1 = unknown / Tor
+        add(f"gnews-{cc}")
+    for sid in _GLOBAL_DECK:
+        add(sid)
+    return deck[:8]
 
 
 @router.get("/search", response_model=NewsSearchResponse, tags=[APITag.public])

@@ -1,9 +1,7 @@
 'use client'
 
-import { useT } from '@/providers/locale'
 import { useTopicPromotion } from '@/hooks/queries/promotions'
-import { promotionClickUrl, topicLabel } from '@/utils/promotions'
-import { Pill } from '@outception-com/orbit'
+import { promotionClickUrl } from '@/utils/promotions'
 import { Box } from '@outception-com/orbit/Box'
 
 /**
@@ -12,7 +10,6 @@ import { Box } from '@outception-com/orbit/Box'
  * through the backend redirect so they're counted for analytics.
  */
 export const PromotionFooter = ({ topic }: { topic: string | null }) => {
-  const t = useT()
   const { data: promotion } = useTopicPromotion(topic)
 
   if (!promotion) {
@@ -29,12 +26,6 @@ export const PromotionFooter = ({ topic }: { topic: string | null }) => {
       backgroundColor="background-card"
       textAlign="right"
     >
-      <Box flexDirection="row" alignItems="center" columnGap="s">
-        <Pill color="blue">{t('promotions.promoted')}</Pill>
-        <span className="text-xs text-gray-500 dark:text-neutral-400">
-          {topicLabel(promotion.category)}
-        </span>
-      </Box>
       <span className="line-clamp-1 text-xs font-medium text-black dark:text-white">
         {promotion.title}
       </span>

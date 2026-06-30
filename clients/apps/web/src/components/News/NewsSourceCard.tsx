@@ -7,7 +7,6 @@ import { Pill, Spinner, Text } from '@outception-com/orbit'
 import { Box } from '@outception-com/orbit/Box'
 import OutceptionTimeAgo from '@outception-com/ui/components/atoms/OutceptionTimeAgo'
 import { useEffect, useRef } from 'react'
-import { PromotionFooter } from '../Promotions/PromotionFooter'
 import { FollowButton } from './FollowButton'
 import { NewsListHot, NewsListTimeline } from './NewsCardList'
 import { useClipPartialRows } from './useClipPartialRows'
@@ -112,8 +111,6 @@ export const NewsSourceCard = ({ source }: { source: NewsSourceMeta }) => {
           <NewsListTimeline items={items} />
         )}
       </Box>
-
-      <PromotionFooter topic={source.column ?? null} />
     </Box>
   )
 }

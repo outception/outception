@@ -26,6 +26,18 @@ export const safeExternalHref = (url: string | null | undefined) => {
 
 export const newsApi = {
   sources: () => unwrap(api.GET('/v1/news/sources')),
+  // Source ids to seed an empty "Your deck", biased to the reader's country.
+  // Hand-rolled fetch: this endpoint isn't in the generated client yet.
+  defaultDeck: async (): Promise<string[]> => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/v1/news/default-deck`,
+      )
+      return res.ok ? ((await res.json()) as string[]) : []
+    } catch {
+      return []
+    }
+  },
   source: (id: string, latest = false, sort: NewsSort = 'hot') =>
     unwrap(
       api.GET('/v1/news/{source_id}', {

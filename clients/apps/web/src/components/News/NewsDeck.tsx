@@ -4,6 +4,7 @@ import type { NewsSourceMeta } from '@/utils/news'
 import { Box } from '@outception-com/orbit/Box'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
+import { PromotionFooter } from '../Promotions/PromotionFooter'
 import { SwipeDeckCard } from './SwipeDeckCard'
 import { useSwipeDeck } from './useSwipeDeck'
 
@@ -45,6 +46,8 @@ export const NewsDeck = ({
     id: items[(((deck.index + depth) % len) + len) % len],
     depth,
   }))
+  // The card currently in focus — its topic drives the promo banner below.
+  const currentSource = byId.get(items[((deck.index % len) + len) % len])
 
   return (
     <Box
@@ -77,6 +80,14 @@ export const NewsDeck = ({
           )
         })}
       </motion.div>
+
+      {/* Promo for the current card's topic, rendered BELOW the fixed-height
+          deck so it extends the area instead of stealing news-list space. */}
+      {currentSource ? (
+        <div className="w-full max-w-2xl">
+          <PromotionFooter topic={currentSource.column ?? null} />
+        </div>
+      ) : null}
 
       <div className="flex items-center gap-4 text-sm text-neutral-500 dark:text-neutral-400">
         <button

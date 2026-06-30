@@ -3,6 +3,15 @@ import { newsApi, type NewsSort } from '@/utils/news'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { defaultRetry } from './retry'
 
+export const useDefaultDeck = (enabled = true) =>
+  useQuery({
+    queryKey: ['news', 'default-deck'],
+    queryFn: () => newsApi.defaultDeck(),
+    enabled,
+    staleTime: 300_000,
+    retry: defaultRetry,
+  })
+
 export const useFollowedSources = (enabled = true) =>
   useQuery({
     queryKey: ['news', 'followed'],
