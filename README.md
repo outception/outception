@@ -19,7 +19,7 @@ Two things in one app:
 
 - News wall on web and mobile, by topic
 - Compose a promotion, check out, go live
-- Promotion lifecycle: pending, queued, active, expired
+- Promotion lifecycle: pending payment, queued, active, expired
 - Analytics: spend, impressions, clicks, CTR (optional
   [Tinybird](https://www.tinybird.co) pipeline for daily time series)
 - Promoter dashboard (web) and analytics screen (mobile)
