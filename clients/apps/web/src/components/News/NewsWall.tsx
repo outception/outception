@@ -42,7 +42,13 @@ export const NewsWall = () => {
   }, [tab, isLoading, visible.length, setSearchOpen])
 
   return (
-    <Box flexDirection="column" rowGap="xl" paddingVertical="xl">
+    <Box
+      flexDirection="column"
+      rowGap="xl"
+      paddingVertical="xl"
+      flexGrow={1}
+      justifyContent="center"
+    >
       {isLoading ? (
         <Box justifyContent="center" padding="xl">
           <Spinner />
