@@ -25,15 +25,11 @@ export const viewport: Viewport = {
   // bar / home indicator, so there's no separate band there. Content is kept
   // clear of the notch via env(safe-area-inset-*) padding in the layout.
   viewportFit: 'cover',
-  // Tint the mobile browser chrome (iOS status bar, Safari toolbar) to match
-  // the page's base colour so the top/bottom don't read as a separate band.
-  // Values mirror the `body` background in globals.css.
-  // Match the SpectraBackground gradient the user actually sees (light cream /
-  // near-black), not the base colour underneath it.
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#fdf4ec' },
-    { media: '(prefers-color-scheme: dark)', color: '#161514' },
-  ],
+  // NOTE: no `themeColor` here on purpose. The site theme is toggled by the
+  // logo (next-themes), independent of the OS. An OS-media theme-color would
+  // mismatch the toggled theme. Instead a single, site-driven theme-color meta
+  // is set at load by the inline script in RootLayout and kept in sync by
+  // <ThemeColorMeta />.
 }
 
 export default async function RootLayout({
@@ -62,6 +58,16 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="antialiased">
       <body style={{ textRendering: 'optimizeLegibility' }}>
+        {/* Set the browser-bar colour at load to match the *site* theme (which
+            the logo toggles), before iOS reads it. <ThemeColorMeta /> keeps it
+            in sync afterwards. */}
+        <script
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{var t=localStorage.getItem('theme');var d=t==='dark'||((!t||t==='system')&&window.matchMedia('(prefers-color-scheme: dark)').matches);var m=document.createElement('meta');m.name='theme-color';m.content=d?'#161514':'#fdf4ec';document.head.appendChild(m);}catch(e){}})();",
+          }}
+        />
         <ExperimentProvider experiments={experimentVariants}>
           <UserContextProvider
             user={authenticatedUser}

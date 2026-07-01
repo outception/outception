@@ -58,7 +58,7 @@ export const NewsDeck = ({
         initial={{ opacity: 0, y: 18, scale: 0.985 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ type: 'spring', stiffness: 260, damping: 30 }}
-        className="relative h-[52vh] min-h-[400px] w-full max-w-2xl overflow-hidden md:h-[62vh] md:min-h-[500px]"
+        className="relative h-[62vh] min-h-[460px] w-full max-w-2xl overflow-hidden md:h-[62vh] md:min-h-[500px]"
       >
         {windowed.map(({ id, depth }) => {
           const source = byId.get(id)
