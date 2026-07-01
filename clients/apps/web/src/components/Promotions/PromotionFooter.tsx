@@ -21,9 +21,11 @@ export const PromotionFooter = ({ topic }: { topic: string | null }) => {
       flexDirection="column"
       rowGap="xs"
       width="100%"
+      alignItems="end"
       padding="s"
       borderRadius="l"
       backgroundColor="background-card"
+      textAlign="right"
     >
       <span className="line-clamp-1 text-xs font-medium text-black dark:text-white">
         {promotion.title}
