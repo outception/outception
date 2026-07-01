@@ -287,15 +287,6 @@
     background-color: #000000;
   }
 
-  /* viewport-fit=cover lets the fixed SpectraBackground fill under the iOS
-     status bar and home indicator (so there's no separate band there); this
-     padding keeps page content clear of those areas. No-op on devices without
-     safe-area insets (desktop). */
-  body {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-
   /* Paper grain: a fixed full-bleed fractal-noise tooth over everything (below
      modals at z-50) so the wall and cards read as printed on aged stock. Very
      low opacity + blend so text stays crisp; pointer-events-none. */

@@ -13,6 +13,13 @@ export default function LandingLayout({ children }: PropsWithChildren) {
   return (
     <NewsColumnProvider>
       <Box flexDirection="column" minHeight="100vh">
+        {/* Reserve the iOS status-bar area so content clears the notch, while
+            the fixed SpectraBackground still fills behind it (plain div — env()
+            isn't a Box token). */}
+        <div
+          aria-hidden
+          style={{ height: 'env(safe-area-inset-top)', flexShrink: 0 }}
+        />
         <Box
           as="header"
           position="sticky"
@@ -51,6 +58,11 @@ export default function LandingLayout({ children }: PropsWithChildren) {
             {t('news.footer')}
           </Text>
         </Box>
+        {/* Clear the iOS home indicator, same idea as the top spacer. */}
+        <div
+          aria-hidden
+          style={{ height: 'env(safe-area-inset-bottom)', flexShrink: 0 }}
+        />
       </Box>
     </NewsColumnProvider>
   )
