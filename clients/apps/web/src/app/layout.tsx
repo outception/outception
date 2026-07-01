@@ -69,10 +69,18 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="antialiased">
       <body style={{ textRendering: 'optimizeLegibility' }}>
-        {/* No theme-color meta on purpose: with viewport-fit=cover the fixed
-            SpectraBackground draws under the iOS status bar / home indicator, so
-            the page (grid and all) shows there. A theme-color would paint an
-            opaque bar over it and re-introduce the flat strip. */}
+        {/* Tint the browser-tab status bar / Android address bar to the site
+            theme at load (before it's read), matching next-themes. Kept in sync
+            afterwards by <ThemeColorMeta />. A Home-Screen install ignores this
+            in favour of the black-translucent status bar, so edge-to-edge is
+            unaffected. */}
+        <script
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{var t=localStorage.getItem('theme');var d=t==='dark'||((!t||t==='system')&&window.matchMedia('(prefers-color-scheme: dark)').matches);var m=document.createElement('meta');m.name='theme-color';m.content=d?'#000000':'#fdf4ec';document.head.appendChild(m);}catch(e){}})();",
+          }}
+        />
         <ExperimentProvider experiments={experimentVariants}>
           <UserContextProvider
             user={authenticatedUser}
