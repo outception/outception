@@ -276,8 +276,9 @@
 
   body {
     color: var(--foreground);
-    /* Flash-free base under <SpectraBackground> — matched to the cream the
-       Spectra gradient resolves to. */
+    /* Flash-free base under <SpectraBackground> — matched to the cream (light)
+       / near-black (dark) the Spectra gradient resolves to, so there's no flash
+       before the WebGL canvas paints. */
     background-color: #fdf4ec;
     /* iOS Safari applies IMPLICIT safe-area padding to <body>, which keeps even
        a fixed full-bleed element (SpectraBackground) from filling under the top

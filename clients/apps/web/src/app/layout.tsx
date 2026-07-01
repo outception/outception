@@ -25,11 +25,10 @@ export const viewport: Viewport = {
   // bar / home indicator, so there's no separate band there. Content is kept
   // clear of the notch via env(safe-area-inset-*) padding in the layout.
   viewportFit: 'cover',
-  // NOTE: no `themeColor` here on purpose. The site theme is toggled by the
-  // logo (next-themes), independent of the OS. An OS-media theme-color would
-  // mismatch the toggled theme. Instead a single, site-driven theme-color meta
-  // is set at load by the inline script in RootLayout and kept in sync by
-  // <ThemeColorMeta />.
+  // No `themeColor`: the site theme is toggled by the logo (next-themes),
+  // independent of the OS, so an OS-media theme-color would mismatch it. In a
+  // browser tab the system status bar can't show page content anyway; in a
+  // Home-Screen install the black-translucent status bar (below) handles it.
 }
 
 export const metadata: Metadata = {
