@@ -2,12 +2,14 @@
 
 import { useTopicPromotion } from '@/hooks/queries/promotions'
 import { promotionClickUrl } from '@/utils/promotions'
-import { Box } from '@outception-com/orbit/Box'
 
 /**
- * The paid "in focus" promotion for a card's topic, pinned at the bottom of the
- * news card. Renders nothing when the topic has no active promotion. Clicks go
- * through the backend redirect so they're counted for analytics.
+ * The paid "in focus" promotion for a card's topic, pinned inside the news card
+ * at the bottom. Renders nothing when the topic has no active promotion. Clicks
+ * go through the backend redirect so they're counted for analytics.
+ *
+ * Uses the `glass-panel` frosted surface (not a solid fill) so it reads as glass
+ * like the rest of the wall — see the glass design language in globals.css.
  */
 export const PromotionFooter = ({ topic }: { topic: string | null }) => {
   const { data: promotion } = useTopicPromotion(topic)
@@ -17,23 +19,14 @@ export const PromotionFooter = ({ topic }: { topic: string | null }) => {
   }
 
   const body = (
-    <Box
-      flexDirection="column"
-      rowGap="xs"
-      width="100%"
-      alignItems="end"
-      padding="s"
-      borderRadius="l"
-      backgroundColor="background-card"
-      textAlign="right"
-    >
+    <div className="glass-panel flex w-full flex-col items-end gap-1 rounded-2xl px-3 py-2 text-right">
       <span className="line-clamp-1 text-xs font-medium text-black dark:text-white">
         {promotion.title}
       </span>
       <span className="line-clamp-1 text-xs text-gray-500 dark:text-neutral-400">
         {promotion.body}
       </span>
-    </Box>
+    </div>
   )
 
   if (!promotion.link) {
