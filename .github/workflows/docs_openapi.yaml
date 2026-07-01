@@ -1,0 +1,36 @@
+name: Update docs OpenAPI schema
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 8 * * *"
+
+concurrency:
+  group: docs-update-openapi-schema
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6.0.3
+
+      - name: Update OpenAPI schema
+        run: |
+          curl -s "https://spec.speakeasy.com/outception/outception/outception-oas-with-code-samples" \
+            | jq -M '.' > clients/apps/web/content/openapi.yaml
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          add-paths: clients/apps/web/content/openapi.yaml
+          commit-message: "docs: update OpenAPI schema"
+          title: "docs: update OpenAPI schema"
+          branch: "docs/update-openapi-schema"
+          delete-branch: true

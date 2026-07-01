@@ -1,0 +1,502 @@
+/* global process */
+import path from 'node:path'
+import createMDX from '@next/mdx'
+import { withSentryConfig } from '@sentry/nextjs'
+import { themeConfig } from './shiki.config.mjs'
+
+const PREVIEW_BUILD = process.env.OUTCEPTION_PREVIEW_BUILD === '1'
+
+// Optional PR-preview builds: derive basePath + API URL from the PR number.
+// Inert in production (no-op unless the preview env vars below are set).
+let previewBasePath = ''
+if (
+  process.env.VERCEL_GIT_PULL_REQUEST_ID &&
+  process.env.OUTCEPTION_PREVIEW_BACKEND_HOST
+) {
+  const prNum = parseInt(process.env.VERCEL_GIT_PULL_REQUEST_ID)
+  previewBasePath = `/pr-${prNum}`
+  const baseUrl = `https://${process.env.OUTCEPTION_PREVIEW_BACKEND_HOST}${previewBasePath}`
+  process.env.NEXT_PUBLIC_API_URL = baseUrl
+  process.env.NEXT_PUBLIC_FRONTEND_BASE_URL = baseUrl
+}
+
+const OUTCEPTION_AUTH_COOKIE_KEY =
+  process.env.OUTCEPTION_AUTH_COOKIE_KEY || 'outception_session'
+const ENVIRONMENT =
+  process.env.VERCEL_ENV || process.env.NEXT_PUBLIC_VERCEL_ENV || 'development'
+
+const defaultFrontendHostname = process.env.NEXT_PUBLIC_FRONTEND_BASE_URL
+  ? new URL(process.env.NEXT_PUBLIC_FRONTEND_BASE_URL).hostname
+  : 'outception.com'
+
+const S3_PUBLIC_IMAGES_BUCKET_ORIGIN = process.env
+  .S3_PUBLIC_IMAGES_BUCKET_HOSTNAME
+  ? `${process.env.S3_PUBLIC_IMAGES_BUCKET_PROTOCOL || 'https'}://${process.env.S3_PUBLIC_IMAGES_BUCKET_HOSTNAME}${process.env.S3_PUBLIC_IMAGES_BUCKET_PORT ? `:${process.env.S3_PUBLIC_IMAGES_BUCKET_PORT}` : ''}`
+  : ''
+const baseCSP = `
+    default-src 'self';
+    connect-src 'self' ${process.env.NEXT_PUBLIC_API_URL} ${process.env.S3_UPLOAD_ORIGINS} https://maps.googleapis.com https://*.google-analytics.com;
+    frame-src 'self';
+    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://maps.googleapis.com https://www.googletagmanager.com;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    img-src 'self' blob: data: https://www.gravatar.com https://img.logo.dev https://lh3.googleusercontent.com https://avatars.githubusercontent.com ${S3_PUBLIC_IMAGES_BUCKET_ORIGIN} https://uploads.outception.com;
+    font-src 'self';
+    object-src 'none';
+    base-uri 'self';
+    ${ENVIRONMENT !== 'development' ? 'upgrade-insecure-requests;' : ''}
+`
+const nonEmbeddedCSP = `
+  ${baseCSP}
+  form-action 'self' ${process.env.NEXT_PUBLIC_API_URL} outception:;
+  frame-ancestors 'none';
+`
+// Don't add form-action to the OAuth2 authorize page, as it blocks the OAuth2 redirection
+// 10-years old debate about whether to block redirects with form-action or not: https://github.com/w3c/webappsec-csp/issues/8
+const oauth2CSP = `
+  ${baseCSP}
+  frame-ancestors 'none';
+`
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // Emit a self-contained server bundle (.next/standalone) so the app can be
+  // run as a plain Node server (node server.js) in a container, instead of on
+  // Vercel. See the production web Dockerfile.
+  output: 'standalone',
+  // The monorepo root is two levels up; tracing from there bundles the
+  // workspace deps the standalone server needs.
+  outputFileTracingRoot: path.join(import.meta.dirname, '../../'),
+  allowedDevOrigins: ['127.0.0.1'],
+  reactStrictMode: true,
+  transpilePackages: ['shiki', '@outception-com/orbit'],
+  pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
+
+  ...(previewBasePath && {
+    basePath: previewBasePath,
+    env: {
+      OUTCEPTION_API_URL: `https://${process.env.OUTCEPTION_PREVIEW_BACKEND_HOST}:8443${previewBasePath}`,
+    },
+  }),
+
+  ...(PREVIEW_BUILD && {
+    typescript: { ignoreBuildErrors: true },
+    eslint: { ignoreDuringBuilds: true },
+  }),
+
+  // This is required to support PostHog trailing slash API requests
+  skipTrailingSlashRedirect: true,
+
+  // Docs/handbook routes read MDX + the OpenAPI spec from `content/` via fs at
+  // request time (dynamic fallbacks, the handbook search index). Trace those
+  // files into the serverless bundle so they exist at runtime on Vercel.
+  outputFileTracingIncludes: {
+    '/docs/[[...slug]]': ['./content/docs/**', './content/openapi.yaml'],
+    '/handbook/[[...slug]]': ['./content/handbook/**'],
+    '/docs/llms.txt': ['./content/docs/**'],
+    '/docs/llms-full.txt': ['./content/docs/**'],
+    '/docs/search-index.json': ['./content/docs/**'],
+    '/handbook/search-index.json': ['./content/handbook/**'],
+    '/sitemap.xml': ['./content/docs/**'],
+  },
+
+  webpack: (config, { dev }) => {
+    if (config.cache && !dev) {
+      config.cache = Object.freeze({
+        type: 'memory',
+      })
+    }
+
+    return config
+  },
+
+  images: {
+    remotePatterns: [
+      ...(process.env.S3_PUBLIC_IMAGES_BUCKET_HOSTNAME
+        ? [
+            {
+              protocol: process.env.S3_PUBLIC_IMAGES_BUCKET_PROTOCOL || 'https',
+              hostname: process.env.S3_PUBLIC_IMAGES_BUCKET_HOSTNAME,
+              port: process.env.S3_PUBLIC_IMAGES_BUCKET_PORT || '',
+              pathname: process.env.S3_PUBLIC_IMAGES_BUCKET_PATHNAME || '**',
+            },
+          ]
+        : []),
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
+        port: '',
+        pathname: '**',
+      },
+    ],
+  },
+
+  async rewrites() {
+    const apiUrl = process.env.OUTCEPTION_API_URL || process.env.NEXT_PUBLIC_API_URL
+    return [
+      ...(PREVIEW_BUILD && apiUrl
+        ? [
+            {
+              source: '/v1/:path*',
+              destination: `${apiUrl}/v1/:path*`,
+            },
+            {
+              source: '/healthz',
+              destination: `${apiUrl}/healthz`,
+            },
+            {
+              source: '/openapi.json',
+              destination: `${apiUrl}/openapi.json`,
+            },
+          ]
+        : []),
+      {
+        source: '/ingest/static/:path*',
+        destination: 'https://us-assets.i.posthog.com/static/:path*',
+      },
+      {
+        source: '/ingest/:path*',
+        destination: 'https://us.i.posthog.com/:path*',
+      },
+      {
+        source: '/ingest/decide',
+        destination: 'https://us.i.posthog.com/decide',
+      },
+    ]
+  },
+
+  async redirects() {
+    return [
+      // dashboard.outception.com redirections
+      {
+        source: '/',
+        destination: '/auth',
+        has: [
+          {
+            type: 'host',
+            value: 'dashboard.outception.com',
+          },
+        ],
+        permanent: false,
+      },
+      {
+        source: '/:path*',
+        destination: 'https://outception.com/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'dashboard.outception.com',
+          },
+        ],
+        permanent: false,
+      },
+      {
+        source: '/careers',
+        destination: 'https://outception.com/company',
+        permanent: false,
+      },
+      {
+        source: '/legal/terms',
+        destination: 'https://outception.com/legal/master-services-terms',
+        permanent: false,
+      },
+      {
+        source: '/legal/privacy',
+        destination: 'https://outception.com/legal/privacy-policy',
+        permanent: false,
+      },
+      {
+        source: '/llms.txt',
+        destination: 'https://outception.com/docs/llms.txt',
+        permanent: true,
+        has: [
+          {
+            type: 'host',
+            value: 'outception.com',
+          },
+        ],
+      },
+      {
+        source: '/llms-full.txt',
+        destination: 'https://outception.com/docs/llms-full.txt',
+        permanent: true,
+        has: [
+          {
+            type: 'host',
+            value: 'outception.com',
+          },
+        ],
+      },
+
+      // Legacy documentation redirects (migrated from the former Mintlify
+      // docs.json). Stale, unmaintained SDK/adapter targets that don't exist in
+      // this docs set were dropped; the rest map to real pages under /docs.
+      { source: '/api', destination: '/docs/api-reference', permanent: true },
+      { source: '/api/:path*', destination: '/docs/api-reference', permanent: true },
+      { source: '/docs/api', destination: '/docs/api-reference', permanent: true },
+      {
+        source: '/docs/api/:path*',
+        destination: '/docs/api-reference',
+        permanent: true,
+      },
+      {
+        source: '/developers/webhooks',
+        destination: '/docs/integrate/webhooks/endpoints',
+        permanent: true,
+      },
+      {
+        source: '/docs/developers/webhooks',
+        destination: '/docs/integrate/webhooks/endpoints',
+        permanent: true,
+      },
+      {
+        source: '/developers/:path*',
+        destination: '/docs/integrate/authentication',
+        permanent: true,
+      },
+      {
+        source: '/docs/developers/:path*',
+        destination: '/docs/integrate/authentication',
+        permanent: true,
+      },
+      { source: '/onboarding', destination: '/docs/introduction', permanent: true },
+      {
+        source: '/docs/onboarding',
+        destination: '/docs/introduction',
+        permanent: true,
+      },
+      {
+        source: '/documentation/support',
+        destination: '/docs/support',
+        permanent: true,
+      },
+      {
+        source: '/documentation/integration-guides/webhooks',
+        destination: '/docs/integrate/webhooks/endpoints',
+        permanent: true,
+      },
+      {
+        source: '/documentation/:path*',
+        destination: '/docs/introduction',
+        permanent: true,
+      },
+
+      // Logged-in user redirections
+      {
+        source: '/',
+        destination: '/start',
+        has: [
+          {
+            type: 'cookie',
+            key: OUTCEPTION_AUTH_COOKIE_KEY,
+          },
+          {
+            type: 'host',
+            value: defaultFrontendHostname,
+          },
+        ],
+        permanent: false,
+      },
+
+      // Redirect /dashboard to correct domain if on a different domain name
+      // Skip in preview builds — preview env uses a single domain via Caddy proxy
+      ...(!previewBasePath
+        ? [
+            {
+              source: '/dashboard/:path*',
+              destination: `https://${defaultFrontendHostname}/dashboard/:path*`,
+              missing: [
+                {
+                  type: 'host',
+                  value: defaultFrontendHostname,
+                },
+                {
+                  type: 'header',
+                  key: 'x-forwarded-host',
+                  value: defaultFrontendHostname,
+                },
+              ],
+              permanent: false,
+            },
+          ]
+        : []),
+
+      {
+        source: '/maintainer',
+        destination: '/dashboard',
+        permanent: true,
+      },
+      {
+        source: '/maintainer/:path(.*)',
+        destination: '/dashboard/:path(.*)',
+        permanent: true,
+      },
+      {
+        source: '/dashboard/:organization/overview',
+        destination: '/dashboard/:organization',
+        permanent: true,
+      },
+
+      // Account Settings Redirects
+      {
+        source: '/settings',
+        destination: '/dashboard/account/preferences',
+        permanent: true,
+      },
+
+      // Access tokens redirect
+      {
+        source: '/settings/tokens',
+        destination: '/account/developer',
+        permanent: false,
+      },
+
+      // Old blog redirects
+      {
+        source: '/outception/posts',
+        destination: '/blog',
+        permanent: false,
+      },
+      {
+        source: '/outception/posts/:path(.*)',
+        destination: '/blog/:path*',
+        permanent: false,
+      },
+
+      // Fallback blog redirect
+      {
+        source: '/:path*',
+        destination: 'https://outception.com/outception',
+        has: [
+          {
+            type: 'host',
+            value: 'blog.outception.com',
+          },
+        ],
+        permanent: false,
+      },
+
+      // CLI Install Script
+      {
+        source: '/install.sh',
+        destination:
+          'https://raw.githubusercontent.com/outception/cli/main/install.sh',
+        permanent: false,
+      },
+
+      {
+        source: '/signup',
+        destination: '/auth',
+        permanent: false,
+      },
+    ]
+  },
+  async headers() {
+    const baseHeaders = [
+      {
+        key: 'Content-Security-Policy',
+        value: nonEmbeddedCSP.replace(/\n/g, ''),
+      },
+      {
+        key: 'Permissions-Policy',
+        value:
+          'payment=(), publickey-credentials-get=(), camera=(), microphone=(), geolocation=()',
+      },
+      {
+        key: 'X-Frame-Options',
+        value: 'DENY',
+      },
+    ]
+
+    return [
+      {
+        source: '/((?!oauth2).*)',
+        headers: baseHeaders,
+      },
+      {
+        source: '/oauth2/:path*',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: oauth2CSP.replace(/\n/g, ''),
+          },
+          {
+            key: 'Permissions-Policy',
+            value:
+              'payment=(), publickey-credentials-get=(), camera=(), microphone=(), geolocation=()',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+        ],
+      },
+    ]
+  },
+}
+
+const createConfig = async () => {
+  const withMDX = createMDX({
+    options: {
+      remarkPlugins: ['remark-frontmatter', 'remark-gfm'],
+      rehypePlugins: [
+        'rehype-slug',
+        [
+          '@shikijs/rehype',
+          {
+            themes: themeConfig,
+          },
+        ],
+      ],
+    },
+  })
+
+  let conf = withMDX(nextConfig)
+
+  // Injected content via Sentry wizard below
+
+  conf = withSentryConfig(conf, {
+    // For all available options, see:
+    // https://github.com/getsentry/sentry-webpack-plugin#options
+
+    org: 'outception-com',
+    project: 'dashboard',
+
+    // Pass the auth token
+    authToken: process.env.SENTRY_AUTH_TOKEN,
+
+    // Only print logs for uploading source maps in CI
+    silent: !process.env.CI,
+
+    // For all available options, see:
+    // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
+
+    // Upload a larger set of source maps for prettier stack traces (increases build time)
+    widenClientFileUpload: true,
+
+    reactComponentAnnotation: {
+      enabled: false,
+    },
+
+    // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
+    // This can increase your server load as well as your hosting bill.
+    // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
+    // side errors will fail.
+    tunnelRoute: '/monitoring',
+
+    // Hides source maps from generated client bundles
+    hideSourceMaps: true,
+
+    // Automatically tree-shake Sentry logger statements to reduce bundle size
+    disableLogger: true,
+
+    // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
+    // See the following for more information:
+    // https://docs.sentry.io/product/crons/
+    // https://vercel.com/docs/cron-jobs
+    automaticVercelMonitors: true,
+  })
+
+  return conf
+}
+
+export default createConfig

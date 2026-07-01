@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Run Outception development environment for Conductor
+#
+# This script is called by Conductor to start the development services.
+# It uses the Docker-based development setup for isolation.
+
+set -euo pipefail
+
+# Use CONDUCTOR_WORKSPACE_PATH if available, otherwise fall back to script location
+if [[ -n "${CONDUCTOR_WORKSPACE_PATH:-}" ]]; then
+    ROOT_DIR="$CONDUCTOR_WORKSPACE_PATH"
+else
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+fi
+
+cd "$ROOT_DIR"
+
+# Generate environment files if needed
+if [[ ! -f "server/.env" ]]; then
+    echo "Generating environment files..."
+    ./dev/setup-environment
+fi
+
+# Start all services in detached mode (instance auto-detected from CONDUCTOR_PORT)
+./dev/cli/dev docker up --detach

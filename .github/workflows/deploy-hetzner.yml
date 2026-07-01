@@ -1,0 +1,99 @@
+# Build the API + web images, push to GHCR, then deploy to the Hetzner host
+# over SSH (docker compose pull && up -d).
+#
+# Required GitHub repo SECRETS:
+#   SSH_HOST            Hetzner server IP / hostname
+#   SSH_USER            SSH user (e.g. deploy)
+#   SSH_PRIVATE_KEY     private key authorized on the host
+#   GHCR_PAT            token the HOST uses to pull from GHCR (read:packages)
+# Required repo VARIABLES (baked into the web bundle at build time):
+#   NEXT_PUBLIC_API_URL            e.g. https://api.outception.com
+#   NEXT_PUBLIC_FRONTEND_BASE_URL  e.g. https://outception.com
+#   DEPLOY_PATH                    path to the deploy/ dir on the host
+#
+# The host must already have: docker + compose, the repo checked out at
+# DEPLOY_PATH's parent, and deploy/.env.prod filled in.
+
+name: Deploy (Hetzner)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-hetzner
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_API: ghcr.io/${{ github.repository_owner }}/outception
+  IMAGE_WEB: ghcr.io/${{ github.repository_owner }}/outception-web
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push API image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./server
+          target: production
+          push: true
+          tags: |
+            ${{ env.IMAGE_API }}:${{ github.sha }}
+            ${{ env.IMAGE_API }}:latest
+          build-args: |
+            RELEASE_VERSION=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & push web image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./clients
+          file: ./deploy/web.Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_WEB }}:${{ github.sha }}
+            ${{ env.IMAGE_WEB }}:latest
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_FRONTEND_BASE_URL=${{ vars.NEXT_PUBLIC_FRONTEND_BASE_URL }}
+            NEXT_PUBLIC_ENVIRONMENT=production
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: GITHUB_SHA
+          script: |
+            set -euo pipefail
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            cd "${{ vars.DEPLOY_PATH }}"
+            export IMAGE_TAG="${GITHUB_SHA}"
+            docker compose --env-file .env.prod -f docker-compose.prod.yml pull
+            docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
+            docker image prune -f

@@ -1,0 +1,220 @@
+---
+title: "Authorization"
+description: "How authorization works in Outception: authentication vs authorization, PolicyGuard, policies, and org-scoped data access."
+---
+
+## Overview
+
+Authorization in Outception is split into two layers:
+
+- **Authentication** (`Authenticator`): "Who are you?" — validates tokens/sessions, resolves the subject (User, Organization), extracts token scopes.
+- **Authorization** (`server/outception/authz/`): "Are you allowed to do this?" — checks org membership, evaluates policies, enforces access control.
+
+These are separate concerns. Authentication happens via FastAPI's `Authenticator` dependency. Authorization happens via **PolicyGuard** dependencies that resolve resources and check policies before the endpoint body runs.
+
+## PolicyGuard
+
+A PolicyGuard is a FastAPI dependency factory that combines resource resolution and authorization into a single step. When an endpoint declares a PolicyGuard dependency, the framework:
+
+1. Authenticates the subject
+2. Resolves the resource from the path parameter
+3. Checks that the subject has access to the owning organization
+4. Evaluates the policy function
+5. Returns an `AuthzContext` containing both the resource and the auth subject
+
+If any step fails, the appropriate HTTP error is raised before the endpoint body executes.
+
+```python
+from outception.authz.dependencies import AuthorizeOrgAccess
+
+@router.get("/{id}/details")
+async def get_details(
+    authz: AuthorizeOrgAccess,
+    session: AsyncReadSession = Depends(get_db_read_session),
+) -> OrganizationSchema:
+    # authz.organization is already resolved and access-checked
+    # authz.auth_subject is the authenticated subject
+    return OrganizationSchema.model_validate(authz.organization)
+```
+
+### Error behavior
+
+| Scenario | HTTP status | Reason |
+|----------|-------------|--------|
+| No valid credentials | 401 Unauthorized | `Authenticator` rejects the request |
+| Token lacks required scopes | 403 Forbidden | `Authenticator` scope check fails |
+| Resource doesn't exist | 404 Not Found | Resource not found in database |
+| Subject not a member of the org | 404 Not Found | Returns 404 (not 403) to avoid leaking existence |
+| Subject is a member but policy denied | 403 Forbidden | Policy returned a denial reason |
+
+### Guard variants
+
+There are three PolicyGuard variants for different resource types:
+
+| Guard | Resolves by | Use case |
+|-------|-------------|----------|
+| `OrgPolicyGuard` | `{id}` → Organization | Org-scoped endpoints (`/organizations/{id}/...`) |
+
+### Typed dependencies
+
+Each guard is paired with a policy and exposed as a named dependency in `server/outception/authz/dependencies.py`. Endpoints depend on these names rather than wiring guards and policies themselves. For example:
+
+```python
+AuthorizeOrgAccess      # OrgPolicyGuard (membership only, no extra policy)
+AuthorizeMembersManage  # OrgPolicyGuard + members.can_manage (User-only)
+AuthorizeOrgManage      # OrgPolicyGuard + organization.can_manage (User-only)
+```
+
+There are also "always-allow" variants for endpoints that only need authentication, scope check, and org membership — no further policy. They exist so endpoints can still benefit from centralized resource resolution (the guard fetches the org and 404s non-members) without inventing a trivial policy.
+
+See `server/outception/authz/dependencies.py` for the full list.
+
+## Policies
+
+Policies are async functions in `server/outception/authz/policies/`. Each policy receives the database session, auth subject, and organization, and returns either `True` (allowed) or a denial reason string.
+
+```python
+# server/outception/authz/policies/organization.py
+async def can_manage(
+    session: AsyncReadSession,
+    auth_subject: AuthSubject[User | Organization],
+    organization: Organization,
+) -> PolicyResult:
+    """Can the subject edit or delete this organization?"""
+    return await _require_permission(
+        session,
+        auth_subject,
+        organization,
+        permission=OrganizationPermission.organization_manage,
+    )
+```
+
+The denial reason string is passed through to the `NotPermitted` exception and appears in the 403 response body.
+
+### Where policies live
+
+Policies are grouped by the resource area they protect — one file per area in `server/outception/authz/policies/` (e.g. members, organization). A file typically exposes `can_read`/`can_write` or a more specific verb when the operation has its own rules (e.g. `can_delete`, `can_manage`). New areas get a new file rather than overloading an existing one.
+
+## Org-scoped data access
+
+Repositories are pure data access — they don't check authentication or authorization. Instead, they accept explicit org IDs:
+
+```python
+# Repository — pure data access
+class ItemRepository(RepositoryBase[Item]):
+    def get_by_org_ids_statement(self, org_ids: set[UUID]) -> Select[tuple[Item]]:
+        return self.get_base_statement().where(
+            Item.organization_id.in_(org_ids)
+        )
+```
+
+Services resolve which orgs the subject can access, then pass the IDs to the repository:
+
+```python
+# Service — resolves org access, delegates to repository
+from outception.authz.service import get_accessible_org_ids
+
+class ItemService:
+    async def list(self, session, auth_subject, ...):
+        org_ids = await get_accessible_org_ids(session, auth_subject)
+        repository = ItemRepository.from_session(session)
+        statement = repository.get_by_org_ids_statement(org_ids)
+        ...
+```
+
+`get_accessible_org_ids` returns the set of organization IDs the subject can access:
+- For a **User**: all orgs they're a member of (via `UserOrganization`), optionally filtered by a required `permission`
+- For an **Organization** token: just that org's ID (permission filters are bypassed — the token represents the org itself)
+- For anything else: empty set
+
+When `permission` is provided, user subjects are restricted to organizations where their `UserOrganization.role` grants that permission. This is useful for service-layer data access that needs to enforce role-based permissions without using a PolicyGuard:
+
+```python
+org_ids = await get_accessible_org_ids(
+    session, auth_subject, permission=OrganizationPermission.organization_manage
+)
+```
+
+## User-personal endpoints
+
+Some endpoints don't operate on an organization — they act on the authenticated user themselves. Examples: own profile (`/users/me`), Personal Access Token management, OAuth identity linking, email update, per-user integration callbacks. There's no organization to resolve, so no membership check or org-scoped policy applies.
+
+For these, use one of the user-personal `Authorize*` aliases from `server/outception/authz/dependencies.py`:
+
+```python
+from outception.authz.dependencies import AuthorizeWebUserRead, AuthorizeWebUserWrite
+
+@router.get("/me")
+async def get_authenticated(auth_subject: AuthorizeWebUserRead) -> User:
+    return auth_subject.subject
+
+@router.patch("/me")
+async def update_authenticated(auth_subject: AuthorizeWebUserWrite, ...) -> User:
+    ...
+```
+
+### Two prefixes: `Web*` vs not
+
+User-personal aliases come in two flavours that differ in **which kinds of authenticated User subjects they accept**:
+
+- **`AuthorizeWebUser{Read,Write}`** — User **via web session** only. Rejects API tokens (PATs, OATs, OAuth2 access tokens). Use for browser/dashboard-only flows. This is the right default for almost every user-personal endpoint.
+- **`Authorize{User}{Read,Write}`** — Any User subject (web session, PAT, OAuth2 access token) with the appropriate scope. Use **only** for endpoints that legitimately need to accept API tokens — for example, the mobile app calling `DELETE /v1/users/me` with an OAuth2 bearer.
+
+In both flavours, read aliases accept either the matching `_read` or `_write` scope (write implies read); write aliases require the `_write` scope. Available aliases today:
+
+| Alias | Subjects | Required scopes | Use case |
+|-------|----------|-----------------|----------|
+| `AuthorizeWebUserRead` | Web session only | `user:read` or `user:write` | Reading the user's own state from the dashboard |
+| `AuthorizeWebUserWrite` | Web session only | `user:write` | Mutating the user's own account from the dashboard |
+| `AuthorizeUserRead` | Any User (web/PAT/OAuth2) | `user:read` or `user:write` | API-token-accessible user reads |
+| `AuthorizeUserWrite` | Any User (web/PAT/OAuth2) | `user:write` | API-token-accessible user writes (e.g. mobile delete-account) |
+
+Add a new alias to `authz/dependencies.py` if a new endpoint needs a scope combination that isn't listed. Endpoints that resolve an organization from a path parameter belong with the `OrgPolicyGuard` family above, not here — even when the operation is read-only.
+
+### Two layers, same model
+
+The split between authentication and authorization still applies:
+
+- `WebUserSession` (in `server/outception/auth/dependencies.py`) — pure authentication for the `Web*` aliases. Accepts only web-session users; rejects API tokens.
+- `Authorize*` aliases (above) — the authorization layer. Add the scope check, and are the place to attach future cross-cutting per-user checks (account suspended, identity not verified, MFA required, …) without touching endpoint signatures.
+
+Endpoints depend on the `Authorize*` alias, never on `WebUserSession` directly.
+
+### Why scopes here too
+
+The scope check on user-personal endpoints is what enforces **read-only impersonation**. Backoffice impersonation creates a user session with only `READ_ONLY_SCOPES` (the `_read` set). Resource endpoints already block writes via their org-scoped guards' `required_scopes`. Mirroring that on user-personal endpoints means an impersonating admin can read profile/PATs/OAuth state but can't mutate it — same mechanism, single invariant: any endpoint declaring a `_write` scope is automatically off-limits to impersonation, regardless of which prefix is used.
+
+## Scopes
+
+Token scopes are checked by the `Authenticator` as a first-pass filter. They represent what the **token** is allowed to do, not what the **user** is allowed to do.
+
+- **Web sessions** have all scopes — the user's permissions are determined entirely by org membership and policies
+- **PATs** (Personal Access Tokens) have user-selected scopes — a CI token might only have `products_read`
+- **OATs** (Organization Access Tokens) have org-selected scopes
+
+PolicyGuard dependencies declare `required_scopes` appropriate to their resource area. For example, `AuthorizeOrgManage` requires `organizations_write`.
+
+## Adding a new policy-guarded endpoint
+
+1. **Choose or create a policy function** in `server/outception/authz/policies/`
+2. **Create a typed dependency** in `server/outception/authz/dependencies.py` using the appropriate guard variant
+3. **Use the dependency in the endpoint** — declare it as a parameter, access `.organization` and `.auth_subject` from the result
+
+```python
+# 1. Policy
+async def can_do_thing(session, auth_subject, organization) -> PolicyResult:
+    # your authorization logic
+    return True
+
+# 2. Typed dependency
+AuthorizeDoThing = Annotated[
+    AuthzContext[User | Organization],
+    Depends(OrgPolicyGuard(can_do_thing)),
+]
+
+# 3. Endpoint
+@router.post("/{id}/thing")
+async def do_thing(authz: AuthorizeDoThing, ...) -> ...:
+    organization = authz.organization
+    ...
+```

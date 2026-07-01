@@ -1,0 +1,61 @@
+import { Box } from '@/components/Shared/Box'
+import { Image } from '@/components/Shared/Image/Image'
+import { Pill } from '@/components/Shared/Pill'
+import { Text } from '@/components/Shared/Text'
+import { Touchable } from '@/components/Shared/Touchable'
+import { useTheme } from '@/design-system/useTheme'
+import { topicLabel, useTopicPromotion } from '@/hooks/outception/promotions'
+import { Linking } from 'react-native'
+
+const SERVER_URL =
+  process.env.EXPO_PUBLIC_OUTCEPTION_SERVER_URL ?? 'https://api.outception.com'
+
+/** The paid promotion for a card's topic, pinned at the bottom. Clicks go
+ * through the backend redirect so they're counted for analytics. */
+export const PromotionFooter = ({ topic }: { topic: string | null }) => {
+  const theme = useTheme()
+  const { data: promotion } = useTopicPromotion(topic)
+
+  if (!promotion) {
+    return null
+  }
+
+  const onPress = () => {
+    if (promotion.link) {
+      Linking.openURL(`${SERVER_URL}/v1/promotions/${promotion.id}/click`)
+    }
+  }
+
+  return (
+    <Touchable onPress={onPress} disabled={!promotion.link}>
+      <Box
+        gap="spacing-4"
+        padding="spacing-12"
+        borderRadius="border-radius-12"
+        backgroundColor="secondary"
+      >
+        <Box flexDirection="row" alignItems="center" gap="spacing-8">
+          <Pill color="blue">Promoted</Pill>
+          <Text variant="caption" color="subtext">
+            {topicLabel(promotion.category)}
+          </Text>
+        </Box>
+        {promotion.image_url ? (
+          <Image
+            source={{ uri: promotion.image_url }}
+            contentFit="cover"
+            style={{
+              width: '100%',
+              height: theme.dimension['dimension-120'],
+              borderRadius: theme.dimension['dimension-12'],
+            }}
+          />
+        ) : null}
+        <Text variant="bodyMedium">{promotion.title}</Text>
+        <Text variant="caption" color="subtext">
+          {promotion.body}
+        </Text>
+      </Box>
+    </Touchable>
+  )
+}

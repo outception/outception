@@ -1,0 +1,109 @@
+'use client'
+
+import { useSendEmailUpdate } from '@/hooks/emailUpdate'
+import { setValidationErrors } from '@/utils/api/errors'
+import { Button } from '@outception-com/orbit'
+import { Input } from '@outception-com/orbit'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+} from '@outception-com/ui/components/ui/form'
+import { useState } from 'react'
+import { SubmitHandler, useForm } from 'react-hook-form'
+
+const EmailUpdateForm = ({
+  returnTo,
+  onEmailUpdateRequest,
+  onCancel,
+}: {
+  returnTo?: string
+  onEmailUpdateRequest?: () => void
+  onCancel?: () => void
+}) => {
+  const form = useForm<{ email: string }>()
+  const { control, handleSubmit, setError } = form
+  const [loading, setLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const sendEmailUpdate = useSendEmailUpdate()
+
+  const onSubmit: SubmitHandler<{ email: string }> = async ({ email }) => {
+    setErrorMessage(null) // Clear previous errors
+    setLoading(true)
+    const { error } = await sendEmailUpdate(email, returnTo)
+    setLoading(false)
+    if (error) {
+      let errMsg = 'An error occurred while updating your email.'
+      if (error.detail && Array.isArray(error.detail)) {
+        const emailError = error.detail.find(
+          (err) => Array.isArray(err.loc) && err.loc.includes('email'),
+        )
+        if (emailError?.msg) {
+          errMsg = emailError.msg
+        }
+        setValidationErrors(error.detail, setError)
+      }
+      setErrorMessage(errMsg)
+      return
+    }
+    onEmailUpdateRequest?.()
+  }
+
+  return (
+    <Form {...form}>
+      <form
+        className="flex w-full flex-col gap-2"
+        onSubmit={handleSubmit(onSubmit)}
+      >
+        <FormField
+          control={control}
+          name="email"
+          render={({ field }) => {
+            return (
+              <FormItem>
+                <FormControl className="w-full">
+                  <div className="flex w-full flex-row gap-2">
+                    <Input
+                      type="email"
+                      required
+                      placeholder="New email"
+                      autoComplete="off"
+                      data-1p-ignore
+                      {...field}
+                    />
+                    <Button
+                      type="submit"
+                      variant="secondary"
+                      loading={loading}
+                      disabled={loading}
+                    >
+                      Update
+                    </Button>
+                    {onCancel && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={onCancel}
+                        disabled={loading}
+                      >
+                        Cancel
+                      </Button>
+                    )}
+                  </div>
+                </FormControl>
+              </FormItem>
+            )
+          }}
+        />
+        {errorMessage && (
+          <div className="text-sm text-red-700 dark:text-red-500">
+            {errorMessage}
+          </div>
+        )}
+      </form>
+    </Form>
+  )
+}
+
+export default EmailUpdateForm
