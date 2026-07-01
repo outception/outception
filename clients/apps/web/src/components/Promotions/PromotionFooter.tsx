@@ -20,11 +20,10 @@ export const PromotionFooter = ({ topic }: { topic: string | null }) => {
     <Box
       flexDirection="column"
       rowGap="xs"
-      alignItems="end"
+      width="100%"
       padding="s"
       borderRadius="l"
       backgroundColor="background-card"
-      textAlign="right"
     >
       <span className="line-clamp-1 text-xs font-medium text-black dark:text-white">
         {promotion.title}

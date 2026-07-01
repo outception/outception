@@ -32,7 +32,7 @@ export const viewport: Viewport = {
   // near-black), not the base colour underneath it.
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#fdf4ec' },
-    { media: '(prefers-color-scheme: dark)', color: '#0e0e0e' },
+    { media: '(prefers-color-scheme: dark)', color: '#161514' },
   ],
 }
 

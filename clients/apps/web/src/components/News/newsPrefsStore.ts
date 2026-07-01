@@ -26,10 +26,12 @@ export const subscribe = (listener: () => void): (() => void) => {
   }
 }
 
+// Default to "Your deck" (focus) — first-time visitors land on their own
+// country-seeded deck; only an explicit choice of Trending overrides it.
 export const getTabSnapshot = (): NewsTab =>
-  localStorage.getItem(TAB_KEY) === 'focus' ? 'focus' : 'trending'
+  localStorage.getItem(TAB_KEY) === 'trending' ? 'trending' : 'focus'
 
-export const getTabServerSnapshot = (): NewsTab => 'trending'
+export const getTabServerSnapshot = (): NewsTab => 'focus'
 
 export const setTab = (tab: NewsTab): void => {
   try {
