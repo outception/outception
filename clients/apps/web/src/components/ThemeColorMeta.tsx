@@ -9,7 +9,7 @@ import { useEffect } from 'react'
 // site theme against their OS setting (dark site on a light phone → light
 // browser chrome on a dark page = the "band"). This keeps the browser chrome
 // colour in sync with the *resolved site theme* instead.
-const THEME_COLORS = { light: '#fdf4ec', dark: '#161514' } as const
+const THEME_COLORS = { light: '#fdf4ec', dark: '#0a0a0a' } as const
 
 export const ThemeColorMeta = () => {
   const { resolvedTheme } = useTheme()
