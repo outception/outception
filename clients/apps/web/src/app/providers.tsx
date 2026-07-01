@@ -1,6 +1,7 @@
 'use client'
 
 import { cookieConsentGiven } from '@/components/Privacy/CookieConsent'
+import { ThemeColorMeta } from '@/components/ThemeColorMeta'
 import { DISTINCT_ID_COOKIE } from '@/experiments/constants'
 import { NavigationHistoryProvider } from '@/providers/navigationHistory'
 import { getQueryClient } from '@/utils/api/query'
@@ -68,6 +69,7 @@ export function OutceptionThemeProvider({
       attribute="class"
       forcedTheme={theme ?? forcedTheme}
     >
+      <ThemeColorMeta />
       {children}
     </ThemeProvider>
   )
