@@ -28,8 +28,8 @@ export default function LandingLayout({ children }: PropsWithChildren) {
               to toggle light/dark — matching the original navbar. Nothing on the
               sides. */}
           <NewsNavTabs />
-          {/* Nudged down a step on mobile so it clears the tabs/status bar. */}
-          <Box marginTop={{ base: 's', md: 'none' }}>
+          {/* Dropped down on mobile so it clears the tabs / status bar. */}
+          <Box marginTop={{ base: '2xl', md: 'none' }}>
             <OutceptionLogotype href="/" togglesTheme size={32} />
           </Box>
         </Box>
