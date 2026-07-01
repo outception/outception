@@ -65,7 +65,7 @@ export default async function RootLayout({
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
             __html:
-              "(function(){try{var t=localStorage.getItem('theme');var d=t==='dark'||((!t||t==='system')&&window.matchMedia('(prefers-color-scheme: dark)').matches);var m=document.createElement('meta');m.name='theme-color';m.content=d?'#0a0a0a':'#fdf4ec';document.head.appendChild(m);}catch(e){}})();",
+              "(function(){try{var t=localStorage.getItem('theme');var d=t==='dark'||((!t||t==='system')&&window.matchMedia('(prefers-color-scheme: dark)').matches);var m=document.createElement('meta');m.name='theme-color';m.content=d?'#000000':'#fdf4ec';document.head.appendChild(m);}catch(e){}})();",
           }}
         />
         <ExperimentProvider experiments={experimentVariants}>

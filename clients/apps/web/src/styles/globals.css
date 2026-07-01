@@ -284,7 +284,7 @@
   }
 
   .dark body {
-    background-color: #0a0a0a;
+    background-color: #000000;
   }
 
   /* viewport-fit=cover lets the fixed SpectraBackground fill under the iOS
