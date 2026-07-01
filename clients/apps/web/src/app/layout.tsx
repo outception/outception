@@ -10,7 +10,7 @@ import { resolveLocale } from '@/utils/i18n'
 import { getAuthenticatedUser, getUserOrganizations } from '@/utils/user'
 import { schemas } from '@outception-com/client'
 import { PHASE_PRODUCTION_BUILD } from 'next/constants'
-import { Viewport } from 'next/types'
+import { Metadata, Viewport } from 'next/types'
 import {
   NavigationHistoryProvider,
   OutceptionNuqsProvider,
@@ -30,6 +30,18 @@ export const viewport: Viewport = {
   // mismatch the toggled theme. Instead a single, site-driven theme-color meta
   // is set at load by the inline script in RootLayout and kept in sync by
   // <ThemeColorMeta />.
+}
+
+export const metadata: Metadata = {
+  // When added to the iOS Home Screen the site runs standalone with a
+  // TRANSLUCENT status bar, so the fixed SpectraBackground (grid) draws
+  // edge-to-edge under the clock/battery. A normal Safari browser tab can't do
+  // this — the top status bar is system chrome there.
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Outception',
+  },
 }
 
 export default async function RootLayout({
