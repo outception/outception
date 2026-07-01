@@ -58,16 +58,10 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="antialiased">
       <body style={{ textRendering: 'optimizeLegibility' }}>
-        {/* Set the browser-bar colour at load to match the *site* theme (which
-            the logo toggles), before iOS reads it. <ThemeColorMeta /> keeps it
-            in sync afterwards. */}
-        <script
-          // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{
-            __html:
-              "(function(){try{var t=localStorage.getItem('theme');var d=t==='dark'||((!t||t==='system')&&window.matchMedia('(prefers-color-scheme: dark)').matches);var m=document.createElement('meta');m.name='theme-color';m.content=d?'#000000':'#fdf4ec';document.head.appendChild(m);}catch(e){}})();",
-          }}
-        />
+        {/* No theme-color meta on purpose: with viewport-fit=cover the fixed
+            SpectraBackground draws under the iOS status bar / home indicator, so
+            the page (grid and all) shows there. A theme-color would paint an
+            opaque bar over it and re-introduce the flat strip. */}
         <ExperimentProvider experiments={experimentVariants}>
           <UserContextProvider
             user={authenticatedUser}
