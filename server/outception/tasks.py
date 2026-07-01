@@ -3,6 +3,7 @@ from outception.dummy import tasks as dummy
 from outception.email import tasks as email
 from outception.email_update import tasks as email_update
 from outception.eventstream import tasks as eventstream
+from outception.news import tasks as news
 from outception.oauth2 import tasks as oauth2
 from outception.organization import tasks as organization
 from outception.organization_access_token import tasks as organization_access_token
@@ -16,6 +17,7 @@ __all__ = [
     "email",
     "email_update",
     "eventstream",
+    "news",
     "oauth2",
     "organization",
     "organization_access_token",
