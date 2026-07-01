@@ -54,7 +54,10 @@ export default async function MainLayout({
   children: React.ReactNode
 }) {
   const headersList = await headers()
-  const countryCode = headersList.get('x-vercel-ip-country')
+  // Cloudflare (our infra) sets CF-IPCountry; fall back to the Vercel header so
+  // this keeps working if the hosting changes. Drives EU cookie-consent gating.
+  const countryCode =
+    headersList.get('cf-ipcountry') ?? headersList.get('x-vercel-ip-country')
 
   return (
     <OutceptionThemeProvider>
