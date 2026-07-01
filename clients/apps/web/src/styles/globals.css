@@ -276,11 +276,16 @@
 
   body {
     color: var(--foreground);
-    /* Flash-free base under <SpectraBackground>. Matched to the cream the
-       Spectra gradient resolves to (and the theme-color meta) so the iOS
-       safe-area strips behind the status bar / toolbar match the page instead
-       of showing a darker beige band. */
+    /* Flash-free base under <SpectraBackground> — matched to the cream the
+       Spectra gradient resolves to. */
     background-color: #fdf4ec;
+    /* iOS Safari applies IMPLICIT safe-area padding to <body>, which keeps even
+       a fixed full-bleed element (SpectraBackground) from filling under the top
+       status bar with viewport-fit=cover. Explicitly zeroing it is the only way
+       to opt into true edge-to-edge; content clears the notch via the spacers
+       in LandingLayout. See w3tutorials "viewport-fit=cover no longer working". */
+    margin: 0;
+    padding: 0 !important;
   }
 
   .dark body {
