@@ -1,0 +1,264 @@
+# Build the API + web images, push to GHCR, then deploy to the Hetzner host over
+# SSH. The host is checked out to the exact commit being deployed (so compose /
+# Caddyfile / env changes ship with the images), then `docker compose pull &&
+# up -d`, followed by a health check that rolls back on failure.
+#
+# Required GitHub repo SECRETS:
+#   SSH_HOST            Hetzner server IP / hostname
+#   SSH_USER            SSH user the CI logs in as (e.g. deploy)
+#   SSH_PRIVATE_KEY     private key authorized on the host
+#   GHCR_PAT            token the HOST uses to pull from GHCR (read:packages)
+# Required repo VARIABLES (baked into the web bundle at build time):
+#   NEXT_PUBLIC_API_URL            e.g. https://api.outception.com
+#   NEXT_PUBLIC_FRONTEND_BASE_URL  e.g. https://outception.com
+#   DEPLOY_PATH                    the deploy/ dir on the host (e.g. /opt/outception/deploy)
+# Optional repo VARIABLES:
+#   NEXT_PUBLIC_POSTHOG_TOKEN      PostHog project key (phc_...); unset = analytics off
+#   NEXT_PUBLIC_SENTRY_DSN         Sentry DSN (region-encoded); unset = error tracking off
+#   EMAIL_SMTP_USER                Gmail/Workspace auth mailbox (e.g. hello@outception.com)
+#   GOOGLE_CLIENT_ID               Google OAuth client id (…apps.googleusercontent.com)
+# Optional repo SECRETS:
+#   EMAIL_SMTP_PASSWORD            Google App Password; when set, email sends via SMTP
+#   GOOGLE_CLIENT_SECRET          Google OAuth client secret (GOCSPX-…)
+#
+# One-time host setup: run deploy/provision.sh (installs Docker, the deploy
+# user, clones the repo) then fill deploy/.env.prod + deploy/secrets/jwks.json.
+
+name: Deploy (Hetzner)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-hetzner
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_API: ghcr.io/${{ github.repository_owner }}/outception
+  IMAGE_WEB: ghcr.io/${{ github.repository_owner }}/outception-web
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      # Push with a PAT that has write:packages (owner is a user account, where
+      # GITHUB_TOKEN package publishing is unreliable). The host reuses the same
+      # token to pull, so the packages stay private.
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: Build & push API image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./server
+          target: production
+          push: true
+          tags: |
+            ${{ env.IMAGE_API }}:${{ github.sha }}
+            ${{ env.IMAGE_API }}:latest
+          build-args: |
+            RELEASE_VERSION=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & push web image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./clients
+          file: ./deploy/web.Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_WEB }}:${{ github.sha }}
+            ${{ env.IMAGE_WEB }}:latest
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_FRONTEND_BASE_URL=${{ vars.NEXT_PUBLIC_FRONTEND_BASE_URL }}
+            NEXT_PUBLIC_ENVIRONMENT=production
+            NEXT_PUBLIC_POSTHOG_TOKEN=${{ vars.NEXT_PUBLIC_POSTHOG_TOKEN }}
+            NEXT_PUBLIC_SENTRY_DSN=${{ vars.NEXT_PUBLIC_SENTRY_DSN }}
+            NEXT_PUBLIC_ADSENSE_CLIENT=${{ vars.NEXT_PUBLIC_ADSENSE_CLIENT }}
+            NEXT_PUBLIC_ADSENSE_SLOT_WALL=${{ vars.NEXT_PUBLIC_ADSENSE_SLOT_WALL }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1
+        env:
+          GHCR_PAT: ${{ secrets.GHCR_PAT }}
+          GHCR_USER: ${{ github.repository_owner }}
+          # Backend Sentry DSN. Kept out of the (public) repo — injected into the
+          # host-only .env.prod below. Reuses the same DSN as the web bundle.
+          SENTRY_DSN: ${{ vars.NEXT_PUBLIC_SENTRY_DSN }}
+          # Gmail/Workspace SMTP. USER is the auth mailbox (non-secret, a repo
+          # variable); PASSWORD is a Google App Password (a repo secret). Both
+          # injected into the host-only .env.prod below — never committed. When
+          # the password is set, email sending switches from the logger to SMTP.
+          SMTP_USER: ${{ vars.EMAIL_SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.EMAIL_SMTP_PASSWORD }}
+          # Google OAuth ("Sign in with Google"). CLIENT_ID is public (a repo
+          # variable); CLIENT_SECRET is a repo secret. Injected into the host-only
+          # .env.prod below — never committed. Both must be set for Google login.
+          GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          # Microsoft OAuth ("Sign in with Microsoft"). CLIENT_ID is public (a
+          # repo variable); CLIENT_SECRET is a repo secret. Injected into the
+          # host-only .env.prod below — never committed. Both must be set for
+          # Microsoft login.
+          MICROSOFT_CLIENT_ID: ${{ vars.MICROSOFT_CLIENT_ID }}
+          MICROSOFT_CLIENT_SECRET: ${{ secrets.MICROSOFT_CLIENT_SECRET }}
+          # Apple OAuth ("Sign in with Apple"). CLIENT_ID (the Services ID),
+          # TEAM_ID and KEY_ID are public (repo variables); KEY_VALUE is the .p8
+          # private key, base64-encoded (a repo secret — .env.prod can't carry
+          # its real newlines; the app base64-decodes it back to a PEM). All
+          # four must be set for Apple login. Injected into host-only .env.prod.
+          APPLE_CLIENT_ID: ${{ vars.APPLE_CLIENT_ID }}
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          APPLE_KEY_ID: ${{ vars.APPLE_KEY_ID }}
+          APPLE_KEY_VALUE: ${{ secrets.APPLE_KEY_VALUE }}
+          # Public domain-verification token (a repo variable) served at
+          # /.well-known/apple-developer-domain-association.txt for Apple.
+          APPLE_DOMAIN_ASSOCIATION: ${{ vars.APPLE_DOMAIN_ASSOCIATION }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: GITHUB_SHA,GHCR_PAT,GHCR_USER,SENTRY_DSN,SMTP_USER,SMTP_PASSWORD,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,MICROSOFT_CLIENT_ID,MICROSOFT_CLIENT_SECRET,APPLE_CLIENT_ID,APPLE_TEAM_ID,APPLE_KEY_ID,APPLE_KEY_VALUE,APPLE_DOMAIN_ASSOCIATION
+          script: |
+            set -euo pipefail
+
+            # 1. Ship the exact code + config version for this commit. .env.prod
+            #    and secrets/ are gitignored, so a hard checkout leaves them intact.
+            repo_root="$(dirname "${{ vars.DEPLOY_PATH }}")"
+            cd "$repo_root"
+            git fetch --quiet origin "$GITHUB_SHA"
+            git checkout --quiet --force "$GITHUB_SHA"
+
+            cd "${{ vars.DEPLOY_PATH }}"
+            # Only log in if a PAT is provided; public GHCR packages pull anonymously.
+            if [ -n "${GHCR_PAT:-}" ]; then
+              echo "$GHCR_PAT" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            fi
+
+            # Upsert a KEY=VALUE into the host-only .env.prod. Drop any existing
+            # line then append with printf %s — the value is written verbatim, so
+            # secrets containing sed metacharacters (# & \ /) can't corrupt the
+            # file the way an in-place sed substitution would.
+            upsert_env() {
+              if [ -f .env.prod ]; then
+                grep -v "^$1=" .env.prod > .env.prod.tmp 2>/dev/null || true
+                mv .env.prod.tmp .env.prod
+              fi
+              printf '%s=%s\n' "$1" "$2" >> .env.prod
+            }
+
+            # Accounts deactivated for the ad-supported launch — the auth /
+            # account / oauth2-provider routers are not mounted in production.
+            # Flip to true (and redeploy) to bring accounts back.
+            upsert_env OUTCEPTION_ACCOUNTS_ENABLED false
+
+            # Keep the backend Sentry DSN in the host-only .env.prod (never
+            # committed). A Sentry DSN is write-only; empty value = reporting off.
+            if [ -n "${SENTRY_DSN:-}" ]; then
+              upsert_env OUTCEPTION_SENTRY_DSN "$SENTRY_DSN"
+            fi
+
+            # Gmail/Workspace SMTP creds (host-only, never committed). Only flip
+            # the sender to SMTP once an App Password is provided; without it the
+            # app keeps its configured sender (logger by default).
+            if [ -n "${SMTP_PASSWORD:-}" ]; then
+              smtp_user="${SMTP_USER:-hello@outception.com}"
+              upsert_env OUTCEPTION_EMAIL_SENDER smtp
+              upsert_env OUTCEPTION_EMAIL_SMTP_USER "$smtp_user"
+              upsert_env OUTCEPTION_EMAIL_SMTP_PASSWORD "$SMTP_PASSWORD"
+              # Send "From" the authenticated Workspace mailbox's own domain.
+              # Google rejects sending as any domain/subdomain it doesn't own for
+              # this account, so the From address MUST match the SMTP user's
+              # domain (deriving both from $smtp_user keeps them aligned).
+              upsert_env OUTCEPTION_EMAIL_FROM_LOCAL "${smtp_user%@*}"
+              upsert_env OUTCEPTION_EMAIL_FROM_DOMAIN "${smtp_user#*@}"
+            fi
+
+            # Google OAuth creds (host-only, never committed). Both required for
+            # "Sign in with Google" to work.
+            if [ -n "${GOOGLE_CLIENT_ID:-}" ] && [ -n "${GOOGLE_CLIENT_SECRET:-}" ]; then
+              upsert_env OUTCEPTION_GOOGLE_CLIENT_ID "$GOOGLE_CLIENT_ID"
+              upsert_env OUTCEPTION_GOOGLE_CLIENT_SECRET "$GOOGLE_CLIENT_SECRET"
+            fi
+
+            # Microsoft OAuth creds (host-only, never committed). Both required
+            # for "Sign in with Microsoft" to work.
+            if [ -n "${MICROSOFT_CLIENT_ID:-}" ] && [ -n "${MICROSOFT_CLIENT_SECRET:-}" ]; then
+              upsert_env OUTCEPTION_MICROSOFT_CLIENT_ID "$MICROSOFT_CLIENT_ID"
+              upsert_env OUTCEPTION_MICROSOFT_CLIENT_SECRET "$MICROSOFT_CLIENT_SECRET"
+            fi
+
+            # Apple OAuth creds (host-only, never committed). All four required
+            # for "Sign in with Apple". KEY_VALUE is base64 of the .p8 key; the
+            # app decodes it back to a PEM at load (see config._normalize_apple_key).
+            if [ -n "${APPLE_CLIENT_ID:-}" ] && [ -n "${APPLE_KEY_VALUE:-}" ]; then
+              upsert_env OUTCEPTION_APPLE_CLIENT_ID "$APPLE_CLIENT_ID"
+              upsert_env OUTCEPTION_APPLE_TEAM_ID "$APPLE_TEAM_ID"
+              upsert_env OUTCEPTION_APPLE_KEY_ID "$APPLE_KEY_ID"
+              upsert_env OUTCEPTION_APPLE_KEY_VALUE "$APPLE_KEY_VALUE"
+            fi
+            # Apple domain-verification token (public; served at the .well-known
+            # path). Set independently so it can be deployed before the creds.
+            if [ -n "${APPLE_DOMAIN_ASSOCIATION:-}" ]; then
+              upsert_env OUTCEPTION_APPLE_DOMAIN_ASSOCIATION "$APPLE_DOMAIN_ASSOCIATION"
+            fi
+
+            export IMAGE_TAG="$GITHUB_SHA"
+            compose() { docker compose --env-file .env.prod -f docker-compose.prod.yml "$@"; }
+
+            # 2. Remember the currently-running API image so we can roll back.
+            prev_cid="$(compose ps -q api 2>/dev/null || true)"
+            prev_tag=""
+            if [ -n "$prev_cid" ]; then
+              prev_tag="$(docker inspect --format '{{.Config.Image}}' "$prev_cid" 2>/dev/null | sed 's/.*://')"
+            fi
+
+            # 3. Pull the new images and bring the stack up.
+            compose pull
+            compose up -d --remove-orphans
+
+            # 4. Health-gate: wait for the API /healthz, roll back on failure.
+            ok=0
+            for _ in $(seq 1 30); do
+              cid="$(compose ps -q api 2>/dev/null || true)"
+              if [ -n "$cid" ] && docker exec "$cid" python -c \
+                "import urllib.request,sys;sys.exit(0 if urllib.request.urlopen('http://localhost:10000/healthz').status==200 else 1)" \
+                >/dev/null 2>&1; then ok=1; break; fi
+              sleep 3
+            done
+
+            if [ "$ok" != "1" ]; then
+              echo "::error::Health check failed for $GITHUB_SHA"
+              if [ -n "$prev_tag" ] && [ "$prev_tag" != "$GITHUB_SHA" ]; then
+                echo "Rolling back to $prev_tag"
+                export IMAGE_TAG="$prev_tag"
+                compose up -d --remove-orphans
+              fi
+              exit 1
+            fi
+
+            docker image prune -f
+            echo "Deployed $GITHUB_SHA"

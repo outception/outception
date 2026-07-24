@@ -1,0 +1,189 @@
+name: outception
+
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "${OUTCEPTION_REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 10s
+      retries: 10
+
+  # Optional local headline-translation engine. Set
+  # OUTCEPTION_LIBRETRANSLATE_URL=http://localhost:5000 in server/.env to route
+  # headline translation through it (otherwise the keyless public endpoint is
+  # used). LT_LOAD_ONLY keeps only a few models for a fast local boot; prod
+  # loads the full language set (see deploy/docker-compose.prod.yml).
+  libretranslate:
+    image: libretranslate/libretranslate:latest
+    ports:
+      - "${OUTCEPTION_LIBRETRANSLATE_PORT:-5000}:5000"
+    environment:
+      - LT_LOAD_ONLY=${OUTCEPTION_LT_LOAD_ONLY:-en,de,es,fr,ja,ar,zh-Hans}
+      - LT_DISABLE_WEB_UI=true
+      - LT_UPDATE_MODELS=false
+    # Persist downloaded models. The named volume starts root-owned but the
+    # process runs as the non-root `libretranslate` user, so mount the whole
+    # home dir (which the image chowns on boot) rather than a deep subpath.
+    volumes:
+      - libretranslate_models:/home/libretranslate/.local
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:5000/languages').status==200 else 1)"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 300s
+
+  db:
+    image: postgres:15.1-bullseye
+    command: ["postgres", "-c", "max_locks_per_transaction=256"]
+    environment:
+      - POSTGRES_USER=${OUTCEPTION_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${OUTCEPTION_POSTGRES_PWD}
+      - POSTGRES_DB=${OUTCEPTION_POSTGRES_DATABASE}
+      - POSTGRES_PORT=${OUTCEPTION_POSTGRES_PORT:-5432}
+      - OUTCEPTION_READ_USER=${OUTCEPTION_POSTGRES_READ_USER:-outception_read}
+      - OUTCEPTION_READ_PASSWORD=${OUTCEPTION_POSTGRES_READ_PWD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+      - ./init-readonly-user.sql:/docker-entrypoint-initdb.d/init-readonly-user.sql
+    ports:
+      - "${OUTCEPTION_POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-q",
+          "-d",
+          "${OUTCEPTION_POSTGRES_DATABASE}",
+          "-U",
+          "${OUTCEPTION_POSTGRES_USER}",
+        ]
+      timeout: 40s
+      interval: 2s
+      retries: 20
+
+  minio:
+    image: bitnamilegacy/minio:2024.5.28
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - "minio_data:/minio"
+    environment:
+      - MINIO_ROOT_USER=${OUTCEPTION_MINIO_USER}
+      - MINIO_ROOT_PASSWORD=${OUTCEPTION_MINIO_PWD}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+
+  minio-setup:
+    image: bitnamilegacy/minio-client:2024.5.24
+    depends_on:
+      minio:
+        condition: service_healthy
+    volumes:
+      - ./.minio:/tmp/config:ro
+    environment:
+      - MINIO_HOST=minio
+      - MINIO_ROOT_USER=${OUTCEPTION_MINIO_USER}
+      - MINIO_ROOT_PASSWORD=${OUTCEPTION_MINIO_PWD}
+      - BUCKET_NAME=${OUTCEPTION_S3_FILES_BUCKET_NAME}
+      - PUBLIC_BUCKET_NAME=${OUTCEPTION_S3_FILES_PUBLIC_BUCKET_NAME}
+      - BUCKET_TESTING_NAME=testing-${OUTCEPTION_S3_FILES_BUCKET_NAME}
+      - POLICY_FILE=/tmp/config/policy.json
+      - ACCESS_KEY=${OUTCEPTION_AWS_ACCESS_KEY_ID}
+      - SECRET_ACCESS_KEY=${OUTCEPTION_AWS_SECRET_ACCESS_KEY}
+    entrypoint:
+      ["bash", "-c", "bash /tmp/config/local.sh /tmp/config/configure.sh"]
+
+  prometheus:
+    image: prom/prometheus:v3.7.3
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=1d"
+      - "--web.enable-lifecycle"
+      - "--web.enable-remote-write-receiver"
+    profiles:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:12.3.0
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=outception
+      - GF_SECURITY_ADMIN_PASSWORD=outception
+      - GF_USERS_ALLOW_SIGN_UP=false
+    depends_on:
+      - prometheus
+    profiles:
+      - monitoring
+
+  tinybird:
+    image: tinybirdco/tinybird-local:latest
+    platform: linux/amd64
+    ports:
+      - "${TINYBIRD_PORT:-7181}:7181"
+      - "${TINYBIRD_ADMIN_PORT:-7182}:7182"
+    volumes:
+      - ./tinybird:/tinybird:ro
+      - ../dev/docker/scripts/tinybird-setup.sh:/scripts/tinybird-setup.sh:ro
+    command: ["bash", "/scripts/tinybird-setup.sh"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7181/"]
+      interval: 5s
+      timeout: 10s
+      retries: 30
+    profiles:
+      - tinybird
+
+  localstack:
+    # Pinned: newer tags may require a LOCALSTACK_AUTH_TOKEN.
+    image: localstack/localstack:4.4.0
+    ports:
+      - "${LOCALSTACK_PORT:-4566}:4566"
+    environment:
+      - SERVICES=sqs,lambda
+      - DEBUG=${LOCALSTACK_DEBUG:-0}
+      - AWS_DEFAULT_REGION=${OUTCEPTION_AWS_REGION:-us-east-2}
+      # LocalStack-spawned Lambda containers join this network so they can
+      # reach `db` and `redis` by service name. Defaults to this project's
+      # network (<project>_default); override if the project name differs.
+      - LAMBDA_DOCKER_NETWORK=${LAMBDA_DOCKER_NETWORK:-server_default}
+      - LAMBDA_KEEPALIVE_MS=${LAMBDA_KEEPALIVE_MS:-300000}
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "localstack_data:/var/lib/localstack"
+    healthcheck:
+      test:
+        ["CMD-SHELL", "curl -fs http://localhost:4566/_localstack/health || exit 1"]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+    profiles:
+      - sqs
+
+volumes:
+  postgres_data:
+  minio_data:
+    driver: local
+  prometheus_data:
+  grafana_data:
+  localstack_data:
+  libretranslate_models:

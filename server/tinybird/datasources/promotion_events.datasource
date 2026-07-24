@@ -1,0 +1,22 @@
+TOKEN "promotion_events_ingest" APPEND
+
+DESCRIPTION >
+    Lifecycle and engagement events for paid promotions: created, paid,
+    activated, expired, impression and click. Emitted best-effort from the
+    promotion service; the Postgres `promotions` table remains the source of
+    truth for counters.
+
+SCHEMA >
+    `id` UUID `json:$.id`,
+    `timestamp` DateTime64(3) `json:$.timestamp`,
+    `name` LowCardinality(String) `json:$.name`,
+    `promotion_id` UUID `json:$.promotion_id`,
+    `author_id` UUID `json:$.author_id`,
+    `category` LowCardinality(String) `json:$.category`,
+    `status` LowCardinality(Nullable(String)) `json:$.status`,
+    `amount_cents` Nullable(Int64) `json:$.amount_cents`,
+    `duration_minutes` Nullable(Int64) `json:$.duration_minutes`
+
+ENGINE "MergeTree"
+ENGINE_PARTITION_KEY "toYYYYMM(timestamp)"
+ENGINE_SORTING_KEY "category, timestamp, promotion_id"

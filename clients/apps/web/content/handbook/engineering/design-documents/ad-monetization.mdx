@@ -1,0 +1,138 @@
+---
+title: "Ad-Supported Monetization (AdMob + AdSense)"
+description: "Monetize Outception with Google AdMob (mobile) and AdSense (web), retire paid promotion, and eliminate the merchant-of-record problem entirely."
+---
+
+<Info>
+**Status**: Draft.
+
+**Created**: 2026-07-21
+
+**Decision**: Monetize via **Google AdMob (mobile, primary)** + **AdSense (web, secondary)**. **Retire paid pay-to-promote** — featured slots become native ads or free community boosts. No payment provider, no Merchant of Record: Google pays *us* as a publisher, so there is nothing to be MoR for. Supersedes the "Outception Pro" subscription proposal.
+</Info>
+
+## Abstract
+
+Outception is a live news wall shown mostly through the **iOS App Store and Google Play** apps (web traffic is minor). We monetize by **showing Google ads to readers** rather than **selling anything**. This removes the merchant-of-record/VAT problem that blocked pay-to-promote: as an ad publisher we receive payouts from Google (ordinary income), and we are never the seller of a product.
+
+- **Mobile (primary):** Google **AdMob** via `react-native-google-mobile-ads` in the Expo app.
+- **Web (secondary):** Google **AdSense** in the Next.js app.
+- **Paid promotion is retired.** Featured slots become AdMob **native ads** (mobile) / AdSense units (web) or **free, vote-ranked community boosts**.
+
+## Why this is the right model
+
+- **No MoR / no VAT-on-sales.** We don't sell — Google bills advertisers and pays us. (Contrast: selling promotion made us a merchant → the Polar rejection.)
+- **Fits the traffic shape.** Ad revenue is a volume game; app-store installs are exactly the volume an ad model wants.
+- **Even a future "remove ads" upgrade stays MoR-free** — it would go through App Store / Play **IAP**, where Apple/Google are the merchant of record. (Out of scope now; noted for later.)
+
+## What we need (all free)
+
+- **Google AdMob** account (mobile apps + ad units).
+- **Google AdSense** account (web) — note the stricter review (see Risks).
+- A **Google-certified Consent Management Platform (CMP)** for EEA/UK: **Google UMP** on mobile, a certified CMP banner on web. Required by Google to serve ads in the EEA/UK.
+- **iOS App Tracking Transparency (ATT)** prompt — Apple rejects ad apps without it.
+- A **privacy policy** page (stores + Google require it; must disclose ad data use).
+- An **EAS build pipeline** for the mobile app (native ad SDK can't run in Expo Go).
+
+No Stripe, no Polar, no webhook billing for this model.
+
+## Policy compliance (must-follow or you get struck/rejected)
+
+- **Aggregator apps are allowed on AdMob** provided we follow AdSense program policies. Keep the product **headlines + link-out to the source** — do **not** start reproducing full third-party articles under ads ("framed content already monetized by Google" is disallowed).
+- **Consent:** serve EEA/UK users only after CMP consent (UMP mobile / certified CMP web). Non-consented users get non-personalized ads only.
+- **ATT (iOS):** show the prompt; personalized ads only if granted.
+- **Ad UX:** no interstitials on app open every session, no accidental-click layouts, no ads over content — Apple/Google both penalize this.
+- **Privacy labels:** update App Store "Privacy" + Play "Data safety" to declare advertising/identifier usage.
+
+## Mobile plan — `apps/app` (Expo / React Native), primary
+
+1. **AdMob setup:** create AdMob account → register the iOS and Android apps → create ad units (app-open, banner, native, interstitial). App IDs look like `ca-app-pub-XXXX~YYYY`.
+2. **SDK integration:** add `react-native-google-mobile-ads` (+ `@react-native-async-storage/async-storage`); configure the plugin + `android_app_id` / `ios_app_id` in `app.config.js`. This requires an **EAS development build** (the app isn't device-tested yet, so we stand up EAS regardless).
+3. **Consent & privacy (gating first launch):**
+   - **UMP** consent form (`AdsConsent` from the SDK) before requesting ads.
+   - **ATT** via `expo-tracking-transparency` on iOS.
+   - Set `requestNonPersonalizedAdsOnly` when consent/ATT is not granted.
+4. **Placements (revenue-optimized for a scroll app):**
+   - **Native ads interspersed in the deck** every ~6–8 cards (best fit; reads like a promoted card).
+   - **Anchored banner** at the bottom of the feed.
+   - **Interstitial** used sparingly (e.g. at natural breaks), never on cold start.
+5. **Store submission:** privacy labels, ATT usage string in `Info.plist`, Play Data-safety form.
+
+## Web plan — `apps/web` (Next.js), secondary
+
+1. **AdSense account + site review** (approval risk — see Risks). Add the AdSense script (via `next/script`, `afterInteractive`) in the root layout, gated behind consent.
+2. **Certified CMP** banner for EEA/UK (Google's own consent or a certified vendor); block ad requests until a choice is made. The app already derives `GEO_COUNTRY` — reuse it to decide whether the CMP is required.
+3. **Placements:** an in-feed unit every N cards on the news wall (mirroring mobile), plus a sidebar/leaderboard on wide layouts. Keep the feed's Orbit layout; ad slots are `<ins class="adsbygoogle">` wrapped in a Box container.
+4. Because web traffic is low, this is **phase 2** — ship mobile ads first.
+
+## Removing Polar & paid promotion (full code removal)
+
+Polar/payment is no longer needed. Remove it entirely. **Decision: Variant B** — remove the promotion feature entirely; the featured slot is filled only by AdMob native ads / AdSense, and the whole `promotion` + `billing` stack (modules, tables, dashboard, UI) is deleted.
+
+- ~~Variant A — keep FREE community boosts~~ (not chosen).
+- **Variant B — remove promotion entirely (chosen):** delete `promotion/` + `billing/`, their models/tables, all promotion UI (web + mobile), and payment config/CI. The wall's featured slot becomes an ad unit.
+
+### Backend — delete (both variants)
+- `outception/billing/` — entire module (`client.py`, `endpoints.py`, `service.py`, `__init__.py`).
+- `outception/api.py` — drop `billing_router` import + `include_router(billing_router)`.
+- `config.py` — remove `PAYMENT_GATEWAY_BASE_URL`, `PAYMENT_GATEWAY_ACCESS_TOKEN`, `PAYMENT_GATEWAY_WEBHOOK_SECRET`, `PROMOTION_PRODUCT_ID`, `PROMOTION_PRICE_CENTS`. Keep `PROMOTION_BLOCK_MINUTES` only if boosts keep a duration (Variant A).
+- `rate_limit.py` — remove the `^/v1/billing/webhook` rule (and the `^/v1/promotions/?$` create rule in Variant B; keep a boost-create rule in Variant A).
+- `promotion/endpoints.py` / `schemas.py` — remove the checkout `POST /` returning `PromotionCheckout`, `resume_checkout`, and the `billing_service` import; drop `PromotionCheckout`, `amount_cents`, `blocks`-pricing from schemas.
+- `promotion/service.py` — remove `create_promotion_checkout` coupling; the underpayment branch in `activate_paid`. Variant A keeps `create_pending`→`activate_paid(paid_amount_cents=None)` for free boosts; Variant B deletes the module.
+- `models/promotion.py` — drop `payment_ref`, `amount_cents`, `paid_at` (both variants; a boost is free). Variant B drops the whole model.
+- **Tests:** delete `tests/billing/`; update or delete `tests/promotion/test_endpoints.py`.
+- **Migrations:** add a migration dropping the payment columns (Variant A) or the `promotions` table (Variant B). Reversible downgrade per repo convention.
+
+### Frontend — remove/repoint (both variants)
+- **Web** (`apps/web`): delete `app/(main)/promote/`, `ComposePromotionDialog`, `EditPromotionDialog`, the `money`/`analytics`/`promotions` dashboard pages + `components/Promotions/*` (Variant B), `MoneyDashboard`, `PromotionCheckout` usage, and checkout bits in `utils/promotions.ts`. In `hooks/queries/promotions.ts`, replace the `featured()` slot with an ad unit. Variant A keeps a slimmed boost UI (no payment step).
+- **Mobile** (`apps/app`): delete `utils/promote.ts` (opens the web checkout) and the promote entry points; replace the wall's promoted slot with an AdMob native ad.
+- Regenerate the API client (`pnpm run generate`) after the backend schema changes.
+
+### Deploy / CI — remove
+- `.github/workflows/deploy-hetzner.yml`: delete the `PAYMENT_PRODUCT_ID`/`PAYMENT_ACCESS_TOKEN`/`PAYMENT_WEBHOOK_SECRET`/`PAYMENT_BASE_URL` env mappings, their entries in the `envs:` list, the injection block, and the header comments.
+- Delete the GitHub **Variables/Secrets**: `PAYMENT_PRODUCT_ID`, `PAYMENT_GATEWAY_ACCESS_TOKEN`, `PAYMENT_GATEWAY_WEBHOOK_SECRET`, `PAYMENT_GATEWAY_BASE_URL` (via `gh`).
+
+### Docs / config text
+- Scrub Polar/payment mentions from `AGENTS.md`, `server/AGENTS.md`, `clients/AGENTS.md`, the `content/docs` + `openapi.yaml`, and `.env.template` (`OUTCEPTION_PROMOTION_PRODUCT_ID`, `OUTCEPTION_PAYMENT_GATEWAY_*`).
+- Known vestiges to sweep while here (from prior audits): `eventstream/service.py` `checkout_client_secret`, `kit/http.py` `_unescape_checkout_id_placeholder` — leftover MoR-checkout plumbing, safe to delete.
+
+### Featured slot → ad
+After removal, the wall's featured slot (`hooks/queries/promotions.ts` `featured()` on web; the equivalent on mobile) is filled by **AdMob native ad** (mobile) / **AdSense in-feed unit** (web). Variant A additionally offers a **free, vote-ranked community boost**.
+
+### Verification
+- `uv run task lint && uv run task lint_types && uv run task test` green with no billing/promotion-payment references remaining (`grep -ri "polar\|payment_gateway"` clean except the OAuth2 `WEBHOOK_SECRET_PREFIX` false positive).
+- Web `pnpm typecheck && pnpm lint` green; client regenerated.
+- App + worker import; migration applies on a fresh DB.
+
+## Consent, privacy & data
+
+- **Mobile:** UMP + ATT as above; store privacy labels updated.
+- **Web:** certified CMP; `adsbygoogle` requests gated on consent.
+- **Privacy policy** page (web + linked from app stores) disclosing Google ad partners, identifiers, and EEA choices. Add/refresh it.
+- Personalized vs non-personalized ads switch on consent state everywhere.
+
+## Config / env
+
+- **Mobile** (`app.config.js`, public): `ADMOB_IOS_APP_ID`, `ADMOB_ANDROID_APP_ID`, and per-format ad-unit IDs (public identifiers, safe in the client; use Google **test IDs** in dev).
+- **Web** (`NEXT_PUBLIC_ADSENSE_CLIENT`, ad-slot IDs): public.
+- No secrets, no deploy-secret injection needed for ads (unlike the payment creds).
+
+## Phased rollout
+
+- **Phase 1 — Mobile ads (primary):** EAS build + `react-native-google-mobile-ads` + UMP + ATT + native/banner placements; ship to TestFlight/internal track, then stores.
+- **Phase 2 — Web ads:** AdSense approval + CMP + in-feed units.
+- **Phase 3 — Retire paid promotion:** swap the featured slot to ads/free boosts; disable checkout; later remove billing/Polar code + config.
+- **Phase 4 (optional, later):** "Remove ads" upgrade via App Store/Play **IAP** (Apple/Google = MoR).
+
+## Risks & open questions
+
+- **AdSense web approval** is stricter in 2026 (helpful-content signals) and can reject thin/aggregated sites. Mitigate: link-out model, add original framing/curation, or **skip web ads** if not approved — mobile carries the model.
+- **AdMob policy strike risk** if the product drifts toward reproducing full articles. Keep headlines + link-out.
+- **Revenue depends on install volume** and geo mix; aggregator eCPMs are modest. Validate with a small launch before over-investing.
+- **iOS review:** ATT string + real native functionality required (the app clears this; a "just a website" build would be rejected).
+- **EEA consent correctness** is a compliance must — get the CMP wiring right before first ad request.
+- **Mobile app maturity:** not yet device-tested / no EAS build on record — Phase 1 includes standing that up.
+
+## Summary
+
+Show Google ads instead of selling promotion. Mobile AdMob is the engine (that's where the users are), web AdSense is a bonus, and paid promotion is retired into native-ad or free-boost slots. Net effect: a monetization path with **no merchant-of-record, no VAT, no payment provider** — just publisher payouts from Google — matched to an app-store-first distribution.

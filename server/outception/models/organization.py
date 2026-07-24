@@ -1,0 +1,235 @@
+from datetime import datetime
+from enum import StrEnum
+from typing import Any, Literal, TypedDict
+from urllib.parse import urlparse
+
+from sqlalchemy import (
+    TIMESTAMP,
+    ColumnElement,
+    String,
+    UniqueConstraint,
+    and_,
+)
+from sqlalchemy.dialects.postgresql import CITEXT, JSONB
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import Mapped, mapped_column
+
+from outception.config import settings
+from outception.exceptions import OutceptionError
+from outception.kit.db.models import RateLimitGroupMixin, RecordModel
+from outception.kit.extensions.sqlalchemy import StringEnum
+
+
+class OrganizationSocials(TypedDict):
+    platform: str
+    url: str
+
+
+class OrganizationDetails(TypedDict, total=False):
+    about: str
+    intended_use: str
+    customer_acquisition: list[str]
+    switching: bool
+    previous_annual_revenue: int
+
+
+class OrganizationStatus(StrEnum):
+    CREATED = "created"
+    ACTIVE = "active"
+    BLOCKED = "blocked"
+
+    def get_display_name(self) -> str:
+        return {
+            OrganizationStatus.CREATED: "Created",
+            OrganizationStatus.ACTIVE: "Active",
+            OrganizationStatus.BLOCKED: "Blocked",
+        }[self]
+
+
+class OrganizationCapabilities(TypedDict):
+    api_access: bool
+    dashboard_access: bool
+
+
+CapabilityName = Literal[
+    "api_access",
+    "dashboard_access",
+]
+
+
+class InvalidStatusTransitionError(OutceptionError):
+    def __init__(
+        self, current: "OrganizationStatus", target: "OrganizationStatus"
+    ) -> None:
+        self.current = current
+        self.target = target
+        super().__init__(
+            f"Cannot transition organization status from "
+            f"{current.get_display_name()} to {target.get_display_name()}.",
+            400,
+        )
+
+
+STATUS_CAPABILITIES: dict[OrganizationStatus, OrganizationCapabilities] = {
+    OrganizationStatus.CREATED: {
+        "api_access": True,
+        "dashboard_access": True,
+    },
+    OrganizationStatus.ACTIVE: {
+        "api_access": True,
+        "dashboard_access": True,
+    },
+    OrganizationStatus.BLOCKED: {
+        "api_access": False,
+        "dashboard_access": False,
+    },
+}
+
+
+CAPABILITY_METADATA: dict[CapabilityName, tuple[str, str]] = {
+    "api_access": (
+        "API access",
+        "Allow authenticated API access for team members.",
+    ),
+    "dashboard_access": (
+        "Dashboard access",
+        "Allow team members to sign in and access the dashboard.",
+    ),
+}
+
+CAPABILITY_NAMES: frozenset[str] = frozenset(CAPABILITY_METADATA.keys())
+
+
+# BLOCKED → ACTIVE additionally requires a reason, enforced at the service layer.
+ALLOWED_STATUS_TRANSITIONS: dict[OrganizationStatus, frozenset[OrganizationStatus]] = {
+    OrganizationStatus.CREATED: frozenset(
+        {OrganizationStatus.ACTIVE, OrganizationStatus.BLOCKED}
+    ),
+    OrganizationStatus.ACTIVE: frozenset({OrganizationStatus.BLOCKED}),
+    OrganizationStatus.BLOCKED: frozenset(
+        {OrganizationStatus.CREATED, OrganizationStatus.ACTIVE}
+    ),
+}
+
+
+class Organization(RateLimitGroupMixin, RecordModel):
+    __tablename__ = "organizations"
+    __table_args__ = (UniqueConstraint("slug"),)
+
+    name: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    slug: Mapped[str] = mapped_column(CITEXT, nullable=False, unique=True)
+    _avatar_url: Mapped[str | None] = mapped_column(
+        String, name="avatar_url", nullable=True
+    )
+
+    email: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
+    website: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
+
+    @property
+    def avatar_url(self) -> str | None:
+        if self._avatar_url:
+            return self._avatar_url
+
+        if not self.website or not settings.LOGO_DEV_PUBLISHABLE_KEY:
+            return None
+
+        parsed = urlparse(self.website)
+        domain = parsed.netloc or parsed.path
+        domain = domain.lower().removeprefix("www.")
+
+        return f"https://img.logo.dev/{domain}?size=64&retina=true&token={settings.LOGO_DEV_PUBLISHABLE_KEY}&fallback=404"
+
+    @avatar_url.setter
+    def avatar_url(self, value: str | None) -> None:
+        self._avatar_url = value
+
+    socials: Mapped[list[OrganizationSocials]] = mapped_column(
+        JSONB, nullable=False, default=list
+    )
+    details: Mapped[OrganizationDetails] = mapped_column(
+        JSONB, nullable=False, default=dict
+    )
+
+    status: Mapped[OrganizationStatus] = mapped_column(
+        StringEnum(OrganizationStatus),
+        nullable=False,
+        default=OrganizationStatus.CREATED,
+    )
+
+    onboarded_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
+    ai_onboarding_completed_at: Mapped[datetime | None] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=True, default=None
+    )
+
+    capabilities: Mapped[OrganizationCapabilities] = mapped_column(
+        JSONB,
+        nullable=False,
+        default=lambda: {**STATUS_CAPABILITIES[OrganizationStatus.CREATED]},
+    )
+
+    country: Mapped[str | None] = mapped_column(String(2), nullable=True, default=None)
+
+    profile_settings: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, default=dict
+    )
+
+    #
+    # Feature Flags
+    #
+
+    feature_settings: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, default=dict
+    )
+
+    #
+    # Fields synced from GitHub
+    #
+
+    # Org description or user bio
+    bio: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
+    company: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
+    blog: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
+    location: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
+    twitter_username: Mapped[str | None] = mapped_column(
+        String, nullable=True, default=None
+    )
+
+    #
+    # End: Fields synced from GitHub
+    #
+
+    def _capability(self, name: CapabilityName) -> bool:
+        return self.capabilities[name]
+
+    @hybrid_property
+    def can_authenticate(self) -> bool:
+        return not self.is_deleted and self._capability("api_access")
+
+    @can_authenticate.inplace.expression
+    @classmethod
+    def _can_authenticate_expression(cls) -> ColumnElement[bool]:
+        return and_(
+            cls.is_deleted.is_(False),
+            cls.capabilities["api_access"].as_boolean().is_(True),
+        )
+
+    @hybrid_property
+    def can_access_dashboard(self) -> bool:
+        return not self.is_deleted and self._capability("dashboard_access")
+
+    @can_access_dashboard.inplace.expression
+    @classmethod
+    def _can_access_dashboard_expression(cls) -> ColumnElement[bool]:
+        return and_(
+            cls.is_deleted.is_(False),
+            cls.capabilities["dashboard_access"].as_boolean().is_(True),
+        )
+
+    def set_status(self, status: OrganizationStatus) -> None:
+        if (
+            status != self.status
+            and status not in ALLOWED_STATUS_TRANSITIONS[self.status]
+        ):
+            raise InvalidStatusTransitionError(self.status, status)
+        self.status = status
+        self.capabilities = {**STATUS_CAPABILITIES[status]}

@@ -1,0 +1,991 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@stylex;
+
+@source '../../../../packages/ui/src';
+@source '../../../../packages/orbit/src';
+
+@plugin '@tailwindcss/forms';
+@plugin 'tailwindcss-radix';
+@plugin '@tailwindcss/typography';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@font-face {
+  font-family: 'Geist';
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/Geist-Variable.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/HankenGrotesk-Variable.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'GeistMono';
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/GeistMono-Variable.woff2') format('woff2');
+}
+
+@theme {
+  --shadow-md: 0 0px 15px rgba(0 0 0 / 0.04), 0 0px 2px rgba(0 0 0 / 0.06);
+  --shadow-lg: 0 0px 20px rgba(0 0 0 / 0.04), 0 0px 5px rgba(0 0 0 / 0.06);
+  --shadow-xl: 0 0px 30px rgba(0 0 0 / 0.04), 0 0px 10px rgba(0 0 0 / 0.06);
+  --shadow-3xl: 0 0 50px rgba(0 0 0 / 0.02), 0 0 50px rgba(0 0 0 / 0.04);
+
+  /* The Magnific-style stack: Geist for text/UI, Hanken Grotesk (an
+     open-licensed stand-in for their commercial display face) for
+     headlines, wordmarks and everything that used to be serif. */
+  --font-sans: 'Geist', 'Inter', sans-serif;
+  --font-display: 'Hanken Grotesk', 'InterDisplay', sans-serif;
+  --font-mono: 'GeistMono', monospace;
+  --font-louize: 'Hanken Grotesk', serif;
+  --font-serif: 'Hanken Grotesk', Georgia, serif;
+
+  --text-xxs: 0.65rem;
+
+  --color-blue-50: oklch(0.97 0.014 254.604);
+  --color-blue-100: oklch(0.932 0.032 255.585);
+  --color-blue-200: oklch(0.882 0.059 254.128);
+  --color-blue-300: oklch(0.809 0.105 251.813);
+  --color-blue-400: oklch(0.707 0.165 254.624);
+  --color-blue-500: oklch(0.623 0.214 259.815);
+  --color-blue-600: oklch(0.546 0.245 262.881);
+  --color-blue-700: oklch(0.488 0.243 264.376);
+  --color-blue-800: oklch(0.424 0.199 265.638);
+  --color-blue-900: oklch(0.379 0.146 265.522);
+  --color-blue-950: oklch(0.282 0.091 267.935);
+  --color-blue: var(--color-blue-600);
+
+  --color-green-50: oklch(0.979 0.021 166.113);
+  --color-green-100: oklch(0.95 0.052 163.051);
+  --color-green-200: oklch(0.905 0.093 164.15);
+  --color-green-300: oklch(0.845 0.143 164.978);
+  --color-green-400: oklch(0.765 0.177 163.223);
+  --color-green-500: oklch(0.696 0.17 162.48);
+  --color-green-600: oklch(0.596 0.145 163.225);
+  --color-green-700: oklch(0.508 0.118 165.612);
+  --color-green-800: oklch(0.432 0.095 166.913);
+  --color-green-900: oklch(0.378 0.077 168.94);
+  --color-green-950: oklch(0.262 0.051 172.552);
+
+  --color-red-50: oklch(0.971 0.013 17.38);
+  --color-red-100: oklch(0.936 0.032 17.717);
+  --color-red-200: oklch(0.885 0.062 18.334);
+  --color-red-300: oklch(0.808 0.114 19.571);
+  --color-red-400: oklch(0.704 0.191 22.216);
+  --color-red-500: oklch(0.637 0.237 25.331);
+  --color-red-600: oklch(0.577 0.245 27.325);
+  --color-red-700: oklch(0.505 0.213 27.518);
+  --color-red-800: oklch(0.444 0.177 26.899);
+  --color-red-900: oklch(0.396 0.141 25.723);
+  --color-red-950: oklch(0.258 0.092 26.042);
+
+  --color-gray-50: oklch(0.985 0.002 247.839);
+  --color-gray-100: oklch(0.967 0.003 264.542);
+  --color-gray-200: oklch(0.928 0.006 264.531);
+  --color-gray-300: oklch(0.872 0.01 258.338);
+  --color-gray-400: oklch(0.707 0.022 261.325);
+  --color-gray-500: oklch(0.551 0.027 264.364);
+  --color-gray-600: oklch(0.446 0.03 256.802);
+  --color-gray-700: oklch(0.373 0.034 259.733);
+  --color-gray-800: oklch(0.278 0.033 256.848);
+  --color-gray-900: oklch(0.21 0.034 264.665);
+  --color-gray-950: oklch(0.13 0.028 261.692);
+
+  --color-outception-50: hsl(233, 4%, 85%);
+  --color-outception-100: hsl(233, 4%, 79%);
+  --color-outception-200: hsl(233, 4%, 68%);
+  --color-outception-300: hsl(233, 4%, 62%);
+  --color-outception-400: hsl(233, 4%, 52%);
+  --color-outception-500: hsl(233, 4%, 46%);
+  --color-outception-600: hsl(233, 4%, 16%);
+  --color-outception-700: hsl(233, 4%, 12%);
+  --color-outception-800: hsl(233, 4%, 9.5%);
+  --color-outception-900: hsl(233, 4%, 6.5%);
+  --color-outception-950: hsl(233, 4%, 3.5%);
+
+  /* Newsprint palette — the single source of truth for the paper design
+     language (see "Newsprint design language" below). Day edition: warm
+     stock + ink; night edition: near-black stock + pale-paper "ink". */
+  --color-paper: #fff1e5; /* FT-salmon page background */
+  --color-paper-sheet: #fffdf7; /* card stock (day) */
+  --color-paper-sheet-under: #fdf9f0; /* peeking sheets (day) */
+  --color-paper-night: hsl(233, 4%, 8%); /* panel stock (night) */
+  --color-paper-night-raised: hsl(233, 4%, 8.5%); /* front sheet (night) */
+  --color-paper-night-under: hsl(233, 4%, 7%); /* peeking sheets (night) */
+  --color-ink: #181612; /* day-edition ink (rules, seams, scrims) */
+  --color-ink-night: #fdf4ec; /* night-edition "ink" = pale paper */
+  --color-ink-shadow: #3c2a14; /* warm sheet drop shadow */
+  /* Night-edition page vignette (the fixed backdrop behind everything). */
+  --color-night-glow: #161514;
+  --color-night-mid: #0f0e0d;
+  --color-night-page: #0a0a0a;
+
+  /* Brand blue ramp — the logo gem and its spin animation. */
+  --color-brand-100: #8fbbf0;
+  --color-brand-200: #6fa3e8;
+  --color-brand-300: #4a8ae0;
+  --color-brand-400: #2e77e0;
+  --color-brand-500: #1b66d1;
+  --color-brand-600: #1554ae;
+  --color-brand-700: #10499e;
+  --color-brand-800: #0e3d80;
+  --color-brand-900: #0b316b;
+
+  /* shadcn */
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-sidebar: var(--sidebar-background);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-4xl: 2rem;
+
+  @keyframes accordion-down {
+    0%: {
+      height: 0;
+    }
+    100% {
+      height: 'var(--radix-accordion-content-height)';
+    }
+  }
+
+  @keyframes accordion-up {
+    0% {
+      height: 'var(--radix-accordion-content-height)';
+    }
+    100% {
+      height: 0;
+    }
+  }
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  @keyframes send-off {
+    0% {
+      transform: translate(0, 0);
+      opacity: 1;
+    }
+    55% {
+      transform: translate(10px, -10px);
+      opacity: 0;
+    }
+    56% {
+      transform: translate(-9px, 9px);
+      opacity: 0;
+    }
+    100% {
+      transform: translate(0, 0);
+      opacity: 1;
+    }
+  }
+
+  --animate-send-off: send-off 0.5s ease-out;
+}
+
+@layer base {
+  html {
+    color-scheme: light dark;
+    @apply text-gray-900;
+    font-feature-settings: 'cv01', 'cv03', 'cv04', 'cv06', 'cv11', 'ss03';
+  }
+
+  html.dark {
+    @apply text-gray-200;
+  }
+
+  html:not(.dark) {
+    --lightningcss-light: initial;
+    --lightningcss-dark: ;
+  }
+
+  html.dark {
+    --lightningcss-light: ;
+    --lightningcss-dark: initial;
+  }
+
+  input[type='email'] {
+    font-feature-settings:
+      'cv01',
+      'cv03',
+      'cv04',
+      'cv06',
+      'cv11',
+      'ss03',
+      'calt' off;
+  }
+
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--border);
+  }
+
+  body {
+    color: var(--foreground);
+    /* Flash-free base under <SpectraBackground> — matched to the cream (light)
+       / near-black (dark) the Spectra gradient resolves to, so there's no flash
+       before the WebGL canvas paints. */
+    background-color: var(--color-paper);
+    /* iOS Safari applies IMPLICIT safe-area padding to <body>, which keeps even
+       a fixed full-bleed element (SpectraBackground) from filling under the top
+       status bar with viewport-fit=cover. Explicitly zeroing it is the only way
+       to opt into true edge-to-edge; content clears the notch via the spacers
+       in LandingLayout. See w3tutorials "viewport-fit=cover no longer working". */
+    margin: 0;
+    padding: 0 !important;
+  }
+
+  .dark body {
+    background-color: #000000;
+  }
+
+  /* Paper grain: a fixed full-bleed fractal-noise tooth over everything (below
+     modals at z-50) so the wall and cards read as printed on aged stock. Very
+     low opacity + blend so text stays crisp; pointer-events-none. */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    pointer-events: none;
+    opacity: 0.06;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .dark body::after {
+    opacity: 0.1;
+    mix-blend-mode: soft-light;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  img[src$='#gh-dark-mode-only'],
+  img[src$='#only-dark'] {
+    display: none;
+  }
+}
+
+/* ─── Orbit design tokens ──────────────────────────────────────────────────── */
+
+@layer base {
+  :root {
+    --orbit-bg: var(--color-white, #ffffff);
+    --orbit-bg-surface: hsl(0, 0%, 97%);
+    --orbit-bg-elevated: hsl(0, 0%, 90%);
+    --orbit-text: #111111;
+    --orbit-text-subtle: hsl(0, 0%, 60%);
+    --orbit-text-disabled: hsl(0, 0%, 32%);
+    --orbit-destructive: var(--color-red-500);
+  }
+
+  .dark {
+    --orbit-bg: hsl(233, 2%, 3%);
+    --orbit-bg-surface: hsl(233, 2%, 6.5%);
+    --orbit-bg-elevated: hsl(233, 2%, 9.5%);
+    --orbit-text: #f0f0f0;
+    --orbit-text-subtle: hsl(233, 2%, 52%);
+    --orbit-text-disabled: hsl(233, 2%, 32%);
+    --orbit-destructive: var(--color-red-600);
+  }
+}
+
+/* ─── Landing graphic tokens — read by canvas/SVG components via getComputedStyle ── */
+
+@layer base {
+  :root {
+    --color-graphic-stroke: #000;
+    --color-graphic-dim: #ccc;
+  }
+
+  .dark {
+    --color-graphic-stroke: #fff;
+    --color-graphic-dim: rgb(60, 60, 60);
+  }
+}
+
+/* shadcn/ui */
+
+@layer base {
+  :root {
+    --background: var(--color-gray-50);
+    --foreground: var(--color-gray-900);
+
+    --card: var(--color-white);
+    --card-foreground: var(--color-gray-900);
+
+    --popover: var(--color-white);
+    --popover-foreground: hsl(224 71.4% 4.1%);
+
+    /* Sidebar is the recessed page-level stock; the content card is the lighter
+       raised sheet (paper-sheet). Keeps the card popping above a darker sidebar. */
+    --sidebar-background: var(--color-paper);
+    --sidebar-foreground: var(--color-gray-900);
+    --sidebar-primary: var(--color-blue);
+    --sidebar-primary-foreground: var(--color-gray-50);
+    --sidebar-border: color-mix(in srgb, var(--color-ink) 10%, transparent);
+
+    --primary: var(--color-blue);
+    --primary-foreground: var(--color-gray-50);
+
+    --secondary: var(--color-gray-100);
+    --secondary-foreground: var(--color-gray-900);
+
+    --muted: var(--color-gray-100);
+    --muted-foreground: var(--color-gray-500);
+
+    --accent: var(--color-blue);
+    --accent-foreground: var(--color-white);
+
+    --destructive: var(--color-red-500);
+    --destructive-foreground: var(--color-red-600);
+
+    --border: var(--color-gray-200);
+    --input: var(--color-gray-200);
+    --ring: var(--color-gray-200);
+    --radius: 0.6rem;
+  }
+
+  :root.dark {
+    --background: var(--color-outception-800);
+    --foreground: var(--color-outception-500);
+
+    --card: var(--color-outception-800);
+    --card-foreground: var(--color-outception-50);
+
+    --popover: var(--color-outception-900);
+    --popover-foreground: var(--color-outception-50);
+
+    /* Dark: sidebar = darkest stock (…-under); the card uses …-raised (lighter). */
+    --sidebar-background: var(--color-paper-night-under);
+    --sidebar-foreground: var(--color-outception-50);
+    --sidebar-primary: var(--color-blue);
+    --sidebar-primary-foreground: var(--color-outception-50);
+    --sidebar-border: color-mix(
+      in srgb,
+      var(--color-ink-night) 12%,
+      transparent
+    );
+
+    --primary: var(--color-blue);
+    --primary-foreground: var(--color-outception-50);
+
+    --secondary: var(--color-outception-900);
+    --secondary-foreground: var(--color-outception-50);
+
+    --muted: var(--color-outception-700);
+    --muted-foreground: var(--color-outception-500);
+
+    --accent: var(--color-blue);
+    --accent-foreground: var(--color-outception-50);
+
+    --destructive: var(--color-red-500);
+    --destructive-foreground: var(--color-red-500);
+
+    --border: var(--color-outception-700);
+    --input: var(--color-outception-700);
+    --ring: var(--color-outception-700);
+  }
+}
+
+pre.shiki {
+  overflow: auto;
+  background-color: transparent !important;
+
+  :not(.dark) .prose-pre\:bg-gray-100 & {
+    background-color: var(--color-gray-100) !important;
+  }
+
+  .dark .dark\:prose-pre\:bg-outception-800 & {
+    background-color: var(--color-outception-800) !important;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .shiki,
+  .shiki span {
+    color: var(--shiki-dark) !important;
+    font-style: var(--shiki-dark-font-style) !important;
+    font-weight: var(--shiki-dark-font-weight) !important;
+    text-decoration: var(--shiki-dark-text-decoration) !important;
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Logo theme-toggle spin. Plays a pre-rendered 3D spinning-top animation (36
+   frames in /assets/brand/top-spin.webp) as a sprite via steps(): the top leans
+   off its axis, precesses, and spins like a real top. --spin-end is set per
+   usage to -(frames * iconSize)px so it works at any rendered size. The
+   component swaps back to the static SVG on animationend. */
+@keyframes logo-top-spin {
+  from {
+    -webkit-mask-position-x: 0;
+    mask-position: 0 0;
+  }
+  to {
+    -webkit-mask-position-x: var(--spin-end);
+    mask-position: var(--spin-end) 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animate-logo-top-spin {
+    /* `reverse` plays the 36 frames back-to-front so the top spins
+       right-to-left instead of left-to-right. The sprite is used as an
+       alpha MASK over a flat fill, so the animated top is always exactly
+       the mark's current color. */
+    animation: logo-top-spin 1.2s steps(36) 1 reverse;
+  }
+}
+
+/* ─── Newsprint design language ─────────────────────────────────────────
+   Flat paper surfaces over the cream page — like sheets of newsprint laid on a
+   desk. No blur, no frosted translucency: solid stock, a crisp ink rule for an
+   edge, and at most a shallow offset shadow (a sheet resting on the pile).
+   Light is the "day edition" (warm white on cream); dark is the "night
+   edition" (near-black stock, pale ink rules). Never pair a paper utility with
+   a background, border, or shadow utility on the same element — the utilities
+   layer would win. */
+
+/* Ink shades: every rule/scrim/seam below is a mix of the edition's ink
+   token, so retuning the palette means touching only the tokens above. */
+
+/* The page backdrop (see PaperBackground): each wall theme supplies its
+   signature --page-gradient; the fallbacks are the base paper/night tokens. */
+.paper-page {
+  background: var(--page-gradient, var(--color-paper));
+}
+.dark .paper-page {
+  background: var(
+    --page-gradient,
+    radial-gradient(
+      130% 130% at 25% 20%,
+      var(--color-night-glow) 0%,
+      var(--color-night-mid) 55%,
+      var(--color-night-page) 100%
+    )
+  );
+}
+
+/* ─── Wall editions ─────────────────────────────────────────────────────
+   Outception's six editions, cycled by clicking the logo
+   (utils/wallTheme.ts). Each block repoints the newsprint tokens, so every
+   paper surface — cards, rules, kickers, scrims — follows without any
+   component changes. Every edition ships BOTH tones: the day tokens are
+   read in light mode, the night tokens under next-themes' .dark class
+   (the sun/moon toggle re-tones the current palette), and the .dark-scoped
+   override swaps in the edition's dark page gradient. */
+
+:root[data-theme='midnight'] {
+  --page-gradient: linear-gradient(
+    135deg,
+    #f7fafc 0%,
+    #e9eef4 55%,
+    #c6d2dd 100%
+  );
+  --color-paper: #e9eef4;
+  --color-paper-sheet: #fbfdfe;
+  --color-paper-sheet-under: #e1e9f0;
+  --color-ink: #1b2836;
+  --color-ink-shadow: #22303d;
+  --color-paper-night: #171d25;
+  --color-paper-night-raised: #1b222b;
+  --color-paper-night-under: #12181f;
+  --color-ink-night: #d6e1ea;
+
+  /* Edition accent — the gem and its spin take this ramp. */
+  --color-brand-100: #d7e6ef;
+  --color-brand-200: #c1d7e5;
+  --color-brand-300: #aac7d9;
+  --color-brand-400: #8fb3c9;
+  --color-brand-500: #74a0b9;
+  --color-brand-600: #57869f;
+  --color-brand-700: #416b81;
+  --color-brand-800: #305264;
+  --color-brand-900: #223c49;
+}
+:root[data-theme='midnight'].dark {
+  --page-gradient: linear-gradient(
+    135deg,
+    #2a3039 0%,
+    #101413 52%,
+    #06080b 100%
+  );
+}
+
+:root[data-theme='tide'] {
+  --page-gradient: radial-gradient(
+    circle at 28% 24%,
+    #eaf7fe 0%,
+    #b9e3f7 42%,
+    #5da8cf 100%
+  );
+  --color-paper: #dceefa;
+  --color-paper-sheet: #ffffff;
+  --color-paper-sheet-under: #cfe7f5;
+  --color-ink: #073a52;
+  --color-ink-shadow: #0d3b55;
+  --color-paper-night: #08324f;
+  --color-paper-night-raised: #0a3a5c;
+  --color-paper-night-under: #072b45;
+  --color-ink-night: #dbf2ff;
+
+  /* Edition accent — the gem and its spin take this ramp. */
+  --color-brand-100: #c9ecf9;
+  --color-brand-200: #a3ddf3;
+  --color-brand-300: #6ec7e9;
+  --color-brand-400: #45b4e0;
+  --color-brand-500: #21a1d6;
+  --color-brand-600: #1585b4;
+  --color-brand-700: #0f6a91;
+  --color-brand-800: #0a506e;
+  --color-brand-900: #073a50;
+}
+:root[data-theme='tide'].dark {
+  --page-gradient: radial-gradient(
+    circle at 28% 24%,
+    #6ec7e9 0%,
+    #0b8edc 42%,
+    #063d61 100%
+  );
+}
+
+:root[data-theme='neon'] {
+  --page-gradient: radial-gradient(
+    circle at 30% 24%,
+    #fdf0f8 0%,
+    #f7cfe6 44%,
+    #d891bd 100%
+  );
+  --color-paper: #fae4f0;
+  --color-paper-sheet: #fffbfd;
+  --color-paper-sheet-under: #f5d9e8;
+  --color-ink: #55103a;
+  --color-ink-shadow: #551038;
+  --color-paper-night: #2b1322;
+  --color-paper-night-raised: #331728;
+  --color-paper-night-under: #22101b;
+  --color-ink-night: #ffd9ec;
+
+  /* Edition accent — the gem and its spin take this ramp. */
+  --color-brand-100: #ffd1e9;
+  --color-brand-200: #ffadd8;
+  --color-brand-300: #ff8ac7;
+  --color-brand-400: #ff61b2;
+  --color-brand-500: #ff2f98;
+  --color-brand-600: #d61d7c;
+  --color-brand-700: #ab1662;
+  --color-brand-800: #7f104a;
+  --color-brand-900: #570b33;
+}
+:root[data-theme='neon'].dark {
+  --page-gradient: radial-gradient(
+    circle at 30% 24%,
+    #ff61b2 0%,
+    #ff2f98 44%,
+    #25101f 100%
+  );
+}
+
+:root[data-theme='dune'] {
+  --page-gradient: linear-gradient(
+    135deg,
+    #fff3e2 0%,
+    #e9c199 42%,
+    #94532f 100%
+  );
+  --color-paper: #f2ddc0;
+  --color-paper-sheet: #fff8ec;
+  --color-paper-sheet-under: #f6e9d4;
+  --color-ink: #45260f;
+  --color-paper-night: #211610;
+  --color-paper-night-raised: #261a13;
+  --color-paper-night-under: #1a110c;
+  --color-ink-night: #f6e4cc;
+
+  /* Edition accent — the gem and its spin take this ramp. */
+  --color-brand-100: #ffedd3;
+  --color-brand-200: #ffe0b6;
+  --color-brand-300: #ffd59d;
+  --color-brand-400: #f2bc74;
+  --color-brand-500: #dfa053;
+  --color-brand-600: #c08138;
+  --color-brand-700: #9c6527;
+  --color-brand-800: #784c1c;
+  --color-brand-900: #553413;
+}
+:root[data-theme='dune'].dark {
+  --page-gradient: linear-gradient(
+    135deg,
+    #3a2a1d 0%,
+    #221510 52%,
+    #120a06 100%
+  );
+}
+
+:root[data-theme='phosphor'] {
+  --page-gradient: radial-gradient(
+    circle at 32% 20%,
+    #edfbf2 0%,
+    #c4ecd4 50%,
+    #7cc697 100%
+  );
+  --color-paper: #dff4e7;
+  --color-paper-sheet: #fbfffc;
+  --color-paper-sheet-under: #d3eede;
+  --color-ink: #0a3a20;
+  --color-ink-shadow: #0e3a24;
+  --color-paper-night: #04140b;
+  --color-paper-night-raised: #05190e;
+  --color-paper-night-under: #030f08;
+  --color-ink-night: #66ff99;
+
+  /* Edition accent — the gem and its spin take this ramp. */
+  --color-brand-100: #c8ffdc;
+  --color-brand-200: #99ffbe;
+  --color-brand-300: #66ff99;
+  --color-brand-400: #3df57e;
+  --color-brand-500: #1fe266;
+  --color-brand-600: #12bd51;
+  --color-brand-700: #0d953f;
+  --color-brand-800: #086e2e;
+  --color-brand-900: #054a1f;
+}
+:root[data-theme='phosphor'].dark {
+  --page-gradient: radial-gradient(
+    circle at 32% 20%,
+    #062414 0%,
+    #020403 56%,
+    #000201 100%
+  );
+}
+
+/* Primary surface — cards, sidebars, large panels. A quiet ring and a
+   soft diffuse shadow, tinted by the edition's ink. */
+.paper-panel {
+  background-color: var(--color-paper-sheet);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 12%, transparent),
+    0 16px 40px -24px
+      color-mix(in srgb, var(--color-ink-shadow) 35%, transparent);
+}
+.dark .paper-panel {
+  background-color: var(--color-paper-night);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--color-ink-night) 14%, transparent),
+    0 16px 40px -24px rgba(0, 0, 0, 0.6);
+}
+
+/* Front sheet — the swipe deck's top card and the app's modals: slightly
+   stronger ring, deeper soft shadow, so it floats above the peeks. */
+.paper-sheet {
+  background-color: var(--color-paper-sheet);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 16%, transparent),
+    0 20px 48px -20px
+      color-mix(in srgb, var(--color-ink-shadow) 40%, transparent);
+}
+.dark .paper-sheet {
+  background-color: var(--color-paper-night-raised);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--color-ink-night) 18%, transparent),
+    0 20px 48px -20px rgba(0, 0, 0, 0.7);
+}
+
+/* Search palette surface (NewsSearchDialog): the front-sheet look with a
+   dialog-scale shadow. */
+.paper-search {
+  background-color: var(--color-paper-sheet);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 16%, transparent),
+    0 28px 64px -28px
+      color-mix(in srgb, var(--color-ink-shadow) 45%, transparent);
+}
+.dark .paper-search {
+  background-color: var(--color-paper-night-raised);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--color-ink-night) 18%, transparent),
+    0 28px 64px -28px rgba(0, 0, 0, 0.75);
+}
+
+/* Peeking neighbours: ring only, no shadow (a shadow would halo out
+   around the card floating above them). */
+.paper-sheet-peek {
+  background-color: var(--color-paper-sheet-under);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--color-ink) 10%, transparent);
+}
+.dark .paper-sheet-peek {
+  background-color: var(--color-paper-night-under);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--color-ink-night) 12%, transparent);
+}
+
+/* Modal/dialog scrim — a plain ink dim (no blur) so the open palette is
+   clearly the focus while the wall stays legible behind it, like laying a
+   tinted acetate over the page. */
+.paper-overlay {
+  background-color: color-mix(in srgb, var(--color-ink) 45%, transparent);
+}
+
+/* Form fields + inset reading surfaces — a lightly inset panel with a thin
+   ink rule, like a form box printed on the page. */
+.paper-input {
+  background-color: color-mix(in srgb, var(--color-ink) 3%, transparent);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--color-ink) 30%, transparent);
+}
+.dark .paper-input {
+  background-color: color-mix(in srgb, var(--color-ink-night) 4%, transparent);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--color-ink-night) 20%, transparent);
+}
+
+/* Transparent interactive rows that tint like thumbed paper on hover. */
+.paper-hover {
+  transition: background-color 0.15s ease;
+}
+.paper-hover:hover {
+  background-color: color-mix(in srgb, var(--color-ink) 5%, transparent);
+}
+.dark .paper-hover:hover {
+  background-color: color-mix(in srgb, var(--color-ink-night) 7%, transparent);
+}
+
+/* ─── Newspaper rules ───────────────────────────────────────────────────
+   Hairline + double column rules for separating headline rows and sections,
+   straight from broadsheet layout. */
+.rule-hairline {
+  border-bottom: 1px solid color-mix(in srgb, var(--color-ink) 7%, transparent);
+}
+.dark .rule-hairline {
+  border-bottom-color: color-mix(
+    in srgb,
+    var(--color-ink-night) 8%,
+    transparent
+  );
+}
+/* Single hairline along the top edge — the modern separator for footers. */
+.rule-top-hairline {
+  border-top: 1px solid color-mix(in srgb, var(--color-ink) 7%, transparent);
+}
+.dark .rule-top-hairline {
+  border-top-color: color-mix(in srgb, var(--color-ink-night) 8%, transparent);
+}
+/* ─── Print furniture ───────────────────────────────────────────────────
+   Letterspaced small-caps labels (folio line, kickers) shared across the wall. */
+.masthead-kicker {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: color-mix(in srgb, var(--color-ink) 62%, transparent);
+}
+.dark .masthead-kicker {
+  color: color-mix(in srgb, var(--color-ink-night) 55%, transparent);
+}
+
+/* Put on a list row's content to draw a hairline between rows: rules every
+   row except the list's last, broadsheet-style. */
+li:not(:last-child) > .rule-row {
+  border-bottom: 1px solid color-mix(in srgb, var(--color-ink) 7%, transparent);
+  padding-bottom: 0.25rem;
+}
+.dark li:not(:last-child) > .rule-row {
+  border-bottom-color: color-mix(
+    in srgb,
+    var(--color-ink-night) 8%,
+    transparent
+  );
+}
+
+/* Headline hover: an ink rule draws itself along the bottom of the row, like
+   a pen underlining the story you're pointing at. */
+.headline-link {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  transition:
+    background-size 0.28s ease,
+    background-color 0.12s cubic-bezier(0, 0, 0.2, 1),
+    transform 0.12s cubic-bezier(0, 0, 0.2, 1);
+}
+.headline-link:hover {
+  background-size: 100% 1px;
+  background-color: color-mix(in srgb, var(--color-ink) 4%, transparent);
+  transform: translateX(2px);
+}
+.dark .headline-link:hover {
+  background-color: color-mix(in srgb, var(--color-ink-night) 6%, transparent);
+}
+/* ─── Modern card furniture ─────────────────────────────────────────────
+   Micro-labels, quiet tags and controls shared by the news cards. */
+
+/* Row timestamps: tiny uppercase letterspaced kickers instead of plain grey. */
+.meta-kicker {
+  font-size: 0.625rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: color-mix(in srgb, var(--color-ink) 52%, transparent);
+}
+.dark .meta-kicker {
+  color: color-mix(in srgb, var(--color-ink-night) 48%, transparent);
+}
+
+/* Bare tabular rank numeral for the hot list — no chip background. */
+.rank-numeral {
+  display: inline-flex;
+  min-width: 20px;
+  justify-content: center;
+  padding-top: 2px;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in srgb, var(--color-ink) 42%, transparent);
+}
+.dark .rank-numeral {
+  color: color-mix(in srgb, var(--color-ink-night) 40%, transparent);
+}
+
+/* Quiet outline tag: uppercase micro type in a hairline capsule. */
+.tag-outline {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--color-ink) 14%, transparent);
+  border-radius: 9999px;
+  padding: 1px 8px;
+  font-size: 0.625rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: color-mix(in srgb, var(--color-ink) 58%, transparent);
+}
+.dark .tag-outline {
+  border-color: color-mix(in srgb, var(--color-ink-night) 16%, transparent);
+  color: color-mix(in srgb, var(--color-ink-night) 55%, transparent);
+}
+
+/* Ghost pill control (Share / Unfollow): a hairline chip whose corners match
+   the navbar card radius (--radius-lg) rather than a full pill. */
+.ghost-pill {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--color-ink) 12%, transparent);
+  border-radius: var(--radius-lg);
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: transparent;
+  color: color-mix(in srgb, var(--color-ink) 70%, transparent);
+  transition:
+    background-color 0.12s cubic-bezier(0, 0, 0.2, 1),
+    opacity 0.12s cubic-bezier(0, 0, 0.2, 1);
+}
+.ghost-pill:hover {
+  background-color: color-mix(in srgb, var(--color-ink) 5%, transparent);
+}
+.dark .ghost-pill {
+  border-color: color-mix(in srgb, var(--color-ink-night) 14%, transparent);
+  color: color-mix(in srgb, var(--color-ink-night) 65%, transparent);
+}
+.dark .ghost-pill:hover {
+  background-color: color-mix(in srgb, var(--color-ink-night) 7%, transparent);
+}
+
+/* Card-body rule: a single solid hairline under the header that
+   dissolves toward the right — one quiet separator, no texture. */
+.rule-corner {
+  --rule-line: color-mix(in srgb, var(--color-ink) 16%, transparent);
+  position: relative;
+  padding-top: 0.625rem;
+}
+.dark .rule-corner {
+  --rule-line: color-mix(in srgb, var(--color-ink-night) 18%, transparent);
+}
+.rule-corner::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(to right, var(--rule-line) 40%, transparent 92%);
+}
+
+/* Ink-filled marker (deck dots etc.) — edition ink on both tones. */
+.ink-fill {
+  background-color: var(--color-ink);
+}
+.dark .ink-fill {
+  background-color: var(--color-ink-night);
+}
+
+/* Active nav-tab pill: a raised chip in the edition's own sheet paper. */
+.tab-pill {
+  background-color: color-mix(
+    in srgb,
+    var(--color-paper-sheet) 92%,
+    transparent
+  );
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--color-ink) 22%, transparent);
+}
+.dark .tab-pill {
+  background-color: color-mix(in srgb, var(--color-ink-night) 10%, transparent);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--color-ink-night) 20%, transparent);
+}
+
+/* Shimmering placeholder bar for loading cards (pair with animate-pulse). */
+.skeleton-bar {
+  border-radius: 6px;
+  background-color: color-mix(in srgb, var(--color-ink) 8%, transparent);
+}
+.dark .skeleton-bar {
+  background-color: color-mix(in srgb, var(--color-ink-night) 10%, transparent);
+}

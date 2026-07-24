@@ -1,0 +1,57 @@
+{
+  "cli": {
+    "version": ">= 16.2.1",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "development",
+      "env": {
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "ADMOB_IOS_APP_ID": "ca-app-pub-9513872467411993~3459287875",
+        "ADMOB_ANDROID_APP_ID": "ca-app-pub-9513872467411993~2533219019",
+        "EXPO_PUBLIC_ADMOB_BANNER_IOS": "ca-app-pub-9513872467411993/7206961195",
+        "EXPO_PUBLIC_ADMOB_BANNER_ANDROID": "ca-app-pub-9513872467411993/7127070149"
+      }
+    },
+    "simulator": {
+      "ios": {
+        "simulator": true
+      },
+      "channel": "simulator",
+      "extends": "development"
+    },
+    "preview": {
+      "extends": "production",
+      "distribution": "internal",
+      "channel": "preview"
+    },
+    "production": {
+      "autoIncrement": true,
+      "channel": "production",
+      "env": {
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "ADMOB_IOS_APP_ID": "ca-app-pub-9513872467411993~3459287875",
+        "ADMOB_ANDROID_APP_ID": "ca-app-pub-9513872467411993~2533219019",
+        "EXPO_PUBLIC_ADMOB_BANNER_IOS": "ca-app-pub-9513872467411993/7206961195",
+        "EXPO_PUBLIC_ADMOB_BANNER_ANDROID": "ca-app-pub-9513872467411993/7127070149"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleTeamId": "55U3YA3QTA",
+        "ascAppId": "6793827093",
+        "ascApiKeyPath": "./credentials/AuthKey_G322C74U75.p8",
+        "ascApiKeyId": "G322C74U75",
+        "ascApiKeyIssuerId": "eab3f32e-7457-44f0-8961-d6f48558672f"
+      },
+      "android": {
+        "track": "internal"
+      }
+    }
+  }
+}

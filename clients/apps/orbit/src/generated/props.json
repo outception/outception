@@ -1,0 +1,3251 @@
+{
+  "box": [
+    {
+      "name": "alignContent",
+      "type": "ResponsiveValue<\"center\" | \"start\" | \"end\" | \"stretch\" | \"between\" | \"around\" | \"evenly\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 129
+      }
+    },
+    {
+      "name": "alignItems",
+      "type": "ResponsiveValue<\"center\" | \"start\" | \"end\" | \"baseline\" | \"stretch\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 120
+      }
+    },
+    {
+      "name": "alignSelf",
+      "type": "ResponsiveValue<\"center\" | \"start\" | \"auto\" | \"end\" | \"baseline\" | \"stretch\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 123
+      }
+    },
+    {
+      "name": "as",
+      "type": "E",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Box.tsx",
+        "line": 32
+      }
+    },
+    {
+      "name": "aspectRatio",
+      "type": "ResponsiveValue<string>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 108
+      }
+    },
+    {
+      "name": "backgroundColor",
+      "type": "ResponsiveValue<BackgroundColorToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 64
+      }
+    },
+    {
+      "name": "borderBottomLeftRadius",
+      "type": "ResponsiveValue<BorderRadiusToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 73
+      }
+    },
+    {
+      "name": "borderBottomRightRadius",
+      "type": "ResponsiveValue<BorderRadiusToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 74
+      }
+    },
+    {
+      "name": "borderBottomWidth",
+      "type": "ResponsiveValue<number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 78
+      }
+    },
+    {
+      "name": "borderColor",
+      "type": "ResponsiveValue<BorderColorToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 66
+      }
+    },
+    {
+      "name": "borderLeftWidth",
+      "type": "ResponsiveValue<number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 79
+      }
+    },
+    {
+      "name": "borderRadius",
+      "type": "ResponsiveValue<BorderRadiusToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 70
+      }
+    },
+    {
+      "name": "borderRightWidth",
+      "type": "ResponsiveValue<number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 77
+      }
+    },
+    {
+      "name": "borderStyle",
+      "type": "ResponsiveValue<\"none\" | \"solid\" | \"dashed\" | \"dotted\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 80
+      }
+    },
+    {
+      "name": "borderTopLeftRadius",
+      "type": "ResponsiveValue<BorderRadiusToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 71
+      }
+    },
+    {
+      "name": "borderTopRightRadius",
+      "type": "ResponsiveValue<BorderRadiusToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 72
+      }
+    },
+    {
+      "name": "borderTopWidth",
+      "type": "ResponsiveValue<number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 76
+      }
+    },
+    {
+      "name": "borderWidth",
+      "type": "ResponsiveValue<number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 75
+      }
+    },
+    {
+      "name": "bottom",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 158
+      }
+    },
+    {
+      "name": "boxShadow",
+      "type": "ResponsiveValue<ShadowToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 84
+      }
+    },
+    {
+      "name": "children",
+      "type": "React.ReactNode",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Box.tsx",
+        "line": 34
+      }
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Box.tsx",
+        "line": 33
+      }
+    },
+    {
+      "name": "color",
+      "type": "ResponsiveValue<TextColorToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 65
+      }
+    },
+    {
+      "name": "columnGap",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 59
+      }
+    },
+    {
+      "name": "cursor",
+      "type": "ResponsiveValue<\"text\" | \"move\" | \"default\" | \"pointer\" | \"not-allowed\" | \"grab\" | \"grabbing\" | \"wait\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 192
+      }
+    },
+    {
+      "name": "display",
+      "type": "ResponsiveValue<\"flex\" | \"none\" | \"grid\" | \"inline\" | \"block\" | \"inline-flex\" | \"inline-grid\" | \"inline-block\" | \"contents\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 88
+      }
+    },
+    {
+      "name": "ease",
+      "type": "ResponsiveValue<\"standard\" | \"decelerate\" | \"accelerate\" | \"spring\">",
+      "description": "Alias for `transitionTimingFunction`.",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 183
+      }
+    },
+    {
+      "name": "flex",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 112
+      }
+    },
+    {
+      "name": "flexBasis",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 119
+      }
+    },
+    {
+      "name": "flexDirection",
+      "type": "ResponsiveValue<\"row\" | \"column\" | \"row-reverse\" | \"column-reverse\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 113
+      }
+    },
+    {
+      "name": "flexGrow",
+      "type": "ResponsiveValue<number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 117
+      }
+    },
+    {
+      "name": "flexShrink",
+      "type": "ResponsiveValue<number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 118
+      }
+    },
+    {
+      "name": "flexWrap",
+      "type": "ResponsiveValue<\"wrap\" | \"nowrap\" | \"wrap-reverse\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 116
+      }
+    },
+    {
+      "name": "g",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 60
+      }
+    },
+    {
+      "name": "gap",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 57
+      }
+    },
+    {
+      "name": "gridArea",
+      "type": "ResponsiveValue<string>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 140
+      }
+    },
+    {
+      "name": "gridAutoColumns",
+      "type": "ResponsiveValue<string>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 148
+      }
+    },
+    {
+      "name": "gridAutoFlow",
+      "type": "ResponsiveValue<\"row\" | \"column\" | \"dense\" | \"row-dense\" | \"column-dense\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 145
+      }
+    },
+    {
+      "name": "gridAutoRows",
+      "type": "ResponsiveValue<string>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 149
+      }
+    },
+    {
+      "name": "gridColumn",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 138
+      }
+    },
+    {
+      "name": "gridColumnEnd",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 142
+      }
+    },
+    {
+      "name": "gridColumnStart",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 141
+      }
+    },
+    {
+      "name": "gridRow",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 139
+      }
+    },
+    {
+      "name": "gridRowEnd",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 144
+      }
+    },
+    {
+      "name": "gridRowStart",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 143
+      }
+    },
+    {
+      "name": "gridTemplateAreas",
+      "type": "ResponsiveValue<string>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 137
+      }
+    },
+    {
+      "name": "gridTemplateColumns",
+      "type": "ResponsiveValue<string>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 135
+      }
+    },
+    {
+      "name": "gridTemplateRows",
+      "type": "ResponsiveValue<string>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 136
+      }
+    },
+    {
+      "name": "height",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 103
+      }
+    },
+    {
+      "name": "inset",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 160
+      }
+    },
+    {
+      "name": "justifyContent",
+      "type": "ResponsiveValue<\"center\" | \"start\" | \"end\" | \"between\" | \"around\" | \"evenly\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 126
+      }
+    },
+    {
+      "name": "left",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 159
+      }
+    },
+    {
+      "name": "m",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 49
+      }
+    },
+    {
+      "name": "margin",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 42
+      }
+    },
+    {
+      "name": "marginBottom",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 45
+      }
+    },
+    {
+      "name": "marginHorizontal",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 47
+      }
+    },
+    {
+      "name": "marginLeft",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 46
+      }
+    },
+    {
+      "name": "marginRight",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 44
+      }
+    },
+    {
+      "name": "marginTop",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 43
+      }
+    },
+    {
+      "name": "marginVertical",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 48
+      }
+    },
+    {
+      "name": "maxHeight",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 107
+      }
+    },
+    {
+      "name": "maxWidth",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 105
+      }
+    },
+    {
+      "name": "mb",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 52
+      }
+    },
+    {
+      "name": "minHeight",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 106
+      }
+    },
+    {
+      "name": "minWidth",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 104
+      }
+    },
+    {
+      "name": "ml",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 53
+      }
+    },
+    {
+      "name": "mr",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 51
+      }
+    },
+    {
+      "name": "mt",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 50
+      }
+    },
+    {
+      "name": "mx",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 54
+      }
+    },
+    {
+      "name": "my",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 55
+      }
+    },
+    {
+      "name": "opacity",
+      "type": "ResponsiveValue<number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 191
+      }
+    },
+    {
+      "name": "overflow",
+      "type": "ResponsiveValue<\"hidden\" | \"auto\" | \"scroll\" | \"visible\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 99
+      }
+    },
+    {
+      "name": "overflowX",
+      "type": "ResponsiveValue<\"hidden\" | \"auto\" | \"scroll\" | \"visible\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 100
+      }
+    },
+    {
+      "name": "overflowY",
+      "type": "ResponsiveValue<\"hidden\" | \"auto\" | \"scroll\" | \"visible\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 101
+      }
+    },
+    {
+      "name": "p",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 34
+      }
+    },
+    {
+      "name": "padding",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 27
+      }
+    },
+    {
+      "name": "paddingBottom",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 30
+      }
+    },
+    {
+      "name": "paddingHorizontal",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 32
+      }
+    },
+    {
+      "name": "paddingLeft",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 31
+      }
+    },
+    {
+      "name": "paddingRight",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 29
+      }
+    },
+    {
+      "name": "paddingTop",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 28
+      }
+    },
+    {
+      "name": "paddingVertical",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 33
+      }
+    },
+    {
+      "name": "pb",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 37
+      }
+    },
+    {
+      "name": "pl",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 38
+      }
+    },
+    {
+      "name": "pointerEvents",
+      "type": "ResponsiveValue<\"none\" | \"auto\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 202
+      }
+    },
+    {
+      "name": "position",
+      "type": "ResponsiveValue<\"relative\" | \"absolute\" | \"fixed\" | \"sticky\" | \"static\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 153
+      }
+    },
+    {
+      "name": "pr",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 36
+      }
+    },
+    {
+      "name": "pt",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 35
+      }
+    },
+    {
+      "name": "px",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 39
+      }
+    },
+    {
+      "name": "py",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 40
+      }
+    },
+    {
+      "name": "right",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 157
+      }
+    },
+    {
+      "name": "rowGap",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 58
+      }
+    },
+    {
+      "name": "textAlign",
+      "type": "ResponsiveValue<\"right\" | \"left\" | \"center\" | \"justify\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 205
+      }
+    },
+    {
+      "name": "top",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 156
+      }
+    },
+    {
+      "name": "transform",
+      "type": "ResponsiveValue<string>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 185
+      }
+    },
+    {
+      "name": "transformOrigin",
+      "type": "ResponsiveValue<string>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 186
+      }
+    },
+    {
+      "name": "transitionDelay",
+      "type": "ResponsiveValue<DurationToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 184
+      }
+    },
+    {
+      "name": "transitionDuration",
+      "type": "ResponsiveValue<DurationToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 180
+      }
+    },
+    {
+      "name": "transitionProperty",
+      "type": "ResponsiveValue<TransitionProperty>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 179
+      }
+    },
+    {
+      "name": "transitionTimingFunction",
+      "type": "ResponsiveValue<\"standard\" | \"decelerate\" | \"accelerate\" | \"spring\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 181
+      }
+    },
+    {
+      "name": "userSelect",
+      "type": "ResponsiveValue<\"text\" | \"none\" | \"auto\" | \"all\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 204
+      }
+    },
+    {
+      "name": "visibility",
+      "type": "ResponsiveValue<\"hidden\" | \"visible\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 203
+      }
+    },
+    {
+      "name": "width",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 102
+      }
+    },
+    {
+      "name": "willChange",
+      "type": "ResponsiveValue<string>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 187
+      }
+    },
+    {
+      "name": "zIndex",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 161
+      }
+    }
+  ],
+  "grid": [
+    {
+      "name": "alignContent",
+      "type": "ResponsiveValue<\"center\" | \"start\" | \"end\" | \"stretch\" | \"between\" | \"around\" | \"evenly\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 129
+      }
+    },
+    {
+      "name": "alignItems",
+      "type": "ResponsiveValue<\"center\" | \"start\" | \"end\" | \"baseline\" | \"stretch\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 120
+      }
+    },
+    {
+      "name": "alignSelf",
+      "type": "ResponsiveValue<\"center\" | \"start\" | \"auto\" | \"end\" | \"baseline\" | \"stretch\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 123
+      }
+    },
+    {
+      "name": "as",
+      "type": "\"div\"",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Box.tsx",
+        "line": 32
+      }
+    },
+    {
+      "name": "aspectRatio",
+      "type": "ResponsiveValue<string>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 108
+      }
+    },
+    {
+      "name": "autoColumns",
+      "type": "ResponsiveValue<string>",
+      "description": "`grid-auto-columns`.",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Grid.tsx",
+        "line": 33
+      }
+    },
+    {
+      "name": "autoFlow",
+      "type": "ResponsiveValue<\"row\" | \"column\" | \"dense\" | \"row-dense\" | \"column-dense\">",
+      "description": "`grid-auto-flow`.",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Grid.tsx",
+        "line": 29
+      }
+    },
+    {
+      "name": "autoRows",
+      "type": "ResponsiveValue<string>",
+      "description": "`grid-auto-rows`.",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Grid.tsx",
+        "line": 31
+      }
+    },
+    {
+      "name": "backgroundColor",
+      "type": "ResponsiveValue<BackgroundColorToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 64
+      }
+    },
+    {
+      "name": "borderBottomLeftRadius",
+      "type": "ResponsiveValue<BorderRadiusToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 73
+      }
+    },
+    {
+      "name": "borderBottomRightRadius",
+      "type": "ResponsiveValue<BorderRadiusToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 74
+      }
+    },
+    {
+      "name": "borderBottomWidth",
+      "type": "ResponsiveValue<number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 78
+      }
+    },
+    {
+      "name": "borderColor",
+      "type": "ResponsiveValue<BorderColorToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 66
+      }
+    },
+    {
+      "name": "borderLeftWidth",
+      "type": "ResponsiveValue<number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 79
+      }
+    },
+    {
+      "name": "borderRadius",
+      "type": "ResponsiveValue<BorderRadiusToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 70
+      }
+    },
+    {
+      "name": "borderRightWidth",
+      "type": "ResponsiveValue<number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 77
+      }
+    },
+    {
+      "name": "borderStyle",
+      "type": "ResponsiveValue<\"none\" | \"solid\" | \"dashed\" | \"dotted\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 80
+      }
+    },
+    {
+      "name": "borderTopLeftRadius",
+      "type": "ResponsiveValue<BorderRadiusToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 71
+      }
+    },
+    {
+      "name": "borderTopRightRadius",
+      "type": "ResponsiveValue<BorderRadiusToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 72
+      }
+    },
+    {
+      "name": "borderTopWidth",
+      "type": "ResponsiveValue<number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 76
+      }
+    },
+    {
+      "name": "borderWidth",
+      "type": "ResponsiveValue<number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 75
+      }
+    },
+    {
+      "name": "bottom",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 158
+      }
+    },
+    {
+      "name": "boxShadow",
+      "type": "ResponsiveValue<ShadowToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 84
+      }
+    },
+    {
+      "name": "children",
+      "type": "React.ReactNode",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Box.tsx",
+        "line": 34
+      }
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Box.tsx",
+        "line": 33
+      }
+    },
+    {
+      "name": "color",
+      "type": "ResponsiveValue<TextColorToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 65
+      }
+    },
+    {
+      "name": "column",
+      "type": "ResponsiveValue<GridPlacement>",
+      "description": "`grid-column` — a line, or `<start> / <end>`.",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Grid.tsx",
+        "line": 35
+      }
+    },
+    {
+      "name": "columnGap",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 59
+      }
+    },
+    {
+      "name": "cursor",
+      "type": "ResponsiveValue<\"text\" | \"move\" | \"default\" | \"pointer\" | \"not-allowed\" | \"grab\" | \"grabbing\" | \"wait\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 192
+      }
+    },
+    {
+      "name": "ease",
+      "type": "ResponsiveValue<\"standard\" | \"decelerate\" | \"accelerate\" | \"spring\">",
+      "description": "Alias for `transitionTimingFunction`.",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 183
+      }
+    },
+    {
+      "name": "flex",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 112
+      }
+    },
+    {
+      "name": "flexBasis",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 119
+      }
+    },
+    {
+      "name": "flexDirection",
+      "type": "ResponsiveValue<\"row\" | \"column\" | \"row-reverse\" | \"column-reverse\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 113
+      }
+    },
+    {
+      "name": "flexGrow",
+      "type": "ResponsiveValue<number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 117
+      }
+    },
+    {
+      "name": "flexShrink",
+      "type": "ResponsiveValue<number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 118
+      }
+    },
+    {
+      "name": "flexWrap",
+      "type": "ResponsiveValue<\"wrap\" | \"nowrap\" | \"wrap-reverse\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 116
+      }
+    },
+    {
+      "name": "g",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 60
+      }
+    },
+    {
+      "name": "gap",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 57
+      }
+    },
+    {
+      "name": "gridArea",
+      "type": "ResponsiveValue<string>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 140
+      }
+    },
+    {
+      "name": "gridColumnEnd",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 142
+      }
+    },
+    {
+      "name": "gridColumnStart",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 141
+      }
+    },
+    {
+      "name": "gridRowEnd",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 144
+      }
+    },
+    {
+      "name": "gridRowStart",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 143
+      }
+    },
+    {
+      "name": "height",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 103
+      }
+    },
+    {
+      "name": "inline",
+      "type": "boolean",
+      "description": "Render as `inline-grid` instead of `grid`.",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Grid.tsx",
+        "line": 39
+      }
+    },
+    {
+      "name": "inset",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 160
+      }
+    },
+    {
+      "name": "justifyContent",
+      "type": "ResponsiveValue<\"center\" | \"start\" | \"end\" | \"between\" | \"around\" | \"evenly\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 126
+      }
+    },
+    {
+      "name": "left",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 159
+      }
+    },
+    {
+      "name": "m",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 49
+      }
+    },
+    {
+      "name": "margin",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 42
+      }
+    },
+    {
+      "name": "marginBottom",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 45
+      }
+    },
+    {
+      "name": "marginHorizontal",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 47
+      }
+    },
+    {
+      "name": "marginLeft",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 46
+      }
+    },
+    {
+      "name": "marginRight",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 44
+      }
+    },
+    {
+      "name": "marginTop",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 43
+      }
+    },
+    {
+      "name": "marginVertical",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 48
+      }
+    },
+    {
+      "name": "maxHeight",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 107
+      }
+    },
+    {
+      "name": "maxWidth",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 105
+      }
+    },
+    {
+      "name": "mb",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 52
+      }
+    },
+    {
+      "name": "minHeight",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 106
+      }
+    },
+    {
+      "name": "minWidth",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 104
+      }
+    },
+    {
+      "name": "ml",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 53
+      }
+    },
+    {
+      "name": "mr",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 51
+      }
+    },
+    {
+      "name": "mt",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 50
+      }
+    },
+    {
+      "name": "mx",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 54
+      }
+    },
+    {
+      "name": "my",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 55
+      }
+    },
+    {
+      "name": "opacity",
+      "type": "ResponsiveValue<number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 191
+      }
+    },
+    {
+      "name": "overflow",
+      "type": "ResponsiveValue<\"hidden\" | \"auto\" | \"scroll\" | \"visible\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 99
+      }
+    },
+    {
+      "name": "overflowX",
+      "type": "ResponsiveValue<\"hidden\" | \"auto\" | \"scroll\" | \"visible\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 100
+      }
+    },
+    {
+      "name": "overflowY",
+      "type": "ResponsiveValue<\"hidden\" | \"auto\" | \"scroll\" | \"visible\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 101
+      }
+    },
+    {
+      "name": "p",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 34
+      }
+    },
+    {
+      "name": "padding",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 27
+      }
+    },
+    {
+      "name": "paddingBottom",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 30
+      }
+    },
+    {
+      "name": "paddingHorizontal",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 32
+      }
+    },
+    {
+      "name": "paddingLeft",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 31
+      }
+    },
+    {
+      "name": "paddingRight",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 29
+      }
+    },
+    {
+      "name": "paddingTop",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 28
+      }
+    },
+    {
+      "name": "paddingVertical",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 33
+      }
+    },
+    {
+      "name": "pb",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 37
+      }
+    },
+    {
+      "name": "pl",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 38
+      }
+    },
+    {
+      "name": "pointerEvents",
+      "type": "ResponsiveValue<\"none\" | \"auto\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 202
+      }
+    },
+    {
+      "name": "position",
+      "type": "ResponsiveValue<\"relative\" | \"absolute\" | \"fixed\" | \"sticky\" | \"static\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 153
+      }
+    },
+    {
+      "name": "pr",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 36
+      }
+    },
+    {
+      "name": "pt",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 35
+      }
+    },
+    {
+      "name": "px",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 39
+      }
+    },
+    {
+      "name": "py",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 40
+      }
+    },
+    {
+      "name": "right",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 157
+      }
+    },
+    {
+      "name": "row",
+      "type": "ResponsiveValue<GridPlacement>",
+      "description": "`grid-row` — a line, or `<start> / <end>`.",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Grid.tsx",
+        "line": 37
+      }
+    },
+    {
+      "name": "rowGap",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 58
+      }
+    },
+    {
+      "name": "templateAreas",
+      "type": "ResponsiveValue<string>",
+      "description": "`grid-template-areas`.",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Grid.tsx",
+        "line": 27
+      }
+    },
+    {
+      "name": "templateColumns",
+      "type": "ResponsiveValue<string>",
+      "description": "`grid-template-columns`, e.g. `\"repeat(3, 1fr)\"`.",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Grid.tsx",
+        "line": 23
+      }
+    },
+    {
+      "name": "templateRows",
+      "type": "ResponsiveValue<string>",
+      "description": "`grid-template-rows`.",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Grid.tsx",
+        "line": 25
+      }
+    },
+    {
+      "name": "textAlign",
+      "type": "ResponsiveValue<\"right\" | \"left\" | \"center\" | \"justify\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 205
+      }
+    },
+    {
+      "name": "top",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 156
+      }
+    },
+    {
+      "name": "transform",
+      "type": "ResponsiveValue<string>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 185
+      }
+    },
+    {
+      "name": "transformOrigin",
+      "type": "ResponsiveValue<string>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 186
+      }
+    },
+    {
+      "name": "transitionDelay",
+      "type": "ResponsiveValue<DurationToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 184
+      }
+    },
+    {
+      "name": "transitionDuration",
+      "type": "ResponsiveValue<DurationToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 180
+      }
+    },
+    {
+      "name": "transitionProperty",
+      "type": "ResponsiveValue<TransitionProperty>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 179
+      }
+    },
+    {
+      "name": "transitionTimingFunction",
+      "type": "ResponsiveValue<\"standard\" | \"decelerate\" | \"accelerate\" | \"spring\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 181
+      }
+    },
+    {
+      "name": "userSelect",
+      "type": "ResponsiveValue<\"text\" | \"none\" | \"auto\" | \"all\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 204
+      }
+    },
+    {
+      "name": "visibility",
+      "type": "ResponsiveValue<\"hidden\" | \"visible\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 203
+      }
+    },
+    {
+      "name": "width",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 102
+      }
+    },
+    {
+      "name": "willChange",
+      "type": "ResponsiveValue<string>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 187
+      }
+    },
+    {
+      "name": "zIndex",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 161
+      }
+    }
+  ],
+  "grid-item": [
+    {
+      "name": "alignContent",
+      "type": "ResponsiveValue<\"center\" | \"start\" | \"end\" | \"stretch\" | \"between\" | \"around\" | \"evenly\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 129
+      }
+    },
+    {
+      "name": "alignItems",
+      "type": "ResponsiveValue<\"center\" | \"start\" | \"end\" | \"baseline\" | \"stretch\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 120
+      }
+    },
+    {
+      "name": "alignSelf",
+      "type": "ResponsiveValue<\"center\" | \"start\" | \"auto\" | \"end\" | \"baseline\" | \"stretch\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 123
+      }
+    },
+    {
+      "name": "area",
+      "type": "ResponsiveValue<string>",
+      "description": "`grid-area`.",
+      "source": {
+        "path": "clients/packages/orbit/src/components/GridItem.tsx",
+        "line": 25
+      }
+    },
+    {
+      "name": "as",
+      "type": "\"div\"",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Box.tsx",
+        "line": 32
+      }
+    },
+    {
+      "name": "aspectRatio",
+      "type": "ResponsiveValue<string>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 108
+      }
+    },
+    {
+      "name": "backgroundColor",
+      "type": "ResponsiveValue<BackgroundColorToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 64
+      }
+    },
+    {
+      "name": "borderBottomLeftRadius",
+      "type": "ResponsiveValue<BorderRadiusToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 73
+      }
+    },
+    {
+      "name": "borderBottomRightRadius",
+      "type": "ResponsiveValue<BorderRadiusToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 74
+      }
+    },
+    {
+      "name": "borderBottomWidth",
+      "type": "ResponsiveValue<number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 78
+      }
+    },
+    {
+      "name": "borderColor",
+      "type": "ResponsiveValue<BorderColorToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 66
+      }
+    },
+    {
+      "name": "borderLeftWidth",
+      "type": "ResponsiveValue<number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 79
+      }
+    },
+    {
+      "name": "borderRadius",
+      "type": "ResponsiveValue<BorderRadiusToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 70
+      }
+    },
+    {
+      "name": "borderRightWidth",
+      "type": "ResponsiveValue<number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 77
+      }
+    },
+    {
+      "name": "borderStyle",
+      "type": "ResponsiveValue<\"none\" | \"solid\" | \"dashed\" | \"dotted\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 80
+      }
+    },
+    {
+      "name": "borderTopLeftRadius",
+      "type": "ResponsiveValue<BorderRadiusToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 71
+      }
+    },
+    {
+      "name": "borderTopRightRadius",
+      "type": "ResponsiveValue<BorderRadiusToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 72
+      }
+    },
+    {
+      "name": "borderTopWidth",
+      "type": "ResponsiveValue<number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 76
+      }
+    },
+    {
+      "name": "borderWidth",
+      "type": "ResponsiveValue<number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 75
+      }
+    },
+    {
+      "name": "bottom",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 158
+      }
+    },
+    {
+      "name": "boxShadow",
+      "type": "ResponsiveValue<ShadowToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 84
+      }
+    },
+    {
+      "name": "children",
+      "type": "React.ReactNode",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Box.tsx",
+        "line": 34
+      }
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Box.tsx",
+        "line": 33
+      }
+    },
+    {
+      "name": "colEnd",
+      "type": "Line",
+      "description": "`grid-column-end`.",
+      "source": {
+        "path": "clients/packages/orbit/src/components/GridItem.tsx",
+        "line": 31
+      }
+    },
+    {
+      "name": "color",
+      "type": "ResponsiveValue<TextColorToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 65
+      }
+    },
+    {
+      "name": "colSpan",
+      "type": "Span",
+      "description": "Number of columns to span, or `\"auto\"`.",
+      "source": {
+        "path": "clients/packages/orbit/src/components/GridItem.tsx",
+        "line": 27
+      }
+    },
+    {
+      "name": "colStart",
+      "type": "Line",
+      "description": "`grid-column-start`.",
+      "source": {
+        "path": "clients/packages/orbit/src/components/GridItem.tsx",
+        "line": 29
+      }
+    },
+    {
+      "name": "columnGap",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 59
+      }
+    },
+    {
+      "name": "cursor",
+      "type": "ResponsiveValue<\"text\" | \"move\" | \"default\" | \"pointer\" | \"not-allowed\" | \"grab\" | \"grabbing\" | \"wait\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 192
+      }
+    },
+    {
+      "name": "display",
+      "type": "ResponsiveValue<\"flex\" | \"none\" | \"grid\" | \"inline\" | \"block\" | \"inline-flex\" | \"inline-grid\" | \"inline-block\" | \"contents\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 88
+      }
+    },
+    {
+      "name": "ease",
+      "type": "ResponsiveValue<\"standard\" | \"decelerate\" | \"accelerate\" | \"spring\">",
+      "description": "Alias for `transitionTimingFunction`.",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 183
+      }
+    },
+    {
+      "name": "flex",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 112
+      }
+    },
+    {
+      "name": "flexBasis",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 119
+      }
+    },
+    {
+      "name": "flexDirection",
+      "type": "ResponsiveValue<\"row\" | \"column\" | \"row-reverse\" | \"column-reverse\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 113
+      }
+    },
+    {
+      "name": "flexGrow",
+      "type": "ResponsiveValue<number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 117
+      }
+    },
+    {
+      "name": "flexShrink",
+      "type": "ResponsiveValue<number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 118
+      }
+    },
+    {
+      "name": "flexWrap",
+      "type": "ResponsiveValue<\"wrap\" | \"nowrap\" | \"wrap-reverse\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 116
+      }
+    },
+    {
+      "name": "g",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 60
+      }
+    },
+    {
+      "name": "gap",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 57
+      }
+    },
+    {
+      "name": "gridAutoColumns",
+      "type": "ResponsiveValue<string>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 148
+      }
+    },
+    {
+      "name": "gridAutoFlow",
+      "type": "ResponsiveValue<\"row\" | \"column\" | \"dense\" | \"row-dense\" | \"column-dense\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 145
+      }
+    },
+    {
+      "name": "gridAutoRows",
+      "type": "ResponsiveValue<string>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 149
+      }
+    },
+    {
+      "name": "gridTemplateAreas",
+      "type": "ResponsiveValue<string>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 137
+      }
+    },
+    {
+      "name": "gridTemplateColumns",
+      "type": "ResponsiveValue<string>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 135
+      }
+    },
+    {
+      "name": "gridTemplateRows",
+      "type": "ResponsiveValue<string>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 136
+      }
+    },
+    {
+      "name": "height",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 103
+      }
+    },
+    {
+      "name": "inset",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 160
+      }
+    },
+    {
+      "name": "justifyContent",
+      "type": "ResponsiveValue<\"center\" | \"start\" | \"end\" | \"between\" | \"around\" | \"evenly\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 126
+      }
+    },
+    {
+      "name": "left",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 159
+      }
+    },
+    {
+      "name": "m",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 49
+      }
+    },
+    {
+      "name": "margin",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 42
+      }
+    },
+    {
+      "name": "marginBottom",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 45
+      }
+    },
+    {
+      "name": "marginHorizontal",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 47
+      }
+    },
+    {
+      "name": "marginLeft",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 46
+      }
+    },
+    {
+      "name": "marginRight",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 44
+      }
+    },
+    {
+      "name": "marginTop",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 43
+      }
+    },
+    {
+      "name": "marginVertical",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 48
+      }
+    },
+    {
+      "name": "maxHeight",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 107
+      }
+    },
+    {
+      "name": "maxWidth",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 105
+      }
+    },
+    {
+      "name": "mb",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 52
+      }
+    },
+    {
+      "name": "minHeight",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 106
+      }
+    },
+    {
+      "name": "minWidth",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 104
+      }
+    },
+    {
+      "name": "ml",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 53
+      }
+    },
+    {
+      "name": "mr",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 51
+      }
+    },
+    {
+      "name": "mt",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 50
+      }
+    },
+    {
+      "name": "mx",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 54
+      }
+    },
+    {
+      "name": "my",
+      "type": "ResponsiveValue<\"auto\" | SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 55
+      }
+    },
+    {
+      "name": "opacity",
+      "type": "ResponsiveValue<number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 191
+      }
+    },
+    {
+      "name": "overflow",
+      "type": "ResponsiveValue<\"hidden\" | \"auto\" | \"scroll\" | \"visible\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 99
+      }
+    },
+    {
+      "name": "overflowX",
+      "type": "ResponsiveValue<\"hidden\" | \"auto\" | \"scroll\" | \"visible\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 100
+      }
+    },
+    {
+      "name": "overflowY",
+      "type": "ResponsiveValue<\"hidden\" | \"auto\" | \"scroll\" | \"visible\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 101
+      }
+    },
+    {
+      "name": "p",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 34
+      }
+    },
+    {
+      "name": "padding",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 27
+      }
+    },
+    {
+      "name": "paddingBottom",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 30
+      }
+    },
+    {
+      "name": "paddingHorizontal",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 32
+      }
+    },
+    {
+      "name": "paddingLeft",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 31
+      }
+    },
+    {
+      "name": "paddingRight",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 29
+      }
+    },
+    {
+      "name": "paddingTop",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 28
+      }
+    },
+    {
+      "name": "paddingVertical",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 33
+      }
+    },
+    {
+      "name": "pb",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 37
+      }
+    },
+    {
+      "name": "pl",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 38
+      }
+    },
+    {
+      "name": "pointerEvents",
+      "type": "ResponsiveValue<\"none\" | \"auto\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 202
+      }
+    },
+    {
+      "name": "position",
+      "type": "ResponsiveValue<\"relative\" | \"absolute\" | \"fixed\" | \"sticky\" | \"static\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 153
+      }
+    },
+    {
+      "name": "pr",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 36
+      }
+    },
+    {
+      "name": "pt",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 35
+      }
+    },
+    {
+      "name": "px",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 39
+      }
+    },
+    {
+      "name": "py",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 40
+      }
+    },
+    {
+      "name": "right",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 157
+      }
+    },
+    {
+      "name": "rowEnd",
+      "type": "Line",
+      "description": "`grid-row-end`.",
+      "source": {
+        "path": "clients/packages/orbit/src/components/GridItem.tsx",
+        "line": 37
+      }
+    },
+    {
+      "name": "rowGap",
+      "type": "ResponsiveValue<SpacingToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 58
+      }
+    },
+    {
+      "name": "rowSpan",
+      "type": "Span",
+      "description": "Number of rows to span, or `\"auto\"`.",
+      "source": {
+        "path": "clients/packages/orbit/src/components/GridItem.tsx",
+        "line": 33
+      }
+    },
+    {
+      "name": "rowStart",
+      "type": "Line",
+      "description": "`grid-row-start`.",
+      "source": {
+        "path": "clients/packages/orbit/src/components/GridItem.tsx",
+        "line": 35
+      }
+    },
+    {
+      "name": "textAlign",
+      "type": "ResponsiveValue<\"right\" | \"left\" | \"center\" | \"justify\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 205
+      }
+    },
+    {
+      "name": "top",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 156
+      }
+    },
+    {
+      "name": "transform",
+      "type": "ResponsiveValue<string>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 185
+      }
+    },
+    {
+      "name": "transformOrigin",
+      "type": "ResponsiveValue<string>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 186
+      }
+    },
+    {
+      "name": "transitionDelay",
+      "type": "ResponsiveValue<DurationToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 184
+      }
+    },
+    {
+      "name": "transitionDuration",
+      "type": "ResponsiveValue<DurationToken>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 180
+      }
+    },
+    {
+      "name": "transitionProperty",
+      "type": "ResponsiveValue<TransitionProperty>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 179
+      }
+    },
+    {
+      "name": "transitionTimingFunction",
+      "type": "ResponsiveValue<\"standard\" | \"decelerate\" | \"accelerate\" | \"spring\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 181
+      }
+    },
+    {
+      "name": "userSelect",
+      "type": "ResponsiveValue<\"text\" | \"none\" | \"auto\" | \"all\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 204
+      }
+    },
+    {
+      "name": "visibility",
+      "type": "ResponsiveValue<\"hidden\" | \"visible\">",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 203
+      }
+    },
+    {
+      "name": "width",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 102
+      }
+    },
+    {
+      "name": "willChange",
+      "type": "ResponsiveValue<string>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 187
+      }
+    },
+    {
+      "name": "zIndex",
+      "type": "ResponsiveValue<string | number>",
+      "source": {
+        "path": "clients/packages/orbit/src/utils/types.ts",
+        "line": 161
+      }
+    }
+  ],
+  "text": [
+    {
+      "name": "align",
+      "type": "TextAlign",
+      "source": {
+        "path": "clients/packages/orbit/src/primitives/createText.tsx",
+        "line": 66
+      }
+    },
+    {
+      "name": "as",
+      "type": "E",
+      "description": "Underlying DOM element. Defaults to a sensible element per variant (heading variants render `h1`–`h6`, everything else `p`). Override to keep a correct document outline. DOM props for the element are typed and forwarded.",
+      "source": {
+        "path": "clients/packages/orbit/src/primitives/createText.tsx",
+        "line": 149
+      }
+    },
+    {
+      "name": "children",
+      "type": "ReactNode",
+      "description": "The text to render. Prefer plain strings and numbers; inline elements are allowed where you genuinely need them (a `<br>`, an inline link), but reach for Box to compose layout rather than nesting containers inside Text.",
+      "source": {
+        "path": "clients/packages/orbit/src/primitives/createText.tsx",
+        "line": 164
+      }
+    },
+    {
+      "name": "color",
+      "type": "TextColor",
+      "source": {
+        "path": "clients/packages/orbit/src/primitives/createText.tsx",
+        "line": 65
+      }
+    },
+    {
+      "name": "formatter",
+      "type": "TextFormatter",
+      "description": "Format the children value for display. 'number' adds grouping separators (3290033 → \"3,290,033\"), 'compact' shortens (3290033 → \"3.3M\"), or pass a function for full control. Pass the raw value as children, not a pre-formatted string.",
+      "source": {
+        "path": "clients/packages/orbit/src/primitives/createText.tsx",
+        "line": 206
+      }
+    },
+    {
+      "name": "lineThrough",
+      "type": "boolean",
+      "description": "Apply a line-through decoration, e.g. for a struck-out previous price.",
+      "source": {
+        "path": "clients/packages/orbit/src/primitives/createText.tsx",
+        "line": 183
+      }
+    },
+    {
+      "name": "loading",
+      "type": "boolean",
+      "description": "Render a pulsing skeleton placeholder instead of children, for content that is still loading.",
+      "source": {
+        "path": "clients/packages/orbit/src/primitives/createText.tsx",
+        "line": 169
+      }
+    },
+    {
+      "name": "monospace",
+      "type": "boolean",
+      "description": "Render in the monospace font family while keeping the variant's size and weight. Orthogonal to `variant`, so any text can be monospaced.",
+      "source": {
+        "path": "clients/packages/orbit/src/primitives/createText.tsx",
+        "line": 188
+      }
+    },
+    {
+      "name": "placeholderNumberOfLines",
+      "type": "number",
+      "description": "When greater than 1, renders a multi-line loading skeleton with that many lines.",
+      "source": {
+        "path": "clients/packages/orbit/src/primitives/createText.tsx",
+        "line": 179
+      }
+    },
+    {
+      "name": "placeholderText",
+      "type": "string",
+      "description": "Sizes the single-line loading skeleton. Falls back to children, then to \"Loading...\".",
+      "source": {
+        "path": "clients/packages/orbit/src/primitives/createText.tsx",
+        "line": 174
+      }
+    },
+    {
+      "name": "tabularNums",
+      "type": "boolean",
+      "description": "Align figures for vertical scanning in tables and stat readouts. Pairs well with a numeric `formatter`.",
+      "source": {
+        "path": "clients/packages/orbit/src/primitives/createText.tsx",
+        "line": 193
+      }
+    },
+    {
+      "name": "truncate",
+      "type": "number | boolean",
+      "description": "Truncate overflow. `true` clamps to a single line with an ellipsis; a number clamps to that many lines. The component owns the CSS, so callers never hand-roll line-clamp utilities.",
+      "source": {
+        "path": "clients/packages/orbit/src/primitives/createText.tsx",
+        "line": 199
+      }
+    },
+    {
+      "name": "variant",
+      "type": "TextVariant",
+      "source": {
+        "path": "clients/packages/orbit/src/primitives/createText.tsx",
+        "line": 64
+      }
+    },
+    {
+      "name": "wrap",
+      "type": "TextWrap",
+      "source": {
+        "path": "clients/packages/orbit/src/primitives/createText.tsx",
+        "line": 67
+      }
+    }
+  ],
+  "button": [
+    {
+      "name": "asChild",
+      "type": "boolean",
+      "source": {
+        "path": "clients/packages/orbit/src/components/ui/button.tsx",
+        "line": 40
+      }
+    },
+    {
+      "name": "fullWidth",
+      "type": "boolean",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Button.tsx",
+        "line": 45
+      }
+    },
+    {
+      "name": "loading",
+      "type": "boolean",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Button.tsx",
+        "line": 44
+      }
+    },
+    {
+      "name": "size",
+      "type": "\"sm\" | \"lg\" | \"default\" | \"icon\" | null",
+      "source": {
+        "path": "clients/packages/orbit/src/components/ui/button.tsx",
+        "line": 22
+      }
+    },
+    {
+      "name": "variant",
+      "type": "\"link\" | \"default\" | \"destructive\" | \"outline\" | \"secondary\" | \"ghost\" | null",
+      "source": {
+        "path": "clients/packages/orbit/src/components/ui/button.tsx",
+        "line": 11
+      }
+    },
+    {
+      "name": "wrapperClassNames",
+      "type": "string",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Button.tsx",
+        "line": 43
+      }
+    }
+  ],
+  "button-group": [
+    {
+      "name": "actions",
+      "type": "ButtonGroupActions",
+      "required": true,
+      "description": "One or two actions. The first renders as the primary (default) button, the second as a quieter ghost button.",
+      "source": {
+        "path": "clients/packages/orbit/src/components/ButtonGroup.tsx",
+        "line": 23
+      }
+    },
+    {
+      "name": "size",
+      "type": "\"sm\" | \"lg\" | \"default\" | \"icon\" | null",
+      "description": "Button size applied to every action in the group.",
+      "source": {
+        "path": "clients/packages/orbit/src/components/ButtonGroup.tsx",
+        "line": 27
+      }
+    }
+  ],
+  "avatar": [
+    {
+      "name": "avatar_url",
+      "type": "string | null",
+      "required": true,
+      "source": {
+        "path": "clients/packages/orbit/src/components/Avatar.tsx",
+        "line": 8
+      }
+    },
+    {
+      "name": "name",
+      "type": "string",
+      "required": true,
+      "source": {
+        "path": "clients/packages/orbit/src/components/Avatar.tsx",
+        "line": 7
+      }
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Avatar.tsx",
+        "line": 9
+      }
+    },
+    {
+      "name": "CustomImageComponent",
+      "type": "ElementType<any, keyof JSX.IntrinsicElements>",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Avatar.tsx",
+        "line": 13
+      }
+    },
+    {
+      "name": "height",
+      "type": "number",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Avatar.tsx",
+        "line": 10
+      }
+    },
+    {
+      "name": "loading",
+      "type": "\"eager\" | \"lazy\"",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Avatar.tsx",
+        "line": 12
+      }
+    },
+    {
+      "name": "width",
+      "type": "number",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Avatar.tsx",
+        "line": 11
+      }
+    }
+  ],
+  "alert": [
+    {
+      "name": "title",
+      "type": "string",
+      "required": true,
+      "description": "The headline of the alert, rendered in the variant's accent color.",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Alert.tsx",
+        "line": 61
+      }
+    },
+    {
+      "name": "actions",
+      "type": "ButtonGroupActions",
+      "description": "One or two call-to-action buttons, rendered bottom-right via ButtonGroup. The first is the primary action, the second a quieter ghost button.",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Alert.tsx",
+        "line": 81
+      }
+    },
+    {
+      "name": "description",
+      "type": "ReactNode",
+      "description": "Supporting copy shown beneath the title. Accepts inline elements (links, bold text, …), not just a plain string. Omit for a title-only alert.",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Alert.tsx",
+        "line": 66
+      }
+    },
+    {
+      "name": "loading",
+      "type": "boolean",
+      "description": "Swaps the variant icon for a spinner, for an alert whose subject is still resolving. Colors and layout are unchanged.",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Alert.tsx",
+        "line": 71
+      }
+    },
+    {
+      "name": "onDismiss",
+      "type": "(() => void)",
+      "description": "Called when the dismiss button is pressed. Provide it to render a dismiss button; omit it for a persistent alert.",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Alert.tsx",
+        "line": 76
+      }
+    },
+    {
+      "name": "variant",
+      "type": "AlertVariant",
+      "description": "Picks the icon, surface tint and accent color in one go. Use it to map the alert to its meaning rather than styling icon and colors by hand.",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Alert.tsx",
+        "line": 57
+      }
+    }
+  ],
+  "pill": [
+    {
+      "name": "children",
+      "type": "ReactNode",
+      "required": true,
+      "source": {
+        "path": "clients/packages/orbit/src/components/Pill.tsx",
+        "line": 7
+      }
+    },
+    {
+      "name": "color",
+      "type": "PillColor",
+      "required": true,
+      "source": {
+        "path": "clients/packages/orbit/src/components/Pill.tsx",
+        "line": 8
+      }
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Pill.tsx",
+        "line": 9
+      }
+    }
+  ],
+  "status": [
+    {
+      "name": "status",
+      "type": "string",
+      "required": true,
+      "source": {
+        "path": "clients/packages/orbit/src/components/Status.tsx",
+        "line": 29
+      }
+    },
+    {
+      "name": "color",
+      "type": "StatusColor",
+      "description": "Applies a predefined color treatment. Omit for a neutral, color-less chip.",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Status.tsx",
+        "line": 31
+      }
+    },
+    {
+      "name": "size",
+      "type": "\"small\" | \"medium\"",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Status.tsx",
+        "line": 32
+      }
+    }
+  ],
+  "checkbox": [
+    {
+      "name": "checked",
+      "type": "CheckboxPrimitive.CheckedState",
+      "source": null
+    },
+    {
+      "name": "defaultChecked",
+      "type": "CheckboxPrimitive.CheckedState",
+      "source": null
+    },
+    {
+      "name": "onCheckedChange",
+      "type": "((checked: CheckboxPrimitive.CheckedState) => void)",
+      "source": null
+    },
+    {
+      "name": "required",
+      "type": "boolean",
+      "source": null
+    }
+  ],
+  "switch": [
+    {
+      "name": "checked",
+      "type": "boolean",
+      "source": null
+    },
+    {
+      "name": "defaultChecked",
+      "type": "boolean",
+      "source": null
+    },
+    {
+      "name": "onCheckedChange",
+      "type": "((checked: boolean) => void)",
+      "source": null
+    },
+    {
+      "name": "required",
+      "type": "boolean",
+      "source": null
+    }
+  ],
+  "input": [
+    {
+      "name": "postSlot",
+      "type": "ReactNode",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Input.tsx",
+        "line": 7
+      }
+    },
+    {
+      "name": "preSlot",
+      "type": "ReactNode",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Input.tsx",
+        "line": 6
+      }
+    }
+  ],
+  "textarea": [
+    {
+      "name": "resizable",
+      "type": "boolean",
+      "source": {
+        "path": "clients/packages/orbit/src/components/TextArea.tsx",
+        "line": 5
+      }
+    }
+  ],
+  "segmented-control": [
+    {
+      "name": "onChange",
+      "type": "(value: T) => void",
+      "required": true,
+      "source": {
+        "path": "clients/packages/orbit/src/components/SegmentedControl.tsx",
+        "line": 71
+      }
+    },
+    {
+      "name": "options",
+      "type": "SegmentedControlOption<T>[]",
+      "required": true,
+      "source": {
+        "path": "clients/packages/orbit/src/components/SegmentedControl.tsx",
+        "line": 69
+      }
+    },
+    {
+      "name": "value",
+      "type": "T",
+      "required": true,
+      "source": {
+        "path": "clients/packages/orbit/src/components/SegmentedControl.tsx",
+        "line": 70
+      }
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "source": {
+        "path": "clients/packages/orbit/src/components/SegmentedControl.tsx",
+        "line": 74
+      }
+    },
+    {
+      "name": "size",
+      "type": "\"sm\" | \"md\" | \"lg\" | null",
+      "source": {
+        "path": "clients/packages/orbit/src/components/SegmentedControl.tsx",
+        "line": 72
+      }
+    },
+    {
+      "name": "variant",
+      "type": "\"default\" | \"tabs\" | null",
+      "source": {
+        "path": "clients/packages/orbit/src/components/SegmentedControl.tsx",
+        "line": 73
+      }
+    }
+  ],
+  "spinner": [],
+  "truncated": [
+    {
+      "name": "children",
+      "type": "ReactNode",
+      "required": true,
+      "source": {
+        "path": "clients/packages/orbit/src/components/Truncated.tsx",
+        "line": 10
+      }
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Truncated.tsx",
+        "line": 13
+      }
+    },
+    {
+      "name": "lines",
+      "type": "number",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Truncated.tsx",
+        "line": 11
+      }
+    },
+    {
+      "name": "tooltip",
+      "type": "ReactNode",
+      "source": {
+        "path": "clients/packages/orbit/src/components/Truncated.tsx",
+        "line": 12
+      }
+    }
+  ],
+  "list": [
+    {
+      "name": "className",
+      "type": "string",
+      "source": {
+        "path": "clients/packages/orbit/src/components/List.tsx",
+        "line": 5
+      }
+    },
+    {
+      "name": "size",
+      "type": "\"small\" | \"default\"",
+      "source": {
+        "path": "clients/packages/orbit/src/components/List.tsx",
+        "line": 6
+      }
+    }
+  ],
+  "datatable": [
+    {
+      "name": "columns",
+      "type": "ColumnDef<TData, TValue>[]",
+      "required": true,
+      "source": {
+        "path": "clients/packages/orbit/src/components/datatable/DataTable.tsx",
+        "line": 38
+      }
+    },
+    {
+      "name": "data",
+      "type": "TData[]",
+      "required": true,
+      "source": {
+        "path": "clients/packages/orbit/src/components/datatable/DataTable.tsx",
+        "line": 39
+      }
+    },
+    {
+      "name": "isLoading",
+      "type": "boolean | ReactQueryLoading",
+      "required": true,
+      "source": {
+        "path": "clients/packages/orbit/src/components/datatable/DataTable.tsx",
+        "line": 50
+      }
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "source": {
+        "path": "clients/packages/orbit/src/components/datatable/DataTable.tsx",
+        "line": 47
+      }
+    },
+    {
+      "name": "enableRowSelection",
+      "type": "boolean",
+      "source": {
+        "path": "clients/packages/orbit/src/components/datatable/DataTable.tsx",
+        "line": 54
+      }
+    },
+    {
+      "name": "getCellColSpan",
+      "type": "((cell: Cell<TData, unknown>) => number)",
+      "source": {
+        "path": "clients/packages/orbit/src/components/datatable/DataTable.tsx",
+        "line": 51
+      }
+    },
+    {
+      "name": "getRowId",
+      "type": "((originalRow: TData, index: number, parent?: Row<TData> | undefined) => string)",
+      "source": {
+        "path": "clients/packages/orbit/src/components/datatable/DataTable.tsx",
+        "line": 52
+      }
+    },
+    {
+      "name": "getSubRows",
+      "type": "((row: TData) => TData[] | undefined)",
+      "source": {
+        "path": "clients/packages/orbit/src/components/datatable/DataTable.tsx",
+        "line": 46
+      }
+    },
+    {
+      "name": "headerClassName",
+      "type": "string",
+      "source": {
+        "path": "clients/packages/orbit/src/components/datatable/DataTable.tsx",
+        "line": 49
+      }
+    },
+    {
+      "name": "onPaginationChange",
+      "type": "OnChangeFn<PaginationState>",
+      "source": {
+        "path": "clients/packages/orbit/src/components/datatable/DataTable.tsx",
+        "line": 43
+      }
+    },
+    {
+      "name": "onRowClick",
+      "type": "((row: Row<TData>) => void)",
+      "source": {
+        "path": "clients/packages/orbit/src/components/datatable/DataTable.tsx",
+        "line": 56
+      }
+    },
+    {
+      "name": "onRowSelectionChange",
+      "type": "OnChangeFn<RowSelectionState>",
+      "source": {
+        "path": "clients/packages/orbit/src/components/datatable/DataTable.tsx",
+        "line": 55
+      }
+    },
+    {
+      "name": "onSortingChange",
+      "type": "OnChangeFn<SortingState>",
+      "source": {
+        "path": "clients/packages/orbit/src/components/datatable/DataTable.tsx",
+        "line": 45
+      }
+    },
+    {
+      "name": "pageCount",
+      "type": "number",
+      "source": {
+        "path": "clients/packages/orbit/src/components/datatable/DataTable.tsx",
+        "line": 41
+      }
+    },
+    {
+      "name": "pagination",
+      "type": "PaginationState",
+      "source": {
+        "path": "clients/packages/orbit/src/components/datatable/DataTable.tsx",
+        "line": 42
+      }
+    },
+    {
+      "name": "rowCount",
+      "type": "number",
+      "source": {
+        "path": "clients/packages/orbit/src/components/datatable/DataTable.tsx",
+        "line": 40
+      }
+    },
+    {
+      "name": "rowSelection",
+      "type": "RowSelectionState",
+      "source": {
+        "path": "clients/packages/orbit/src/components/datatable/DataTable.tsx",
+        "line": 53
+      }
+    },
+    {
+      "name": "sorting",
+      "type": "SortingState",
+      "source": {
+        "path": "clients/packages/orbit/src/components/datatable/DataTable.tsx",
+        "line": 44
+      }
+    },
+    {
+      "name": "wrapperClassName",
+      "type": "string",
+      "source": {
+        "path": "clients/packages/orbit/src/components/datatable/DataTable.tsx",
+        "line": 48
+      }
+    }
+  ]
+}

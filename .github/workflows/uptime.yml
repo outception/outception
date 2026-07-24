@@ -1,0 +1,56 @@
+# External uptime monitor: probes the public /healthz from GitHub's runners
+# (off the Hetzner box, so it also catches "the whole server is down"). On a
+# genuine failure it posts to a webhook and fails the run (GitHub emails you).
+#
+# Required repo VARIABLE:  HEALTHCHECK_URL   e.g. https://api.outception.com/healthz
+# Optional repo SECRET:    ALERT_WEBHOOK_URL Slack/Discord incoming webhook
+#
+# Note: GitHub cron is ~5-min granularity and can be delayed under load. For
+# 1-minute checks, add UptimeRobot too (see deploy/README.md) — this is the
+# free, zero-signup baseline.
+
+name: Uptime
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: uptime
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Probe /healthz
+        env:
+          URL: ${{ vars.HEALTHCHECK_URL }}
+          WEBHOOK: ${{ secrets.ALERT_WEBHOOK_URL }}
+        run: |
+          set -u
+          if [ -z "${URL:-}" ]; then
+            echo "::error::Set the HEALTHCHECK_URL repo variable (e.g. https://api.<domain>/healthz)"
+            exit 1
+          fi
+
+          # Retry a few times so a transient blip doesn't page you.
+          code=000
+          for _ in 1 2 3; do
+            code="$(curl -fsS -m 15 -o /tmp/h -w '%{http_code}' "$URL" || echo 000)"
+            if [ "$code" = "200" ] && grep -q '"ok"' /tmp/h; then
+              echo "healthy: $URL"
+              exit 0
+            fi
+            sleep 10
+          done
+
+          msg="🔴 Outception uptime check FAILED: ${URL} (HTTP ${code})"
+          echo "::error::${msg}"
+          if [ -n "${WEBHOOK:-}" ]; then
+            curl -fsS -m 10 -H 'Content-Type: application/json' \
+              -d "{\"text\":\"${msg}\",\"content\":\"${msg}\"}" "$WEBHOOK" || true
+          fi
+          exit 1

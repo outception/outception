@@ -1,0 +1,35 @@
+# One-off operational task: hard-delete a user by email from the production
+# database (cascades remove their sessions, OAuth links, follows, etc.). Run
+# manually from the Actions tab or with:
+#   gh workflow run ops-delete-user.yml -f email=someone@example.com
+# Uses the same SSH secrets as the deploy workflow.
+name: Ops (delete user)
+
+on:
+  workflow_dispatch:
+    inputs:
+      email:
+        description: "Email of the user to hard-delete"
+        required: true
+
+jobs:
+  delete-user:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete user over SSH
+        uses: appleboy/ssh-action@v1
+        env:
+          EMAIL: ${{ inputs.email }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: EMAIL
+          script: |
+            set -euo pipefail
+            cd "${{ vars.DEPLOY_PATH }}"
+            # :'email' safely quotes the value inside SQL (no injection). Local
+            # socket auth in the db container needs no password.
+            docker compose --env-file .env.prod -f docker-compose.prod.yml exec -T db \
+              psql -U outception -d outception -v email="$EMAIL" \
+              -c "DELETE FROM users WHERE email = :'email';"

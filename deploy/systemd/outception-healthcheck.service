@@ -1,0 +1,10 @@
+[Unit]
+Description=Outception /healthz monitor -> webhook alert
+After=docker.service
+
+[Service]
+Type=oneshot
+User=deploy
+Environment=DEPLOY_DIR=/opt/outception/deploy
+ExecStart=/opt/outception/deploy/healthcheck-alert.sh
+TimeoutStartSec=60
