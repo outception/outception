@@ -1,0 +1,1076 @@
+"""Docker-based isolated development environment.
+
+One shared infra stack (db, redis, minio, tinybird, optional prometheus/
+grafana) is brought up per machine; each worktree gets its own per-instance
+app stack (api, worker, web) using its own postgres DB, Redis DB index, and
+S3 bucket pair. Service-aware commands auto-route by service name to the
+right project. `dev docker up` starts shared (if needed) then this instance.
+"""
+
+import json
+import os
+import re
+import shutil
+import subprocess
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Annotated
+
+import typer
+from rich.table import Table
+
+from shared import (
+    DEFAULT_API_PORT,
+    DEFAULT_WEB_PORT,
+    ROOT_DIR,
+    SECRETS_FILE,
+    SERVER_DIR,
+    console,
+    run_command,
+)
+
+DOCKER_DIR = ROOT_DIR / "dev" / "docker"
+COMPOSE_FILE = DOCKER_DIR / "docker-compose.dev.yml"
+SHARED_COMPOSE_FILE = DOCKER_DIR / "docker-compose.shared.yml"
+ENV_TEMPLATE = DOCKER_DIR / ".env.docker.template"
+ENV_FILE = DOCKER_DIR / ".env.docker"
+SERVER_ENV_FILE = SERVER_DIR / ".env"
+SERVER_ENV_TEMPLATE = SERVER_DIR / ".env.template"
+
+SHARED_PROJECT_NAME = "outception-comared"
+SHARED_NETWORK_NAME = "outception-comared"
+
+# Cross-worktree registry of allocated instances. Lives outside the repo so all
+# worktrees see the same list and can allocate without colliding.
+REGISTRY_FILE = Path.home() / ".config" / "outception" / "docker-instances.json"
+REGISTRY_VERSION = 1
+MIN_INSTANCE = 1
+MAX_INSTANCE = 99
+
+# Per-instance naming. Single source of truth — referenced both here and in
+# docker-compose.dev.yml (via env interpolation) and dev/docker/scripts/startup.sh.
+# Instance numbers are in [1, 99]; the shared redis is launched with
+# `--databases 100` so we can map instance → redis DB index 1:1 (no modulo,
+# no collisions).
+
+
+def app_project(instance: int) -> str:
+    return f"outception-app-{instance}"
+
+
+def db_name(instance: int) -> str:
+    return f"outception_dev_{instance}"
+
+
+def redis_db(instance: int) -> int:
+    return instance
+
+
+def s3_bucket(instance: int) -> str:
+    return f"outception-s3-{instance}"
+
+
+def s3_public_bucket(instance: int) -> str:
+    return f"outception-s3-public-{instance}"
+
+
+# Host ports for the per-instance app stack. Only api and web publish host
+# ports (shared infra is reached by container name). Each instance gets one
+# port per service from a tight band whose trailing two digits are the
+# instance number; both bands stay clear of every RESERVED_HOST_PORT.
+# Instance 0 uses the legacy defaults.
+API_PORT_BASE = 8100  # instance 1..99 → 8101..8199
+WEB_PORT_BASE = 3100  # instance 1..99 → 3101..3199
+
+# Host ports published by the shared infra and the non-Docker dev tooling.
+# Per-instance app ports must never collide with these.
+RESERVED_HOST_PORTS = frozenset(
+    {
+        DEFAULT_API_PORT,  # 8000 — non-Docker / legacy api
+        DEFAULT_WEB_PORT,  # 3000 — non-Docker / legacy web
+        3001,  # grafana
+        5432,  # postgres
+        6379,  # redis
+        7181,  # tinybird
+        7182,  # tinybird admin
+        9000,  # minio api
+        9001,  # minio console
+        9090,  # prometheus
+    }
+)
+
+
+def api_port(instance: int) -> int:
+    return DEFAULT_API_PORT if instance == 0 else API_PORT_BASE + instance
+
+
+def web_port(instance: int) -> int:
+    return DEFAULT_WEB_PORT if instance == 0 else WEB_PORT_BASE + instance
+
+
+def _assert_ports_free(instance: int) -> None:
+    """Fail fast if an instance's api or web port falls on a reserved infra port."""
+    if instance == 0:
+        return  # instance 0 uses the reserved legacy defaults by design
+    for label, port in (("API", api_port(instance)), ("web", web_port(instance))):
+        if port in RESERVED_HOST_PORTS:
+            console.print(
+                f"[red]Instance {instance} maps {label} to reserved infra port "
+                f"{port}. This is a bug in the port scheme (dev/cli/commands/"
+                f"docker.py); please report it.[/red]"
+            )
+            raise typer.Exit(1)
+
+
+APP_SERVICES = frozenset(("api", "worker", "web"))
+SHARED_SERVICES = frozenset(
+    (
+        "db",
+        "redis",
+        "minio",
+        "minio-setup",
+        "tinybird",
+        "prometheus",
+        "grafana",
+    )
+)
+
+
+# --------------------------------------------------------------------------- #
+# Instance registry — JSON file that tracks each worktree's instance number
+# and when it was first allocated. Lives in the user's home so all worktrees
+# on the machine share it.
+# --------------------------------------------------------------------------- #
+
+
+def _short_ts(iso: str) -> str:
+    try:
+        dt = datetime.fromisoformat(iso).astimezone()
+        return dt.strftime("%Y-%m-%d %H:%M")
+    except ValueError:
+        return iso
+
+
+def _load_registry() -> dict:
+    try:
+        return json.loads(REGISTRY_FILE.read_text())
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        return {"version": REGISTRY_VERSION, "instances": []}
+
+
+def _save_registry(data: dict) -> None:
+    REGISTRY_FILE.parent.mkdir(parents=True, exist_ok=True)
+    tmp = REGISTRY_FILE.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(data, indent=2, sort_keys=True))
+    tmp.replace(REGISTRY_FILE)
+
+
+def _upsert_registry(path: str, instance: int) -> None:
+    """Insert the entry for `path` if missing, or update its instance number.
+
+    No-op when the path is already registered with the same instance, so steady-
+    state `dev docker` calls don't rewrite the file.
+    """
+    data = _load_registry()
+    entry = next((e for e in data["instances"] if e["path"] == path), None)
+    if entry is None:
+        data["instances"].append(
+            {
+                "instance": instance,
+                "path": path,
+                "created_at": datetime.now(UTC).isoformat(timespec="seconds"),
+            }
+        )
+    elif entry["instance"] != instance:
+        entry["instance"] = instance
+    else:
+        return
+    _save_registry(data)
+
+
+def _running_compose_projects() -> set[str]:
+    """Return the set of docker compose project names with at least one running container."""
+    result = run_command(
+        [
+            "docker",
+            "ps",
+            "--format",
+            '{{.Label "com.docker.compose.project"}}',
+            "--filter",
+            "label=com.docker.compose.project",
+        ],
+        capture=True,
+    )
+    if not result or result.returncode != 0:
+        return set()
+    return {line.strip() for line in result.stdout.splitlines() if line.strip()}
+
+
+# --------------------------------------------------------------------------- #
+# Per-worktree pin (.env.docker) and instance detection
+# --------------------------------------------------------------------------- #
+
+
+def _read_stored_instance() -> int | None:
+    """Read OUTCEPTION_DOCKER_INSTANCE from .env.docker if set."""
+    if not ENV_FILE.exists():
+        return None
+    for line in ENV_FILE.read_text().splitlines():
+        line = line.strip()
+        if line.startswith("#") or not line:
+            continue
+        match = re.match(r"^OUTCEPTION_DOCKER_INSTANCE\s*=\s*(\d+)\s*$", line)
+        if match:
+            return int(match.group(1))
+    return None
+
+
+def _write_stored_instance(instance: int) -> None:
+    """Write OUTCEPTION_DOCKER_INSTANCE to .env.docker."""
+    _ensure_env_file()
+    content = ENV_FILE.read_text()
+    new_line = f"OUTCEPTION_DOCKER_INSTANCE={instance}"
+    if re.search(r"^#?\s*OUTCEPTION_DOCKER_INSTANCE\s*=", content, re.MULTILINE):
+        content = re.sub(
+            r"^#?\s*OUTCEPTION_DOCKER_INSTANCE\s*=.*$",
+            new_line,
+            content,
+            flags=re.MULTILINE,
+        )
+    else:
+        content = content.rstrip() + f"\n{new_line}\n"
+    ENV_FILE.write_text(content)
+
+
+def _clear_stored_instance() -> bool:
+    """Comment out OUTCEPTION_DOCKER_INSTANCE in .env.docker. Returns True if found."""
+    if not ENV_FILE.exists():
+        return False
+    content = ENV_FILE.read_text()
+    if re.search(r"^OUTCEPTION_DOCKER_INSTANCE\s*=", content, re.MULTILINE):
+        content = re.sub(
+            r"^OUTCEPTION_DOCKER_INSTANCE\s*=.*$",
+            "# OUTCEPTION_DOCKER_INSTANCE=",
+            content,
+            flags=re.MULTILINE,
+        )
+        ENV_FILE.write_text(content)
+        return True
+    return False
+
+
+def _detect_instance() -> tuple[int, str]:
+    """Resolve the instance number for the current worktree.
+
+    Priority:
+    1. OUTCEPTION_DOCKER_INSTANCE in .env.docker (explicit per-worktree pin)
+    2. Existing entry in the cross-worktree registry for this path
+    3. Allocate the lowest free instance number
+    """
+    stored = _read_stored_instance()
+    if stored is not None:
+        return stored, "stored"
+
+    path = str(ROOT_DIR)
+    data = _load_registry()
+    entry = next((e for e in data["instances"] if e["path"] == path), None)
+    if entry is not None:
+        return entry["instance"], "registry"
+
+    taken = {e["instance"] for e in data["instances"]}
+    for n in range(MIN_INSTANCE, MAX_INSTANCE + 1):
+        if n not in taken:
+            return n, "new"
+    raise RuntimeError(
+        f"No free instance numbers left ({MIN_INSTANCE}..{MAX_INSTANCE} all taken). "
+        "Run `dev docker prune` to drop entries for paths that no longer exist."
+    )
+
+
+# --------------------------------------------------------------------------- #
+# Env files
+# --------------------------------------------------------------------------- #
+
+
+def _ensure_env_file() -> None:
+    """Create .env.docker from template if it doesn't exist."""
+    if not ENV_FILE.exists():
+        if not ENV_TEMPLATE.exists():
+            # Template was optional in the original layout; tolerate absence.
+            ENV_FILE.write_text(
+                "# Outception Docker dev env\n"
+                "# Set OUTCEPTION_DOCKER_INSTANCE=N to pin this worktree to instance N\n"
+                "# OUTCEPTION_DOCKER_INSTANCE=\n"
+            )
+            return
+        console.print("[dim]Creating Docker environment file from template...[/dim]")
+        shutil.copy(ENV_TEMPLATE, ENV_FILE)
+
+
+def _load_central_secrets() -> dict[str, str]:
+    """Load secrets from central file if it exists."""
+    if not SECRETS_FILE.exists():
+        return {}
+    from dotenv import dotenv_values
+
+    return {k: v for k, v in dotenv_values(SECRETS_FILE).items() if v}
+
+
+def _ensure_server_env() -> None:
+    """Create server/.env from template if it doesn't exist.
+
+    Applies central secrets from ~/.config/outception/secrets.env when available,
+    mirroring what `dev/setup-environment` does.
+    """
+    if SERVER_ENV_FILE.exists():
+        return
+
+    if not SERVER_ENV_TEMPLATE.exists():
+        console.print("[red]server/.env.template not found[/red]")
+        raise typer.Exit(1)
+
+    console.print("[dim]Creating server/.env from template...[/dim]")
+
+    from dotenv import dotenv_values
+
+    template_env = dotenv_values(SERVER_ENV_TEMPLATE)
+    central_secrets = _load_central_secrets()
+
+    if "OUTCEPTION_GITHUB_APP_NAMESPACE" in central_secrets:
+        central_secrets["NEXT_PUBLIC_GITHUB_APP_NAMESPACE"] = central_secrets[
+            "OUTCEPTION_GITHUB_APP_NAMESPACE"
+        ]
+
+    with open(SERVER_ENV_FILE, "w") as f:
+        for key, value in template_env.items():
+            output_value = central_secrets.get(key, value)
+            delimiter = "'" if '"' in str(output_value) else '"'
+            f.write(f"{key}={delimiter}{output_value}{delimiter}\n")
+
+    if central_secrets:
+        console.print(f"[dim]  Applied secrets from {SECRETS_FILE}[/dim]")
+
+
+# --------------------------------------------------------------------------- #
+# Shared network + shared compose helpers
+# --------------------------------------------------------------------------- #
+
+
+def _ensure_network() -> None:
+    """Idempotently create the outception-comared docker network."""
+    result = subprocess.run(
+        ["docker", "network", "inspect", SHARED_NETWORK_NAME],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode == 0:
+        return
+    create = subprocess.run(
+        ["docker", "network", "create", SHARED_NETWORK_NAME],
+        capture_output=True,
+        text=True,
+    )
+    if create.returncode != 0:
+        console.print(
+            f"[red]Failed to create docker network {SHARED_NETWORK_NAME}: {create.stderr.strip()}[/red]"
+        )
+        raise typer.Exit(1)
+    console.print(f"[dim]Created docker network: {SHARED_NETWORK_NAME}[/dim]")
+
+
+def _shared_compose_cmd(monitoring: bool = False, tinybird: bool = False) -> list[str]:
+    cmd = [
+        "docker",
+        "compose",
+        "-p",
+        SHARED_PROJECT_NAME,
+        "-f",
+        str(SHARED_COMPOSE_FILE),
+    ]
+    profiles = []
+    if monitoring:
+        profiles.append("monitoring")
+    if tinybird:
+        profiles.append("tinybird")
+    for profile in profiles:
+        cmd.extend(["--profile", profile])
+    return cmd
+
+
+def _shared_is_running() -> bool:
+    """Return True if any container in the shared project is running."""
+    result = subprocess.run(
+        [
+            "docker",
+            "compose",
+            "-p",
+            SHARED_PROJECT_NAME,
+            "-f",
+            str(SHARED_COMPOSE_FILE),
+            "ps",
+            "-q",
+            "--status",
+            "running",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    return result.returncode == 0 and bool(result.stdout.strip())
+
+
+def _drop_instance_data(instance: int) -> None:
+    """Best-effort cleanup of per-instance state in the shared infra.
+
+    Drops the postgres database, flushes the redis DB, and removes the S3
+    buckets. Each step is non-fatal — a missing DB or bucket is fine since the
+    api auto-creates them on next boot.
+    """
+    if not _shared_is_running():
+        console.print(
+            f"[yellow]Shared infra not running — skipping data cleanup for instance {instance}. "
+            "Start it with `dev docker up` and re-run prune to drop the DB / buckets.[/yellow]"
+        )
+        return
+
+    db = db_name(instance)
+    console.print(f"[dim]  Dropping postgres database {db}...[/dim]")
+    run_command(
+        _shared_compose_cmd()
+        + [
+            "exec",
+            "-T",
+            "db",
+            "psql",
+            "-U",
+            "outception",
+            "-d",
+            "postgres",
+            "-c",
+            f"DROP DATABASE IF EXISTS {db} WITH (FORCE);",
+        ],
+        capture=True,
+    )
+
+    redis_index = redis_db(instance)
+    console.print(f"[dim]  Flushing redis DB {redis_index}...[/dim]")
+    run_command(
+        _shared_compose_cmd()
+        + [
+            "exec",
+            "-T",
+            "redis",
+            "redis-cli",
+            "-n",
+            str(redis_index),
+            "FLUSHDB",
+        ],
+        capture=True,
+    )
+
+    bucket = s3_bucket(instance)
+    public_bucket = s3_public_bucket(instance)
+    console.print(f"[dim]  Removing S3 buckets {bucket}, {public_bucket}...[/dim]")
+    # `set -e` aborts on alias-set failure (e.g. minio unreachable) so the user
+    # sees the error. `|| true` on rb makes a missing bucket non-fatal — that's
+    # the expected case for any instance that never created buckets.
+    run_command(
+        _shared_compose_cmd()
+        + [
+            "run",
+            "--rm",
+            "--entrypoint",
+            "sh",
+            "minio-setup",
+            "-c",
+            'set -e; mc alias set local http://minio:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"; '
+            f"mc rb --force local/{bucket} || true; "
+            f"mc rb --force local/{public_bucket} || true",
+        ],
+        capture=True,
+    )
+
+
+# --------------------------------------------------------------------------- #
+# Per-instance compose helpers
+# --------------------------------------------------------------------------- #
+
+
+def _build_compose_env(instance: int) -> dict[str, str]:
+    """Build environment variables for the per-instance app stack.
+
+    Only API and WEB host ports are offset (those need to be reachable from
+    the host browser). Infra services live in the shared stack and are
+    reached by container name on the outception-comared network — no host ports.
+    """
+    _assert_ports_free(instance)
+    return {
+        "OUTCEPTION_DOCKER_INSTANCE": str(instance),
+        "API_PORT": str(api_port(instance)),
+        "WEB_PORT": str(web_port(instance)),
+        "OUTCEPTION_POSTGRES_DATABASE": db_name(instance),
+        "OUTCEPTION_REDIS_DB": str(redis_db(instance)),
+        "OUTCEPTION_S3_FILES_BUCKET_NAME": s3_bucket(instance),
+        "OUTCEPTION_S3_FILES_PUBLIC_BUCKET_NAME": s3_public_bucket(instance),
+    }
+
+
+def _build_compose_cmd(instance: int) -> list[str]:
+    return [
+        "docker",
+        "compose",
+        "-p",
+        app_project(instance),
+        "-f",
+        str(COMPOSE_FILE),
+        "--env-file",
+        str(ENV_FILE),
+    ]
+
+
+def _get_instance(ctx: typer.Context) -> int:
+    # Every caller (action commands) passes ENV_FILE to docker compose via
+    # `--env-file`, so the file must exist. Read-only commands like `list`
+    # don't call this, so they don't create the file as a side effect.
+    _ensure_env_file()
+    return ctx.obj["instance"]
+
+
+def _instance_was_explicit(ctx: typer.Context) -> bool:
+    return ctx.obj["instance_explicit"]
+
+
+def _print_access_info(ctx: typer.Context, instance: int) -> None:
+    i_flag = f" -i {instance}" if _instance_was_explicit(ctx) else ""
+    console.print()
+    console.print("[bold]Outception Docker Development Environment[/bold]")
+    console.print(f"Instance: {instance} (project {app_project(instance)})")
+    console.print(
+        f"Database: {db_name(instance)}  Redis DB: {redis_db(instance)}  "
+        f"Buckets: {s3_bucket(instance)}, {s3_public_bucket(instance)}"
+    )
+    console.print()
+    console.print("[bold]App services:[/bold]")
+    console.print(f"  API:           http://localhost:{api_port(instance)}")
+    console.print(f"  Web:           http://localhost:{web_port(instance)}")
+    console.print()
+    console.print(
+        "[bold]Shared infra:[/bold] (no host ports — reach via `dev docker exec <service>`)"
+    )
+    console.print(f"  Project: {SHARED_PROJECT_NAME}  Network: {SHARED_NETWORK_NAME}")
+    console.print(f"  psql:    dev docker exec db psql -U outception -d {db_name(instance)}")
+    console.print(f"  redis:   dev docker exec redis redis-cli -n {redis_db(instance)}")
+    console.print()
+    console.print("[bold]Commands:[/bold]")
+    console.print(f"  View logs:   dev docker{i_flag} logs")
+    console.print(f"  API logs:    dev docker{i_flag} logs api")
+    console.print(f"  Stop:        dev docker{i_flag} down")
+    console.print(f"  Shell (API): dev docker{i_flag} shell api")
+    console.print()
+
+
+# --------------------------------------------------------------------------- #
+# Typer registration
+# --------------------------------------------------------------------------- #
+
+
+def register(app: typer.Typer, prompt_setup: callable) -> None:
+    docker_app = typer.Typer(help="Isolated Docker development environment")
+    app.add_typer(docker_app, name="docker")
+
+    @docker_app.callback()
+    def docker_callback(
+        ctx: typer.Context,
+        instance: Annotated[
+            int | None,
+            typer.Option(
+                "--instance",
+                "-i",
+                help="Instance number for port isolation (auto-detected if not set)",
+            ),
+        ] = None,
+    ) -> None:
+        """Isolated Docker development environment.
+
+        One shared infra stack (postgres/redis/minio/tinybird) lives on the
+        machine; each worktree gets its own api/worker/web on offset ports.
+        Service-aware commands (logs, exec, restart, ...) auto-route to the
+        right project based on the service name.
+        """
+        explicit = instance is not None
+        if instance is None:
+            instance, source = _detect_instance()
+            if source == "stored":
+                console.print(
+                    f"[dim]Using stored instance {instance} (from .env.docker)[/dim]"
+                )
+            elif source == "registry":
+                console.print(f"[dim]Using registered instance {instance}[/dim]")
+            elif source == "new":
+                console.print(
+                    f"[dim]Allocated new instance {instance} for {ROOT_DIR}[/dim]"
+                )
+            else:
+                console.print(f"[dim]Auto-detected instance {instance}[/dim]")
+            if source != "registry":
+                _upsert_registry(str(ROOT_DIR), instance)
+        ctx.ensure_object(dict)
+        ctx.obj["instance"] = instance
+        ctx.obj["instance_explicit"] = explicit
+
+    def _route(service: str | None, instance: int) -> tuple[list[str], dict[str, str]]:
+        """Pick the right (compose_cmd, env) for a service.
+
+        - shared services (db, redis, minio, tinybird, prometheus, grafana) →
+          the machine-wide `outception-comared` project
+        - app services (api, worker, web) or no service → this instance's
+          `outception-app-N` project
+        """
+        if service in SHARED_SERVICES:
+            return _shared_compose_cmd(monitoring=True, tinybird=True), {}
+        return _build_compose_cmd(instance), _build_compose_env(instance)
+
+    @docker_app.command("up")
+    def docker_up(
+        ctx: typer.Context,
+        detach: Annotated[
+            bool, typer.Option("--detach", "-d", help="Run in background")
+        ] = True,
+        build: Annotated[
+            bool, typer.Option("--build", "-b", help="Force rebuild images")
+        ] = False,
+        monitoring: Annotated[
+            bool,
+            typer.Option(
+                "--monitoring", help="Include Prometheus and Grafana in shared infra"
+            ),
+        ] = False,
+        skip_tinybird: Annotated[
+            bool,
+            typer.Option(
+                "--skip-tinybird", help="Skip starting Tinybird service"
+            ),
+        ] = False,
+        services: Annotated[
+            list[str] | None,
+            typer.Argument(help="Services to start (default: all app services)"),
+        ] = None,
+    ) -> None:
+        """Start shared infra (if needed) + this instance's app stack."""
+        instance = _get_instance(ctx)
+        _ensure_server_env()
+
+        # Bring shared infra up first if it isn't already running.
+        _ensure_network()
+        if not _shared_is_running():
+            shared_cmd = _shared_compose_cmd(monitoring=monitoring, tinybird=not skip_tinybird) + ["up", "-d"]
+            console.print("[bold blue]Starting Outception shared infra[/bold blue]")
+            result = run_command(shared_cmd)
+            if not result or result.returncode != 0:
+                console.print("[red]Failed to start shared infra[/red]")
+                raise typer.Exit(1)
+        elif monitoring or skip_tinybird:
+            console.print(
+                "[yellow]Shared infra is already running; --monitoring and --skip-tinybird only take effect on first start. Run `dev docker down --all` first to apply.[/yellow]"
+            )
+
+        env = _build_compose_env(instance)
+        cmd = _build_compose_cmd(instance)
+
+        console.print(
+            f"\n[bold blue]Starting Outception app stack (instance {instance})[/bold blue]\n"
+        )
+
+        if build:
+            console.print("[dim]Building images...[/dim]")
+            build_cmd = cmd + ["build"] + (services or [])
+            result = run_command(build_cmd, env=env)
+            if result and result.returncode != 0:
+                console.print("[red]Build failed[/red]")
+                raise typer.Exit(1)
+
+        up_cmd = cmd + ["up"]
+        if detach:
+            up_cmd.append("-d")
+        up_cmd.extend(services or [])
+
+        if detach:
+            result = run_command(up_cmd, env=env)
+            if result and result.returncode == 0:
+                _print_access_info(ctx, instance)
+            else:
+                console.print("[red]Failed to start services[/red]")
+                raise typer.Exit(1)
+        else:
+            full_env = {**os.environ, **env}
+            os.execvpe(up_cmd[0], up_cmd, full_env)
+
+    @docker_app.command("down")
+    def docker_down(
+        ctx: typer.Context,
+        all_: Annotated[
+            bool,
+            typer.Option(
+                "--all", help="Also stop the shared infra (postgres/redis/etc.)"
+            ),
+        ] = False,
+        services: Annotated[
+            list[str] | None, typer.Argument(help="App services to stop (default: all)")
+        ] = None,
+    ) -> None:
+        """Stop this instance's app stack (use --all to also stop shared infra)."""
+        instance = _get_instance(ctx)
+        env = _build_compose_env(instance)
+        cmd = _build_compose_cmd(instance) + ["down"] + (services or [])
+        console.print(f"[dim]Stopping app stack (instance {instance})...[/dim]")
+        result = run_command(cmd, env=env)
+        if not result or result.returncode != 0:
+            console.print("[red]Failed to stop app stack[/red]")
+            raise typer.Exit(1)
+        console.print("[green]App stack stopped[/green]")
+
+        if all_:
+            console.print("[dim]Stopping shared infra...[/dim]")
+            shared = _shared_compose_cmd(monitoring=True, tinybird=True) + ["down"]
+            result = run_command(shared)
+            if not result or result.returncode != 0:
+                console.print("[red]Failed to stop shared infra[/red]")
+                raise typer.Exit(1)
+            console.print("[green]Shared infra stopped[/green]")
+        else:
+            console.print(
+                "[dim]Shared infra still running — `dev docker down --all` to stop it.[/dim]"
+            )
+
+    @docker_app.command("logs")
+    def docker_logs(
+        ctx: typer.Context,
+        follow: Annotated[
+            bool, typer.Option("--follow", "-f", help="Follow log output")
+        ] = True,
+        service: Annotated[
+            str | None,
+            typer.Argument(help="Service to tail (auto-routed to shared/app project)"),
+        ] = None,
+    ) -> None:
+        """Tail logs for an app or shared service (auto-routes by service name)."""
+        instance = _get_instance(ctx)
+        cmd, env = _route(service, instance)
+        cmd = cmd + ["logs"]
+        if follow:
+            cmd.append("-f")
+        if service:
+            cmd.append(service)
+        full_env = {**os.environ, **env}
+        os.execvpe(cmd[0], cmd, full_env)
+
+    @docker_app.command("ps")
+    def docker_ps(ctx: typer.Context) -> None:
+        """List running containers — both shared infra and this instance's app stack."""
+        instance = _get_instance(ctx)
+        console.print(f"[bold]Shared ({SHARED_PROJECT_NAME})[/bold]")
+        run_command(_shared_compose_cmd(monitoring=True, tinybird=True) + ["ps"])
+        console.print(f"\n[bold]App ({app_project(instance)})[/bold]")
+        run_command(
+            _build_compose_cmd(instance) + ["ps"], env=_build_compose_env(instance)
+        )
+
+    @docker_app.command("restart")
+    def docker_restart(
+        ctx: typer.Context,
+        services: Annotated[
+            list[str] | None,
+            typer.Argument(help="Services to restart — auto-routed by name"),
+        ] = None,
+    ) -> None:
+        """Restart services (auto-routes by name; mixing app + shared services is not supported)."""
+        instance = _get_instance(ctx)
+        # Determine routing from the first service; require homogeneous targets.
+        first = (services or [None])[0]
+        if services and not all(
+            (s in SHARED_SERVICES) == (first in SHARED_SERVICES) for s in services
+        ):
+            console.print(
+                "[red]Cannot restart shared and app services in one call. Run them separately.[/red]"
+            )
+            raise typer.Exit(1)
+        cmd, env = _route(first, instance)
+        cmd = cmd + ["restart"] + (services or [])
+        console.print("[dim]Restarting services...[/dim]")
+        result = run_command(cmd, env=env)
+        if result and result.returncode == 0:
+            console.print("[green]Services restarted[/green]")
+        else:
+            console.print("[red]Failed to restart services[/red]")
+            raise typer.Exit(1)
+
+    @docker_app.command("build")
+    def docker_build(
+        ctx: typer.Context,
+        services: Annotated[
+            list[str] | None,
+            typer.Argument(
+                help="Services to build (app services only — shared use upstream images)"
+            ),
+        ] = None,
+    ) -> None:
+        """Build/rebuild this instance's app images."""
+        instance = _get_instance(ctx)
+        env = _build_compose_env(instance)
+        cmd = _build_compose_cmd(instance) + ["build"] + (services or [])
+        console.print("[dim]Building images...[/dim]")
+        result = run_command(cmd, env=env)
+        if result and result.returncode == 0:
+            console.print("[green]Build complete[/green]")
+        else:
+            console.print("[red]Build failed[/red]")
+            raise typer.Exit(1)
+
+    @docker_app.command("shell")
+    def docker_shell(
+        ctx: typer.Context,
+        service: Annotated[
+            str, typer.Argument(help="Service to shell into (app or shared)")
+        ],
+    ) -> None:
+        """Open a /bin/bash shell in any service's container (use `exec` for one-off commands)."""
+        instance = _get_instance(ctx)
+        cmd, env = _route(service, instance)
+        cmd = cmd + ["exec", service, "/bin/bash"]
+        console.print(f"[dim]Opening shell in {service}...[/dim]")
+        full_env = {**os.environ, **env}
+        os.execvpe(cmd[0], cmd, full_env)
+
+    @docker_app.command(
+        "exec",
+        context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+    )
+    def docker_exec(
+        ctx: typer.Context,
+        service: Annotated[
+            str,
+            typer.Argument(
+                help="Service to exec in (auto-routed to shared/app project)"
+            ),
+        ],
+    ) -> None:
+        """Run a command in any service's container.
+
+        Examples:
+          dev docker exec db psql -U outception -l
+          dev docker exec redis redis-cli -n 1 dbsize
+          dev docker exec api uv run alembic current
+        """
+        instance = _get_instance(ctx)
+        cmd, env = _route(service, instance)
+        extra = ctx.args or ["/bin/sh"]
+        cmd = cmd + ["exec", service, *extra]
+        full_env = {**os.environ, **env}
+        os.execvpe(cmd[0], cmd, full_env)
+
+    @docker_app.command("cleanup")
+    def docker_cleanup(
+        ctx: typer.Context,
+        all_: Annotated[
+            bool,
+            typer.Option(
+                "--all",
+                help="Also wipe shared infra volumes (DESTROYS data for ALL instances)",
+            ),
+        ] = False,
+        force: Annotated[
+            bool, typer.Option("--force", help="Skip confirmation")
+        ] = False,
+    ) -> None:
+        """Remove this instance's app containers and volumes (use --all to nuke shared infra too)."""
+        instance = _get_instance(ctx)
+        if not force:
+            if all_:
+                console.print(
+                    "[red bold]This destroys ALL postgres data, MinIO objects, Tinybird events, prometheus/grafana state.[/red bold]"
+                )
+                console.print(
+                    "[red]Every instance on this machine will be wiped.[/red]"
+                )
+                if not typer.confirm("Are you absolutely sure?"):
+                    raise typer.Abort()
+            else:
+                console.print(
+                    "[yellow]This will remove this instance's api/worker/web containers and their build/cache volumes.[/yellow]"
+                )
+                console.print(
+                    "[dim]Shared infra (postgres, redis, minio, tinybird) is left untouched. Use --all to wipe that too.[/dim]"
+                )
+                if not typer.confirm("Continue?"):
+                    raise typer.Abort()
+
+        env = _build_compose_env(instance)
+        cmd = _build_compose_cmd(instance) + ["down", "-v", "--remove-orphans"]
+        console.print(f"[dim]Cleaning up app stack (instance {instance})...[/dim]")
+        result = run_command(cmd, env=env)
+        if not result or result.returncode != 0:
+            console.print("[red]Cleanup failed[/red]")
+            raise typer.Exit(1)
+        console.print("[green]App stack cleaned up[/green]")
+
+        if all_:
+            console.print("[dim]Wiping shared infra volumes...[/dim]")
+            shared = _shared_compose_cmd(monitoring=True, tinybird=True) + [
+                "down",
+                "-v",
+                "--remove-orphans",
+            ]
+            result = run_command(shared)
+            if not result or result.returncode != 0:
+                console.print("[red]Shared cleanup failed[/red]")
+                raise typer.Exit(1)
+            console.print("[green]Shared infra wiped[/green]")
+
+    @docker_app.command("set-instance")
+    def docker_set_instance(
+        instance: Annotated[
+            int, typer.Argument(help="Instance number to store (0 = default ports)")
+        ],
+    ) -> None:
+        """Pin an instance number for this worktree (writes .env.docker + registry)."""
+        if not 0 <= instance <= MAX_INSTANCE:
+            console.print(
+                f"[red]Instance number must be between 0 and {MAX_INSTANCE} "
+                f"(redis is launched with 100 DBs)[/red]"
+            )
+            raise typer.Exit(1)
+        if instance >= MIN_INSTANCE:
+            conflict = next(
+                (
+                    e
+                    for e in _load_registry()["instances"]
+                    if e["instance"] == instance and e["path"] != str(ROOT_DIR)
+                ),
+                None,
+            )
+            if conflict:
+                console.print(
+                    f"[red]Instance {instance} is already used by worktree {conflict['path']}[/red]"
+                )
+                console.print(
+                    "[dim]Run `dev docker list` to see all assignments.[/dim]"
+                )
+                raise typer.Exit(1)
+            _upsert_registry(str(ROOT_DIR), instance)
+        _write_stored_instance(instance)
+        console.print(f"[green]Stored instance {instance} in .env.docker[/green]")
+        console.print(
+            f"[dim]Ports: API={api_port(instance)}, Web={web_port(instance)}, "
+            f"DB=5432 (shared)[/dim]"
+        )
+        console.print(
+            f"[dim]Database: {db_name(instance)}, Redis DB: {redis_db(instance)}, "
+            f"Buckets: {s3_bucket(instance)}, {s3_public_bucket(instance)}[/dim]"
+        )
+
+    @docker_app.command("clear-instance")
+    def docker_clear_instance() -> None:
+        """Remove stored instance number (back to auto-detect)."""
+        if _clear_stored_instance():
+            console.print("[green]Cleared stored instance from .env.docker[/green]")
+        else:
+            console.print("[dim]No stored instance to clear[/dim]")
+
+    @docker_app.command("list")
+    def docker_list() -> None:
+        """List every known instance: path, created date, and runtime status."""
+        data = _load_registry()
+        entries = sorted(data["instances"], key=lambda e: e["instance"])
+        if not entries:
+            console.print("[dim]No instances registered yet.[/dim]")
+            console.print(
+                f"[dim]Registry: {REGISTRY_FILE} (will be created on first use)[/dim]"
+            )
+            return
+
+        current_path = str(ROOT_DIR)
+        home = str(Path.home())
+        running_projects = _running_compose_projects()
+        console.print(f"[dim]Registry: {REGISTRY_FILE}[/dim]")
+
+        table = Table(show_header=True, show_lines=False, expand=False, box=None)
+        table.add_column("#", style="cyan", no_wrap=True, justify="right")
+        table.add_column("Status", no_wrap=True)
+        table.add_column("Created", no_wrap=True)
+        table.add_column("Path", overflow="fold")
+
+        for entry in entries:
+            instance_num = entry["instance"]
+            path = entry["path"]
+            path_exists = Path(path).exists()
+            running = app_project(instance_num) in running_projects
+
+            if running:
+                status = "[green]●[/green] running"
+            elif not path_exists:
+                status = "[red]✗[/red] path missing"
+            else:
+                status = "[dim]○ stopped[/dim]"
+
+            display_path = (
+                path.replace(home, "~", 1) if path.startswith(home) else path
+            )
+            if path == current_path:
+                display_path = f"[bold cyan]{display_path}[/bold cyan] [dim](this worktree)[/dim]"
+            elif not path_exists:
+                display_path = f"[red]{display_path}[/red]"
+
+            table.add_row(
+                str(instance_num),
+                status,
+                _short_ts(entry["created_at"]),
+                display_path,
+            )
+
+        console.print(table)
+
+    @docker_app.command("prune")
+    def docker_prune(
+        force: Annotated[
+            bool, typer.Option("--force", help="Skip confirmation")
+        ] = False,
+    ) -> None:
+        """Drop registry entries whose path no longer exists, plus all their data.
+
+        For each stale entry: stops + removes its app stack (containers and
+        per-instance build volumes), drops its postgres database, flushes its
+        redis DB, and removes its S3 buckets. The shared infra itself is left
+        running.
+        """
+        data = _load_registry()
+        stale = [e for e in data["instances"] if not Path(e["path"]).exists()]
+        if not stale:
+            console.print("[dim]No stale entries to prune.[/dim]")
+            return
+
+        console.print(
+            f"[yellow]Found {len(stale)} stale entries (path no longer exists):[/yellow]"
+        )
+        for entry in stale:
+            console.print(f"  Instance {entry['instance']}: {entry['path']}")
+        console.print(
+            "[red bold]This will drop their app containers, build volumes, "
+            "postgres databases, redis data, and S3 buckets. Data will be lost.[/red bold]"
+        )
+
+        if not force and not typer.confirm("Continue?"):
+            raise typer.Abort()
+
+        for entry in stale:
+            instance = entry["instance"]
+            console.print(f"\n[dim]Pruning instance {instance}...[/dim]")
+            run_command(
+                _build_compose_cmd(instance) + ["down", "-v", "--remove-orphans"],
+                env=_build_compose_env(instance),
+            )
+            _drop_instance_data(instance)
+
+        data["instances"] = [e for e in data["instances"] if e not in stale]
+        _save_registry(data)
+        console.print(
+            f"\n[green]Pruned {len(stale)} stale instances.[/green]"
+        )

@@ -1,0 +1,11 @@
+[Unit]
+Description=Nightly Outception PostgreSQL backup to R2
+
+[Timer]
+# 03:15 UTC daily; Persistent catches up a missed run after downtime.
+OnCalendar=*-*-* 03:15:00
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

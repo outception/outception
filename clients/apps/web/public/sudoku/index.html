@@ -1,0 +1,1328 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,height=device-height,user-scalable=no,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0"
+    />
+    <meta name="robots" content="noindex" />
+    <title>Sudoku</title>
+    <style>
+      @font-face {
+        font-family: 'Hanken Grotesk';
+        font-weight: 100 900;
+        font-style: normal;
+        font-display: swap;
+        src: url('/fonts/HankenGrotesk-Variable.woff2') format('woff2');
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        font-family: 'Hanken Grotesk', sans-serif;
+        background: linear-gradient(to bottom, #fff 50%, #d1d5db 100%);
+        color: #0b0b10;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        user-select: none;
+        overflow: hidden;
+      }
+      .screen {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: linear-gradient(to bottom, #fff 50%, #d1d5db 100%);
+        transition:
+          opacity 0.3s,
+          transform 0.3s;
+        transform: scale(1);
+      }
+      .hidden {
+        opacity: 0;
+        pointer-events: none;
+        transform: scale(0.94);
+      }
+      .preview {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 0;
+        padding: 12px;
+      }
+      #previewGrid {
+        display: grid;
+        gap: 0;
+        background: #17181f;
+        border: 2px solid #17181f;
+        opacity: 0.92;
+      }
+      #previewGrid .pcell {
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #17181f;
+      }
+      #previewGrid .pTop {
+        border-top: 1px solid #17181f;
+      }
+      #previewGrid .pLeft {
+        border-left: 1px solid #17181f;
+      }
+      .title {
+        margin-top: 9vh;
+        text-align: center;
+        line-height: 0.92;
+      }
+      .title .small {
+        display: block;
+        font-weight: 800;
+        font-size: 18px;
+        letter-spacing: 0.4em;
+        color: #17181f;
+      }
+      .title .big {
+        display: block;
+        font-weight: 800;
+        font-size: 44px;
+        letter-spacing: 0.06em;
+        color: #17181f;
+      }
+      .meta {
+        font-weight: 600;
+        font-size: 11px;
+        color: #9a9aa2;
+        margin-top: 8px;
+        text-align: center;
+        padding: 0 20px;
+      }
+      .note {
+        margin-bottom: 5.5vh;
+        font-weight: 800;
+        font-size: clamp(12px, 3.33vh, 20px);
+        color: #070d15;
+        text-align: center;
+        line-height: 1.9;
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 0;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+      .corner {
+        position: fixed;
+        bottom: 12px;
+        width: 42px;
+        height: 42px;
+        border: 0;
+        background: none;
+        cursor: pointer;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .corner svg {
+        width: 22px;
+        height: 22px;
+        fill: #9a9aa2;
+      }
+      .corner.bl {
+        left: 12px;
+      }
+      .corner.br {
+        right: 12px;
+      }
+      .hud {
+        margin-top: 10px;
+        text-align: center;
+      }
+      .hud .timer {
+        font-weight: 800;
+        font-size: 26px;
+        color: #3d3d46;
+      }
+      .hud .sub {
+        font-weight: 700;
+        font-size: 11px;
+        color: #9a9aa2;
+      }
+      .stage {
+        flex: 1;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 0;
+        padding: 8px 8px 60px;
+      }
+      #boardWrap {
+        max-width: 100%;
+        align-self: center;
+        flex: 1 1 0;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+      }
+      .bottombar {
+        position: fixed;
+        bottom: 12px;
+        left: 58px;
+        right: 58px;
+        z-index: 15;
+        min-height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.3s;
+      }
+      .bottombar.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      .bottombar .sub {
+        font-weight: 700;
+        font-size: 12px;
+        color: #6b6b74;
+        text-align: center;
+      }
+      #board {
+        display: grid;
+        background: #17181f;
+        border: 2px solid #17181f;
+        touch-action: pan-x pan-y;
+      }
+      #hidkb {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 2px;
+        height: 2px;
+        opacity: 0.01;
+        border: 0;
+        font-size: 16px;
+      }
+      .cell {
+        position: relative;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .cell.given {
+        color: #17181f;
+      }
+      .cell.user {
+        color: #2a7ade;
+      }
+      .cell.wrong {
+        color: #e0313f;
+      }
+      .cell.sel {
+        background: #ffd766 !important;
+      }
+      .cell.peer {
+        background: #f3ecd7;
+      }
+      .cell.same {
+        background: #ffe9a3;
+      }
+      .cell.bTop {
+        border-top: 2px solid #17181f;
+      }
+      .cell.bLeft {
+        border-left: 2px solid #17181f;
+      }
+      .cell + .cell {
+        border-left: 1px solid #c9c9cf;
+      }
+      .rowline {
+        border-top: 1px solid #c9c9cf;
+      }
+      .pad {
+        display: flex;
+        gap: 6px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .pad button {
+        border: 0;
+        background: #fff;
+        border-radius: 10px;
+        width: 38px;
+        height: 44px;
+        font-family: inherit;
+        font-size: 19px;
+        font-weight: 700;
+        color: #17181f;
+        cursor: pointer;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+      }
+      .pad button.count-done {
+        opacity: 0.25;
+      }
+      .tools {
+        position: fixed;
+        bottom: 12px;
+        left: 58px;
+        right: 58px;
+        z-index: 15;
+        display: flex;
+        gap: 8px;
+        margin: 0;
+        justify-content: center;
+        align-items: center;
+      }
+      .embed .hud,
+      .embed .bottombar,
+      .embed .tools {
+        display: none;
+      }
+      .tools button {
+        border: 0;
+        background: #ffffffcc;
+        border-radius: 10px;
+        padding: 7px 12px;
+        font-family: inherit;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        color: #3d3d46;
+        cursor: pointer;
+      }
+      .panel {
+        margin-top: 8vh;
+        width: min(340px, 88vw);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .panel h2 {
+        font-weight: 800;
+        font-size: 22px;
+        letter-spacing: 0.06em;
+        color: #17181f;
+        text-align: center;
+      }
+      .stat {
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px solid #c9c9cf;
+        padding: 8px 2px;
+        font-size: 14px;
+      }
+      .stat i {
+        font-style: normal;
+        font-weight: 600;
+        color: #6b6b74;
+      }
+      .stat b {
+        font-weight: 800;
+        color: #17181f;
+      }
+      .pref {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 2px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #3d3d46;
+      }
+      .pref .opts {
+        display: flex;
+        gap: 6px;
+      }
+      .pref .opts button {
+        border: 0;
+        background: #ffffffcc;
+        border-radius: 8px;
+        padding: 6px 10px;
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 800;
+        color: #6b6b74;
+        cursor: pointer;
+      }
+      .pref .opts button.on {
+        background: #17181f;
+        color: #fff;
+      }
+      .complete {
+        margin-top: 24vh;
+        text-align: center;
+      }
+      .complete .big {
+        font-size: 38px;
+        font-weight: 800;
+        color: #17181f;
+      }
+      .complete .sub {
+        font-size: 16px;
+        font-weight: 700;
+        color: #3d3d46;
+        margin-top: 4px;
+      }
+      .complete .best {
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.15em;
+        color: #e0a800;
+        margin-top: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Intro -->
+    <div class="screen" id="sIntro">
+      <div class="title">
+        <span class="small">DAILY</span><span class="big">SUDOKU</span>
+      </div>
+      <div class="meta" id="introMeta">Same puzzle for everyone today</div>
+      <div class="preview"><div id="previewGrid"></div></div>
+      <div class="note" id="introNote">DOUBLE TAP TO START</div>
+    </div>
+    <!-- Game -->
+    <div class="screen hidden" id="sGame">
+      <div class="hud"><div class="timer" id="timer">0:00</div></div>
+      <div class="stage">
+        <div id="boardWrap"><div id="board"></div></div>
+        <div class="pad" id="pad"></div>
+        <div class="tools">
+          <button id="erase">ERASE</button>
+          <button id="check">CHECK</button>
+          <button id="reveal">REVEAL CELL</button>
+        </div>
+      </div>
+    </div>
+    <!-- Stats -->
+    <div class="screen hidden" id="sStats">
+      <div class="panel">
+        <h2>STATISTICS</h2>
+        <div id="statRows"></div>
+      </div>
+    </div>
+    <!-- Prefs -->
+    <div class="screen hidden" id="sPrefs">
+      <div class="panel">
+        <h2>SETTINGS</h2>
+        <div class="pref">
+          <span>Difficulty</span>
+          <span class="opts">
+            <button data-d="easy">EASY</button>
+            <button data-d="classic">CLASSIC</button>
+            <button data-d="hard">HARD</button>
+          </span>
+        </div>
+        <div class="pref">
+          <span>Mark mistakes as you type</span>
+          <span class="opts">
+            <button data-m="on">ON</button>
+            <button data-m="off">OFF</button>
+          </span>
+        </div>
+        <div class="pref">
+          <span>Restart today's puzzle</span>
+          <span class="opts"><button id="restart">RESET</button></span>
+        </div>
+      </div>
+    </div>
+    <!-- Complete -->
+    <div class="screen hidden" id="sDone">
+      <div class="complete">
+        <div class="big">Complete!</div>
+        <div class="sub" id="finalTime"></div>
+        <div class="best hidden" id="bestBadge">🏆 BEST TIME!</div>
+      </div>
+    </div>
+
+    <!-- Paused: opaque so the grid can't be studied while the clock is stopped -->
+    <div class="screen hidden" id="sPause">
+      <div class="title" style="margin-top: 24vh">
+        <span class="big">PAUSED</span>
+      </div>
+      <div class="preview">
+        <div
+          id="pauseTime"
+          style="font-weight: 700; font-size: 16px; color: #3d3d46"
+        ></div>
+      </div>
+      <div class="note">DOUBLE TAP TO RESUME</div>
+    </div>
+
+    <div class="bottombar hidden" id="subBar">
+      <div class="sub" id="sub"></div>
+    </div>
+    <input
+      id="hidkb"
+      type="text"
+      inputmode="numeric"
+      pattern="[0-9]*"
+      autocomplete="off"
+      autocorrect="off"
+      spellcheck="false"
+      aria-hidden="true"
+      tabindex="-1"
+    />
+    <button class="corner bl hidden" id="btnBack" aria-label="Back">
+      <svg viewBox="0 0 24 24">
+        <path
+          d="M11.2 4.3 4.5 10l6.7 5.7v-3.6c4.6 0 7.6 1.4 9.8 4.4-.8-5.2-4-9-9.8-9.6V4.3z"
+        />
+      </svg>
+    </button>
+    <button class="corner bl" id="btnStats" aria-label="Statistics">
+      <svg viewBox="0 0 24 24">
+        <path
+          d="M5 3h14v2h3v4c0 2.2-1.8 4-4 4h-.3c-.8 1.9-2.5 3.3-4.7 3.8V19h3v2H8v-2h3v-2.2c-2.2-.5-3.9-1.9-4.7-3.8H6c-2.2 0-4-1.8-4-4V5h3V3zm0 4H4v2c0 1.1.9 2 2 2h-.8A8 8 0 0 1 5 8.9V7zm14 0v1.9c0 .8-.1 1.5-.2 2.1H19c1.1 0 2-.9 2-2V7h-2z"
+        />
+      </svg>
+    </button>
+    <button class="corner br" id="btnPrefs" aria-label="Settings">
+      <svg viewBox="0 0 24 24">
+        <path
+          d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm9.4 5.3-1.8 1a7.9 7.9 0 0 1-1 2.4l.6 2-1.7 1.7-2-.6a7.9 7.9 0 0 1-2.4 1l-1 1.9h-2.4l-1-1.9a7.9 7.9 0 0 1-2.4-1l-2 .6-1.6-1.7.6-2a7.9 7.9 0 0 1-1-2.4l-1.9-1v-2.4l1.9-1a7.9 7.9 0 0 1 1-2.4l-.6-2L4.3 3.8l2 .6a7.9 7.9 0 0 1 2.4-1l1-1.9h2.4l1 1.9a7.9 7.9 0 0 1 2.4 1l2-.6 1.7 1.7-.6 2a7.9 7.9 0 0 1 1 2.4l1.8 1v2.4z"
+        />
+      </svg>
+    </button>
+
+    <script>
+      ;(function () {
+        'use strict'
+        var now = new Date()
+        var dayKey =
+          now.getUTCFullYear() * 10000 +
+          (now.getUTCMonth() + 1) * 100 +
+          now.getUTCDate()
+        var PREFS_KEY = 'sudoku_prefs',
+          STATS_KEY = 'sudoku_stats'
+        var prefs = { d: 'classic', m: 'on' }
+        try {
+          Object.assign(
+            prefs,
+            JSON.parse(localStorage.getItem(PREFS_KEY) || '{}'),
+          )
+        } catch (e) {}
+        var HOLES = { easy: 34, classic: 41, hard: 47 }
+
+        function mulberry32(a) {
+          return function () {
+            a |= 0
+            a = (a + 0x6d2b79f5) | 0
+            var t = Math.imul(a ^ (a >>> 15), 1 | a)
+            t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+          }
+        }
+        var rng
+        function shuffled(arr) {
+          var a = arr.slice()
+          for (var i = a.length - 1; i > 0; i--) {
+            var j = Math.floor(rng() * (i + 1))
+            var t = a[i]
+            a[i] = a[j]
+            a[j] = t
+          }
+          return a
+        }
+        function cellOk(g, i, v) {
+          var r = Math.floor(i / 9),
+            c = i % 9
+          for (var k = 0; k < 9; k++)
+            if (g[r * 9 + k] === v || g[k * 9 + c] === v) return false
+          var br = r - (r % 3),
+            bc = c - (c % 3)
+          for (var rr = br; rr < br + 3; rr++)
+            for (var cc = bc; cc < bc + 3; cc++)
+              if (g[rr * 9 + cc] === v) return false
+          return true
+        }
+        function generateSolution() {
+          var g = new Array(81).fill(0)
+          function fill(i) {
+            if (i === 81) return true
+            var cands = shuffled([1, 2, 3, 4, 5, 6, 7, 8, 9])
+            for (var k = 0; k < 9; k++) {
+              if (cellOk(g, i, cands[k])) {
+                g[i] = cands[k]
+                if (fill(i + 1)) return true
+                g[i] = 0
+              }
+            }
+            return false
+          }
+          fill(0)
+          return g
+        }
+        function countSolutions(g, limit) {
+          var grid = g.slice()
+          var count = 0
+          function solve(i) {
+            while (i < 81 && grid[i] !== 0) i++
+            if (i === 81) {
+              count++
+              return count >= limit
+            }
+            for (var v = 1; v <= 9; v++) {
+              if (cellOk(grid, i, v)) {
+                grid[i] = v
+                if (solve(i + 1)) {
+                  grid[i] = 0
+                  return true
+                }
+                grid[i] = 0
+              }
+            }
+            return false
+          }
+          solve(0)
+          return count
+        }
+        function buildPuzzle() {
+          rng = mulberry32(dayKey + variant * 7919)
+          solution = generateSolution()
+          puzzle = solution.slice()
+          var order = shuffled(
+            Array.from({ length: HOLES[prefs.d] }, function (_, i) {
+              return i
+            }),
+          )
+          order.forEach(function (i) {
+            var j = 80 - i
+            var a = puzzle[i],
+              b = puzzle[j]
+            puzzle[i] = 0
+            puzzle[j] = 0
+            if (countSolutions(puzzle, 2) !== 1) {
+              puzzle[i] = a
+              puzzle[j] = b
+            }
+          })
+        }
+
+        var solution, puzzle, entries
+        var sel = null,
+          seconds = 0,
+          mistakes = 0,
+          done = false,
+          ticker = null,
+          started = false
+        // The wall keeps this iframe mounted when the card is swiped away, so
+        // the host tells us when we stop being the card in front and the clock
+        // holds — matching the app, which unmounts its WebView outright.
+        var away = false
+        var saveKey
+        var TOUCH = window.matchMedia && matchMedia('(pointer: coarse)').matches
+        // Embedded either as the wall card's iframe or as a native WebView with
+        // ?embed=1 (the app can't nest an iframe, so the flag stands in for it).
+        // The flag only counts alongside the RN bridge object — a plain browser
+        // visiting ?embed=1 must not get the relaxed app-host behavior.
+        var EMBED_APP =
+          new URLSearchParams(location.search).has('embed') &&
+          !!window.ReactNativeWebView
+        var EMBED = window.self !== window.top || EMBED_APP
+        if (EMBED) document.body.classList.add('embed')
+        function postToHost(payload) {
+          try {
+            parent.postMessage(payload, '*')
+          } catch (e) {}
+          try {
+            if (window.ReactNativeWebView)
+              window.ReactNativeWebView.postMessage(JSON.stringify(payload))
+          } catch (e) {}
+        }
+        function postTimer() {
+          if (!EMBED) return
+          postToHost({ outceptionGame: 'sudoku', timer: fmt(seconds) })
+        }
+        function postNote(text) {
+          if (!EMBED) return
+          var actions =
+            current === 'sGame'
+              ? [
+                  { cmd: 'erase', label: 'ERASE' },
+                  { cmd: 'check', label: 'CHECK' },
+                  { cmd: 'reveal', label: 'REVEAL CELL' },
+                ]
+              : []
+          postToHost({
+            outceptionGame: 'sudoku',
+            note: text || '',
+            actions: actions,
+            playing: current === 'sGame',
+          })
+        }
+        function syncIntroNote() {
+          $('introNote').innerHTML =
+            started && !done
+              ? 'TAP TO CONTINUE<br>DOUBLE TAP TO RESTART'
+              : done
+                ? 'TAP FOR RESULT<br>DOUBLE TAP TO PLAY AGAIN'
+                : 'DOUBLE TAP TO START'
+        }
+
+        function $(id) {
+          return document.getElementById(id)
+        }
+        function fmt(t) {
+          var m = Math.floor(t / 60),
+            s = t % 60
+          return m + ':' + (s < 10 ? '0' : '') + s
+        }
+        var VARIANT_KEY = 'sudoku_seq_' + dayKey
+        var variant = 0
+        try {
+          variant = parseInt(localStorage.getItem(VARIANT_KEY) || '0', 10) || 0
+        } catch (e) {}
+        function syncMeta() {
+          $('introMeta').textContent =
+            variant === 0
+              ? 'Same puzzle for everyone today'
+              : 'Fresh shuffle · deal ' + (variant + 1)
+        }
+
+        var current = 'sIntro'
+        function show(id) {
+          current = id
+          ;['sIntro', 'sGame', 'sStats', 'sPrefs', 'sPause', 'sDone'].forEach(
+            function (s) {
+              $(s).classList.toggle('hidden', s !== id)
+            },
+          )
+          $('btnBack').classList.toggle('hidden', id === 'sIntro')
+          $('btnStats').classList.toggle('hidden', id !== 'sIntro')
+          $('btnPrefs').classList.toggle(
+            'hidden',
+            !(id === 'sIntro' || id === 'sGame'),
+          )
+          $('subBar').classList.toggle('hidden', id !== 'sGame')
+          if (id === 'sIntro') {
+            syncIntroNote()
+            postNote('')
+          } else if (id === 'sGame')
+            postNote(mistakes ? 'Mistakes: ' + mistakes : '')
+          else postNote('')
+          if (id === 'sGame' && TOUCH) focusKb()
+          else $('hidkb').blur()
+        }
+        function focusKb() {
+          var kb = $('hidkb')
+          kb.value = ''
+          kb.focus({ preventScroll: true })
+        }
+
+        // Yesterday's save slots are dead weight (a fresh key every day) — sweep
+        // them so localStorage never grows without bound. Stats/prefs keys stay.
+        try {
+          for (var pi = localStorage.length - 1; pi >= 0; pi--) {
+            var pk = localStorage.key(pi)
+            if (
+              pk &&
+              pk.indexOf('sudoku_') === 0 &&
+              pk.indexOf(dayKey) === -1 &&
+              pk !== 'sudoku_stats' &&
+              pk !== 'sudoku_prefs'
+            ) {
+              localStorage.removeItem(pk)
+            }
+          }
+        } catch (e) {}
+
+        function stats() {
+          try {
+            return JSON.parse(localStorage.getItem(STATS_KEY) || '{}')
+          } catch (e) {
+            return {}
+          }
+        }
+        function pushStat(t) {
+          var s = stats()
+          s.solves = (s.solves || 0) + 1
+          s.times = (s.times || []).concat([t]).slice(-50)
+          var isBest = s.best == null || t < s.best
+          if (isBest) s.best = t
+          if (s.worst == null || t > s.worst) s.worst = t
+          try {
+            localStorage.setItem(STATS_KEY, JSON.stringify(s))
+          } catch (e) {}
+          return isBest
+        }
+        function avg(list, n) {
+          if (!list || list.length < n) return null
+          var last = list.slice(-n)
+          return Math.round(
+            last.reduce(function (a, b) {
+              return a + b
+            }, 0) / n,
+          )
+        }
+        function renderStats() {
+          var s = stats()
+          var rows = [
+            ['Difficulty', prefs.d.toUpperCase()],
+            ['Total solves', s.solves || '-'],
+            ['Best time', s.best != null ? fmt(s.best) : '-'],
+            ['Worst time', s.worst != null ? fmt(s.worst) : '-'],
+            [
+              'Average of 5',
+              avg(s.times, 5) != null ? fmt(avg(s.times, 5)) : '-',
+            ],
+            [
+              'Average of 12',
+              avg(s.times, 12) != null ? fmt(avg(s.times, 12)) : '-',
+            ],
+          ]
+          $('statRows').innerHTML = rows
+            .map(function (r) {
+              return (
+                '<div class="stat"><i>' + r[0] + '</i><b>' + r[1] + '</b></div>'
+              )
+            })
+            .join('')
+        }
+
+        function save() {
+          try {
+            localStorage.setItem(
+              saveKey,
+              JSON.stringify({
+                e: entries,
+                t: seconds,
+                m: mistakes,
+                d: done,
+                s: started,
+              }),
+            )
+          } catch (e) {}
+        }
+        function restore() {
+          try {
+            var raw = localStorage.getItem(saveKey)
+            if (!raw) return
+            var st = JSON.parse(raw)
+            if ((st.v || 0) !== variant) return
+            if (Array.isArray(st.e) && st.e.length === 81) entries = st.e
+            seconds = st.t || 0
+            mistakes = st.m || 0
+            done = !!st.d
+            started = !!st.s
+          } catch (e) {}
+        }
+        // The timer only runs while the game screen is in front — going back or
+        // double-tapping pauses it, exactly like the cube, and so does the host
+        // swiping this card away (see `away`).
+        function startTimer() {
+          if (ticker) return
+          ticker = setInterval(function () {
+            if (done || away || current !== 'sGame') return
+            seconds++
+            $('timer').textContent = fmt(seconds)
+            postTimer()
+            save()
+          }, 1000)
+        }
+
+        function render() {
+          var board = $('board')
+          var wrapH =
+            $('boardWrap').clientHeight || Math.floor(window.innerHeight * 0.6)
+          var px = Math.floor(
+            Math.min((window.innerWidth - 24) / 9, (wrapH - 4) / 9),
+          )
+          px = Math.max(px, 30)
+          board.style.gridTemplateColumns = 'repeat(9, ' + px + 'px)'
+          board.style.gridTemplateRows = 'repeat(9, ' + px + 'px)'
+          board.innerHTML = ''
+          for (var i = 0; i < 81; i++) {
+            var r = Math.floor(i / 9),
+              c = i % 9
+            var div = document.createElement('div')
+            div.className = 'cell'
+            if (r > 0) div.classList.add('rowline')
+            if (r % 3 === 0 && r > 0) div.classList.add('bTop')
+            if (c % 3 === 0 && c > 0) div.classList.add('bLeft')
+            div.style.fontSize = Math.floor(px * 0.55) + 'px'
+            ;(function (ii) {
+              div.addEventListener('pointerdown', function (e) {
+                e.preventDefault()
+                sel = ii
+                paint()
+                if (TOUCH) focusKb()
+              })
+            })(i)
+            board.appendChild(div)
+          }
+          paint()
+          buildPad()
+        }
+        function paint() {
+          var kids = $('board').children
+          for (var i = 0; i < 81; i++) {
+            var div = kids[i]
+            div.classList.remove(
+              'sel',
+              'peer',
+              'same',
+              'given',
+              'user',
+              'wrong',
+            )
+            div.textContent = entries[i] ? entries[i] : ''
+            if (puzzle[i]) div.classList.add('given')
+            else if (entries[i]) {
+              div.classList.add('user')
+              if (prefs.m === 'on' && entries[i] !== solution[i])
+                div.classList.add('wrong')
+            }
+            if (sel !== null) {
+              var r = Math.floor(i / 9),
+                c = i % 9
+              var sr = Math.floor(sel / 9),
+                sc = sel % 9
+              if (
+                r === sr ||
+                c === sc ||
+                (Math.floor(r / 3) === Math.floor(sr / 3) &&
+                  Math.floor(c / 3) === Math.floor(sc / 3))
+              )
+                div.classList.add('peer')
+              if (entries[i] && entries[i] === entries[sel] && i !== sel)
+                div.classList.add('same')
+              if (i === sel) div.classList.add('sel')
+            }
+          }
+          if (sel !== null) {
+            try {
+              kids[sel].scrollIntoView({ block: 'nearest', inline: 'nearest' })
+            } catch (e) {}
+          }
+          refreshPad()
+        }
+        function place(v) {
+          if (done || sel === null || puzzle[sel]) return
+          startTimer()
+          if (entries[sel] === v) entries[sel] = 0
+          else {
+            entries[sel] = v
+            if (v !== solution[sel]) {
+              mistakes++
+              $('sub').textContent = 'Mistakes: ' + mistakes
+              postNote($('sub').textContent)
+            }
+          }
+          paint()
+          save()
+          checkDone()
+        }
+        function erase() {
+          if (done || sel === null || puzzle[sel]) return
+          entries[sel] = 0
+          paint()
+          save()
+        }
+        function checkBoard() {
+          var kids = $('board').children
+          for (var i = 0; i < 81; i++)
+            if (!puzzle[i] && entries[i] && entries[i] !== solution[i])
+              kids[i].classList.add('wrong')
+        }
+        function revealCell() {
+          if (done || sel === null || puzzle[sel]) return
+          entries[sel] = solution[sel]
+          paint()
+          save()
+          checkDone()
+        }
+        function checkDone() {
+          for (var i = 0; i < 81; i++) if (entries[i] !== solution[i]) return
+          done = true
+          save()
+          var isBest = pushStat(seconds)
+          $('finalTime').textContent = fmt(seconds)
+          $('bestBadge').classList.toggle('hidden', !isBest)
+          show('sDone')
+        }
+        function buildPad() {
+          var pad = $('pad')
+          pad.innerHTML = ''
+          if (TOUCH) return
+          for (var v = 1; v <= 9; v++) {
+            ;(function (vv) {
+              var b = document.createElement('button')
+              b.textContent = vv
+              b.id = 'pad' + vv
+              b.addEventListener('pointerdown', function (e) {
+                e.preventDefault()
+                place(vv)
+              })
+              pad.appendChild(b)
+            })(v)
+          }
+          refreshPad()
+        }
+        function refreshPad() {
+          for (var v = 1; v <= 9; v++) {
+            var b = $('pad' + v)
+            if (!b) continue
+            var count = 0
+            for (var i = 0; i < 81; i++) if (entries[i] === v) count++
+            b.classList.toggle('count-done', count >= 9)
+          }
+        }
+
+        function renderPreview() {
+          var pg = $('previewGrid')
+          var px = 22
+          pg.style.gridTemplateColumns = 'repeat(9, ' + px + 'px)'
+          pg.style.gridTemplateRows = 'repeat(9, ' + px + 'px)'
+          pg.innerHTML = ''
+          for (var i = 0; i < 81; i++) {
+            var r = Math.floor(i / 9),
+              c = i % 9
+            var d = document.createElement('div')
+            d.className = 'pcell'
+            d.style.fontSize = '12px'
+            if (r % 3 === 0 && r > 0) d.classList.add('pTop')
+            if (c % 3 === 0 && c > 0) d.classList.add('pLeft')
+            d.textContent = puzzle[i] ? puzzle[i] : ''
+            pg.appendChild(d)
+          }
+        }
+
+        function boot(fresh) {
+          buildPuzzle()
+          saveKey = 'sudoku_' + dayKey + '_' + prefs.d
+          entries = puzzle.slice()
+          seconds = 0
+          mistakes = 0
+          done = false
+          started = false
+          sel = null
+          if (!fresh) restore()
+          $('timer').textContent = fmt(seconds)
+          postTimer()
+          $('sub').textContent = mistakes
+            ? 'Mistakes: ' + mistakes
+            : 'Same puzzle for everyone today'
+          renderPreview()
+          render()
+          syncIntroNote()
+          syncMeta()
+        }
+
+        // Double tap: starts from the intro, pauses (back to intro) from the
+        // game — mirrors the flagship cube card.
+        var lastTap = 0
+        function isDoubleTap() {
+          var t = Date.now()
+          var dbl = t - lastTap < 400
+          lastTap = t
+          return dbl
+        }
+        var introTapTimer = null
+        function clearIntroTap() {
+          if (introTapTimer) {
+            clearTimeout(introTapTimer)
+            introTapTimer = null
+          }
+        }
+        $('sIntro').addEventListener('pointerdown', function () {
+          if (isDoubleTap()) {
+            clearIntroTap()
+            if (started || done) restartGame()
+            else {
+              show('sGame')
+              started = true
+              startTimer()
+              save()
+            }
+            return
+          }
+          clearIntroTap()
+          introTapTimer = setTimeout(function () {
+            introTapTimer = null
+            if (started && !done) {
+              show('sGame')
+              startTimer()
+            } else if (done) show('sDone')
+          }, 410)
+        })
+        document
+          .querySelector('#sGame .hud')
+          .addEventListener('pointerdown', function () {
+            if (isDoubleTap()) pauseGame()
+          })
+        document
+          .querySelector('#sGame .stage')
+          .addEventListener('pointerdown', function (e) {
+            if (e.target !== e.currentTarget) return
+            if (isDoubleTap()) pauseGame()
+          })
+        function pauseGame() {
+          $('pauseTime').textContent = fmt(seconds)
+          show('sPause')
+        }
+        $('sPause').addEventListener('pointerdown', function () {
+          if (isDoubleTap()) show('sGame')
+        })
+        $('btnStats').addEventListener('pointerdown', function (e) {
+          e.preventDefault()
+          renderStats()
+          show('sStats')
+        })
+        $('btnPrefs').addEventListener('pointerdown', function (e) {
+          e.preventDefault()
+          if (current === 'sPrefs') {
+            show(started && !done ? 'sGame' : 'sIntro')
+            return
+          }
+          syncPrefUI()
+          show('sPrefs')
+        })
+        // Back steps OUT one level: overlays return to where you were, the game
+        // quits to the title (pausing the clock), like the cube.
+        $('btnBack').addEventListener('pointerdown', function (e) {
+          e.preventDefault()
+          if (current === 'sGame') show('sIntro')
+          else if (current === 'sStats' || current === 'sPrefs')
+            show(started && !done ? 'sGame' : 'sIntro')
+          else show('sIntro')
+        })
+        function syncPrefUI() {
+          document.querySelectorAll('[data-d]').forEach(function (b) {
+            b.classList.toggle('on', b.dataset.d === prefs.d)
+          })
+          document.querySelectorAll('[data-m]').forEach(function (b) {
+            b.classList.toggle('on', b.dataset.m === prefs.m)
+          })
+        }
+        document.querySelectorAll('[data-d]').forEach(function (b) {
+          b.addEventListener('pointerdown', function (e) {
+            e.preventDefault()
+            prefs.d = b.dataset.d
+            try {
+              localStorage.setItem(PREFS_KEY, JSON.stringify(prefs))
+            } catch (er) {}
+            syncPrefUI()
+            boot(false)
+          })
+        })
+        document.querySelectorAll('[data-m]').forEach(function (b) {
+          b.addEventListener('pointerdown', function (e) {
+            e.preventDefault()
+            prefs.m = b.dataset.m
+            try {
+              localStorage.setItem(PREFS_KEY, JSON.stringify(prefs))
+            } catch (er) {}
+            syncPrefUI()
+            paint()
+          })
+        })
+        function restartGame() {
+          // Every restart deals a DIFFERENT puzzle — the variant seeds the
+          // generator, so replays never repeat the board just solved.
+          variant++
+          try {
+            localStorage.setItem(VARIANT_KEY, String(variant))
+          } catch (er) {}
+          try {
+            localStorage.removeItem('sudoku_' + dayKey + '_' + prefs.d)
+          } catch (er) {}
+          boot(true)
+          show('sGame')
+          started = true
+          startTimer()
+          save()
+          postTimer()
+        }
+        $('restart').addEventListener('pointerdown', function (e) {
+          e.preventDefault()
+          restartGame()
+        })
+        window.addEventListener('message', function (e) {
+          // ?embed=1 (native WebView) commands arrive via injected
+          // `window.postMessage(...)` — same-context, so the sender IS this
+          // window; skip the same-origin gate only for that exact case.
+          if (
+            e.origin !== window.location.origin &&
+            !(EMBED_APP && e.source === window)
+          )
+            return
+          var d = e.data
+          if (!d || !d.outceptionGameCmd) return
+          // blur/focus are host lifecycle, not gameplay: they arrive whichever
+          // screen is up, so they're handled before the sGame gate below.
+          if (d.outceptionGameCmd === 'blur') {
+            away = true
+            return
+          }
+          if (d.outceptionGameCmd === 'focus') {
+            away = false
+            return
+          }
+          if (current !== 'sGame') return
+          if (d.outceptionGameCmd === 'erase') erase()
+          else if (d.outceptionGameCmd === 'check') checkBoard()
+          else if (d.outceptionGameCmd === 'reveal') revealCell()
+        })
+        $('erase').addEventListener('pointerdown', function (e) {
+          e.preventDefault()
+          erase()
+        })
+        $('check').addEventListener('pointerdown', function (e) {
+          e.preventDefault()
+          checkBoard()
+        })
+        $('reveal').addEventListener('pointerdown', function (e) {
+          e.preventDefault()
+          revealCell()
+        })
+
+        $('hidkb').addEventListener('input', function () {
+          var kb = $('hidkb')
+          var ch = (kb.value || '').slice(-1)
+          kb.value = ''
+          if (/^[1-9]$/.test(ch)) place(parseInt(ch, 10))
+        })
+        $('hidkb').addEventListener('keydown', function (e) {
+          if (e.key === 'Backspace' || e.key === 'Delete') {
+            e.preventDefault()
+            erase()
+          }
+        })
+        // iOS opens the keyboard on the pointerdown focus, then the tap's default
+        // action on touchend moves focus off the input again (a visible flash).
+        // Cancelling touchend and re-focusing keeps it up.
+        $('board').addEventListener('touchend', function (e) {
+          if (!TOUCH) return
+          e.preventDefault()
+          if (current === 'sGame') focusKb()
+        })
+
+        document.addEventListener('keydown', function (e) {
+          if (e.target === $('hidkb')) return // handled by the input listeners
+          if ($('sGame').classList.contains('hidden')) return
+          if (/^[1-9]$/.test(e.key)) place(parseInt(e.key, 10))
+          else if (e.key === 'Backspace' || e.key === 'Delete') erase()
+          else if (sel !== null) {
+            var r = Math.floor(sel / 9),
+              c = sel % 9
+            if (e.key === 'ArrowRight' && c < 8) sel++
+            else if (e.key === 'ArrowLeft' && c > 0) sel--
+            else if (e.key === 'ArrowDown' && r < 8) sel += 9
+            else if (e.key === 'ArrowUp' && r > 0) sel -= 9
+            paint()
+          }
+        })
+        window.addEventListener('resize', render)
+
+        boot(false)
+        if (done) {
+          $('finalTime').textContent = fmt(seconds)
+          show('sIntro')
+        } else if (EMBED && started) {
+          // Embedded hosts (the app unmounts its WebView on swipe-away, so
+          // coming back re-loads this page) drop straight back onto a solve in
+          // progress; a standalone visit still gets the title screen.
+          show('sGame')
+          startTimer()
+        }
+      })()
+
+      // ── swipe-away over the game surface ─────────────────────────────
+      // The deck outside cannot see drags that start inside this iframe, so
+      // qualifying horizontal strokes are forwarded up to the host, which
+      // advances the deck. Only from surfaces the game itself does not use:
+      // every non-play screen (intro, pause, stats, prefs, done) anywhere
+      // that isn't a control, and on the play screen just the empty chrome
+      // (hud, stage padding) — a drag that starts on the board belongs to
+      // the game. Fully self-contained ON PURPOSE: the game code above lives
+      // in its own closure, so nothing of it ($, EMBED_APP, current) is in
+      // scope here — reaching for those silently killed the first version.
+      ;(function () {
+        // Touch screens: without this the browser claims every drag as page
+        // scroll and the pointer stream is cancelled before the swipe can be
+        // recognised. pan-y keeps vertical drags scrolling the wall as before
+        // (this page has no internal scrolling to lose) and hands horizontal
+        // strokes to the handlers below.
+        document.documentElement.style.touchAction = 'pan-y'
+        var swipeFrom = null
+        function el(id) {
+          return document.getElementById(id)
+        }
+        function playing() {
+          var sg = el('sGame')
+          return !!sg && !sg.classList.contains('hidden')
+        }
+        function interactive(t) {
+          return !!(
+            t &&
+            t.closest &&
+            t.closest('button, a, input, select, [contenteditable]')
+          )
+        }
+        function eligible(e) {
+          if (interactive(e.target)) return false
+          if (!playing()) return true
+          var stage = document.querySelector('#sGame .stage') || el('stage')
+          var hud = document.querySelector('#sGame .hud') || el('hud')
+          if (hud && (e.target === hud || hud.contains(e.target))) return true
+          return !!stage && e.target === stage
+        }
+        document.addEventListener(
+          'pointerdown',
+          function (e) {
+            swipeFrom = eligible(e) ? { x: e.clientX, y: e.clientY } : null
+          },
+          true,
+        )
+        document.addEventListener(
+          'pointermove',
+          function (e) {
+            if (!swipeFrom) return
+            var dx = e.clientX - swipeFrom.x
+            var dy = e.clientY - swipeFrom.y
+            if (Math.abs(dx) < 48 || Math.abs(dx) < 2 * Math.abs(dy)) return
+            swipeFrom = null
+            var payload = { outceptionGameSwipe: dx < 0 ? 'left' : 'right' }
+            if (window.parent !== window) window.parent.postMessage(payload, '*')
+            if (window.ReactNativeWebView)
+              window.ReactNativeWebView.postMessage(JSON.stringify(payload))
+          },
+          true,
+        )
+        function clear() {
+          swipeFrom = null
+        }
+        document.addEventListener('pointerup', clear, true)
+        document.addEventListener('pointercancel', clear, true)
+      })()
+    </script>
+  </body>
+</html>

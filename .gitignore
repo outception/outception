@@ -1,0 +1,35 @@
+# Secrets and signing material — never commit (public repo).
+clients/apps/app/credentials.json
+clients/apps/app/credentials/
+server/.jwks.json
+deploy/secrets/
+.env
+.env.*
+!.env.example
+
+# Editor and assistant tooling — local only.
+.vscode/
+*.code-workspace
+.claude/
+.agents/
+CLAUDE.md
+AGENTS.md
+.coverage
+
+# Build and dependency output.
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+dist/
+.turbo/
+.next/
+.expo/
+clients/apps/app/.expo/
+
+# never in the public repo (post-incident 2026-09-02)
+deploy/secrets/
+clients/apps/app/credentials/
+clients/apps/app/credentials.json
+*.aab
+*.apk

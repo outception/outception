@@ -1,0 +1,353 @@
+# Build the API + web images, push to GHCR, then deploy to the Hetzner host over
+# SSH. The host is checked out to the exact commit being deployed (so compose /
+# Caddyfile / env changes ship with the images), then `docker compose pull &&
+# up -d`, followed by a health check that rolls back on failure.
+#
+# Required GitHub repo SECRETS:
+#   SSH_HOST            Hetzner server IP / hostname
+#   SSH_USER            SSH user the CI logs in as (e.g. deploy)
+#   SSH_PRIVATE_KEY     private key authorized on the host
+#   GHCR_PAT            token the HOST uses to pull from GHCR (read:packages)
+# Required repo VARIABLES (baked into the web bundle at build time):
+#   NEXT_PUBLIC_API_URL            e.g. https://api.outception.com
+#   NEXT_PUBLIC_FRONTEND_BASE_URL  e.g. https://outception.com
+#   DEPLOY_PATH                    the deploy/ dir on the host (e.g. /opt/outception/deploy)
+# Optional repo VARIABLES:
+#   NEXT_PUBLIC_POSTHOG_TOKEN      PostHog project key (phc_...); unset = analytics off
+#   NEXT_PUBLIC_SENTRY_DSN         Sentry DSN (region-encoded); unset = error tracking off
+#   EMAIL_SMTP_USER                Gmail/Workspace auth mailbox (e.g. hello@outception.com)
+#   GOOGLE_CLIENT_ID               Google OAuth client id (…apps.googleusercontent.com)
+# Optional repo SECRETS:
+#   EMAIL_SMTP_PASSWORD            Google App Password; when set, email sends via SMTP
+#   GOOGLE_CLIENT_SECRET          Google OAuth client secret (GOCSPX-…)
+#
+# One-time host setup: run deploy/provision.sh (installs Docker, the deploy
+# user, clones the repo) then fill deploy/.env.prod. The RS256 keypair at
+# deploy/secrets/jwks.json is host-only and never committed; the deploy mints
+# one when it is missing.
+
+name: Deploy (Hetzner)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: deploy-hetzner
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_API: ghcr.io/${{ github.repository_owner }}/outception
+  IMAGE_WEB: ghcr.io/${{ github.repository_owner }}/outception-web
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+
+      # Push with a PAT that has write:packages (owner is a user account, where
+      # GITHUB_TOKEN package publishing is unreliable). The host reuses the same
+      # token to pull, so the packages stay private.
+      - name: Log in to GHCR
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: Build & push API image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: ./server
+          target: production
+          push: true
+          tags: |
+            ${{ env.IMAGE_API }}:${{ github.sha }}
+            ${{ env.IMAGE_API }}:latest
+          build-args: |
+            RELEASE_VERSION=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & push web image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: ./clients
+          file: ./deploy/web.Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_WEB }}:${{ github.sha }}
+            ${{ env.IMAGE_WEB }}:latest
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_FRONTEND_BASE_URL=${{ vars.NEXT_PUBLIC_FRONTEND_BASE_URL }}
+            NEXT_PUBLIC_ENVIRONMENT=production
+            NEXT_PUBLIC_POSTHOG_TOKEN=${{ vars.NEXT_PUBLIC_POSTHOG_TOKEN }}
+            NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=${{ vars.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID }}
+            NEXT_PUBLIC_SENTRY_DSN=${{ vars.NEXT_PUBLIC_SENTRY_DSN }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions: {}
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        env:
+          GHCR_PAT: ${{ secrets.GHCR_PAT }}
+          GHCR_USER: ${{ github.repository_owner }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+          # Backend Sentry DSN. Kept out of the (public) repo — injected into the
+          # host-only .env.prod below. Reuses the same DSN as the web bundle.
+          SENTRY_DSN: ${{ vars.NEXT_PUBLIC_SENTRY_DSN }}
+          # Gmail/Workspace SMTP. USER is the auth mailbox (non-secret, a repo
+          # variable); PASSWORD is a Google App Password (a repo secret). Both
+          # injected into the host-only .env.prod below — never committed. When
+          # the password is set, email sending switches from the logger to SMTP.
+          SMTP_USER: ${{ vars.EMAIL_SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.EMAIL_SMTP_PASSWORD }}
+          # Google OAuth ("Sign in with Google"). CLIENT_ID is public (a repo
+          # variable); CLIENT_SECRET is a repo secret. Injected into the host-only
+          # .env.prod below — never committed. Both must be set for Google login.
+          GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          # Microsoft OAuth ("Sign in with Microsoft"). CLIENT_ID is public (a
+          # repo variable); CLIENT_SECRET is a repo secret. Injected into the
+          # host-only .env.prod below — never committed. Both must be set for
+          # Microsoft login.
+          MICROSOFT_CLIENT_ID: ${{ vars.MICROSOFT_CLIENT_ID }}
+          MICROSOFT_CLIENT_SECRET: ${{ secrets.MICROSOFT_CLIENT_SECRET }}
+          # Apple OAuth ("Sign in with Apple"). CLIENT_ID (the Services ID),
+          # TEAM_ID and KEY_ID are public (repo variables); KEY_VALUE is the .p8
+          # private key, base64-encoded (a repo secret — .env.prod can't carry
+          # its real newlines; the app base64-decodes it back to a PEM). All
+          # four must be set for Apple login. Injected into host-only .env.prod.
+          APPLE_CLIENT_ID: ${{ vars.APPLE_CLIENT_ID }}
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          APPLE_KEY_ID: ${{ vars.APPLE_KEY_ID }}
+          APPLE_KEY_VALUE: ${{ secrets.APPLE_KEY_VALUE }}
+          # Public domain-verification token (a repo variable) served at
+          # /.well-known/apple-developer-domain-association.txt for Apple.
+          APPLE_DOMAIN_ASSOCIATION: ${{ vars.APPLE_DOMAIN_ASSOCIATION }}
+          # AI article summaries (repo secrets, injected into the host-only
+          # .env.prod below — never committed). Gemini free tier is the primary
+          # provider; Anthropic is the paid backup. Neither set = the summary
+          # endpoint returns its graceful 503 fallback.
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEYS: ${{ secrets.GEMINI_API_KEYS }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: GITHUB_SHA,GHCR_PAT,GHCR_USER,DEPLOY_PATH,SENTRY_DSN,SMTP_USER,SMTP_PASSWORD,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,MICROSOFT_CLIENT_ID,MICROSOFT_CLIENT_SECRET,APPLE_CLIENT_ID,APPLE_TEAM_ID,APPLE_KEY_ID,APPLE_KEY_VALUE,APPLE_DOMAIN_ASSOCIATION,ANTHROPIC_API_KEY,GEMINI_API_KEY,GEMINI_API_KEYS
+          script: |
+            set -euo pipefail
+
+            # 1. Ship the exact code + config version for this commit. .env.prod
+            #    and secrets/ are gitignored, so a hard checkout leaves them intact.
+            repo_root="$(dirname "$DEPLOY_PATH")"
+            cd "$repo_root"
+            git fetch --quiet origin "$GITHUB_SHA"
+            git checkout --quiet --force "$GITHUB_SHA"
+
+            cd "$DEPLOY_PATH"
+            # Only log in if a PAT is provided; public GHCR packages pull anonymously.
+            if [ -n "${GHCR_PAT:-}" ]; then
+              echo "$GHCR_PAT" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            fi
+
+            # .env.prod carries secrets: keep it (and its tmp file) owner-only.
+            umask 077
+            # Upsert a KEY=VALUE into the host-only .env.prod. Drop any existing
+            # line then append with printf %s — the value is written verbatim, so
+            # secrets containing sed metacharacters (# & \ /) can't corrupt the
+            # file the way an in-place sed substitution would.
+            upsert_env() {
+              if [ -f .env.prod ]; then
+                grep -v "^$1=" .env.prod > .env.prod.tmp 2>/dev/null || true
+                mv .env.prod.tmp .env.prod
+              fi
+              printf '%s=%s\n' "$1" "$2" >> .env.prod
+            }
+
+            # Accounts deactivated for the public launch — the auth /
+            # account / oauth2-provider routers are not mounted in production.
+            # Flip to true (and redeploy) to bring accounts back.
+            upsert_env OUTCEPTION_ACCOUNTS_ENABLED false
+
+            # Keep the backend Sentry DSN in the host-only .env.prod (never
+            # committed). A Sentry DSN is write-only; empty value = reporting off.
+            if [ -n "${SENTRY_DSN:-}" ]; then
+              upsert_env OUTCEPTION_SENTRY_DSN "$SENTRY_DSN"
+            fi
+
+            # AI-summary provider keys (host-only, never committed). Gemini
+            # free tier first, Anthropic paid backup; neither set = summaries
+            # stay on the graceful 503 fallback.
+            if [ -n "${ANTHROPIC_API_KEY:-}" ]; then
+              upsert_env OUTCEPTION_ANTHROPIC_API_KEY "$ANTHROPIC_API_KEY"
+            fi
+            if [ -n "${GEMINI_API_KEYS:-}" ]; then
+              upsert_env OUTCEPTION_GEMINI_API_KEYS "$GEMINI_API_KEYS"
+            fi
+            if [ -n "${GEMINI_API_KEY:-}" ]; then
+              upsert_env OUTCEPTION_GEMINI_API_KEY "$GEMINI_API_KEY"
+            fi
+
+            # Gmail/Workspace SMTP creds (host-only, never committed). Only flip
+            # the sender to SMTP once an App Password is provided; without it the
+            # app keeps its configured sender (logger by default).
+            if [ -n "${SMTP_PASSWORD:-}" ]; then
+              smtp_user="${SMTP_USER:-hello@outception.com}"
+              upsert_env OUTCEPTION_EMAIL_SENDER smtp
+              upsert_env OUTCEPTION_EMAIL_SMTP_USER "$smtp_user"
+              upsert_env OUTCEPTION_EMAIL_SMTP_PASSWORD "$SMTP_PASSWORD"
+              # Send "From" the authenticated Workspace mailbox's own domain.
+              # Google rejects sending as any domain/subdomain it doesn't own for
+              # this account, so the From address MUST match the SMTP user's
+              # domain (deriving both from $smtp_user keeps them aligned).
+              upsert_env OUTCEPTION_EMAIL_FROM_LOCAL "${smtp_user%@*}"
+              upsert_env OUTCEPTION_EMAIL_FROM_DOMAIN "${smtp_user#*@}"
+            fi
+
+            # Google OAuth creds (host-only, never committed). Both required for
+            # "Sign in with Google" to work.
+            if [ -n "${GOOGLE_CLIENT_ID:-}" ] && [ -n "${GOOGLE_CLIENT_SECRET:-}" ]; then
+              upsert_env OUTCEPTION_GOOGLE_CLIENT_ID "$GOOGLE_CLIENT_ID"
+              upsert_env OUTCEPTION_GOOGLE_CLIENT_SECRET "$GOOGLE_CLIENT_SECRET"
+            fi
+
+            # Microsoft OAuth creds (host-only, never committed). Both required
+            # for "Sign in with Microsoft" to work.
+            if [ -n "${MICROSOFT_CLIENT_ID:-}" ] && [ -n "${MICROSOFT_CLIENT_SECRET:-}" ]; then
+              upsert_env OUTCEPTION_MICROSOFT_CLIENT_ID "$MICROSOFT_CLIENT_ID"
+              upsert_env OUTCEPTION_MICROSOFT_CLIENT_SECRET "$MICROSOFT_CLIENT_SECRET"
+            fi
+
+            # Apple OAuth creds (host-only, never committed). All four required
+            # for "Sign in with Apple". KEY_VALUE is base64 of the .p8 key; the
+            # app decodes it back to a PEM at load (see config._normalize_apple_key).
+            if [ -n "${APPLE_CLIENT_ID:-}" ] && [ -n "${APPLE_KEY_VALUE:-}" ]; then
+              upsert_env OUTCEPTION_APPLE_CLIENT_ID "$APPLE_CLIENT_ID"
+              upsert_env OUTCEPTION_APPLE_TEAM_ID "$APPLE_TEAM_ID"
+              upsert_env OUTCEPTION_APPLE_KEY_ID "$APPLE_KEY_ID"
+              upsert_env OUTCEPTION_APPLE_KEY_VALUE "$APPLE_KEY_VALUE"
+            fi
+            # Apple domain-verification token (public; served at the .well-known
+            # path). Set independently so it can be deployed before the creds.
+            if [ -n "${APPLE_DOMAIN_ASSOCIATION:-}" ]; then
+              upsert_env OUTCEPTION_APPLE_DOMAIN_ASSOCIATION "$APPLE_DOMAIN_ASSOCIATION"
+            fi
+            chmod 600 .env.prod
+
+            export IMAGE_TAG="$GITHUB_SHA"
+            compose() { docker compose --env-file .env.prod -f docker-compose.prod.yml "$@"; }
+
+            # 2. Remember the currently-running API image so we can roll back.
+            prev_cid="$(compose ps -q api 2>/dev/null || true)"
+            prev_tag=""
+            if [ -n "$prev_cid" ]; then
+              prev_tag="$(docker inspect --format '{{.Config.Image}}' "$prev_cid" 2>/dev/null | sed 's/.*://')"
+            fi
+
+            # 3. Pull the new images and bring the stack up.
+            # The pull is the only step that reaches GHCR, and the handshake
+            # from this host times out now and then (seen twice on 2026-09-02,
+            # with GHCR itself up and the box healthy). A failure here is safe —
+            # nothing has been recreated yet, so the running version keeps
+            # serving — but it needed a manual re-run, so absorb it here.
+            pull_attempt=1
+            until compose pull; do
+              if [ "$pull_attempt" -ge 3 ]; then
+                echo "::error::Could not pull images after 3 attempts"
+                exit 1
+              fi
+              echo "Pull failed (attempt $pull_attempt of 3); retrying shortly"
+              sleep $((pull_attempt * 20))
+              pull_attempt=$((pull_attempt + 1))
+            done
+
+            # The RS256 keypair lives only on the host and is never committed,
+            # so a fresh host — or a checkout that drops the file — leaves the
+            # bind-mount source missing, which Docker then materialises as a
+            # root-owned directory the app can't read. Mint a keypair whenever
+            # the path isn't a readable key carrying the kid the app resolves at
+            # startup. Runs as root in a container: clearing that directory
+            # needs a root context, and the key stays readable only to the
+            # unprivileged uid the app runs as.
+            kid="$(sed -n 's/^OUTCEPTION_CURRENT_JWK_KID=//p' .env.prod | tail -1 | tr -d "\"'")"
+            : "${kid:=outception_dev}"
+            case "$kid" in *[!A-Za-z0-9_-]*)
+              echo "::error::Refusing to mint a JWKS for kid $kid"; exit 1;;
+            esac
+            docker run --rm --user 0:0 -e JWK_KID="$kid" -v "$PWD:/deploy" \
+              "ghcr.io/$GHCR_USER/outception:$GITHUB_SHA" sh -eu -c '
+                jwks=/deploy/secrets/jwks.json
+                if [ -f "$jwks" ] && [ -s "$jwks" ] && grep -q "\"$JWK_KID\"" "$jwks"; then
+                  exit 0
+                fi
+                echo "Minting a new JWKS keypair for kid $JWK_KID"
+                rm -rf "$jwks"
+                mkdir -p /deploy/secrets
+                /app/server/.venv/bin/python -m outception.kit.jwk "$JWK_KID" > "$jwks.tmp"
+                grep -q "\"kty\"" "$jwks.tmp"
+                mv "$jwks.tmp" "$jwks"
+                chown 1001:1001 "$jwks"
+                chmod 400 "$jwks"
+              '
+
+            # An unparseable Caddyfile would leave the edge unable to start,
+            # taking TLS down with it. Adapt it first — in the image that will
+            # run it — so a bad config fails the deploy with prod untouched.
+            # Adapt, not validate: validating provisions the ACME issuer, which
+            # needs the real Cloudflare token rather than these placeholders.
+            if docker image inspect outception-caddy >/dev/null 2>&1; then
+              docker run --rm -v "$PWD/Caddyfile:/etc/caddy/Caddyfile:ro" \
+                -e WEB_DOMAIN=validate.invalid -e API_DOMAIN=api.validate.invalid \
+                -e CF_API_TOKEN=validation-only \
+                outception-caddy caddy adapt --adapter caddyfile \
+                --config /etc/caddy/Caddyfile > /dev/null
+            fi
+
+            compose up -d --remove-orphans
+
+            # 4. Health-gate: wait for the API /healthz, roll back on failure.
+            ok=0
+            for _ in $(seq 1 30); do
+              cid="$(compose ps -q api 2>/dev/null || true)"
+              if [ -n "$cid" ] && docker exec "$cid" python -c \
+                "import urllib.request,sys;sys.exit(0 if urllib.request.urlopen('http://localhost:10000/healthz').status==200 else 1)" \
+                >/dev/null 2>&1; then ok=1; break; fi
+              sleep 3
+            done
+
+            if [ "$ok" != "1" ]; then
+              echo "::error::Health check failed for $GITHUB_SHA"
+              if [ -n "$prev_tag" ] && [ "$prev_tag" != "$GITHUB_SHA" ]; then
+                echo "Rolling back to $prev_tag"
+                export IMAGE_TAG="$prev_tag"
+                compose up -d --remove-orphans
+              fi
+              exit 1
+            fi
+
+            # -a: previous deploys' images are TAGGED (commit sha), so plain
+            # prune never removes them and they stack ~2.6GB per deploy. The
+            # running containers' images are protected; a rollback re-pulls
+            # its tag from GHCR if needed.
+            docker image prune -af
+            echo "Deployed $GITHUB_SHA"

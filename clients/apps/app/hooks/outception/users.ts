@@ -1,0 +1,32 @@
+import { useSession } from '@/providers/SessionProvider'
+import { schemas } from '@outception-com/client'
+import { useMutation, UseMutationResult } from '@tanstack/react-query'
+import { API_URL } from '@/utils/env'
+
+export const useDeleteUser = (): UseMutationResult<
+  { data?: schemas['UserDeletionResponse']; error?: { detail: string } },
+  Error,
+  void
+> => {
+  const { session } = useSession()
+
+  return useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`${API_URL}/v1/users/me`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session}`,
+        },
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        return { error }
+      }
+
+      const data = await response.json()
+      return { data }
+    },
+  })
+}

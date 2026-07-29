@@ -1,0 +1,71 @@
+# Reverse proxy + automatic TLS (Let's Encrypt via Cloudflare DNS-01).
+# Domains and the Cloudflare token come from the environment (see .env.prod).
+#
+# Cloudflare SSL/TLS mode for these hostnames should be "Full (strict)".
+
+{
+	# Global: use the Cloudflare DNS challenge for all sites.
+	acme_dns cloudflare {$CF_API_TOKEN}
+}
+
+# Cloudflare appends the visitor IP to whatever X-Forwarded-For the visitor
+# already sent, so the leftmost entry is attacker-controlled. CF-Connecting-IP
+# is set by Cloudflare and cannot be spoofed by the client — make it the ONLY
+# forwarded-for value so the origin can't be fooled about who is calling.
+# Trusted only when the peer really is Cloudflare: anyone reaching the origin
+# directly could forge CF-Connecting-IP, so for them Caddy's default applies
+# (X-Forwarded-For = the peer's own address). Ranges are Cloudflare's published
+# list (https://www.cloudflare.com/ips-v4 and /ips-v6) — refresh occasionally.
+# lb_try_duration: a request that lands while the app container restarts
+# WAITS and retries instead of failing, so deploys stay invisible. Sized to
+# cover the full deploy gap — the one-shot migrate container plus api boot
+# (start_period 30s) — not just the container swap; past it, the maintenance
+# page takes over.
+(proxy) {
+	@cloudflare remote_ip 173.245.48.0/20 103.21.244.0/22 103.22.200.0/22 103.31.4.0/22 141.101.64.0/18 108.162.192.0/18 190.93.240.0/20 188.114.96.0/20 197.234.240.0/22 198.41.128.0/17 162.158.0.0/15 104.16.0.0/13 104.24.0.0/14 172.64.0.0/13 131.0.72.0/22 2400:cb00::/32 2606:4700::/32 2803:f800::/32 2405:b500::/32 2405:8100::/32 2a06:98c0::/29 2c0f:f248::/32
+	reverse_proxy @cloudflare {args[0]} {
+		header_up X-Forwarded-For {http.request.header.Cf-Connecting-Ip}
+		header_up -X-Real-Ip
+		lb_try_duration 25s
+		lb_try_interval 1s
+	}
+	reverse_proxy {args[0]} {
+		header_up -X-Real-Ip
+		lb_try_duration 25s
+		lb_try_interval 1s
+	}
+}
+
+# Public web app
+{$WEB_DOMAIN} {
+	encode zstd gzip
+	import proxy web:3000
+
+	# When the app container is down, Caddy is still up — serve our own
+	# branded page instead of letting the edge render its bad-gateway
+	# notice. 503 + Retry-After tells crawlers this is temporary.
+	handle_errors 502 503 504 {
+		root * /srv/maintenance
+		rewrite * /index.html
+		header Cache-Control "no-store"
+		header Retry-After "120"
+		file_server {
+			status 503
+		}
+	}
+}
+
+# Backend API
+{$API_DOMAIN} {
+	encode zstd gzip
+	import proxy api:10000
+
+	# Clients tell "the server is down" apart from "you are offline" by this
+	# response, and show the maintenance copy rather than the offline copy.
+	handle_errors 502 503 504 {
+		header Content-Type "application/json"
+		header Cache-Control "no-store"
+		header Retry-After "120"
+		respond `{"error":"ServiceUnavailable","detail":"Outception is undergoing maintenance. Back soon."}` 503
+	}
+}

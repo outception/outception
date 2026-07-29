@@ -1,0 +1,27 @@
+---
+title: 'Engineering'
+description: 'Stack, workflow and operations'
+---
+
+## Stack
+
+- Web: Next.js, React, TypeScript
+- Mobile: Expo (React Native)
+- API and worker: Python, FastAPI, dramatiq
+- Data: PostgreSQL, Redis, S3-compatible object storage
+- Deployment: Docker Compose on a single Hetzner host behind Cloudflare, described in
+  [`deploy/README.md`](https://github.com/outception/outception/blob/main/deploy/README.md)
+- Source, issues, CI and CD: GitHub
+
+## Workflow
+
+- Work is tracked in GitHub issues. Larger changes get a design document first
+  (see [Design Documents](/engineering/design-documents/api-versioning)).
+- Changes land on `main` through pull requests. CI runs lint, type checks and tests.
+- Every push to `main` builds images and deploys. The deploy health-gates the API
+  and rolls back to the previous image if it does not come up.
+
+## Local development
+
+See [`DEVELOPMENT.md`](https://github.com/outception/outception/blob/main/DEVELOPMENT.md)
+in the repository.
