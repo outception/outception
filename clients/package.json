@@ -1,0 +1,47 @@
+{
+  "private": true,
+  "name": "outception",
+  "scripts": {
+    "build": "turbo run build --filter='!./examples/*'",
+    "dev": "turbo watch dev",
+    "dev-web": "turbo run dev --filter=web",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "generate": "pnpm -C packages/client generate",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "knip": "knip",
+    "box-codemod": "pnpm --filter @outception-com/box-codemod box-codemod",
+    "preinstall": "npx only-allow pnpm",
+    "prepare": "turbo run build --filter='./packages/*'",
+    "release-packages": "turbo run build lint test --filter='./packages/*' && changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.31.0",
+    "@manypkg/cli": "^0.25.1",
+    "eslint": "^9.39.4",
+    "knip": "^5.88.1",
+    "only-allow": "1.2.2",
+    "oxfmt": "^0.41.0",
+    "turbo": "^2.9.12"
+  },
+  "resolutions": {
+    "sharp": "0.33.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "19.2.13",
+      "@types/react-dom": "19.2.3"
+    },
+    "patchedDependencies": {
+      "openapi-typescript@7.10.1": "patches/openapi-typescript@7.10.1.patch"
+    }
+  },
+  "packageManager": "pnpm@10.29.3",
+  "manypkg": {
+    "ignoredRules": [
+      "INTERNAL_MISMATCH"
+    ]
+  }
+}

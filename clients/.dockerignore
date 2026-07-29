@@ -1,0 +1,14 @@
+# Keep host artifacts out of the web image build context.
+**/node_modules
+**/.next
+**/.turbo
+**/dist
+**/build
+**/.expo
+.git
+**/*.log
+**/.env
+**/.env.*
+!**/.env.template
+**/coverage
+**/.DS_Store

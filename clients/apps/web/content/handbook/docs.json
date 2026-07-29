@@ -1,0 +1,81 @@
+{
+  "theme": "maple",
+  "name": "Outception Handbook",
+  "favicon": "/logo.svg",
+  "logo": {
+    "light": "/logo.svg",
+    "dark": "/logo.svg"
+  },
+  "appearance": {
+    "default": "system"
+  },
+  "colors": {
+    "primary": "#000",
+    "light": "#fff",
+    "dark": "#000"
+  },
+  "background": {
+    "color": {
+      "dark": "#131316"
+    }
+  },
+  "contextual": {
+    "options": ["copy"]
+  },
+  "navigation": {
+    "groups": [
+      {
+        "group": "Company",
+        "pages": ["company/about-outception"]
+      },
+      {
+        "group": "Design",
+        "pages": [
+          "design/introduction",
+          "design/principles",
+          "design/product-design",
+          "design/visual-design",
+          "design/voice-and-tone"
+        ]
+      },
+      {
+        "group": "Engineering",
+        "pages": [
+          "engineering/introduction",
+          {
+            "group": "Guides",
+            "pages": [
+              "engineering/guides"
+            ]
+          },
+          {
+            "group": "Backend Development",
+            "pages": [
+              "engineering/backend-development/authorization",
+              "engineering/backend-development/rest-api-guidelines",
+              "engineering/backend-development/task-debouncer",
+              "engineering/backend-development/operational-errors",
+              "engineering/backend-development/metadata",
+              "engineering/backend-development/tinybird"
+            ]
+          },
+          {
+            "group": "Design Documents",
+            "pages": [
+              "engineering/design-documents/index",
+              "engineering/design-documents/api-versioning"
+            ]
+          },
+          "engineering/tech-notes",
+          {
+            "group": "On-Call Procedures",
+            "pages": [
+              "engineering/oncall/introduction",
+              "engineering/oncall/trigger-webhooks"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

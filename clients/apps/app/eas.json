@@ -1,0 +1,72 @@
+{
+  "cli": {
+    "version": ">= 16.2.1",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "development",
+      "env": {
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+
+
+
+        "EXPO_PUBLIC_OUTCEPTION_SERVER_URL": "https://api.outception.com",
+        "EXPO_PUBLIC_OUTCEPTION_WEB_URL": "https://outception.com",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://49db72e464edc9fe5f570ae6a333fdb2@o4511757957726208.ingest.de.sentry.io/4511757976469584"
+      }
+    },
+    "simulator": {
+      "ios": {
+        "simulator": true
+      },
+      "channel": "simulator",
+      "extends": "development"
+    },
+    "preview": {
+      "extends": "production",
+      "distribution": "internal",
+      "channel": "preview",
+      "autoIncrement": false,
+      "env": {
+        "EXPO_PUBLIC_OUTCEPTION_SERVER_URL": "https://api.outception.com",
+        "EXPO_PUBLIC_OUTCEPTION_WEB_URL": "https://outception.com",
+
+
+
+        "EXPO_PUBLIC_SENTRY_DSN": "https://49db72e464edc9fe5f570ae6a333fdb2@o4511757957726208.ingest.de.sentry.io/4511757976469584",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_OUTCEPTION_SERVER_URL": "https://api.outception.com",
+        "EXPO_PUBLIC_OUTCEPTION_WEB_URL": "https://outception.com",
+
+
+
+        "EXPO_PUBLIC_SENTRY_DSN": "https://49db72e464edc9fe5f570ae6a333fdb2@o4511757957726208.ingest.de.sentry.io/4511757976469584",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleTeamId": "PFQXM32538",
+        "ascAppId": "6793827093",
+        "ascApiKeyPath": "./credentials/AuthKey_U6Z2R4GGDU.p8",
+        "ascApiKeyId": "U6Z2R4GGDU",
+        "ascApiKeyIssuerId": "1c72c709-e6f6-4b79-8284-6666a4033980"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./credentials/google-play-service-account.json",
+        "track": "alpha"
+      }
+    }
+  }
+}

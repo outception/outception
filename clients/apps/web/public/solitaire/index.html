@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,height=device-height,user-scalable=no,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Solitaire</title>
+  <style>
+    @font-face {
+      font-family: 'Hanken Grotesk';
+      font-weight: 100 900;
+      font-style: normal;
+      font-display: swap;
+      src: url('/fonts/HankenGrotesk-Variable.woff2') format('woff2');
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Hanken Grotesk', sans-serif;
+      background: linear-gradient(to bottom, #fff 50%, #d1d5db 100%);
+      color: #0b0b10; display: flex; flex-direction: column; align-items: center;
+      user-select: none; overflow: hidden;
+    }
+    .screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; background: linear-gradient(to bottom, #fff 50%, #d1d5db 100%); transition: opacity 0.3s, transform 0.3s; transform: scale(1); }
+    .hidden { opacity: 0; pointer-events: none; transform: scale(0.94); }
+    .title { margin-top: 9vh; text-align: center; line-height: 0.92; }
+    .title .small { display: block; font-weight: 800; font-size: 18px; letter-spacing: 0.4em; color: #17181f; }
+    .title .big { display: block; font-weight: 800; font-size: 40px; letter-spacing: 0.06em; color: #17181f; }
+    .meta { font-weight: 600; font-size: 11px; color: #9a9aa2; margin-top: 8px; text-align: center; padding: 0 20px; }
+    .preview { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; padding: 12px; }
+    #previewFan { display: flex; gap: 6px; align-items: flex-start; }
+    #previewFan .pcol { display: flex; flex-direction: column; }
+    #previewFan .pcard { width: 26px; height: 36px; border-radius: 4px; border: 1px solid #b9b9c0; background: #fff; margin-top: -26px; }
+    #previewFan .pcol .pcard:first-child { margin-top: 0; }
+    #previewFan .pcard.down { background: #3d3d46; border-color: #17181f; }
+    .note { margin-bottom: 5.5vh; font-weight: 800; font-size: clamp(12px, 3.33vh, 20px); color: #070d15; text-align: center; line-height: 1.9; animation: pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+    .corner { position: fixed; bottom: 12px; width: 42px; height: 42px; border: 0; background: none; cursor: pointer; z-index: 20; display: flex; align-items: center; justify-content: center; }
+    .corner svg { width: 22px; height: 22px; fill: #9a9aa2; }
+    .corner.bl { left: 12px; } .corner.br { right: 12px; }
+    .hud { margin-top: 10px; text-align: center; }
+    .hud .timer { font-weight: 800; font-size: 26px; color: #3d3d46; }
+    .stage { flex: 1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 0; padding: 6px 8px 58px; }
+    #board { width: 100%; max-width: 560px; flex: 1 1 0; min-height: 0; }
+    .rowtop { display: flex; justify-content: center; margin-bottom: 8px; }
+    .cols { display: flex; justify-content: center; }
+    .slot { position: relative; border-radius: 6px; }
+    .slot .base { position: absolute; inset: 0; border: 1.5px dashed #b9b9c0; border-radius: 6px; }
+    .card {
+      position: absolute; left: 0; border-radius: 6px; background: #fff;
+      border: 1px solid #9a9aa2; box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      font-weight: 800; line-height: 1; cursor: pointer; overflow: hidden;
+    }
+    .card .pip { position: absolute; top: 2px; left: 4px; }
+    .card .pipb { position: absolute; bottom: 2px; right: 4px; transform: rotate(180deg); }
+    .card.red { color: #d02533; }
+    .card.blk { color: #17181f; }
+    .card.down { background: repeating-linear-gradient(45deg, #3d3d46 0 4px, #4a4a54 4px 8px); border-color: #17181f; cursor: default; }
+    .card.down .pip, .card.down .pipb { display: none; }
+    .card.sel { outline: 3px solid #ffd766; outline-offset: -2px; }
+    .sub { font-weight: 700; font-size: 11px; color: #9a9aa2; }
+    .bottombar { position: fixed; bottom: 12px; left: 58px; right: 58px; z-index: 15; min-height: 42px; display: flex; align-items: center; justify-content: center; transition: opacity 0.3s; }
+    .bottombar.hidden { opacity: 0; pointer-events: none; }
+    .bottombar .sub { font-weight: 700; font-size: 12px; color: #6b6b74; text-align: center; }
+    .embed .hud, .embed .bottombar { display: none; }
+    .panel { margin-top: 8vh; width: min(340px, 88vw); display: flex; flex-direction: column; gap: 14px; }
+    .panel h2 { font-weight: 800; font-size: 22px; letter-spacing: 0.06em; color: #17181f; text-align: center; }
+    .stat { display: flex; justify-content: space-between; border-bottom: 1px solid #c9c9cf; padding: 8px 2px; font-size: 14px; }
+    .stat i { font-style: normal; font-weight: 600; color: #6b6b74; }
+    .stat b { font-weight: 800; color: #17181f; }
+    .pref { display: flex; justify-content: space-between; align-items: center; padding: 6px 2px; font-size: 14px; font-weight: 600; color: #3d3d46; }
+    .pref .opts { display: flex; gap: 6px; }
+    .pref .opts button { border: 0; background: #ffffffcc; border-radius: 8px; padding: 6px 10px; font-family: inherit; font-size: 12px; font-weight: 800; color: #6b6b74; cursor: pointer; }
+    .pref .opts button.on { background: #17181f; color: #fff; }
+    .complete { margin-top: 24vh; text-align: center; }
+    .complete .big { font-size: 38px; font-weight: 800; color: #17181f; }
+    .complete .sub2 { font-size: 16px; font-weight: 700; color: #3d3d46; margin-top: 4px; }
+    .complete .best { font-size: 13px; font-weight: 800; letter-spacing: 0.15em; color: #e0a800; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <!-- Intro -->
+  <div class="screen" id="sIntro">
+    <div class="title"><span class="small">DAILY</span><span class="big">SOLITAIRE</span></div>
+    <div class="meta">Same deal for everyone today</div>
+    <div class="preview"><div id="previewFan"></div></div>
+    <div class="note" id="introNote">DOUBLE TAP TO START</div>
+  </div>
+  <!-- Game -->
+  <div class="screen hidden" id="sGame">
+    <div class="hud"><div class="timer" id="timer">0:00</div><div class="sub" id="sub"></div></div>
+    <div class="stage">
+      <div id="board"></div>
+    </div>
+  </div>
+  <!-- Stats -->
+  <div class="screen hidden" id="sStats">
+    <div class="panel"><h2>STATISTICS</h2><div id="statRows"></div></div>
+  </div>
+  <!-- Prefs -->
+  <div class="screen hidden" id="sPrefs">
+    <div class="panel"><h2>SETTINGS</h2>
+      <div class="pref"><span>Cards drawn per turn</span>
+        <span class="opts">
+          <button data-d="1">ONE</button>
+          <button data-d="3">THREE</button>
+        </span>
+      </div>
+      <div class="pref"><span>Restart today's deal</span>
+        <span class="opts"><button id="restart">RESET</button></span>
+      </div>
+    </div>
+  </div>
+  <!-- Complete -->
+  <div class="screen hidden" id="sDone">
+    <div class="complete">
+      <div class="big">Complete!</div>
+      <div class="sub2" id="finalTime"></div>
+      <div class="best hidden" id="bestBadge">🏆 BEST TIME!</div>
+    </div>
+  </div>
+  <!-- Paused: opaque so the board can't be studied while the clock is stopped -->
+  <div class="screen hidden" id="sPause">
+    <div class="title" style="margin-top: 24vh"><span class="big">PAUSED</span></div>
+    <div class="preview"><div id="pauseTime" style="font-weight: 700; font-size: 16px; color: #3d3d46"></div></div>
+    <div class="note">DOUBLE TAP TO RESUME</div>
+  </div>
+
+  <div class="bottombar hidden" id="subBar"><div class="sub" id="barSub"></div></div>
+  <button class="corner bl hidden" id="btnBack" aria-label="Back">
+    <svg viewBox="0 0 24 24"><path d="M11.2 4.3 4.5 10l6.7 5.7v-3.6c4.6 0 7.6 1.4 9.8 4.4-.8-5.2-4-9-9.8-9.6V4.3z"/></svg>
+  </button>
+  <button class="corner bl" id="btnStats" aria-label="Statistics">
+    <svg viewBox="0 0 24 24"><path d="M5 3h14v2h2v5c0 2-1.5 3.6-3.4 3.9A6 6 0 0 1 13 17.9V19h3v2H8v-2h3v-1.1a6 6 0 0 1-4.6-3A4 4 0 0 1 3 10V5h2V3zm0 4v3c0 .9.6 1.7 1.4 1.9A9 9 0 0 1 5 7zm14 0a9 9 0 0 1-1.4 4.9C18.4 11.7 19 10.9 19 10V7z"/></svg>
+  </button>
+  <button class="corner br" id="btnPrefs" aria-label="Settings">
+    <svg viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm8.7 3.5c0 .4 0 .8-.1 1.2l2 1.5-2 3.5-2.4-1a7.6 7.6 0 0 1-2 1.2l-.4 2.6h-4l-.4-2.6a7.6 7.6 0 0 1-2-1.2l-2.4 1-2-3.5 2-1.5a8 8 0 0 1 0-2.4l-2-1.5 2-3.5 2.4 1a7.6 7.6 0 0 1 2-1.2L11.8 3h4l.4 2.6a7.6 7.6 0 0 1 2 1.2l2.4-1 2 3.5-2 1.5c.1.4.1.8.1 1.2z"/></svg>
+  </button>
+
+  <script>
+    var API = location.hostname === 'localhost' || location.hostname === '127.0.0.1'
+      ? 'http://127.0.0.1:8000' : 'https://api.outception.com'
+    var PREFS_KEY = 'solitaire_prefs', STATS_KEY = 'solitaire_stats'
+    var now = new Date()
+    var dayKey = now.getUTCFullYear() * 10000 + (now.getUTCMonth() + 1) * 100 + now.getUTCDate()
+
+    function mulberry32(a) {
+      return function () {
+        a |= 0; a = (a + 0x6d2b79f5) | 0
+        var t = Math.imul(a ^ (a >>> 15), 1 | a)
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+      }
+    }
+
+    var prefs = { d: '3' }
+    try { var pp = JSON.parse(localStorage.getItem(PREFS_KEY) || '{}'); if (pp.d === '1' || pp.d === '3') prefs.d = pp.d } catch (e) {}
+
+    // ── state ──────────────────────────────────────────────────────────
+    // A card is an int 0..51: rank = c % 13 (0 = ace), suit = (c / 13) | 0
+    // (0 spades, 1 hearts, 2 clubs, 3 diamonds). Hearts/diamonds are red.
+    var stock = [], waste = [], found = [[], [], [], []], cols = [[], [], [], [], [], [], []]
+    var faceUp = {}
+    var seconds = 0, moves = 0, done = false, started = false, ticker = null
+    var sel = null // { pile: 'waste'|'col', col, index }
+    var undoStack = []
+    var saveKey = 'solitaire_' + dayKey + '_' + prefs.d
+    var current = 'sIntro'
+
+    var SUITS = ['♠', '♥', '♣', '♦']
+    var RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
+    function rank(c) { return c % 13 }
+    function suit(c) { return (c / 13) | 0 }
+    function isRed(c) { var s = suit(c); return s === 1 || s === 3 }
+
+    function $(id) { return document.getElementById(id) }
+    function fmt(t) { var m = Math.floor(t / 60), s = t % 60; return m + ':' + (s < 10 ? '0' : '') + s }
+
+    var TOUCH = window.matchMedia && matchMedia('(pointer: coarse)').matches
+    var EMBED = window.self !== window.top
+    if (EMBED) document.body.classList.add('embed')
+    function postTimer() {
+      if (!EMBED) return
+      try { parent.postMessage({ outceptionGame: 'solitaire', timer: fmt(seconds) }, '*') } catch (e) {}
+    }
+    function postNote(text) {
+      if (!EMBED) return
+      var actions = current === 'sGame'
+        ? [{ cmd: 'undo', label: 'UNDO' }, { cmd: 'auto', label: 'AUTO' }]
+        : []
+      try { parent.postMessage({ outceptionGame: 'solitaire', note: text || '', actions: actions, playing: current === 'sGame' }, '*') } catch (e) {}
+    }
+    function noteText() { return moves ? 'Moves: ' + moves : 'Tap the deck to draw · tap a card to play it' }
+
+    function show(id) {
+      current = id
+      ;['sIntro', 'sGame', 'sStats', 'sPrefs', 'sPause', 'sDone'].forEach(function (s) {
+        $(s).classList.toggle('hidden', s !== id)
+      })
+      $('btnBack').classList.toggle('hidden', id === 'sIntro')
+      $('btnStats').classList.toggle('hidden', id !== 'sIntro')
+      $('btnPrefs').classList.toggle('hidden', !(id === 'sIntro' || id === 'sGame'))
+      $('subBar').classList.toggle('hidden', id !== 'sGame')
+      if (id === 'sIntro') {
+        syncIntroNote()
+        postNote('')
+      } else if (id === 'sGame') postNote(noteText())
+      else postNote('')
+    }
+    function syncIntroNote() {
+      $('introNote').innerHTML = started && !done
+        ? 'TAP TO CONTINUE<br>DOUBLE TAP TO RESTART'
+        : done ? 'TAP FOR RESULT<br>DOUBLE TAP TO PLAY AGAIN' : 'DOUBLE TAP TO START'
+    }
+
+    // ── stats ──────────────────────────────────────────────────────────
+    function stats() { try { return JSON.parse(localStorage.getItem(STATS_KEY) || '{}') } catch (e) { return {} } }
+    function pushStat(t) {
+      var s = stats()
+      s.solves = (s.solves || 0) + 1
+      s.times = (s.times || []).concat([t]).slice(-50)
+      var isBest = s.best == null || t < s.best
+      if (isBest) s.best = t
+      if (s.worst == null || t > s.worst) s.worst = t
+      try { localStorage.setItem(STATS_KEY, JSON.stringify(s)) } catch (e) {}
+      return isBest
+    }
+    function avg(list, n) {
+      if (!list || list.length < n) return null
+      var last = list.slice(-n)
+      return Math.round(last.reduce(function (a, b) { return a + b }, 0) / n)
+    }
+    function renderStats() {
+      var s = stats()
+      var rows = [
+        ['Draw mode', prefs.d === '1' ? 'ONE' : 'THREE'],
+        ['Total wins', s.solves || '-'],
+        ['Best time', s.best != null ? fmt(s.best) : '-'],
+        ['Worst time', s.worst != null ? fmt(s.worst) : '-'],
+        ['Average of 5', avg(s.times, 5) != null ? fmt(avg(s.times, 5)) : '-'],
+      ]
+      $('statRows').innerHTML = rows.map(function (r) {
+        return '<div class="stat"><i>' + r[0] + '</i><b>' + r[1] + '</b></div>'
+      }).join('')
+    }
+
+    // ── persistence ────────────────────────────────────────────────────
+    function save() {
+      try {
+        localStorage.setItem(saveKey, JSON.stringify({
+          st: stock, w: waste, f: found, c: cols, u: faceUp,
+          t: seconds, m: moves, d: done, s: started,
+        }))
+      } catch (e) {}
+    }
+    function restore() {
+      try {
+        var raw = localStorage.getItem(saveKey)
+        if (!raw) return
+        var st = JSON.parse(raw)
+        if (!Array.isArray(st.c) || st.c.length !== 7) return
+        stock = st.st; waste = st.w; found = st.f; cols = st.c; faceUp = st.u || {}
+        seconds = st.t || 0; moves = st.m || 0; done = !!st.d; started = !!st.s
+      } catch (e) {}
+    }
+
+    function startTimer() {
+      if (ticker) return
+      ticker = setInterval(function () {
+        if (done || current !== 'sGame') return
+        seconds++; $('timer').textContent = fmt(seconds); postTimer(); save()
+      }, 1000)
+    }
+
+    // ── deal ───────────────────────────────────────────────────────────
+    function deal() {
+      var rng = mulberry32(dayKey)
+      var deck = []
+      for (var i = 0; i < 52; i++) deck.push(i)
+      for (var j = deck.length - 1; j > 0; j--) {
+        var k = Math.floor(rng() * (j + 1))
+        var tmp = deck[j]; deck[j] = deck[k]; deck[k] = tmp
+      }
+      stock = []; waste = []; found = [[], [], [], []]; faceUp = {}
+      cols = [[], [], [], [], [], [], []]
+      for (var col = 0; col < 7; col++) {
+        for (var row = 0; row <= col; row++) {
+          var card = deck.pop()
+          cols[col].push(card)
+          if (row === col) faceUp[card] = true
+        }
+      }
+      stock = deck
+      seconds = 0; moves = 0; done = false; started = false; sel = null; undoStack = []
+    }
+
+    // ── rules ──────────────────────────────────────────────────────────
+    function canFoundation(c) { return found[suit(c)].length === rank(c) }
+    function canStack(c, onto) {
+      if (onto == null) return rank(c) === 12 // king on empty column
+      return isRed(c) !== isRed(onto) && rank(c) === rank(onto) - 1
+    }
+    function colTop(i) { var p = cols[i]; return p.length ? p[p.length - 1] : null }
+
+    function snapshot() {
+      undoStack.push(JSON.stringify({ st: stock, w: waste, f: found, c: cols, u: faceUp, m: moves }))
+      if (undoStack.length > 300) undoStack.shift()
+    }
+    function undo() {
+      if (done || !undoStack.length) return
+      var st = JSON.parse(undoStack.pop())
+      stock = st.st; waste = st.w; found = st.f; cols = st.c; faceUp = st.u; moves = st.m
+      sel = null
+      render(); save(); syncSub()
+    }
+
+    function flipTops() {
+      for (var i = 0; i < 7; i++) {
+        var t = colTop(i)
+        if (t != null && !faceUp[t]) faceUp[t] = true
+      }
+    }
+    function bump() { moves++; flipTops(); sel = null; render(); save(); syncSub(); checkWin() }
+    function syncSub() {
+      var txt = 'Moves: ' + moves + ' · Stock: ' + stock.length
+      $('sub').textContent = txt; $('barSub').textContent = txt
+      if (current === 'sGame') postNote(noteText())
+    }
+
+    function drawFromStock() {
+      snapshot()
+      if (!stock.length) {
+        if (!waste.length) { undoStack.pop(); return }
+        stock = waste.reverse(); waste = []
+        for (var i = 0; i < stock.length; i++) faceUp[stock[i]] = false
+      } else {
+        var n = Math.min(prefs.d === '1' ? 1 : 3, stock.length)
+        for (var j = 0; j < n; j++) {
+          var c = stock.pop()
+          faceUp[c] = true
+          waste.push(c)
+        }
+      }
+      startTimer(); bump()
+    }
+
+    // Move the run starting at cols[from][index] (or the waste top) to the
+    // best legal home: foundation first for single cards, then tableau.
+    function tryMove(pile, colIndex, cardIndex) {
+      var run, fromCol = null
+      if (pile === 'waste') {
+        if (!waste.length) return false
+        run = [waste[waste.length - 1]]
+      } else {
+        fromCol = cols[colIndex]
+        run = fromCol.slice(cardIndex)
+        if (!run.length || !faceUp[run[0]]) return false
+      }
+      var head = run[0]
+      if (run.length === 1 && canFoundation(head)) {
+        snapshot()
+        if (pile === 'waste') waste.pop()
+        else fromCol.pop()
+        found[suit(head)].push(head)
+        startTimer(); bump()
+        return true
+      }
+      for (var i = 0; i < 7; i++) {
+        if (pile === 'col' && i === colIndex) continue
+        if (canStack(head, colTop(i))) {
+          snapshot()
+          if (pile === 'waste') waste.pop()
+          else fromCol.splice(cardIndex, run.length)
+          cols[i] = cols[i].concat(run)
+          startTimer(); bump()
+          return true
+        }
+      }
+      return false
+    }
+
+    function autoPlay() {
+      if (done) return
+      var moved = true, any = false
+      while (moved) {
+        moved = false
+        if (waste.length && canFoundation(waste[waste.length - 1])) {
+          if (!any) snapshot()
+          var w = waste.pop(); found[suit(w)].push(w)
+          moved = true; any = true
+        }
+        for (var i = 0; i < 7; i++) {
+          var t = colTop(i)
+          if (t != null && faceUp[t] && canFoundation(t)) {
+            if (!any) snapshot()
+            cols[i].pop(); found[suit(t)].push(t)
+            flipTops()
+            moved = true; any = true
+          }
+        }
+      }
+      if (any) { startTimer(); bump() }
+    }
+
+    function checkWin() {
+      var total = found[0].length + found[1].length + found[2].length + found[3].length
+      if (total !== 52) return
+      done = true; save()
+      var isBest = pushStat(seconds)
+      $('finalTime').textContent = fmt(seconds)
+      $('bestBadge').classList.toggle('hidden', !isBest)
+      show('sDone')
+    }
+
+    // ── rendering ──────────────────────────────────────────────────────
+    var cardW = 44, cardH = 62, gap = 5
+    function cardNode(c, up) {
+      var d = document.createElement('div')
+      d.className = 'card ' + (up ? (isRed(c) ? 'red' : 'blk') : 'down')
+      d.style.width = cardW + 'px'; d.style.height = cardH + 'px'
+      if (up) {
+        var fs = Math.max(10, Math.floor(cardW * 0.30))
+        var label = RANKS[rank(c)] + SUITS[suit(c)]
+        d.innerHTML = '<span class="pip" style="font-size:' + fs + 'px">' + label +
+          '</span><span class="pipb" style="font-size:' + fs + 'px">' + label + '</span>'
+      }
+      return d
+    }
+    function slotNode() {
+      var s = document.createElement('div')
+      s.className = 'slot'
+      s.style.width = cardW + 'px'; s.style.height = cardH + 'px'
+      s.style.marginRight = gap + 'px'
+      var b = document.createElement('div'); b.className = 'base'; s.appendChild(b)
+      return s
+    }
+    function render() {
+      var board = $('board')
+      var W = Math.min(board.clientWidth || window.innerWidth - 16, 560)
+      var H = board.clientHeight || Math.floor(window.innerHeight * 0.7)
+      cardW = Math.floor((W - 6 * gap) / 7)
+      cardH = Math.floor(cardW * 1.4)
+      board.innerHTML = ''
+
+      var top = document.createElement('div'); top.className = 'rowtop'
+      // stock
+      var stockSlot = slotNode()
+      if (stock.length) {
+        var sc = cardNode(stock[stock.length - 1], false)
+        sc.style.top = '0'; stockSlot.appendChild(sc)
+      }
+      stockSlot.addEventListener('pointerdown', function (e) { e.preventDefault(); if (current === 'sGame') drawFromStock() })
+      top.appendChild(stockSlot)
+      // waste
+      var wasteSlot = slotNode()
+      if (waste.length) {
+        var wc = cardNode(waste[waste.length - 1], true)
+        wc.style.top = '0'
+        if (sel && sel.pile === 'waste') wc.classList.add('sel')
+        wc.addEventListener('pointerdown', function (e) {
+          e.preventDefault(); e.stopPropagation()
+          if (current !== 'sGame') return
+          if (!tryMove('waste', 0, 0)) { sel = { pile: 'waste' }; render() }
+        })
+        wasteSlot.appendChild(wc)
+      }
+      top.appendChild(wasteSlot)
+      // spacer
+      var sp = document.createElement('div')
+      sp.style.width = cardW + 'px'; sp.style.marginRight = gap + 'px'
+      top.appendChild(sp)
+      // foundations
+      for (var f = 0; f < 4; f++) {
+        (function (ff) {
+          var fs = slotNode()
+          var pile = found[ff]
+          if (pile.length) {
+            var fc = cardNode(pile[pile.length - 1], true)
+            fc.style.top = '0'; fs.appendChild(fc)
+          } else {
+            fs.querySelector('.base').innerHTML =
+              '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#c9c9cf;font-size:' +
+              Math.floor(cardW * 0.5) + 'px">' + SUITS[ff] + '</div>'
+          }
+          if (ff === 3) fs.style.marginRight = '0'
+          top.appendChild(fs)
+        })(f)
+      }
+      board.appendChild(top)
+
+      // tableau
+      var maxLen = 1
+      for (var m = 0; m < 7; m++) if (cols[m].length > maxLen) maxLen = cols[m].length
+      var availH = H - cardH - 8
+      var upOff = Math.floor(cardH * 0.34)
+      var downOff = Math.floor(cardH * 0.16)
+      // squeeze the fan when a long column would overflow
+      var needed = cardH + (maxLen - 1) * upOff
+      if (needed > availH && maxLen > 1) {
+        var scale = (availH - cardH) / ((maxLen - 1) * upOff)
+        if (scale < 1) { upOff = Math.max(12, Math.floor(upOff * scale)); downOff = Math.max(6, Math.floor(downOff * scale)) }
+      }
+
+      var row = document.createElement('div'); row.className = 'cols'
+      for (var i = 0; i < 7; i++) {
+        (function (ci) {
+          var colEl = document.createElement('div')
+          colEl.className = 'slot'
+          colEl.style.width = cardW + 'px'
+          colEl.style.marginRight = ci === 6 ? '0' : gap + 'px'
+          var y = 0
+          var pile = cols[ci]
+          colEl.style.height = (cardH + Math.max(0, pile.length - 1) * upOff) + 'px'
+          if (!pile.length) {
+            var b = document.createElement('div'); b.className = 'base'; b.style.height = cardH + 'px'
+            colEl.appendChild(b)
+            colEl.addEventListener('pointerdown', function (e) {
+              e.preventDefault()
+              if (current !== 'sGame' || !sel) return
+              if (sel.pile === 'waste') tryMove('waste', 0, 0)
+              else tryMove('col', sel.col, sel.index)
+            })
+          }
+          for (var j = 0; j < pile.length; j++) {
+            (function (cj) {
+              var c = pile[cj]
+              var up = !!faceUp[c]
+              var node = cardNode(c, up)
+              node.style.top = y + 'px'
+              if (sel && sel.pile === 'col' && sel.col === ci && cj >= sel.index) node.classList.add('sel')
+              if (up) {
+                node.addEventListener('pointerdown', function (e) {
+                  e.preventDefault(); e.stopPropagation()
+                  if (current !== 'sGame') return
+                  if (!tryMove('col', ci, cj)) { sel = { pile: 'col', col: ci, index: cj }; render() }
+                })
+              }
+              colEl.appendChild(node)
+              y += up ? upOff : downOff
+            })(j)
+          }
+          row.appendChild(colEl)
+        })(i)
+      }
+      board.appendChild(row)
+      renderPreview()
+    }
+
+    function renderPreview() {
+      var fan = $('previewFan')
+      if (!fan) return
+      fan.innerHTML = ''
+      for (var i = 0; i < 7; i++) {
+        var col = document.createElement('div'); col.className = 'pcol'
+        for (var j = 0; j <= i; j++) {
+          var pc = document.createElement('div')
+          pc.className = 'pcard' + (j < i ? ' down' : '')
+          col.appendChild(pc)
+        }
+        fan.appendChild(col)
+      }
+    }
+
+    // ── boot / lifecycle ───────────────────────────────────────────────
+    // Yesterday's save slots are dead weight (a fresh key every day) — sweep
+    // them so localStorage never grows without bound. Stats/prefs keys stay.
+    try {
+      for (var pi = localStorage.length - 1; pi >= 0; pi--) {
+        var pk = localStorage.key(pi)
+        if (pk && pk.indexOf('solitaire_') === 0 && pk.indexOf(dayKey) === -1 && pk !== 'solitaire_stats' && pk !== 'solitaire_prefs') {
+          localStorage.removeItem(pk)
+        }
+      }
+    } catch (e) {}
+
+    function boot(fresh) {
+      deal()
+      saveKey = 'solitaire_' + dayKey + '_' + prefs.d
+      if (!fresh) restore()
+      $('timer').textContent = fmt(seconds)
+      render(); syncSub(); syncIntroNote()
+    }
+    function restartGame() {
+      try { localStorage.removeItem(saveKey) } catch (e) {}
+      boot(true); show('sGame'); started = true; startTimer(); save(); postTimer()
+    }
+
+    var lastTap = 0
+    function isDoubleTap() {
+      var t = Date.now()
+      var dbl = t - lastTap < 400
+      lastTap = t
+      return dbl
+    }
+    var introTapTimer = null
+    function clearIntroTap() {
+      if (introTapTimer) { clearTimeout(introTapTimer); introTapTimer = null }
+    }
+    $('sIntro').addEventListener('pointerdown', function () {
+      if (isDoubleTap()) {
+        clearIntroTap()
+        if (started || done) restartGame()
+        else { show('sGame'); started = true; startTimer(); save() }
+        return
+      }
+      clearIntroTap()
+      introTapTimer = setTimeout(function () {
+        introTapTimer = null
+        if (started && !done) { show('sGame'); startTimer() }
+        else if (done) show('sDone')
+      }, 410)
+    })
+    document.querySelector('#sGame .hud').addEventListener('pointerdown', function () {
+      if (isDoubleTap()) pauseGame()
+    })
+    document.querySelector('#sGame .stage').addEventListener('pointerdown', function (e) {
+      if (e.target !== e.currentTarget) return
+      if (isDoubleTap()) pauseGame()
+    })
+    function pauseGame() {
+      $('pauseTime').textContent = fmt(seconds)
+      show('sPause')
+    }
+    $('sPause').addEventListener('pointerdown', function () {
+      if (isDoubleTap()) show('sGame')
+    })
+    $('btnStats').addEventListener('pointerdown', function (e) {
+      e.preventDefault(); renderStats(); show('sStats')
+    })
+    $('btnPrefs').addEventListener('pointerdown', function (e) {
+      e.preventDefault()
+      if (current === 'sPrefs') { show(started && !done ? 'sGame' : 'sIntro'); return }
+      syncPrefUI(); show('sPrefs')
+    })
+    $('btnBack').addEventListener('pointerdown', function (e) {
+      e.preventDefault()
+      if (current === 'sGame') show('sIntro')
+      else if (current === 'sStats' || current === 'sPrefs') show(started && !done ? 'sGame' : 'sIntro')
+      else show('sIntro')
+    })
+    function syncPrefUI() {
+      document.querySelectorAll('[data-d]').forEach(function (b) { b.classList.toggle('on', b.dataset.d === prefs.d) })
+    }
+    document.querySelectorAll('[data-d]').forEach(function (b) {
+      b.addEventListener('pointerdown', function (e) {
+        e.preventDefault(); prefs.d = b.dataset.d
+        try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)) } catch (er) {}
+        syncPrefUI(); boot(false)
+      })
+    })
+    $('restart').addEventListener('pointerdown', function (e) {
+      e.preventDefault(); restartGame()
+    })
+    window.addEventListener('message', function (e) {
+      if (e.origin !== window.location.origin) return
+      var d = e.data
+      if (!d || !d.outceptionGameCmd || current !== 'sGame') return
+      if (d.outceptionGameCmd === 'undo') undo()
+      else if (d.outceptionGameCmd === 'auto') autoPlay()
+    })
+    window.addEventListener('resize', render)
+
+    boot(false)
+    if (done) { $('finalTime').textContent = fmt(seconds); show('sIntro') }
+  </script>
+</body>
+</html>

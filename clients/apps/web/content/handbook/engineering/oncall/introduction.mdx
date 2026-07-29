@@ -1,0 +1,68 @@
+---
+title: "On-Call Procedures"
+description: "Manual procedures and troubleshooting guide for on-call engineers"
+---
+
+This guide contains manual procedures that on-call engineers may need to perform. These are operations that cannot be automated or require manual intervention due to their sensitive nature.
+
+## Available Procedures
+
+<CardGroup cols={2}>
+  <Card title="Trigger Webhooks" icon="webhook" href="/engineering/oncall/trigger-webhooks">
+    Manually trigger missed or failed webhooks
+  </Card>
+
+  <Card title="Kill Blocking DB Queries" icon="database" href="/engineering/oncall/kill-blocking-queries">
+    Detect and terminate queries blocking migrations or other operations
+  </Card>
+</CardGroup>
+
+
+## Safety Guidelines
+
+- Double-check identifiers before executing queries
+- Test queries on staging environment when possible
+- Document all manual operations in the on-call log
+- Notify the team after performing manual operations
+
+## Where can I find the schedule?
+
+On BetterStack: `https://uptime.betterstack.com/team/{TEAM_ID}/oncalls/{SCHEDULE_ID}` (see the team's internal docs for the IDs).
+
+This is also where you edit/update the schedule.
+
+You can find people on the rota and their phone numbers in the BetterStack
+team-members settings (`https://betterstack.com/settings/teams/{TEAM_ID}/team-members`).
+
+## What triggers an on-call event?
+
+Only BetterStack itself makes the phone call as it knows who and what to call. BetterStack will generally make a normal phone call, but can also send a iOS/Android notification to the BetterStack app on your phone.
+
+BetterStack reacts to these sources of data:
+
+- BetterStack itself (uptime monitoring of the API and the web app)
+- Sentry alerts
+    - Repeated errors “anomaly” – **not** the more common ones that are sent to Slack
+
+## What is the schedule?
+
+- 1 developer is on-call for 1 full week
+    - The week goes from Monday 9:00 CET to the following Monday 9:00 CET
+- We cycle between the devs every week
+- People are free to swap between each other, but that should be reflected in the BetterStack on-call schedule.
+- All hours of the day and night, both weekdays and weekend days during that week. It doesn’t mean that you can’t participate in family events (or not sleeping 😅). But it means having BetterStack’s phone numbers added as VIPs to your phone so that those calls go through and having your laptop with you plus the ability to connect to the internet so that you can investigate and respond to the incident. This sounds scary, but we generally don’t expect to have a lot of downtime.
+
+## How and when to escalate?
+
+**When?**
+
+- For minor incidents – do try and resolve yourself, but if you’re unable to resolve and the incident is ongoing do escalate. If the incident resolves itself we can investigate the following day.
+- For major incidents – i.e. all of Outception is down or we’ve had more than 5 minutes of downtime then always escalate to other team members – don’t try to be the hero.
+
+**How?**
+
+- In BetterStack use the “Escalate” button to escalate to the secondary on-call engineer. If that doesn’t work, use the BetterStack team page and call the phone numbers listed there. Note that BetterStack’s own escalation mechanism is preferred as those calls and notifications are more likely to come through.
+
+## Support
+
+- The week you’re on call, you’re also the go-to person for the support team to reach out to for deeper, more technical questions or things that can only be solved by a dev.
