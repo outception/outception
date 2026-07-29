@@ -1,0 +1,34 @@
+# Reverse proxy + automatic TLS (Let's Encrypt via Cloudflare DNS-01).
+# Domains and the Cloudflare token come from the environment (see .env.prod).
+#
+# Cloudflare SSL/TLS mode for these hostnames should be "Full (strict)".
+
+{
+	# Global: use the Cloudflare DNS challenge for all sites.
+	acme_dns cloudflare {$CF_API_TOKEN}
+}
+
+# Cloudflare appends the visitor IP to whatever X-Forwarded-For the visitor
+# already sent, so the leftmost entry is attacker-controlled. CF-Connecting-IP
+# is set by Cloudflare and cannot be spoofed by the client — make it the ONLY
+# forwarded-for value so the origin can't be fooled about who is calling.
+(real_client_ip) {
+	header_up X-Forwarded-For {http.request.header.Cf-Connecting-Ip}
+	header_up -X-Real-Ip
+}
+
+# Public web app
+{$WEB_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy web:3000 {
+		import real_client_ip
+	}
+}
+
+# Backend API
+{$API_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy api:10000 {
+		import real_client_ip
+	}
+}

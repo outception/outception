@@ -1,0 +1,75 @@
+{
+  "cli": {
+    "version": ">= 16.2.1",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "development",
+      "env": {
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "ADMOB_IOS_APP_ID": "ca-app-pub-9513872467411993~3459287875",
+        "ADMOB_ANDROID_APP_ID": "ca-app-pub-9513872467411993~2533219019",
+        "EXPO_PUBLIC_ADMOB_BANNER_IOS": "ca-app-pub-9513872467411993/7206961195",
+        "EXPO_PUBLIC_ADMOB_BANNER_ANDROID": "ca-app-pub-9513872467411993/7127070149",
+        "EXPO_PUBLIC_OUTCEPTION_SERVER_URL": "https://api.outception.com",
+        "EXPO_PUBLIC_OUTCEPTION_WEB_URL": "https://outception.com",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://49db72e464edc9fe5f570ae6a333fdb2@o4511757957726208.ingest.de.sentry.io/4511757976469584"
+      }
+    },
+    "simulator": {
+      "ios": {
+        "simulator": true
+      },
+      "channel": "simulator",
+      "extends": "development"
+    },
+    "preview": {
+      "extends": "production",
+      "distribution": "internal",
+      "channel": "preview",
+      "autoIncrement": false,
+      "env": {
+        "EXPO_PUBLIC_OUTCEPTION_SERVER_URL": "https://api.outception.com",
+        "EXPO_PUBLIC_OUTCEPTION_WEB_URL": "https://outception.com",
+        "ADMOB_IOS_APP_ID": "ca-app-pub-9513872467411993~3459287875",
+        "ADMOB_ANDROID_APP_ID": "ca-app-pub-9513872467411993~2533219019",
+        "EXPO_PUBLIC_ADMOB_BANNER_IOS": "ca-app-pub-3940256099942544/2934735716",
+        "EXPO_PUBLIC_ADMOB_BANNER_ANDROID": "ca-app-pub-3940256099942544/6300978111",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://49db72e464edc9fe5f570ae6a333fdb2@o4511757957726208.ingest.de.sentry.io/4511757976469584",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_OUTCEPTION_SERVER_URL": "https://api.outception.com",
+        "EXPO_PUBLIC_OUTCEPTION_WEB_URL": "https://outception.com",
+        "ADMOB_IOS_APP_ID": "ca-app-pub-9513872467411993~3459287875",
+        "ADMOB_ANDROID_APP_ID": "ca-app-pub-9513872467411993~2533219019",
+        "EXPO_PUBLIC_ADMOB_BANNER_IOS": "ca-app-pub-9513872467411993/7206961195",
+        "EXPO_PUBLIC_ADMOB_BANNER_ANDROID": "ca-app-pub-9513872467411993/7127070149",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://49db72e464edc9fe5f570ae6a333fdb2@o4511757957726208.ingest.de.sentry.io/4511757976469584",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleTeamId": "55U3YA3QTA",
+        "ascAppId": "6793827093",
+        "ascApiKeyPath": "./credentials/AuthKey_G322C74U75.p8",
+        "ascApiKeyId": "G322C74U75",
+        "ascApiKeyIssuerId": "eab3f32e-7457-44f0-8961-d6f48558672f"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./credentials/google-play-service-account.json",
+        "track": "alpha"
+      }
+    }
+  }
+}

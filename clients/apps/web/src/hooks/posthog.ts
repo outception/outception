@@ -1,0 +1,114 @@
+'use client'
+
+import type { schemas } from '@outception-com/client'
+import type { JsonType } from '@posthog/core'
+import type { CaptureOptions } from 'posthog-js'
+import { usePostHog as useOuterPostHog } from 'posthog-js/react'
+import { useCallback, useMemo } from 'react'
+
+// https://posthog.com/product-engineers/5-ways-to-improve-analytics-data#suggested-naming-guide
+
+// PostHog Events Naming Convention
+//
+// ${Category}:${Noun}:${Verb}
+//
+type Surface =
+  | 'website'
+  | 'docs'
+  | 'dashboard'
+  // For rare global(ish) events, e.g login, signup...
+  // We can use properties to distinguish flywheel etc
+  | 'global'
+
+type Category = 'user' | 'organizations' | 'onboarding'
+
+type Noun = string
+
+// Verbs in past tense
+type Verb =
+  | 'click'
+  | 'submit'
+  | 'create'
+  | 'view'
+  | 'add'
+  | 'invite'
+  | 'update'
+  | 'delete'
+  | 'remove'
+  | 'start'
+  | 'end'
+  | 'cancel'
+  | 'fail'
+  | 'generate'
+  | 'send'
+  | 'archive'
+  | 'done'
+  | 'open'
+  | 'close'
+  | 'complete'
+
+export type EventName = `${Surface}:${Category}:${Noun}:${Verb}`
+
+export interface OutceptionHog {
+  setPersistence: (
+    persistence: 'localStorage' | 'sessionStorage' | 'cookie' | 'memory',
+  ) => void
+  capture: (
+    event: EventName,
+    properties?: { [key: string]: JsonType },
+    options?: CaptureOptions,
+  ) => void
+  identify: (user: schemas['UserRead']) => void
+  logout: () => void
+}
+
+export const usePostHog = (): OutceptionHog => {
+  const posthog = useOuterPostHog()
+
+  const setPersistence = useCallback(
+    (persistence: 'localStorage' | 'sessionStorage' | 'cookie' | 'memory') => {
+      posthog.set_config({ persistence })
+    },
+    [posthog],
+  )
+
+  const capture: OutceptionHog['capture'] = useCallback(
+    (event, properties, options) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.debug(`[posthog] ${event}`, properties ?? {})
+      }
+      posthog.capture(event, properties, options)
+    },
+    [posthog],
+  )
+
+  const identify: OutceptionHog['identify'] = useCallback(
+    (user) => {
+      const posthogId = `user:${user.id}`
+
+      if (posthog.get_distinct_id() !== posthogId) {
+        posthog.identify(posthogId, {
+          email: user.email,
+        })
+      }
+    },
+    [posthog],
+  )
+
+  const logout: OutceptionHog['logout'] = useCallback(() => {
+    capture('global:user:logout:done')
+    posthog?.reset()
+  }, [capture, posthog])
+
+  const context = useMemo(
+    () => ({
+      setPersistence,
+      capture,
+      identify,
+      logout,
+    }),
+    [setPersistence, capture, identify, logout],
+  )
+
+  return context
+}
