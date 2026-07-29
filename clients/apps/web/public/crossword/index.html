@@ -1,0 +1,1325 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,height=device-height,user-scalable=no,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0"
+    />
+    <meta name="robots" content="noindex" />
+    <title>Crossword</title>
+    <style>
+      @font-face {
+        font-family: 'Hanken Grotesk';
+        font-weight: 100 900;
+        font-style: normal;
+        font-display: swap;
+        src: url('/fonts/HankenGrotesk-Variable.woff2') format('woff2');
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        font-family: 'Hanken Grotesk', sans-serif;
+        background: linear-gradient(to bottom, #fff 50%, #d1d5db 100%);
+        color: #0b0b10;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        user-select: none;
+        overflow: hidden;
+      }
+      .screen {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: linear-gradient(to bottom, #fff 50%, #d1d5db 100%);
+        transition:
+          opacity 0.3s,
+          transform 0.3s;
+        transform: scale(1);
+      }
+      .hidden {
+        opacity: 0;
+        pointer-events: none;
+        transform: scale(0.94);
+      }
+      .title {
+        margin-top: 9vh;
+        text-align: center;
+        line-height: 0.92;
+      }
+      .title .small {
+        display: block;
+        font-weight: 800;
+        font-size: 17px;
+        letter-spacing: 0.4em;
+        color: #17181f;
+      }
+      .title .big {
+        display: block;
+        font-weight: 800;
+        font-size: 36px;
+        letter-spacing: 0.04em;
+        color: #17181f;
+      }
+      .byline {
+        font-weight: 600;
+        font-size: 11px;
+        color: #9a9aa2;
+        margin-top: 8px;
+        text-align: center;
+        padding: 0 20px;
+      }
+      .preview {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 0;
+        padding: 12px;
+      }
+      #previewGrid {
+        display: grid;
+        gap: 0;
+        background: #17181f;
+        border: 2px solid #17181f;
+        opacity: 0.92;
+      }
+      #previewGrid .pcell {
+        background: #fff;
+      }
+      #previewGrid .pcell.block {
+        background: #17181f;
+      }
+      .note {
+        margin-bottom: 5.5vh;
+        font-weight: 800;
+        font-size: clamp(12px, 3.33vh, 20px);
+        color: #070d15;
+        text-align: center;
+        line-height: 1.9;
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 0;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+      .corner {
+        position: fixed;
+        bottom: 12px;
+        width: 42px;
+        height: 42px;
+        border: 0;
+        background: none;
+        cursor: pointer;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .corner svg {
+        width: 22px;
+        height: 22px;
+        fill: #9a9aa2;
+      }
+      .corner.bl {
+        left: 12px;
+      }
+      .corner.br {
+        right: 12px;
+      }
+      .hud {
+        margin-top: 8px;
+        text-align: center;
+      }
+      .hud .timer {
+        font-weight: 800;
+        font-size: 22px;
+        color: #3d3d46;
+      }
+      .stage {
+        flex: 1;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 0;
+        padding: 4px 8px 60px;
+      }
+      #boardWrap {
+        max-width: 100%;
+        align-self: center;
+        flex: 1 1 0;
+        min-height: 0;
+        overflow-x: auto;
+        /* Scrollable while the keyboard freezes the board size: paint()
+           pans the active cell into view instead of shrinking cells. */
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+      }
+      #board {
+        display: grid;
+        gap: 0;
+        background: #17181f;
+        border: 2px solid #17181f;
+        touch-action: pan-x pan-y;
+      }
+      .cell {
+        position: relative;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        cursor: pointer;
+        border-right: 1px dotted #b9b9c0;
+        border-bottom: 1px dotted #b9b9c0;
+      }
+      .cell.block {
+        background: #17181f;
+        cursor: default;
+        border-color: #17181f;
+      }
+      .cell .num {
+        position: absolute;
+        top: 0;
+        left: 1px;
+        font-weight: 700;
+        color: #6b6b74;
+      }
+      .cell.sel {
+        background: #ffd766;
+      }
+      .cell.word {
+        background: #fff0bf;
+      }
+      .cell.wrong {
+        color: #e0313f;
+      }
+      .cell.revealed {
+        color: #2a7ade;
+      }
+      .bottombar {
+        position: fixed;
+        bottom: 12px;
+        left: 58px;
+        right: 58px;
+        z-index: 15;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.3s;
+      }
+      .bottombar.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      .clue {
+        flex: 1;
+        background: #ffffffcc;
+        border-radius: 10px;
+        padding: 6px 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #17181f;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        min-height: 42px;
+      }
+      .embed #hud,
+      .embed .bottombar {
+        display: none;
+      }
+      /* The 60px bottom padding below exists for the fixed toolbar; inside
+         the app that bar is hidden, so reclaim the space - the board sits
+         as high and as large as the card allows. */
+      .embed .stage {
+        padding-bottom: 8px;
+      }
+      #hidkb {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 2px;
+        height: 2px;
+        opacity: 0.01;
+        border: 0;
+        font-size: 16px;
+      }
+      .panel {
+        margin-top: 8vh;
+        width: min(340px, 88vw);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .panel h2 {
+        font-weight: 800;
+        font-size: 22px;
+        letter-spacing: 0.06em;
+        color: #17181f;
+        text-align: center;
+      }
+      .stat {
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px solid #c9c9cf;
+        padding: 8px 2px;
+        font-size: 14px;
+      }
+      .stat i {
+        font-style: normal;
+        font-weight: 600;
+        color: #6b6b74;
+      }
+      .stat b {
+        font-weight: 800;
+        color: #17181f;
+      }
+      .pref {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 2px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #3d3d46;
+      }
+      .pref .opts {
+        display: flex;
+        gap: 6px;
+      }
+      .pref .opts button {
+        border: 0;
+        background: #ffffffcc;
+        border-radius: 8px;
+        padding: 6px 10px;
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 800;
+        color: #6b6b74;
+        cursor: pointer;
+      }
+      .pref .opts button.on {
+        background: #17181f;
+        color: #fff;
+      }
+      .complete {
+        margin-top: 24vh;
+        text-align: center;
+      }
+      .complete .big {
+        font-size: 38px;
+        font-weight: 800;
+        color: #17181f;
+      }
+      .complete .sub {
+        font-size: 16px;
+        font-weight: 700;
+        color: #3d3d46;
+        margin-top: 4px;
+      }
+      .complete .best {
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.15em;
+        color: #e0a800;
+        margin-top: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="screen" id="sIntro">
+      <div class="title">
+        <span class="small">THE</span><span class="big">CROSSWORD</span>
+      </div>
+      <div class="byline" id="byline"></div>
+      <div class="preview"><div id="previewGrid"></div></div>
+      <div class="note" id="introNote">LOADING…</div>
+    </div>
+    <div class="screen hidden" id="sGame">
+      <div class="hud" id="hud"><div class="timer" id="timer">0:00</div></div>
+      <div class="stage" id="stage">
+        <div id="boardWrap"><div id="board"></div></div>
+      </div>
+    </div>
+    <div class="screen hidden" id="sStats">
+      <div class="panel">
+        <h2>STATISTICS</h2>
+        <div id="statRows"></div>
+      </div>
+    </div>
+    <div class="screen hidden" id="sPrefs">
+      <div class="panel">
+        <h2>SETTINGS</h2>
+        <div class="pref">
+          <span>Skip filled squares</span>
+          <span class="opts"
+            ><button data-s="on">ON</button
+            ><button data-s="off">OFF</button></span
+          >
+        </div>
+        <div class="pref">
+          <span>Check current word</span>
+          <span class="opts"><button id="checkWord">CHECK</button></span>
+        </div>
+        <div class="pref">
+          <span>Reveal current word</span>
+          <span class="opts"><button id="revealWord">REVEAL</button></span>
+        </div>
+        <div class="pref">
+          <span>Reveal whole puzzle</span>
+          <span class="opts"><button id="revealAll">REVEAL ALL</button></span>
+        </div>
+        <div class="pref">
+          <span>Restart today's puzzle</span>
+          <span class="opts"><button id="restart">RESET</button></span>
+        </div>
+      </div>
+    </div>
+    <div class="screen hidden" id="sDone">
+      <div class="complete">
+        <div class="big">Complete!</div>
+        <div class="sub" id="finalTime"></div>
+        <div class="best hidden" id="bestBadge">BEST TIME!</div>
+      </div>
+    </div>
+
+    <!-- Paused: opaque so the grid can't be studied while the clock is stopped -->
+    <div class="screen hidden" id="sPause">
+      <div class="title" style="margin-top: 24vh">
+        <span class="big">PAUSED</span>
+      </div>
+      <div class="preview">
+        <div
+          id="pauseTime"
+          style="font-weight: 700; font-size: 16px; color: #3d3d46"
+        ></div>
+      </div>
+      <div class="note">DOUBLE TAP TO RESUME</div>
+    </div>
+
+    <div class="bottombar hidden" id="clueBar">
+      <div class="clue" id="clue"></div>
+    </div>
+    <button class="corner bl hidden" id="btnBack" aria-label="Back">
+      <svg viewBox="0 0 24 24">
+        <path
+          d="M11.2 4.3 4.5 10l6.7 5.7v-3.6c4.6 0 7.6 1.4 9.8 4.4-.8-5.2-4-9-9.8-9.6V4.3z"
+        />
+      </svg>
+    </button>
+    <button class="corner bl" id="btnStats" aria-label="Statistics">
+      <svg viewBox="0 0 24 24">
+        <path
+          d="M5 3h14v2h3v4c0 2.2-1.8 4-4 4h-.3c-.8 1.9-2.5 3.3-4.7 3.8V19h3v2H8v-2h3v-2.2c-2.2-.5-3.9-1.9-4.7-3.8H6c-2.2 0-4-1.8-4-4V5h3V3zm0 4H4v2c0 1.1.9 2 2 2h-.8A8 8 0 0 1 5 8.9V7zm14 0v1.9c0 .8-.1 1.5-.2 2.1H19c1.1 0 2-.9 2-2V7h-2z"
+        />
+      </svg>
+    </button>
+    <button class="corner br" id="btnPrefs" aria-label="Settings">
+      <svg viewBox="0 0 24 24">
+        <path
+          d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm9.4 5.3-1.8 1a7.9 7.9 0 0 1-1 2.4l.6 2-1.7 1.7-2-.6a7.9 7.9 0 0 1-2.4 1l-1 1.9h-2.4l-1-1.9a7.9 7.9 0 0 1-2.4-1l-2 .6-1.6-1.7.6-2a7.9 7.9 0 0 1-1-2.4l-1.9-1v-2.4l1.9-1a7.9 7.9 0 0 1 1-2.4l-.6-2L4.3 3.8l2 .6a7.9 7.9 0 0 1 2.4-1l1-1.9h2.4l1 1.9a7.9 7.9 0 0 1 2.4 1l2-.6 1.7 1.7-.6 2a7.9 7.9 0 0 1 1 2.4l1.8 1v2.4z"
+        />
+      </svg>
+    </button>
+    <input
+      id="hidkb"
+      type="text"
+      autocomplete="off"
+      autocorrect="off"
+      autocapitalize="characters"
+      spellcheck="false"
+      aria-hidden="true"
+      tabindex="-1"
+    />
+
+    <script>
+      ;(function () {
+        'use strict'
+        var API =
+          location.hostname === 'localhost' || location.hostname === '127.0.0.1'
+            ? 'http://127.0.0.1:8000'
+            : 'https://api.outception.com'
+        var PREFS_KEY = 'xword_prefs',
+          STATS_KEY = 'xword_stats'
+        var prefs = { s: 'on' }
+        try {
+          Object.assign(
+            prefs,
+            JSON.parse(localStorage.getItem(PREFS_KEY) || '{}'),
+          )
+        } catch (e) {}
+        var TOUCH = window.matchMedia('(pointer: coarse)').matches
+        // Embedded either as the wall card's iframe or as a native WebView with
+        // ?embed=1 (the app can't nest an iframe, so the flag stands in for it).
+        // The flag only counts alongside the RN bridge object - a plain browser
+        // visiting ?embed=1 must not get the relaxed app-host behavior.
+        var EMBED_APP =
+          new URLSearchParams(location.search).has('embed') &&
+          !!window.ReactNativeWebView
+        var EMBED = window.self !== window.top || EMBED_APP
+        if (EMBED) document.body.classList.add('embed')
+        function postToHost(payload) {
+          try {
+            parent.postMessage(payload, '*')
+          } catch (e) {}
+          try {
+            if (window.ReactNativeWebView)
+              window.ReactNativeWebView.postMessage(JSON.stringify(payload))
+          } catch (e) {}
+        }
+        function postTimer() {
+          if (!EMBED) return
+          postToHost({ outceptionGame: 'crossword', timer: fmt(seconds) })
+        }
+        function postNote(text) {
+          if (!EMBED) return
+          var actions =
+            current === 'sGame'
+              ? [
+                  { cmd: 'erase', label: 'ERASE' },
+                  { cmd: 'reveal', label: 'REVEAL' },
+                ]
+              : []
+          postToHost({
+            outceptionGame: 'crossword',
+            note: text || '',
+            actions: actions,
+            playing: current === 'sGame',
+          })
+        }
+        function syncIntroNote() {
+          if (!puzzle) return
+          $('introNote').innerHTML =
+            started && !done
+              ? 'TAP TO CONTINUE<br>DOUBLE TAP TO RESTART'
+              : done
+                ? 'TAP FOR RESULT<br>DOUBLE TAP TO PLAY AGAIN'
+                : 'DOUBLE TAP TO START'
+        }
+
+        var puzzle = null,
+          sel = null,
+          dirAcross = true
+        var entries = [],
+          marks = []
+        var seconds = 0,
+          ticker = null,
+          done = false,
+          started = false
+        // The wall keeps this iframe mounted when the card is swiped away, so
+        // the host tells us when we stop being the card in front and the clock
+        // holds - matching the app, which unmounts its WebView outright.
+        var away = false
+        var saveKey = null,
+          current = 'sIntro'
+
+        function $(id) {
+          return document.getElementById(id)
+        }
+        function fmt(t) {
+          var m = Math.floor(t / 60),
+            s = t % 60
+          return m + ':' + (s < 10 ? '0' : '') + s
+        }
+        function show(id) {
+          current = id
+          ;['sIntro', 'sGame', 'sStats', 'sPrefs', 'sPause', 'sDone'].forEach(
+            function (s) {
+              $(s).classList.toggle('hidden', s !== id)
+            },
+          )
+          $('btnBack').classList.toggle('hidden', id === 'sIntro')
+          $('btnStats').classList.toggle('hidden', id !== 'sIntro')
+          $('btnPrefs').classList.toggle(
+            'hidden',
+            !(id === 'sIntro' || id === 'sGame'),
+          )
+          $('clueBar').classList.toggle('hidden', id !== 'sGame')
+          if (id === 'sIntro') {
+            syncIntroNote()
+            postNote('')
+          } else if (id === 'sGame') postNote($('clue').textContent)
+          else postNote('')
+          if (id === 'sGame' && TOUCH) focusKb()
+          else $('hidkb').blur()
+        }
+        function focusKb() {
+          var kb = $('hidkb')
+          kb.value = ''
+          kb.focus({ preventScroll: true })
+        }
+
+        function stats() {
+          try {
+            return JSON.parse(localStorage.getItem(STATS_KEY) || '{}')
+          } catch (e) {
+            return {}
+          }
+        }
+        function pushStat(t) {
+          var s = stats()
+          s.solves = (s.solves || 0) + 1
+          s.times = (s.times || []).concat([t]).slice(-50)
+          var isBest = s.best == null || t < s.best
+          if (isBest) s.best = t
+          if (s.worst == null || t > s.worst) s.worst = t
+          try {
+            localStorage.setItem(STATS_KEY, JSON.stringify(s))
+          } catch (e) {}
+          return isBest
+        }
+        function avg(list, n) {
+          if (!list || list.length < n) return null
+          var last = list.slice(-n)
+          return Math.round(
+            last.reduce(function (a, b) {
+              return a + b
+            }, 0) / n,
+          )
+        }
+        function renderStats() {
+          var s = stats()
+          var rows = [
+            ['Total solves', s.solves || '-'],
+            ['Best time', s.best != null ? fmt(s.best) : '-'],
+            ['Worst time', s.worst != null ? fmt(s.worst) : '-'],
+            [
+              'Average of 5',
+              avg(s.times, 5) != null ? fmt(avg(s.times, 5)) : '-',
+            ],
+            [
+              'Average of 12',
+              avg(s.times, 12) != null ? fmt(avg(s.times, 12)) : '-',
+            ],
+          ]
+          $('statRows').innerHTML = rows
+            .map(function (r) {
+              return (
+                '<div class="stat"><i>' + r[0] + '</i><b>' + r[1] + '</b></div>'
+              )
+            })
+            .join('')
+        }
+
+        function save() {
+          if (!saveKey) return
+          try {
+            localStorage.setItem(
+              saveKey,
+              JSON.stringify({
+                e: entries,
+                m: marks,
+                t: seconds,
+                d: done,
+                s: started,
+                // The cursor is part of where you were: without it a resumed
+                // board snaps back to 1-Across and the clue bar lies.
+                c: sel,
+                a: dirAcross,
+              }),
+            )
+          } catch (e) {}
+        }
+        function restore() {
+          try {
+            var raw = localStorage.getItem(saveKey)
+            if (!raw) return
+            var st = JSON.parse(raw)
+            if (Array.isArray(st.e) && st.e.length === entries.length)
+              entries = st.e
+            if (Array.isArray(st.m) && st.m.length === marks.length)
+              marks = st.m
+            seconds = st.t || 0
+            done = !!st.d
+            started = !!st.s
+            if (
+              Array.isArray(st.c) &&
+              st.c.length === 2 &&
+              st.c[0] >= 0 &&
+              st.c[0] < puzzle.rows &&
+              st.c[1] >= 0 &&
+              st.c[1] < puzzle.cols &&
+              !isBlock(st.c[0], st.c[1])
+            )
+              sel = [st.c[0], st.c[1]]
+            if (typeof st.a === 'boolean') dirAcross = st.a
+          } catch (e) {}
+        }
+        // The timer only runs while the game screen is actually in front - going
+        // back (bottom-left) or double-tapping pauses it, exactly like the cube,
+        // and so does the host swiping this card away (see `away`).
+        function startTimer() {
+          if (ticker) return
+          ticker = setInterval(function () {
+            if (done || away || current !== 'sGame') return
+            seconds++
+            $('timer').textContent = fmt(seconds)
+            postTimer()
+            save()
+          }, 1000)
+        }
+
+        function idx(r, c) {
+          return r * puzzle.cols + c
+        }
+        function cellAt(r, c) {
+          return puzzle.grid[r][c]
+        }
+        function isBlock(r, c) {
+          return cellAt(r, c) === '#'
+        }
+        function wordCells(r, c, across) {
+          var cells = []
+          if (across) {
+            var c0 = c
+            while (c0 > 0 && !isBlock(r, c0 - 1)) c0--
+            for (var i = c0; i < puzzle.cols && !isBlock(r, i); i++)
+              cells.push([r, i])
+          } else {
+            var r0 = r
+            while (r0 > 0 && !isBlock(r0 - 1, c)) r0--
+            for (var j = r0; j < puzzle.rows && !isBlock(j, c); j++)
+              cells.push([j, c])
+          }
+          return cells
+        }
+        function clueFor(r, c, across) {
+          var head = wordCells(r, c, across)[0]
+          var list = across ? puzzle.across : puzzle.down
+          for (var i = 0; i < list.length; i++) {
+            if (list[i].row === head[0] && list[i].col === head[1])
+              return { clue: list[i], i: i }
+          }
+          return null
+        }
+
+        function renderPreview() {
+          var pg = $('previewGrid')
+          var px = Math.max(
+            6,
+            Math.floor(Math.min(200 / puzzle.cols, 200 / puzzle.rows)),
+          )
+          pg.style.gridTemplateColumns =
+            'repeat(' + puzzle.cols + ', ' + px + 'px)'
+          pg.style.gridTemplateRows =
+            'repeat(' + puzzle.rows + ', ' + px + 'px)'
+          pg.innerHTML = ''
+          for (var r = 0; r < puzzle.rows; r++)
+            for (var c = 0; c < puzzle.cols; c++) {
+              var d = document.createElement('div')
+              d.className = 'pcell' + (isBlock(r, c) ? ' block' : '')
+              pg.appendChild(d)
+            }
+        }
+
+        // The height the board can really use: the VISIBLE part of the wrap.
+        // The card no longer moves or shrinks for the keyboard (the app's
+        // lift is gone), so visualViewport is finally trustworthy here: with
+        // the keyboard up it reports exactly the strip above the keys, and
+        // with it down it equals the full page. (When the frame used to move
+        // mid-keyboard, this same clamp read stale numbers - that is why it
+        // was removed once; do not re-add the lift without removing this.)
+        function availBoardHeight() {
+          var wrap = $('boardWrap')
+          var h = wrap.clientHeight || Math.floor(window.innerHeight * 0.7)
+          if (window.visualViewport) {
+            var top = wrap.getBoundingClientRect().top
+            var visible = Math.floor(window.visualViewport.height - top - 6)
+            if (visible > 80) h = Math.min(h, visible)
+          }
+          return h
+        }
+
+        function render() {
+          var board = $('board')
+          var wrapH = availBoardHeight()
+          var wrapW = $('boardWrap').clientWidth || window.innerWidth - 16
+          // Fit BOTH dimensions: height-only sizing pushed the last columns
+          // of wide grids past the card's right edge, reachable only by a
+          // sideways scroll nobody discovers. The 20px floor still wins on
+          // tiny screens (h-scroll stays as the fallback).
+          var cellPx = Math.floor(
+            Math.min((wrapH - 4) / puzzle.rows, (wrapW - 4) / puzzle.cols),
+          )
+          // 14, not 20: the comfort floor used to outrank the width fit, so
+          // a 21-column Sunday grid still pushed two columns past the card's
+          // edge on phones - a hidden column costs more than smaller squares.
+          cellPx = Math.max(cellPx, 14)
+          board.style.gridTemplateColumns =
+            'repeat(' + puzzle.cols + ', ' + cellPx + 'px)'
+          board.style.gridTemplateRows =
+            'repeat(' + puzzle.rows + ', ' + cellPx + 'px)'
+          board.innerHTML = ''
+          var numAt = {}
+          puzzle.across.concat(puzzle.down).forEach(function (cl) {
+            numAt[cl.row + ',' + cl.col] = cl.num
+          })
+          for (var r = 0; r < puzzle.rows; r++) {
+            for (var c = 0; c < puzzle.cols; c++) {
+              var div = document.createElement('div')
+              div.className = 'cell' + (isBlock(r, c) ? ' block' : '')
+              div.style.fontSize = Math.floor(cellPx * 0.55) + 'px'
+              if (!isBlock(r, c)) {
+                var n = numAt[r + ',' + c]
+                if (n) {
+                  var numEl = document.createElement('span')
+                  numEl.className = 'num'
+                  numEl.style.fontSize =
+                    Math.max(6, Math.floor(cellPx * 0.26)) + 'px'
+                  numEl.textContent = n
+                  div.appendChild(numEl)
+                }
+                var letter = document.createElement('span')
+                letter.textContent = entries[idx(r, c)] || ''
+                div.appendChild(letter)
+                if (marks[idx(r, c)] === 'wrong') div.classList.add('wrong')
+                if (marks[idx(r, c)] === 'revealed')
+                  div.classList.add('revealed')
+                ;(function (rr, cc) {
+                  div.addEventListener('pointerdown', function (e) {
+                    e.preventDefault()
+                    if (sel && sel[0] === rr && sel[1] === cc)
+                      dirAcross = !dirAcross
+                    sel = [rr, cc]
+                    paint()
+                    if (TOUCH) focusKb()
+                  })
+                })(r, c)
+              }
+              board.appendChild(div)
+            }
+          }
+          paint()
+        }
+        function paint() {
+          var kids = $('board').children
+          for (var i = 0; i < kids.length; i++)
+            kids[i].classList.remove('sel', 'word')
+          if (!sel) return
+          wordCells(sel[0], sel[1], dirAcross).forEach(function (rc) {
+            kids[idx(rc[0], rc[1])].classList.add('word')
+          })
+          kids[idx(sel[0], sel[1])].classList.add('sel')
+          try {
+            kids[idx(sel[0], sel[1])].scrollIntoView({
+              block: 'nearest',
+              inline: 'nearest',
+            })
+          } catch (e) {}
+          var found = clueFor(sel[0], sel[1], dirAcross)
+          if (found) {
+            $('clue').textContent =
+              found.clue.num + (dirAcross ? 'A' : 'D') + ' · ' + found.clue.clue
+            if (current === 'sGame') postNote($('clue').textContent)
+          }
+          // Every cursor move is a save: a swipe away can drop this document at
+          // any moment, and the clue bar has to come back where it was.
+          save()
+        }
+        function refreshCell(r, c) {
+          var div = $('board').children[idx(r, c)]
+          div.querySelector('span:last-child').textContent =
+            entries[idx(r, c)] || ''
+          div.classList.remove('wrong', 'revealed')
+          if (marks[idx(r, c)] === 'wrong') div.classList.add('wrong')
+          if (marks[idx(r, c)] === 'revealed') div.classList.add('revealed')
+        }
+        function setLetter(ch) {
+          if (!sel || done || current !== 'sGame') return
+          startTimer()
+          var i = idx(sel[0], sel[1])
+          if (marks[i] === 'revealed') {
+            advance(1)
+            return
+          }
+          entries[i] = ch
+          marks[i] = ''
+          refreshCell(sel[0], sel[1])
+          advance(1)
+          save()
+          checkDone()
+        }
+        function erase() {
+          if (!sel || done || current !== 'sGame') return
+          var i = idx(sel[0], sel[1])
+          if (entries[i]) {
+            if (marks[i] !== 'revealed') {
+              entries[i] = ''
+              marks[i] = ''
+            }
+            refreshCell(sel[0], sel[1])
+          } else {
+            advance(-1)
+            var j = idx(sel[0], sel[1])
+            if (marks[j] !== 'revealed') {
+              entries[j] = ''
+              marks[j] = ''
+            }
+            refreshCell(sel[0], sel[1])
+          }
+          save()
+        }
+        function advance(step) {
+          if (!sel) return
+          var word = wordCells(sel[0], sel[1], dirAcross)
+          var pos = -1
+          for (var i = 0; i < word.length; i++) {
+            if (word[i][0] === sel[0] && word[i][1] === sel[1]) {
+              pos = i
+              break
+            }
+          }
+          var next = pos + step
+          while (next >= 0 && next < word.length) {
+            var cand = word[next]
+            if (
+              step > 0 &&
+              prefs.s === 'on' &&
+              entries[idx(cand[0], cand[1])]
+            ) {
+              next += step
+              continue
+            }
+            sel = cand
+            paint()
+            return
+          }
+          if (step > 0) nextClue(1)
+        }
+        function nextClue(step) {
+          var found = clueFor(sel[0], sel[1], dirAcross)
+          if (!found) return
+          var list = dirAcross ? puzzle.across : puzzle.down
+          var i = found.i + step
+          if (i >= list.length) {
+            dirAcross = !dirAcross
+            i = 0
+          } else if (i < 0) {
+            dirAcross = !dirAcross
+            i = (dirAcross ? puzzle.across : puzzle.down).length - 1
+          }
+          var cl = (dirAcross ? puzzle.across : puzzle.down)[i]
+          sel = [cl.row, cl.col]
+          paint()
+        }
+        function checkWord() {
+          if (!sel) return
+          wordCells(sel[0], sel[1], dirAcross).forEach(function (rc) {
+            var i = idx(rc[0], rc[1])
+            if (entries[i] && entries[i] !== cellAt(rc[0], rc[1]))
+              marks[i] = 'wrong'
+            refreshCell(rc[0], rc[1])
+          })
+          save()
+        }
+        function revealWord() {
+          if (!sel) return
+          wordCells(sel[0], sel[1], dirAcross).forEach(function (rc) {
+            var i = idx(rc[0], rc[1])
+            entries[i] = cellAt(rc[0], rc[1])
+            marks[i] = 'revealed'
+            refreshCell(rc[0], rc[1])
+          })
+          save()
+          checkDone()
+        }
+        function revealAll() {
+          for (var r = 0; r < puzzle.rows; r++)
+            for (var c = 0; c < puzzle.cols; c++) {
+              if (isBlock(r, c)) continue
+              var i = idx(r, c)
+              if (entries[i] !== cellAt(r, c)) {
+                entries[i] = cellAt(r, c)
+                marks[i] = 'revealed'
+              }
+              refreshCell(r, c)
+            }
+          save()
+          checkDone()
+        }
+        function checkDone() {
+          for (var r = 0; r < puzzle.rows; r++)
+            for (var c = 0; c < puzzle.cols; c++) {
+              if (!isBlock(r, c) && entries[idx(r, c)] !== cellAt(r, c)) return
+            }
+          done = true
+          save()
+          var isBest = pushStat(seconds)
+          $('finalTime').textContent = fmt(seconds)
+          $('bestBadge').classList.toggle('hidden', !isBest)
+          show('sDone')
+        }
+
+        // Physical keyboard (desktop).
+        document.addEventListener('keydown', function (e) {
+          if (!puzzle || current !== 'sGame') return
+          if (e.target === $('hidkb')) return // handled by the input listeners
+          if (e.key === 'Backspace') {
+            e.preventDefault()
+            erase()
+          } else if (e.key === 'ArrowRight') {
+            dirAcross = true
+            advance(1)
+          } else if (e.key === 'ArrowLeft') {
+            dirAcross = true
+            advance(-1)
+          } else if (e.key === 'ArrowDown') {
+            dirAcross = false
+            advance(1)
+          } else if (e.key === 'ArrowUp') {
+            dirAcross = false
+            advance(-1)
+          } else if (e.key === 'Enter' || e.key === 'Tab') {
+            e.preventDefault()
+            nextClue(1)
+          } else if (/^[a-zA-Z]$/.test(e.key)) setLetter(e.key.toUpperCase())
+        })
+        // Native phone keyboard: a hidden input keeps focus while playing on
+        // touch devices, so the OS keyboard does the typing - no cramped custom
+        // keys inside the card.
+        $('hidkb').addEventListener('input', function () {
+          var v = this.value
+          this.value = ''
+          var ch = v.slice(-1).toUpperCase()
+          if (/^[A-Z]$/.test(ch)) setLetter(ch)
+        })
+        $('hidkb').addEventListener('keydown', function (e) {
+          if (e.key === 'Backspace') {
+            e.preventDefault()
+            erase()
+          } else if (e.key === 'Enter') {
+            e.preventDefault()
+            nextClue(1)
+          }
+        })
+
+        // Double tap: starts from the intro, pauses (back to intro) from the
+        // game - the timer only ticks while the game screen is in front.
+        var lastTap = 0
+        function isDoubleTap() {
+          var t = Date.now()
+          var dbl = t - lastTap < 400
+          lastTap = t
+          return dbl
+        }
+        var introTapTimer = null
+        function clearIntroTap() {
+          if (introTapTimer) {
+            clearTimeout(introTapTimer)
+            introTapTimer = null
+          }
+        }
+        $('sIntro').addEventListener('pointerdown', function () {
+          if (!puzzle) return
+          if (isDoubleTap()) {
+            clearIntroTap()
+            if (started || done) restartGame()
+            else {
+              show('sGame')
+              started = true
+              startTimer()
+              save()
+            }
+            return
+          }
+          clearIntroTap()
+          introTapTimer = setTimeout(function () {
+            introTapTimer = null
+            if (started && !done) {
+              show('sGame')
+              startTimer()
+            } else if (done) show('sDone')
+          }, 410)
+        })
+        $('hud').addEventListener('pointerdown', function () {
+          if (isDoubleTap()) pauseGame()
+        })
+        $('stage').addEventListener('pointerdown', function (e) {
+          if (e.target !== $('stage')) return // cells/clue own their taps
+          if (isDoubleTap()) pauseGame()
+        })
+        function pauseGame() {
+          $('pauseTime').textContent = fmt(seconds)
+          show('sPause')
+        }
+        $('sPause').addEventListener('pointerdown', function () {
+          if (isDoubleTap()) show('sGame')
+        })
+
+        $('btnStats').addEventListener('pointerdown', function (e) {
+          e.preventDefault()
+          renderStats()
+          show('sStats')
+        })
+        $('btnPrefs').addEventListener('pointerdown', function (e) {
+          e.preventDefault()
+          if (current === 'sPrefs') {
+            show(started && !done ? 'sGame' : 'sIntro')
+            return
+          }
+          syncPrefUI()
+          show('sPrefs')
+        })
+        // Back always steps OUT one level: overlays return to where you were,
+        // the game quits to the title (pausing the clock), like the cube.
+        $('btnBack').addEventListener('pointerdown', function (e) {
+          e.preventDefault()
+          if (current === 'sGame') show('sIntro')
+          else if (current === 'sStats' || current === 'sPrefs')
+            show(started && !done ? 'sGame' : 'sIntro')
+          else show('sIntro')
+        })
+        function syncPrefUI() {
+          document.querySelectorAll('[data-s]').forEach(function (b) {
+            b.classList.toggle('on', b.dataset.s === prefs.s)
+          })
+        }
+        document.querySelectorAll('[data-s]').forEach(function (b) {
+          b.addEventListener('pointerdown', function (e) {
+            e.preventDefault()
+            prefs.s = b.dataset.s
+            try {
+              localStorage.setItem(PREFS_KEY, JSON.stringify(prefs))
+            } catch (er) {}
+            syncPrefUI()
+          })
+        })
+        window.addEventListener('message', function (e) {
+          // ?embed=1 (native WebView) commands arrive via injected
+          // `window.postMessage(...)` - same-context, so the sender IS this
+          // window; skip the same-origin gate only for that exact case.
+          if (
+            e.origin !== window.location.origin &&
+            !(EMBED_APP && e.source === window)
+          )
+            return
+          var d = e.data
+          if (!d || !d.outceptionGameCmd) return
+          // blur/focus are host lifecycle, not gameplay: they arrive whichever
+          // screen is up, so they're handled before the sGame gate below.
+          if (d.outceptionGameCmd === 'blur') {
+            away = true
+            return
+          }
+          if (d.outceptionGameCmd === 'focus') {
+            away = false
+            return
+          }
+          if (current !== 'sGame') return
+          if (d.outceptionGameCmd === 'erase') erase()
+          else if (d.outceptionGameCmd === 'check') checkWord()
+          else if (d.outceptionGameCmd === 'reveal') revealWord()
+        })
+        $('checkWord').addEventListener('pointerdown', function (e) {
+          e.preventDefault()
+          checkWord()
+          show('sGame')
+        })
+        $('revealWord').addEventListener('pointerdown', function (e) {
+          e.preventDefault()
+          revealWord()
+          if (!done) show('sGame')
+        })
+        $('revealAll').addEventListener('pointerdown', function (e) {
+          e.preventDefault()
+          revealAll()
+        })
+        function restartGame() {
+          entries = new Array(puzzle.rows * puzzle.cols).fill('')
+          marks = new Array(puzzle.rows * puzzle.cols).fill('')
+          seconds = 0
+          done = false
+          started = true
+          $('timer').textContent = fmt(0)
+          postTimer()
+          render()
+          save()
+          show('sGame')
+          startTimer()
+        }
+        $('restart').addEventListener('pointerdown', function (e) {
+          e.preventDefault()
+          restartGame()
+        })
+        // iOS opens the keyboard on the pointerdown focus, then the tap's default
+        // action on touchend moves focus off the input again (the flash the
+        // reader sees). Cancelling touchend and re-focusing keeps it up.
+        $('board').addEventListener('touchend', function (e) {
+          if (!TOUCH) return
+          e.preventDefault()
+          if (current === 'sGame') focusKb()
+        })
+        // One rAF-debounced re-render for every size signal. The app's
+        // WebView first paints against a pre-layout viewport (full screen
+        // height) and iOS fires the correcting `resize` seconds late, which
+        // showed as a too-big board shrinking after load; a ResizeObserver
+        // on the wrap fires the moment the REAL layout lands. It also
+        // catches the app card shrinking for the phone keyboard.
+        var renderQueued = false
+        var settleTimer = null
+        function scheduleRender() {
+          if (!renderQueued) {
+            renderQueued = true
+            requestAnimationFrame(function () {
+              renderQueued = false
+              if (puzzle) render()
+            })
+          }
+          // The keyboard slide fires a storm of size signals and the LAST
+          // mid-animation one can land before the layout truly settles; one
+          // trailing pass renders against the final geometry.
+          if (settleTimer) clearTimeout(settleTimer)
+          settleTimer = setTimeout(function () {
+            settleTimer = null
+            if (puzzle) render()
+          }, 300)
+        }
+        window.addEventListener('resize', scheduleRender)
+        if (window.visualViewport)
+          window.visualViewport.addEventListener('resize', scheduleRender)
+        if (window.ResizeObserver)
+          new ResizeObserver(scheduleRender).observe($('boardWrap'))
+
+        fetch(API + '/v1/news/crossword')
+          .then(function (r) {
+            if (!r.ok) throw new Error(r.status)
+            return r.json()
+          })
+          .then(function (p) {
+            puzzle = p
+            saveKey = 'xword_' + p.id
+            // Yesterday's save slots are dead weight (a fresh key every day) -
+            // sweep everything but today's, the stats and the prefs.
+            try {
+              for (var pi = localStorage.length - 1; pi >= 0; pi--) {
+                var pk = localStorage.key(pi)
+                if (
+                  pk &&
+                  pk.indexOf('xword_') === 0 &&
+                  pk !== saveKey &&
+                  pk !== 'xword_stats' &&
+                  pk !== 'xword_prefs'
+                ) {
+                  localStorage.removeItem(pk)
+                }
+              }
+            } catch (e) {}
+            entries = new Array(p.rows * p.cols).fill('')
+            marks = new Array(p.rows * p.cols).fill('')
+            restore()
+            $('byline').textContent = p.title + ' - ' + p.author
+            syncIntroNote()
+            $('timer').textContent = fmt(seconds)
+            postTimer()
+            if (!sel) sel = [p.across[0].row, p.across[0].col]
+            renderPreview()
+            render()
+            if (done) {
+              $('finalTime').textContent = fmt(seconds)
+              $('bestBadge').classList.add('hidden')
+            }
+            // Embedded hosts (the app unmounts its WebView on swipe-away, so
+            // coming back re-loads this page) drop straight back onto a solve in
+            // progress; a standalone visit still gets the title screen.
+            else if (EMBED && started) {
+              show('sGame')
+              startTimer()
+            }
+          })
+          .catch(function () {
+            $('introNote').textContent = 'PUZZLE UNAVAILABLE - TRY AGAIN SOON'
+          })
+      })()
+
+      // ── swipe-away over the game surface ─────────────────────────────
+      // The deck outside cannot see drags that start inside this iframe, so
+      // qualifying horizontal strokes are forwarded up to the host, which
+      // advances the deck. Only from surfaces the game itself does not use:
+      // every non-play screen (intro, pause, stats, prefs, done) anywhere
+      // that isn't a control, and on the play screen just the empty chrome
+      // (hud, stage padding) - a drag that starts on the board belongs to
+      // the game. Fully self-contained ON PURPOSE: the game code above lives
+      // in its own closure, so nothing of it ($, EMBED_APP, current) is in
+      // scope here - reaching for those silently killed the first version.
+      ;(function () {
+        // Touch screens: without this the browser claims every drag as page
+        // scroll and the pointer stream is cancelled before the swipe can be
+        // recognised. pan-y keeps vertical drags scrolling the wall as before
+        // (this page has no internal scrolling to lose) and hands horizontal
+        // strokes to the handlers below.
+        document.documentElement.style.touchAction = 'pan-y'
+        var swipeFrom = null
+        function el(id) {
+          return document.getElementById(id)
+        }
+        function playing() {
+          var sg = el('sGame')
+          return !!sg && !sg.classList.contains('hidden')
+        }
+        function interactive(t) {
+          return !!(
+            t &&
+            t.closest &&
+            t.closest('button, a, input, select, [contenteditable]')
+          )
+        }
+        function eligible(e) {
+          if (interactive(e.target)) return false
+          if (!playing()) return true
+          var stage = document.querySelector('#sGame .stage') || el('stage')
+          var hud = document.querySelector('#sGame .hud') || el('hud')
+          if (hud && (e.target === hud || hud.contains(e.target))) return true
+          return !!stage && e.target === stage
+        }
+        document.addEventListener(
+          'pointerdown',
+          function (e) {
+            swipeFrom = eligible(e) ? { x: e.clientX, y: e.clientY } : null
+          },
+          true,
+        )
+        document.addEventListener(
+          'pointermove',
+          function (e) {
+            if (!swipeFrom) return
+            var dx = e.clientX - swipeFrom.x
+            var dy = e.clientY - swipeFrom.y
+            if (Math.abs(dx) < 48 || Math.abs(dx) < 2 * Math.abs(dy)) return
+            swipeFrom = null
+            var payload = { outceptionGameSwipe: dx < 0 ? 'left' : 'right' }
+            if (window.parent !== window) window.parent.postMessage(payload, '*')
+            if (window.ReactNativeWebView)
+              window.ReactNativeWebView.postMessage(JSON.stringify(payload))
+          },
+          true,
+        )
+        function clear() {
+          swipeFrom = null
+        }
+        document.addEventListener('pointerup', clear, true)
+        document.addEventListener('pointercancel', clear, true)
+      })()
+    </script>
+  </body>
+</html>
