@@ -1,0 +1,46 @@
+# Watches the ops box over TCP and power-cycles it through the Hetzner API when
+# it stops answering. Runs from CI so the cloud token never lives on a host.
+# Reset is skipped if the server was already power-cycled in the last 6 hours.
+#
+# Required repo SECRETS:
+#   OPS_HETZNER_TOKEN   Hetzner Cloud API token (read+write)
+#   OPS_AGENT_IP        public IPv4 of the ops box
+#   OPS_AGENT_ID        Hetzner server id of the ops box
+name: Ops (agent watchdog)
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check reachability, power-cycle if dead
+        env:
+          TOKEN: ${{ secrets.OPS_HETZNER_TOKEN }}
+          IP: ${{ secrets.OPS_AGENT_IP }}
+          ID: ${{ secrets.OPS_AGENT_ID }}
+        run: |
+          set -euo pipefail
+          for i in 1 2 3; do
+            if nc -z -w 5 "$IP" 22; then
+              echo "agent reachable"
+              exit 0
+            fi
+            sleep 45
+          done
+          last=$(curl -s -H "Authorization: Bearer $TOKEN" \
+            "https://api.hetzner.cloud/v1/servers/$ID/actions?sort=started:desc&per_page=10" \
+            | jq -r '[.actions[] | select(.command == "reset_server" or .command == "reboot_server")][0].started // "1970-01-01T00:00:00+00:00"')
+          age=$(( $(date +%s) - $(date -d "$last" +%s) ))
+          if [ "$age" -lt 21600 ]; then
+            echo "agent down but power-cycled ${age}s ago - holding off"
+            exit 0
+          fi
+          curl -sf -X POST -H "Authorization: Bearer $TOKEN" \
+            "https://api.hetzner.cloud/v1/servers/$ID/actions/reset" > /dev/null
+          echo "agent unreachable - issued power-cycle"

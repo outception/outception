@@ -1,0 +1,12 @@
+{
+  "extends": "@outception-com/typescript-config/nextjs.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "baseUrl": "src/",
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["src", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}

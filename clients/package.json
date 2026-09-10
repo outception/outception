@@ -1,0 +1,66 @@
+{
+  "private": true,
+  "name": "outception",
+  "scripts": {
+    "build": "turbo run build --filter='!./examples/*'",
+    "dev": "turbo watch dev",
+    "dev-web": "turbo run dev --filter=web",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "generate": "pnpm -C packages/client generate",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "knip": "knip",
+    "box-codemod": "pnpm --filter @outception-com/box-codemod box-codemod",
+    "preinstall": "npx only-allow pnpm",
+    "prepare": "turbo run build --filter='./packages/*'",
+    "release-packages": "turbo run build lint test --filter='./packages/*' && changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.31.0",
+    "@manypkg/cli": "^0.25.1",
+    "eslint": "^9.39.4",
+    "knip": "^5.88.1",
+    "only-allow": "1.2.2",
+    "oxfmt": "^0.41.0",
+    "turbo": "^2.9.12"
+  },
+  "pnpm": {
+    "overrides": {
+      "sharp": "^0.35.4",
+      "@types/react": "19.2.13",
+      "@types/react-dom": "19.2.3",
+      "shell-quote": "^1.9.0",
+      "tar@>=7 <7.5.21": "^7.5.21",
+      "@xmldom/xmldom@>=0.8 <0.8.13": "^0.8.13",
+      "tmp@<0.2.6": "^0.2.6",
+      "node-forge@<1.4.0": "^1.4.0",
+      "postcss@>=8 <8.5.18": "^8.5.18",
+      "rollup@>=4 <4.59.0": "^4.59.0",
+      "picomatch@>=4 <4.0.4": "^4.0.4",
+      "picomatch@>=2 <2.3.2": "^2.3.2",
+      "ws@>=8 <8.21.0": "^8.21.0",
+      "ws@>=7 <7.5.11": "^7.5.11",
+      "ws@>=6 <6.2.4": "^6.2.4",
+      "fast-uri@<3.1.6": "^3.1.6",
+      "minimatch@>=9 <9.0.7": "^9.0.7",
+      "browserslist@>=4 <4.28.7": "^4.28.7",
+      "flatted@<3.4.2": "^3.4.2",
+      "fast-xml-parser@>=5 <5.5.6": "^5.5.6",
+      "brace-expansion@>=2 <2.1.2": "^2.1.2",
+      "brace-expansion@>=1 <1.1.16": "^1.1.16",
+      "js-yaml@>=4 <4.3.0": "^4.3.0",
+      "undici@>=6 <6.27.0": "^6.27.0"
+    },
+    "patchedDependencies": {
+      "openapi-typescript@7.10.1": "patches/openapi-typescript@7.10.1.patch"
+    }
+  },
+  "packageManager": "pnpm@10.29.3",
+  "manypkg": {
+    "ignoredRules": [
+      "INTERNAL_MISMATCH"
+    ]
+  }
+}

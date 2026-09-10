@@ -1,0 +1,267 @@
+import contextlib
+import functools
+import json
+import re
+
+import dramatiq
+import logfire
+import sentry_sdk
+import structlog
+from starlette.datastructures import Headers, MutableHeaders
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
+
+from outception.logging import ClientContext, CorrelationID, Logger
+from outception.operational_errors import handle_operational_error
+from outception.worker import JobQueueManager
+
+
+class LogCorrelationIdMiddleware:
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            return await self.app(scope, receive, send)
+
+        correlation_id = CorrelationID.set()
+        structlog.contextvars.bind_contextvars(
+            correlation_id=correlation_id, method=scope["method"], path=scope["path"]
+        )
+        sentry_sdk.set_tag("correlation_id", correlation_id)
+
+        logfire_stack = contextlib.ExitStack()
+        logfire_stack.enter_context(logfire.set_baggage(correlation_id=correlation_id))
+        # The root span was already created by the OTel ASGI middleware
+        # (which runs before this middleware), so baggage won't be picked up
+        # automatically. Set the attribute directly on the root span.
+        root_span = scope.get("logfire.span")
+        if root_span is not None and root_span.is_recording():
+            root_span.set_attribute("correlation_id", correlation_id)
+
+        # Capture client identification headers (sent by the mobile app)
+        # so we can correlate API traffic to specific client builds for
+        # retrocompatibility monitoring.
+        headers = Headers(scope=scope)
+        client_context = {
+            key: value
+            for key, value in (
+                ("client_version", headers.get("x-outception-client-version")),
+                ("client_runtime", headers.get("x-outception-client-runtime")),
+                ("client_update", headers.get("x-outception-client-update")),
+            )
+            if value is not None
+        }
+        try:
+            if client_context:
+                ClientContext.set(client_context)
+                structlog.contextvars.bind_contextvars(**client_context)
+                for key, value in client_context.items():
+                    sentry_sdk.set_tag(key, value)
+                    if root_span is not None and root_span.is_recording():
+                        root_span.set_attribute(key, value)
+
+            await self.app(scope, receive, send)
+        finally:
+            logfire_stack.close()
+            structlog.contextvars.unbind_contextvars(
+                "correlation_id", "method", "path", *client_context.keys()
+            )
+            CorrelationID.clear()
+            ClientContext.clear()
+
+
+class FlushEnqueuedWorkerJobsMiddleware:
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] not in ("http", "websocket"):
+            await self.app(scope, receive, send)
+            return
+
+        async with JobQueueManager.open(dramatiq.get_broker(), scope["state"]["redis"]):
+            await self.app(scope, receive, send)
+
+
+class PathRewriteMiddleware:
+    def __init__(
+        self, app: ASGIApp, pattern: str | re.Pattern[str], replacement: str
+    ) -> None:
+        self.app = app
+        self.pattern = pattern
+        self.replacement = replacement
+        self.logger: Logger = structlog.get_logger()
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] not in ("http", "websocket"):
+            await self.app(scope, receive, send)
+            return
+
+        scope["path"], replacements = re.subn(
+            self.pattern, self.replacement, scope["path"]
+        )
+
+        if replacements > 0:
+            self.logger.warning(
+                "PathRewriteMiddleware",
+                pattern=self.pattern,
+                replacement=self.replacement,
+                path=scope["path"],
+            )
+
+        send = functools.partial(self.send, send=send, replacements=replacements)
+        await self.app(scope, receive, send)
+
+    async def send(self, message: Message, send: Send, replacements: int) -> None:
+        if message["type"] != "http.response.start":
+            await send(message)
+            return
+
+        message.setdefault("headers", [])
+        headers = MutableHeaders(scope=message)
+        if replacements > 0:
+            headers["X-Outception-Deprecation-Notice"] = (
+                "The API root has moved from /api/v1 to /v1. "
+                "Please update your integration."
+            )
+
+        await send(message)
+
+
+class SandboxResponseHeaderMiddleware:
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] not in ("http", "websocket"):
+            await self.app(scope, receive, send)
+            return
+
+        async def send_wrapper(message: Message) -> None:
+            if message["type"] == "http.response.start":
+                message.setdefault("headers", [])
+                headers = MutableHeaders(scope=message)
+                headers["X-Outception-Sandbox"] = "1"
+            await send(message)
+
+        await self.app(scope, receive, send_wrapper)
+
+
+class SecurityHeadersMiddleware:
+    """Emit baseline security response headers on every response. ``nosniff``,
+    frame-denial and a conservative referrer policy are always safe for a JSON
+    API; HSTS is only sent when the deployment is HTTPS-terminated (hosted
+    environments) so it can't strand a plain-HTTP dev box."""
+
+    def __init__(self, app: ASGIApp, *, hsts: bool) -> None:
+        self.app = app
+        self.hsts = hsts
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        async def send_wrapper(message: Message) -> None:
+            if message["type"] == "http.response.start":
+                message.setdefault("headers", [])
+                headers = MutableHeaders(scope=message)
+                headers.setdefault("X-Content-Type-Options", "nosniff")
+                headers.setdefault("X-Frame-Options", "DENY")
+                headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+                if self.hsts:
+                    headers.setdefault(
+                        "Strict-Transport-Security",
+                        "max-age=63072000; includeSubDomains",
+                    )
+            await send(message)
+
+        await self.app(scope, receive, send_wrapper)
+
+
+class CacheControlMiddleware:
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        async def send_wrapper(message: Message) -> None:
+            if message["type"] == "http.response.start":
+                message.setdefault("headers", [])
+                headers = MutableHeaders(scope=message)
+                if "cache-control" not in headers:
+                    headers["Cache-Control"] = "private, no-store"
+            await send(message)
+
+        await self.app(scope, receive, send_wrapper)
+
+
+class MaxBodySizeMiddleware:
+    def __init__(self, app: ASGIApp, limit: int) -> None:
+        self.app = app
+        self.limit = limit
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        headers = Headers(scope=scope)
+        content_length = headers.get("content-length")
+        if content_length is None:
+            if scope["method"] in ("POST", "PUT", "PATCH"):
+                await self._send_error(
+                    send,
+                    status=411,
+                    error="LengthRequired",
+                    detail="A Content-Length header is required.",
+                )
+                return
+        else:
+            try:
+                if int(content_length) > self.limit:
+                    await self._send_error(
+                        send,
+                        status=413,
+                        error="RequestBodyTooLarge",
+                        detail=(
+                            "Request body exceeded the maximum allowed size "
+                            f"of {self.limit} bytes."
+                        ),
+                    )
+                    return
+            except ValueError:
+                pass
+
+        await self.app(scope, receive, send)
+
+    async def _send_error(
+        self, send: Send, *, status: int, error: str, detail: str
+    ) -> None:
+        body = json.dumps({"error": error, "detail": detail}).encode("utf-8")
+        await send(
+            {
+                "type": "http.response.start",
+                "status": status,
+                "headers": [
+                    (b"content-type", b"application/json"),
+                    (b"content-length", str(len(body)).encode("latin-1")),
+                ],
+            }
+        )
+        await send({"type": "http.response.body", "body": body})
+
+
+class OperationalErrorMiddleware:
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        try:
+            await self.app(scope, receive, send)
+        except Exception as exc:
+            handle_operational_error(exc)
+            raise

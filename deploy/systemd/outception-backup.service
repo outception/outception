@@ -1,0 +1,12 @@
+[Unit]
+Description=Outception PostgreSQL backup to Cloudflare R2
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=deploy
+Environment=DEPLOY_DIR=/opt/outception/deploy
+ExecStart=/opt/outception/deploy/backup.sh
+# Don't hammer if it fails; the timer retries next night.
+TimeoutStartSec=1800

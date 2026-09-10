@@ -1,0 +1,19 @@
+packages:
+  - apps/*
+  - packages/*
+  - examples/*
+  - scripts/*
+
+onlyBuiltDependencies:
+  - '@parcel/watcher'
+  - '@sentry/cli'
+  - '@tailwindcss/oxide'
+  - core-js-pure
+  - esbuild
+  - sharp
+  - unrs-resolver
+  - openapi-typescript
+
+minimumReleaseAge: 1440
+minimumReleaseAgeExclude:
+  - '@outception-com/sdk'
