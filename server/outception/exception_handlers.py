@@ -1,0 +1,69 @@
+from urllib.parse import urlencode
+
+from fastapi import FastAPI, Request
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse, RedirectResponse, Response
+
+from outception.config import settings
+from outception.exceptions import (
+    OutceptionError,
+    OutceptionRedirectionError,
+    OutceptionRequestValidationError,
+    ResourceNotModified,
+)
+
+
+async def outception_exception_handler(
+    request: Request, exc: Exception
+) -> JSONResponse:
+    assert isinstance(exc, OutceptionError)
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"error": type(exc).__name__, "detail": exc.message},
+        headers=exc.headers,
+    )
+
+
+async def request_validation_exception_handler(
+    request: Request, exc: Exception
+) -> JSONResponse:
+    assert isinstance(exc, (RequestValidationError, OutceptionRequestValidationError))
+    return JSONResponse(
+        status_code=422,
+        content={"error": type(exc).__name__, "detail": jsonable_encoder(exc.errors())},
+    )
+
+
+async def outception_redirection_exception_handler(
+    request: Request, exc: Exception
+) -> RedirectResponse:
+    assert isinstance(exc, OutceptionRedirectionError)
+    error_url_params = urlencode(
+        {
+            "message": exc.message,
+            "return_to": exc.return_to or settings.FRONTEND_DEFAULT_RETURN_PATH,
+        }
+    )
+    error_url = f"{settings.generate_frontend_url('/error')}?{error_url_params}"
+    return RedirectResponse(error_url, exc.status_code)
+
+
+async def outception_not_modified_handler(request: Request, exc: Exception) -> Response:
+    assert isinstance(exc, ResourceNotModified)
+    return Response(status_code=exc.status_code)
+
+
+def add_exception_handlers(app: FastAPI) -> None:
+    app.add_exception_handler(
+        OutceptionRedirectionError, outception_redirection_exception_handler
+    )
+    app.add_exception_handler(ResourceNotModified, outception_not_modified_handler)
+
+    app.add_exception_handler(
+        RequestValidationError, request_validation_exception_handler
+    )
+    app.add_exception_handler(
+        OutceptionRequestValidationError, request_validation_exception_handler
+    )
+    app.add_exception_handler(OutceptionError, outception_exception_handler)
