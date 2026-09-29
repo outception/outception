@@ -1,0 +1,25 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "ignoreWorkspaces": ["apps/app", "examples/*"],
+  "ignoreDependencies": [
+    "only-allow",
+    "@stylexjs/stylex",
+    "@stylexjs/babel-plugin",
+    "import-in-the-middle",
+    "require-in-the-middle",
+    "@types/web",
+    "@manypkg/cli",
+    "@vitest/coverage-v8"
+  ],
+  "workspaces": {
+    "packages/client": {
+      "ignore": ["src/v1.ts"]
+    },
+    "packages/ui": {
+      "entry": ["src/**/*.{ts,tsx}"]
+    },
+    "apps/web": {
+      "ignore": ["content/**", "public/**", "shiki.config.d.ts"]
+    }
+  }
+}

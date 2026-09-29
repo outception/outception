@@ -1,0 +1,27 @@
+DESCRIPTION >
+    Daily promotion analytics from the `promotion_events` stream: spend (paid
+    amount), impressions, clicks and distinct promotions per day. Optionally
+    filtered by author and category over a trailing window.
+
+NODE promotion_analytics_node
+SQL >
+    %
+    SELECT
+        toStartOfDay(timestamp) AS timestamp,
+        sumIf(amount_cents, name = 'promotion_paid') AS spend_cents,
+        countIf(name = 'promotion_impression') AS impressions,
+        countIf(name = 'promotion_click') AS clicks,
+        uniqExactIf(promotion_id, name = 'promotion_created') AS promotions
+    FROM promotion_events
+    WHERE
+        timestamp >= now() - interval {{ Int32(days, 30, description="Trailing window in days") }} day
+        {% if defined(author_id) %}
+        AND author_id = {{ UUID(author_id, description="Filter by promotion author") }}
+        {% end %}
+        {% if defined(category) %}
+        AND category = {{ String(category, description="Filter by category") }}
+        {% end %}
+    GROUP BY timestamp
+    ORDER BY timestamp ASC
+
+TYPE endpoint

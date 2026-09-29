@@ -1,0 +1,5 @@
+export { PageHeader } from './PageHeader'
+export { Section, Prose } from './Section'
+export { Example } from './Example'
+export { PropsTable } from './PropsTable'
+export type { PropRow } from './PropsTable'

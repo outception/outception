@@ -1,0 +1,343 @@
+import { unstable_doesMiddlewareMatch } from 'next/experimental/testing/server'
+import { NextRequest } from 'next/server'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { config, proxy } from './proxy'
+
+vi.mock('./utils/client', () => ({
+  createServerSideAPI: vi.fn(),
+}))
+
+const nextConfig = {}
+
+describe('proxy matcher configuration', () => {
+  it('should run for dashboard routes', () => {
+    expect(
+      unstable_doesMiddlewareMatch({
+        config,
+        nextConfig,
+        url: '/dashboard',
+      }),
+    ).toBe(true)
+  })
+
+  it('should run for start routes', () => {
+    expect(
+      unstable_doesMiddlewareMatch({
+        config,
+        nextConfig,
+        url: '/start',
+      }),
+    ).toBe(true)
+  })
+
+  it('should run for finance routes', () => {
+    expect(
+      unstable_doesMiddlewareMatch({
+        config,
+        nextConfig,
+        url: '/finance',
+      }),
+    ).toBe(true)
+  })
+
+  it('should run for settings routes', () => {
+    expect(
+      unstable_doesMiddlewareMatch({
+        config,
+        nextConfig,
+        url: '/settings',
+      }),
+    ).toBe(true)
+  })
+
+  it('should NOT run for API routes', () => {
+    expect(
+      unstable_doesMiddlewareMatch({
+        config,
+        nextConfig,
+        url: '/api/test',
+      }),
+    ).toBe(false)
+  })
+
+  it('should NOT run for PostHog ingest', () => {
+    expect(
+      unstable_doesMiddlewareMatch({
+        config,
+        nextConfig,
+        url: '/ingest/test',
+      }),
+    ).toBe(false)
+  })
+
+  it('should run for self-hosted docs', () => {
+    expect(
+      unstable_doesMiddlewareMatch({
+        config,
+        nextConfig,
+        url: '/docs/integrate/authentication',
+      }),
+    ).toBe(true)
+  })
+
+  it('should run for the auth-gated handbook', () => {
+    expect(
+      unstable_doesMiddlewareMatch({
+        config,
+        nextConfig,
+        url: '/handbook/engineering/introduction',
+      }),
+    ).toBe(true)
+  })
+
+  it('should NOT run for Next.js static files', () => {
+    expect(
+      unstable_doesMiddlewareMatch({
+        config,
+        nextConfig,
+        url: '/_next/static/chunks/test.js',
+      }),
+    ).toBe(false)
+  })
+
+  it('should NOT run for Next.js image optimization', () => {
+    expect(
+      unstable_doesMiddlewareMatch({
+        config,
+        nextConfig,
+        url: '/_next/image',
+      }),
+    ).toBe(false)
+  })
+
+  it('should NOT run for static asset routes', () => {
+    expect(
+      unstable_doesMiddlewareMatch({
+        config,
+        nextConfig,
+        url: '/assets/images/logo.png',
+      }),
+    ).toBe(false)
+  })
+
+  it('should NOT run for favicon', () => {
+    expect(
+      unstable_doesMiddlewareMatch({
+        config,
+        nextConfig,
+        url: '/favicon.ico',
+      }),
+    ).toBe(false)
+  })
+
+  it('should NOT run for sitemap', () => {
+    expect(
+      unstable_doesMiddlewareMatch({
+        config,
+        nextConfig,
+        url: '/sitemap.xml',
+      }),
+    ).toBe(false)
+  })
+
+  it('should NOT run for robots.txt', () => {
+    expect(
+      unstable_doesMiddlewareMatch({
+        config,
+        nextConfig,
+        url: '/robots.txt',
+      }),
+    ).toBe(false)
+  })
+
+  it('should run for organization routes', () => {
+    expect(
+      unstable_doesMiddlewareMatch({
+        config,
+        nextConfig,
+        url: '/my-org',
+      }),
+    ).toBe(true)
+  })
+
+  it('should run for nested organization routes', () => {
+    expect(
+      unstable_doesMiddlewareMatch({
+        config,
+        nextConfig,
+        url: '/my-org/products',
+      }),
+    ).toBe(true)
+  })
+})
+
+describe('middleware function', () => {
+  let createServerSideAPI: ReturnType<typeof vi.fn>
+
+  beforeEach(async () => {
+    const clientModule = await import('./utils/client')
+    createServerSideAPI = clientModule.createServerSideAPI as ReturnType<
+      typeof vi.fn
+    >
+    vi.clearAllMocks()
+  })
+
+  it('should redirect unauthenticated users from protected routes', async () => {
+    const request = new NextRequest('https://example.com/dashboard')
+
+    const response = await proxy(request)
+
+    expect(response.status).toBe(307)
+    expect(response.headers.get('location')).toContain('/auth')
+    expect(response.headers.get('location')).toContain('return_to=%2Fdashboard')
+  })
+
+  it('should redirect unauthenticated users from the handbook', async () => {
+    const request = new NextRequest('https://example.com/handbook')
+
+    const response = await proxy(request)
+
+    expect(response.status).toBe(307)
+    expect(response.headers.get('location')).toContain('/auth')
+    expect(response.headers.get('location')).toContain('return_to=%2Fhandbook')
+  })
+
+  it('should forward the authenticated user to server components', async () => {
+    const mockUser = { id: '123', email: 'test@example.com' }
+    createServerSideAPI.mockResolvedValue({
+      GET: vi.fn().mockResolvedValue({
+        data: mockUser,
+        response: { ok: true, status: 200, headers: new Headers() },
+      }),
+    })
+
+    const request = new NextRequest('https://example.com/dashboard')
+    request.cookies.set('outception_session', 'valid-session-token')
+
+    const response = await proxy(request)
+
+    expect(response.status).toBe(200)
+    // NextResponse.next({ request: { headers } }) communicates request-header
+    // overrides to the server via `x-middleware-request-*`.
+    expect(response.headers.get('x-middleware-request-x-outception-user')).toBe(
+      Buffer.from(JSON.stringify(mockUser)).toString('base64'),
+    )
+  })
+
+  it('should allow unauthenticated access to public routes', async () => {
+    const request = new NextRequest('https://example.com/')
+
+    const response = await proxy(request)
+
+    expect(response.status).toBe(200)
+    expect(
+      response.headers.get('x-middleware-request-x-outception-user'),
+    ).toBeNull()
+  })
+
+  it('should strip a forged x-outception-user header from an unauthenticated request', async () => {
+    const forged = Buffer.from(
+      JSON.stringify({ id: 'attacker', email: 'evil@example.com' }),
+    ).toString('base64')
+    const request = new NextRequest('https://example.com/', {
+      headers: { 'x-outception-user': forged },
+    })
+
+    const response = await proxy(request)
+
+    // The forged value must not survive to the server component.
+    expect(
+      response.headers.get('x-middleware-request-x-outception-user'),
+    ).toBeNull()
+  })
+
+  it('should redirect to login with query params preserved', async () => {
+    const request = new NextRequest(
+      'https://example.com/dashboard?foo=bar&baz=qux',
+    )
+
+    const response = await proxy(request)
+
+    expect(response.status).toBe(307)
+    const location = response.headers.get('location')
+    expect(location).toContain('/auth')
+    expect(location).toContain('return_to=%2Fdashboard%3Ffoo%3Dbar%26baz%3Dqux')
+  })
+
+  it('should throw error on unexpected API response status', async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {})
+
+    createServerSideAPI.mockResolvedValue({
+      GET: vi.fn().mockResolvedValue({
+        data: undefined,
+        response: { ok: false, status: 500, headers: new Headers() },
+      }),
+    })
+
+    const request = new NextRequest('https://example.com/dashboard')
+    request.cookies.set('outception_session', 'valid-session-token')
+
+    await expect(proxy(request)).rejects.toThrow(
+      'Unexpected response status while fetching authenticated user',
+    )
+    consoleErrorSpy.mockRestore()
+  })
+
+  it('should handle 401 responses gracefully', async () => {
+    createServerSideAPI.mockResolvedValue({
+      GET: vi.fn().mockResolvedValue({
+        data: undefined,
+        response: { ok: false, status: 401, headers: new Headers() },
+      }),
+    })
+
+    const request = new NextRequest('https://example.com/dashboard')
+    request.cookies.set('outception_session', 'invalid-session-token')
+
+    const response = await proxy(request)
+
+    expect(response.status).toBe(307)
+    expect(response.headers.get('location')).toContain('/auth')
+  })
+
+  it('should handle 429 rate-limit responses gracefully', async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {})
+
+    createServerSideAPI.mockResolvedValue({
+      GET: vi.fn().mockResolvedValue({
+        data: undefined,
+        response: { ok: false, status: 429, headers: new Headers() },
+      }),
+    })
+
+    const request = new NextRequest('https://example.com/dashboard')
+    request.cookies.set('outception_session', 'rate-limited-session-token')
+
+    // Must not throw: a 429 should be treated as "couldn't determine the user"
+    // and proceed as anonymous (protected route -> redirect to login).
+    const response = await proxy(request)
+
+    expect(response.status).toBe(307)
+    expect(response.headers.get('location')).toContain('/auth')
+    consoleErrorSpy.mockRestore()
+  })
+
+  it('should redirect unauthenticated /to/* requests to login preserving the deep link', async () => {
+    const request = new NextRequest(
+      'https://example.com/to/dashboard/settings/billing',
+    )
+
+    const response = await proxy(request)
+
+    expect(response.status).toBe(307)
+    const location = response.headers.get('location')
+    expect(location).toContain('/auth')
+    expect(location).toContain(
+      'return_to=%2Fto%2Fdashboard%2Fsettings%2Fbilling',
+    )
+  })
+})
