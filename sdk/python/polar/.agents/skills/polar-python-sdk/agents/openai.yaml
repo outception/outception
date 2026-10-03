@@ -1,4 +1,0 @@
-interface:
-  display_name: "Polar Python SDK"
-  short_description: "Build reliable Polar billing integrations"
-  default_prompt: "Use $polar-python-sdk to implement a secure Polar billing integration in my Python application."
