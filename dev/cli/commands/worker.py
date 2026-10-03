@@ -20,7 +20,7 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
         cmd = [
             "uv", "run", "dramatiq",
             "-p", "1", "-t", "1",
-            "--queues", "high_priority", "medium_priority", "low_priority", "tinybird", "invoices_and_receipts",
+            "--queues", "high_priority", "medium_priority", "low_priority", "news_pipeline",
             "--watch", "outception",
             "-f", "outception.worker.scheduler:start",
             "outception.worker.run",

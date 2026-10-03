@@ -12,7 +12,7 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
     @app.command()
     def logs(
         service: Annotated[
-            str | None, typer.Argument(help="Service name (db, redis, minio, tinybird)")
+            str | None, typer.Argument(help="Service name (db, redis, api, worker, web)")
         ] = None,
         follow: Annotated[
             bool, typer.Option("--follow", help="Follow log output")

@@ -42,7 +42,7 @@ dev reset --force       # Reset without confirmation
 ### Running Services
 
 ```bash
-dev start               # Start all services (api, worker, web, stripe) in tmux
+dev start               # Start all services (api, worker, web) in tmux
 dev stop                # Stop all services (kills the tmux session)
 dev api                 # Start backend API (port 8000)
 dev api --port 8080     # Start on custom port
@@ -67,36 +67,24 @@ dev db reset --force    # Reset without confirmation
 ```bash
 dev status              # Show environment status
 dev doctor              # Check prerequisites and configuration
-dev seed                # Load sample data
-dev seed --reset        # Recreate database and load fresh seed data
 dev help                # Show all commands
 ```
 
 ### End-to-end Tests
 
 ```bash
-dev e2e setup                       # Organization token and settings for the Playwright E2E tests
-dev e2e setup --org acme-corp       # Pick the organization up front instead of being asked
-dev e2e run                         # Run the Playwright E2E tests against the local stack
-dev e2e run trial --headed          # Only files matching "trial", with a visible browser
 ```
 
 ### Visual Regression Testing
 
 ```bash
-dev snap                            # Interactive: pick branch and URLs to test
-dev snap --branch my-feature        # Test a specific branch
-dev snap --url /dashboard/settings  # Test specific URL(s)
-dev snap --detect                   # Auto-detect URLs from git diff
-dev snap --viewport desktop,mobile  # Test multiple viewports
-dev snap --interactive              # Show browser (headed mode)
 ```
 
 Captures before/after screenshots across branches and generates a visual diff report.
 
 ## Docker dev environment
 
-One shared infra stack (postgres, redis, minio, tinybird) plus one app stack (api, worker, web) per worktree, each on its own DB / Redis index / buckets. Service-aware commands auto-route by service name (`api`/`worker`/`web` → this instance, `db`/`redis`/`minio`/`tinybird` → shared). `dev docker --help` for the full list.
+One shared infra stack (postgres, redis) plus one app stack (api, worker, web) per worktree, each on its own DB and Redis index. Service-aware commands auto-route by service name (`api`/`worker`/`web` → this instance, `db`/`redis` → shared). `dev docker --help` for the full list.
 
 ```bash
 dev docker up                           # shared infra (if needed) + this instance's app stack

@@ -1,4 +1,4 @@
-"""Start Docker infrastructure (PostgreSQL, Redis, Minio, Tinybird)."""
+"""Start the Docker infrastructure (PostgreSQL, Redis)."""
 
 from shared import (
     SERVER_DIR,
@@ -11,8 +11,7 @@ from shared import (
 
 NAME = "Starting infrastructure"
 
-# One-shot jobs like minio-setup exit on purpose and are not in this list.
-LONG_RUNNING_SERVICES = ("db", "redis", "minio", "tinybird")
+LONG_RUNNING_SERVICES = ("db", "redis")
 
 
 def get_running_services() -> set[str]:
@@ -45,7 +44,7 @@ def run(ctx: Context) -> bool:
     compose_cmd = ["docker", "compose"]
     compose_cmd.extend(["up", "-d"])
 
-    service_name = "PostgreSQL, Redis, Minio, Tinybird"
+    service_name = "PostgreSQL, Redis"
 
     with step_spinner(f"Starting {service_name}..."):
         result = run_command(
@@ -68,7 +67,7 @@ def run(ctx: Context) -> bool:
         output = f"{result.stdout}\n{result.stderr}" if result else ""
         if "port is already allocated" in output or "address already in use" in output:
             hints = (
-                "Another program is using one of the ports (5432, 6379, 9000, 7181): stop it, or change the port in server/.env",
+                "Another program is using one of the ports (5432, 6379): stop it, or change the port in server/.env",
                 "Find it with [bold]lsof -i :5432[/bold] (swap in the port from the error above)",
             )
         else:

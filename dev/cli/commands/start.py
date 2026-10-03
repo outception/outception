@@ -57,7 +57,7 @@ def _ensure_mouse_support() -> None:
 def register(app: typer.Typer, prompt_setup: callable) -> None:
     @app.command()
     def start() -> None:
-        """Start all services (api, worker, web, stripe) in a tmux session."""
+        """Start all services (api, worker, web) in a tmux session."""
         if not prompt_setup():
             raise typer.Exit(1)
 
@@ -90,21 +90,18 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
             # Create session with first window
             ["tmux", "new-session", "-d", "-s", SESSION, "-n", "services", "-c", root_dir],
 
-            # Split into 4 panes
+            # Split into 3 panes
             ["tmux", "send-keys", "-t", f"{svc}.0", f"cd {server_dir}", "C-m"],
             ["tmux", "split-window", "-h", "-t", svc, "-c", server_dir],
-            ["tmux", "split-window", "-v", "-t", f"{svc}.0", "-c", server_dir],
-            ["tmux", "split-window", "-v", "-t", f"{svc}.2", "-c", web_dir],
+            ["tmux", "split-window", "-v", "-t", f"{svc}.0", "-c", web_dir],
             ["tmux", "select-layout", "-t", svc, "tiled"],
 
             # Start services in each pane
             ["tmux", "send-keys", "-t", f"{svc}.0", f"{dev_bin} api", "C-m"],
             ["tmux", "send-keys", "-t", f"{svc}.1", f"{dev_bin} worker", "C-m"],
             ["tmux", "send-keys", "-t", f"{svc}.2", f"{dev_bin} web", "C-m"],
-            ["tmux", "send-keys", "-t", f"{svc}.3", f"{dev_bin} stripe --listen", "C-m"],
 
-            # Tag the web pane so `dev switch` can find it reliably (its cwd is
-            # not a stable marker — the stripe pane also lives in the web dir)
+            # Tag the web pane so `dev switch` can find it reliably
             ["tmux", "set-option", "-p", "-t", f"{svc}.2", "@outception_role", "web"],
 
             # Create second window for general use

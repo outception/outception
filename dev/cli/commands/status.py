@@ -9,9 +9,7 @@ from shared import (
     CLIENTS_DIR,
     DEFAULT_API_PORT,
     DEFAULT_DB_PORT,
-    DEFAULT_MINIO_PORT,
     DEFAULT_REDIS_PORT,
-    DEFAULT_TINYBIRD_PORT,
     DEFAULT_WEB_PORT,
     SERVER_DIR,
     check_env_file_exists,
@@ -154,8 +152,6 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
         services = {
             "db": ("PostgreSQL", DEFAULT_DB_PORT),
             "redis": ("Redis", DEFAULT_REDIS_PORT),
-            "minio": ("Minio", DEFAULT_MINIO_PORT),
-            "tinybird": ("Tinybird", DEFAULT_TINYBIRD_PORT),
         }
 
         for service_key, (name, port) in services.items():

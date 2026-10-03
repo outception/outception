@@ -1,10 +1,10 @@
 """Docker-based isolated development environment.
 
-One shared infra stack (db, redis, minio, tinybird, optional prometheus/
-grafana) is brought up per machine; each worktree gets its own per-instance
-app stack (api, worker, web) using its own postgres DB, Redis DB index, and
-S3 bucket pair. Service-aware commands auto-route by service name to the
-right project. `dev docker up` starts shared (if needed) then this instance.
+One shared infra stack (db, redis) is brought up per machine; each worktree
+gets its own per-instance app stack (api, worker, web) using its own
+postgres DB and Redis DB index. Service-aware commands auto-route by service
+name to the right project. `dev docker up` starts shared (if needed) then
+this instance.
 """
 
 import json
@@ -74,14 +74,6 @@ def redis_db(instance: int) -> int:
     return instance
 
 
-def s3_bucket(instance: int) -> str:
-    return f"outception-s3-{instance}"
-
-
-def s3_public_bucket(instance: int) -> str:
-    return f"outception-s3-public-{instance}"
-
-
 # Host ports for the per-instance app stack. Only api and web publish host
 # ports (shared infra is reached by container name). Each instance gets one
 # port per service from a tight band whose trailing two digits are the
@@ -100,14 +92,8 @@ RESERVED_HOST_PORTS = frozenset(
     {
         DEFAULT_API_PORT,  # 8000 — non-Docker / legacy api
         DEFAULT_WEB_PORT,  # 3000 — non-Docker / legacy web
-        3001,  # grafana
         5432,  # postgres
         6379,  # redis
-        7181,  # tinybird
-        7182,  # tinybird admin
-        9000,  # minio api
-        9001,  # minio console
-        9090,  # prometheus
     }
 )
 
@@ -143,11 +129,6 @@ SHARED_SERVICES = frozenset(
     (
         "db",
         "redis",
-        "minio",
-        "minio-setup",
-        "tinybird",
-        "prometheus",
-        "grafana",
     )
 )
 
@@ -358,15 +339,6 @@ def _ensure_server_env() -> None:
     template_env = dotenv_values(SERVER_ENV_TEMPLATE)
     central_secrets = _load_central_secrets()
 
-    if "OUTCEPTION_STRIPE_PUBLISHABLE_KEY" in central_secrets:
-        central_secrets["NEXT_PUBLIC_STRIPE_KEY"] = central_secrets[
-            "OUTCEPTION_STRIPE_PUBLISHABLE_KEY"
-        ]
-    if "OUTCEPTION_GITHUB_APP_NAMESPACE" in central_secrets:
-        central_secrets["NEXT_PUBLIC_GITHUB_APP_NAMESPACE"] = central_secrets[
-            "OUTCEPTION_GITHUB_APP_NAMESPACE"
-        ]
-
     with open(SERVER_ENV_FILE, "w") as f:
         for key, value in template_env.items():
             output_value = central_secrets.get(key, value)
@@ -404,8 +376,8 @@ def _ensure_network() -> None:
     console.print(f"[dim]Created docker network: {SHARED_NETWORK_NAME}[/dim]")
 
 
-def _shared_compose_cmd(monitoring: bool = False) -> list[str]:
-    cmd = [
+def _shared_compose_cmd() -> list[str]:
+    return [
         "docker",
         "compose",
         "-p",
@@ -413,12 +385,6 @@ def _shared_compose_cmd(monitoring: bool = False) -> list[str]:
         "-f",
         str(SHARED_COMPOSE_FILE),
     ]
-    profiles = []
-    if monitoring:
-        profiles.append("monitoring")
-    for profile in profiles:
-        cmd.extend(["--profile", profile])
-    return cmd
 
 
 def _shared_is_running() -> bool:
@@ -457,14 +423,14 @@ def _drop_instance_data(instance: int) -> bool:
     """Drop per-instance state in the shared infra.
 
     Drops the postgres database, flushes the redis DB, and removes the S3
-    buckets. A missing DB or bucket is success because the api recreates
+    database. A missing DB is success because the api recreates
     them on next boot. Returns False if shared infra is down or a command
     fails, so callers can require a retry.
     """
     if not _shared_is_running():
         console.print(
             f"[yellow]Shared infra not running — skipping data cleanup for instance {instance}. "
-            "Start it with `dev docker up` and re-run cleanup (or prune) to drop the DB / buckets.[/yellow]"
+            "Start it with `dev docker up` and re-run cleanup (or prune) to drop the DB.[/yellow]"
         )
         return False
 
@@ -513,36 +479,6 @@ def _drop_instance_data(instance: int) -> bool:
     ):
         ok = False
 
-    bucket = s3_bucket(instance)
-    public_bucket = s3_public_bucket(instance)
-    console.print(f"[dim]  Removing S3 buckets {bucket}, {public_bucket}...[/dim]")
-    # `mc alias set` fails if MinIO is unreachable. `mc ls` failing with
-    # "does not exist" is the only missing-bucket case we ignore; any other
-    # listing or `mc rb` error fails the step.
-    if not _drop_step_ok(
-        run_command(
-            _shared_compose_cmd()
-            + [
-                "run",
-                "--rm",
-                "--no-deps",
-                "--entrypoint",
-                "sh",
-                "minio-setup",
-                "-c",
-                'set -e; mc alias set local http://minio:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"; '
-                'rm_bucket() { '
-                'if mc ls "local/$1" >/dev/null 2>/tmp/mc-ls.err; then '
-                'mc rb --force "local/$1"; '
-                'elif grep -q "does not exist" /tmp/mc-ls.err; then :; '
-                'else cat /tmp/mc-ls.err >&2; return 1; fi; }; '
-                f"rm_bucket {bucket}; rm_bucket {public_bucket}",
-            ],
-            capture=True,
-        ),
-        f"S3 buckets {bucket}, {public_bucket}",
-    ):
-        ok = False
 
     return ok
 
@@ -566,8 +502,6 @@ def _build_compose_env(instance: int) -> dict[str, str]:
         "WEB_PORT": str(web_port(instance)),
         "OUTCEPTION_POSTGRES_DATABASE": db_name(instance),
         "OUTCEPTION_REDIS_DB": str(redis_db(instance)),
-        "OUTCEPTION_S3_FILES_BUCKET_NAME": s3_bucket(instance),
-        "OUTCEPTION_S3_FILES_PUBLIC_BUCKET_NAME": s3_public_bucket(instance),
     }
 
 
@@ -608,10 +542,7 @@ def _print_access_info(ctx: typer.Context, instance: int) -> None:
     console.print()
     console.print("[bold]Outception Docker Development Environment[/bold]")
     console.print(f"Instance: {instance} (project {app_project(instance)})")
-    console.print(
-        f"Database: {db_name(instance)}  Redis DB: {redis_db(instance)}  "
-        f"Buckets: {s3_bucket(instance)}, {s3_public_bucket(instance)}"
-    )
+    console.print(f"Database: {db_name(instance)}  Redis DB: {redis_db(instance)}")
     console.print()
     console.print("[bold]App services:[/bold]")
     console.print(f"  API:           http://localhost:{api_port(instance)}")
@@ -655,7 +586,7 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
     ) -> None:
         """Isolated Docker development environment.
 
-        One shared infra stack (postgres/redis/minio/tinybird) lives on the
+        One shared infra stack (postgres, redis) lives on the
         machine; each worktree gets its own api/worker/web on offset ports.
         Service-aware commands (logs, exec, restart, ...) auto-route to the
         right project based on the service name.
@@ -682,13 +613,13 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
     def _route(service: str | None, instance: int) -> tuple[list[str], dict[str, str]]:
         """Pick the right (compose_cmd, env) for a service.
 
-        - shared services (db, redis, minio, tinybird, prometheus, grafana) →
+        - shared services (db, redis) →
           the machine-wide `outception-shared` project
         - app services (api, worker, web) or no service → this instance's
           `outception-app-N` project
         """
         if service in SHARED_SERVICES:
-            return _shared_compose_cmd(monitoring=True), {}
+            return _shared_compose_cmd(), {}
         return _build_compose_cmd(instance), _build_compose_env(instance)
 
     @docker_app.command("up")
@@ -718,12 +649,6 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
                 "--wait", help="Block until app services are healthy (detached only)"
             ),
         ] = False,
-        monitoring: Annotated[
-            bool,
-            typer.Option(
-                "--monitoring", help="Include Prometheus and Grafana in shared infra"
-            ),
-        ] = False,
         services: Annotated[
             list[str] | None,
             typer.Argument(help="Services to start (default: all app services)"),
@@ -737,16 +662,12 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
         # Bring shared infra up first if it isn't already running.
         _ensure_network()
         if not _shared_is_running():
-            shared_cmd = _shared_compose_cmd(monitoring=monitoring) + ["up", "-d"]
+            shared_cmd = _shared_compose_cmd() + ["up", "-d"]
             console.print("[bold blue]Starting Outception shared infra[/bold blue]")
             result = run_command(shared_cmd)
             if not result or result.returncode != 0:
                 console.print("[red]Failed to start shared infra[/red]")
                 raise typer.Exit(1)
-        elif monitoring:
-            console.print(
-                "[yellow]Shared infra is already running; --monitoring only takes effect on first start. Run `dev docker down --all` first to apply.[/yellow]"
-            )
 
         env = _build_compose_env(instance)
         cmd = _build_compose_cmd(instance)
@@ -813,7 +734,7 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
 
         if all_:
             console.print("[dim]Stopping shared infra...[/dim]")
-            shared = _shared_compose_cmd(monitoring=True) + ["down"]
+            shared = _shared_compose_cmd() + ["down"]
             result = run_command(shared)
             if not result or result.returncode != 0:
                 console.print("[red]Failed to stop shared infra[/red]")
@@ -856,7 +777,7 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
         """List running containers — both shared infra and this instance's app stack."""
         instance = _get_instance(ctx)
         console.print(f"[bold]Shared ({SHARED_PROJECT_NAME})[/bold]")
-        run_command(_shared_compose_cmd(monitoring=True) + ["ps"])
+        run_command(_shared_compose_cmd() + ["ps"])
         console.print(f"\n[bold]App ({app_project(instance)})[/bold]")
         run_command(
             _build_compose_cmd(instance) + ["ps"], env=_build_compose_env(instance)
@@ -985,7 +906,7 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
         if not force:
             if all_:
                 console.print(
-                    "[red bold]This destroys ALL postgres data, MinIO objects, Tinybird events, prometheus/grafana state.[/red bold]"
+                    "[red bold]This destroys ALL postgres data and redis state.[/red bold]"
                 )
                 console.print(
                     "[red]Every instance on this machine will be wiped.[/red]"
@@ -996,10 +917,10 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
                 console.print(
                     "[yellow]This will remove this instance's api/worker/web containers, "
                     "build/cache volumes, postgres database "
-                    f"({db_name(instance)}), redis DB, and S3 buckets.[/yellow]"
+                    f"({db_name(instance)}) and redis DB.[/yellow]"
                 )
                 console.print(
-                    "[dim]Shared infra (postgres, redis, minio, tinybird) stays running. "
+                    "[dim]Shared infra (postgres, redis) stays running. "
                     "Use --all to wipe that too.[/dim]"
                 )
                 if not typer.confirm("Continue?"):
@@ -1017,7 +938,7 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
         if not all_:
             console.print(
                 f"[dim]Dropping instance {instance} data "
-                f"({db_name(instance)}, redis DB {redis_db(instance)}, buckets)...[/dim]"
+                f"({db_name(instance)}, redis DB {redis_db(instance)})...[/dim]"
             )
             if not _drop_instance_data(instance):
                 console.print(
@@ -1029,7 +950,7 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
 
         if all_:
             console.print("[dim]Wiping shared infra volumes...[/dim]")
-            shared = _shared_compose_cmd(monitoring=True) + [
+            shared = _shared_compose_cmd() + [
                 "down",
                 "-v",
                 "--remove-orphans",
@@ -1062,8 +983,6 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
             "web_url": f"http://localhost:{web_port(instance)}",
             "database": db_name(instance),
             "redis_db": redis_db(instance),
-            "s3_bucket": s3_bucket(instance),
-            "s3_public_bucket": s3_public_bucket(instance),
         }
         if json_output:
             # Write straight to stdout (not console.print_json) so piped output
@@ -1080,7 +999,6 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
             f"  Database: {info['database']}  Redis DB: {info['redis_db']}"
         )
         console.print(
-            f"  Buckets: {info['s3_bucket']}, {info['s3_public_bucket']}"
         )
 
     @docker_app.command("launch-json")
@@ -1185,7 +1103,6 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
         )
         console.print(
             f"[dim]Database: {db_name(instance)}, Redis DB: {redis_db(instance)}, "
-            f"Buckets: {s3_bucket(instance)}, {s3_public_bucket(instance)}[/dim]"
         )
 
     @docker_app.command("clear-instance")
@@ -1259,7 +1176,7 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
 
         For each stale entry: stops + removes its app stack (containers and
         per-instance build volumes), drops its postgres database, flushes its
-        redis DB, and removes its S3 buckets. The shared infra itself is left
+        redis DB. The shared infra itself is left
         running.
         """
         data = _load_registry()
@@ -1275,7 +1192,7 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
             console.print(f"  Instance {entry['instance']}: {entry['path']}")
         console.print(
             "[red bold]This will drop their app containers, build volumes, "
-            "postgres databases, redis data, and S3 buckets. Data will be lost.[/red bold]"
+            "postgres databases and redis data. Data will be lost.[/red bold]"
         )
 
         if not force and not typer.confirm("Continue?"):

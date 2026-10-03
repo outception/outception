@@ -22,7 +22,7 @@ WEB_DIR = CLIENTS_DIR / "apps" / "web"
 def _find_web_pane() -> str | None:
     """Return the tmux pane id tagged as the web pane by `dev start`.
 
-    Matching on the working directory is unreliable: the stripe pane is also
+    Matching on the working directory is unreliable: another pane may also
     created in the web dir, and any pane's path follows its foreground process.
     """
     result = run_command(

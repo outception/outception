@@ -81,7 +81,7 @@ def is_environment_ready() -> tuple[bool, list[str]]:
     if not status:
         issues.append("Docker containers not running")
     else:
-        required = ["db", "redis", "minio"]
+        required = ["db", "redis"]
         for service in required:
             found = any(service in name and running for name, running in status.items())
             if not found:
@@ -166,7 +166,7 @@ def up(
     ] = False,
     skip_integrations: Annotated[
         bool,
-        typer.Option("--skip-integrations", help="Skip GitHub/Stripe setup prompts"),
+        typer.Option("--skip-integrations", help="Skip the optional setup prompts"),
     ] = False,
     database_name: Annotated[
         str | None,
@@ -178,8 +178,7 @@ def up(
     """
     Prepare the development environment.
 
-    Installs dependencies, starts infrastructure, runs migrations,
-    and prompts to configure GitHub and Stripe integrations.
+    Installs dependencies, starts the infrastructure and runs migrations.
     """
     print_banner("Outception dev", "Setting up your development environment")
 
@@ -211,17 +210,14 @@ def up(
     next_steps.add_column(style="bold cyan")
     next_steps.add_column(style="dim")
     next_steps.add_row("[dim]Recommended", "")
-    next_steps.add_row("dev seed", "Load sample data")
-    next_steps.add_row()
     next_steps.add_row("[dim]Start all services", "")
-    next_steps.add_row("dev start", "API, worker, web, and Stripe in a tmux session")
+    next_steps.add_row("dev start", "API, worker and web in a tmux session")
     next_steps.add_row("dev stop", "Stop all services")
     next_steps.add_row()
     next_steps.add_row("[dim]Start specific services", "")
     next_steps.add_row("dev api", "API server")
     next_steps.add_row("dev worker", "Background worker")
     next_steps.add_row("dev web", "Frontend dev server")
-    next_steps.add_row("dev stripe", "Stripe webhook listener")
     next_steps.add_row()
     next_steps.add_row("[dim]Need assistance?", "")
     next_steps.add_row("dev help", "Show all available commands")
@@ -254,7 +250,6 @@ def help() -> None:
     recipes.add_column(style="bold cyan", min_width=24)
     recipes.add_column(style="dim")
     recipes.add_row("dev up", "First time setup, or when pulling new changes")
-    recipes.add_row("dev seed", "Load the default sample data")
     recipes.add_row("dev api", "Start API server")
     recipes.add_row("dev worker", "Start background worker")
     recipes.add_row("dev web", "Start frontend dev server")
@@ -340,7 +335,6 @@ def help() -> None:
     section_titles = {
         "db": "Database",
         "docker": "Docker",
-        "e2e": "End-to-end tests",
     }
 
     for group_info in sorted(
