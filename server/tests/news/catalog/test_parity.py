@@ -8,15 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from outception.cards.deck import (
-    DeckData,
-    DeckEntry,
-    DeckInput,
-    compose_default_deck,
-    resolve,
-)
 from outception.config import settings
 from outception.news.catalog import load_catalog
+from outception.news.catalog.decks import default_cards, resolve_templates
 from outception.news.catalog.registry import Registry
 
 PARITY = Path(__file__).resolve().parents[1] / "fixtures" / "parity"
@@ -84,63 +78,17 @@ def test_search_index(registry: Registry) -> None:
     assert actual == expected
 
 
-def _deck_data(registry: Registry) -> DeckData:
-    deck = registry.catalog.deck
-    return DeckData(
-        base=tuple(
-            DeckEntry(
-                entry.id,
-                inject_after=tuple(entry.inject_after),
-                swap=entry.swap,
-                enabled=entry.enabled,
-                season=entry.season,
-                countries=frozenset(entry.countries) if entry.countries else None,
-            )
-            for entry in deck.base
-        ),
-        country_tables=registry.catalog.country_tables,
-        briefing_profile_by_country=deck.briefing_profile_by_country,
-        default_briefing_profile=deck.default_briefing_profile,
-    )
-
-
-def _resolve_templates(
-    registry: Registry, country: str | None
-) -> list[dict[str, object]]:
-    data = _deck_data(registry)
-    out = []
-    for template in registry.catalog.templates:
-        ids = list(template.sources)
-        for ref in template.extras:
-            ids.extend(resolve(ref, data, country))
-        seen: set[str] = set()
-        sources = []
-        for sid in ids:
-            if sid in seen or not registry.is_known(sid) or registry.is_disabled(sid):
-                continue
-            seen.add(sid)
-            sources.append(sid)
-        if sources:
-            out.append({"id": template.id, "sources": sources})
-    return out
-
-
 def test_default_decks_match_the_live_tree(registry: Registry) -> None:
     expected = json.loads((PARITY / "default_cards.json").read_text())
-    data = _deck_data(registry)
     for country, deck in expected.items():
-        inp = DeckInput(
-            country=country or None,
-            month=10,
-            known=registry.is_known,
-            disabled=registry.is_disabled,
+        assert default_cards(registry, country or None, month=10) == deck, (
+            country or "unknown"
         )
-        assert compose_default_deck(data, inp) == deck, country or "unknown"
 
 
 def test_starters_match_the_live_tree(registry: Registry) -> None:
     expected = json.loads((PARITY / "templates.json").read_text())
     for country, templates in expected.items():
-        assert _resolve_templates(registry, country or None) == templates, (
+        assert resolve_templates(registry, country or None) == templates, (
             country or "unknown"
         )

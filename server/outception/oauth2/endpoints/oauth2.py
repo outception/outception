@@ -128,8 +128,6 @@ async def update(
     tags=["clients", APITag.public],
     summary="Delete Client",
     name="oauth2:delete_client",
-    status_code=204,
-    responses={204: {"description": "Client deleted successfully."}},
 )
 async def delete(
     client_id: str,

@@ -15,8 +15,8 @@ from functools import cached_property
 from outception.config import settings
 from outception.news.schemas import SourceMeta
 
-from .loader import Catalog, SourceRow
-from .schemas import COLUMN_ORDER
+from .loader import Catalog
+from .schemas import COLUMN_ORDER, SourceRow
 
 DEFAULT_INTERVAL_MS = 2 * 60 * 1000
 

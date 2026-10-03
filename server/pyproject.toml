@@ -45,6 +45,9 @@ dependencies = [
   "tzdata>=2026.2",
   "reauth==0.4.1",
   "aiosmtplib>=5.1.2",
+  "beautifulsoup4>=4.14.3",
+  "lxml>=6.0.2",
+  "feedparser>=6.0.12",
   "joserfc>=1.7.4",
 ]
 

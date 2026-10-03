@@ -21,6 +21,8 @@ class OutceptionError(Exception):
         headers: Additional headers to be included in the response.
     """
 
+    expected: ClassVar[bool] = False
+
     _schema: ClassVar[type[BaseModel] | None] = None
 
     def __init__(
@@ -48,6 +50,15 @@ class OutceptionError(Exception):
         )
         cls._schema = model
         return cls._schema
+
+
+class OutceptionBackpressureError(OutceptionError):
+    """A 5xx that is a documented outcome of the endpoint rather than a
+    fault: cold-cache single-flight losers, upstream warm-up windows. The
+    client's contract is "retry shortly", and the error tracker drops these
+    (see outception.sentry.before_send)."""
+
+    expected = True
 
 
 class OutceptionTaskError(OutceptionError):

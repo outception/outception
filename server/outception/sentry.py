@@ -18,6 +18,7 @@ from sentry_sdk.integrations.threading import ThreadingIntegration
 
 from outception.auth.models import AuthSubject, Subject, is_user
 from outception.config import settings
+from outception.exceptions import OutceptionError
 from outception.observability.http_telemetry import url_without_request_values
 
 if TYPE_CHECKING:
@@ -50,6 +51,11 @@ def before_send(event: Event, hint: Hint) -> Event | None:
             request["url"] = url_without_request_values(url)
         request.pop("query_string", None)
         request.pop("fragment", None)
+    exc_info = hint.get("exc_info")
+    if exc_info is not None:
+        exc = exc_info[1]
+        if isinstance(exc, OutceptionError) and exc.expected:
+            return None
     return event
 
 
