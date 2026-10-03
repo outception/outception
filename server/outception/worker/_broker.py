@@ -32,6 +32,7 @@ from ._debounce import DebounceMiddleware
 from ._encoder import JSONEncoder
 from ._health import HealthMiddleware
 from ._httpx import HTTPXMiddleware
+from ._jobs import JobRunsMiddleware
 from ._metrics import PrometheusMiddleware
 from ._redis import RedisMiddleware
 from ._sqlalchemy import SQLAlchemyMiddleware
@@ -228,7 +229,7 @@ def get_broker(*, database: bool = True) -> dramatiq.Broker:
         # Group completion callbacks for orchestrating task sequences
         GroupCallbacks(rate_limiter_backend),
         # Resource lifecycle (worker boot/shutdown)
-        *([SQLAlchemyMiddleware()] if database else []),
+        *([SQLAlchemyMiddleware(), JobRunsMiddleware()] if database else []),
         RedisMiddleware(),
         HTTPXMiddleware(),
         HealthMiddleware(database=database),

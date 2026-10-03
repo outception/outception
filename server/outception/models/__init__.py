@@ -5,7 +5,15 @@ from .backup_codes_enrollment import BackupCodesEnrollment
 from .email_log import EmailLog
 from .email_otp import EmailOTP
 from .email_verification import EmailVerification
+from .feedback import Feedback
+from .job_run import JobKind, JobRun, JobState
 from .launch import Launch, LaunchStatus
+from .news_cluster import (
+    NewsBriefing,
+    NewsCluster,
+    NewsClusterMember,
+    NewsClusterScore,
+)
 from .oauth2_authorization_code import OAuth2AuthorizationCode
 from .oauth2_client import OAuth2Client
 from .oauth2_grant import OAuth2Grant
@@ -23,9 +31,17 @@ __all__ = [
     "EmailLog",
     "EmailOTP",
     "EmailVerification",
+    "Feedback",
+    "JobKind",
+    "JobRun",
+    "JobState",
     "Launch",
     "LaunchStatus",
     "Model",
+    "NewsBriefing",
+    "NewsCluster",
+    "NewsClusterMember",
+    "NewsClusterScore",
     "OAuth2AuthorizationCode",
     "OAuth2Client",
     "OAuth2Grant",
