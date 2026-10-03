@@ -172,6 +172,44 @@ _BASE_RULES: dict[str, Sequence[Rule]] = {
             zone="auth-backup-codes",
         ),
     ],
+    # Zones for the routes the news domain adds. Declared ahead of the
+    # routes so each lands with its own allowance rather than the catch-all.
+    "^/v1/cards/": [
+        Rule(minute=120, zone="cards"),
+        Rule(group=RateLimitGroup.web, minute=240, zone="cards"),
+        Rule(group=RateLimitGroup.elevated, second=20, zone="cards"),
+        Rule(group=RateLimitGroup.pending_auth, minute=120, zone="cards"),
+    ],
+    "^/v1/news/briefing/": [
+        Rule(minute=60, zone="briefing"),
+        Rule(group=RateLimitGroup.web, minute=120, zone="briefing"),
+        Rule(group=RateLimitGroup.elevated, second=10, zone="briefing"),
+        Rule(group=RateLimitGroup.pending_auth, minute=60, zone="briefing"),
+    ],
+    "^/v1/feedback": [
+        Rule(hour=5, block_time=3600, zone="feedback"),
+        Rule(group=RateLimitGroup.web, hour=5, block_time=3600, zone="feedback"),
+        Rule(
+            group=RateLimitGroup.pending_auth, hour=5, block_time=3600, zone="feedback"
+        ),
+    ],
+    "^/v1/launches": [
+        Rule(method="POST", hour=20, block_time=3600, zone="launches-submit"),
+        Rule(
+            group=RateLimitGroup.web,
+            method="POST",
+            hour=20,
+            block_time=3600,
+            zone="launches-submit",
+        ),
+        Rule(
+            group=RateLimitGroup.pending_auth,
+            method="POST",
+            hour=20,
+            block_time=3600,
+            zone="launches-submit",
+        ),
+    ],
 }
 
 _SANDBOX_RULES: dict[str, Sequence[Rule]] = {

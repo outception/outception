@@ -1,0 +1,321 @@
+# Build the API and web images, push them to the registry, then deploy to
+# the host over SSH. The host is checked out to the exact commit being
+# deployed so the compose file, the edge config and the env changes ship
+# with the images; then the stack is pulled and brought up, followed by a
+# health check that rolls back on failure.
+#
+# Required repository SECRETS:
+#   SSH_HOST            the host
+#   SSH_USER            the SSH user the deploy logs in as
+#   SSH_PRIVATE_KEY     a private key authorized on the host
+#   GHCR_PAT            a token the host uses to pull images (read:packages)
+# Required repository VARIABLES (baked into the web bundle at build time):
+#   NEXT_PUBLIC_API_URL            e.g. https://api.outception.com
+#   NEXT_PUBLIC_FRONTEND_BASE_URL  e.g. https://outception.com
+#   DEPLOY_PATH                    the deploy directory on the host
+# Optional VARIABLES and SECRETS are listed beside their steps below.
+#
+# One-time host setup: deploy/provision.sh installs the container runtime,
+# the deploy user and the checkout; then fill deploy/.env.prod on the host.
+# The RS256 keypair at deploy/secrets/jwks.json is host-only and never
+# committed; the deploy mints one when it is missing.
+#
+# Manual trigger only until the deploy directory lands with the ops port;
+# the push trigger on main returns with it.
+
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_API: ghcr.io/${{ github.repository_owner }}/outception
+  IMAGE_WEB: ghcr.io/${{ github.repository_owner }}/outception-web
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      # Push with a token that has write:packages; the host reuses the same
+      # token to pull, so the packages stay private.
+      - name: Log in to the registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: Build and push the API image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./server
+          target: production
+          push: true
+          tags: |
+            ${{ env.IMAGE_API }}:${{ github.sha }}
+            ${{ env.IMAGE_API }}:latest
+          build-args: |
+            RELEASE_VERSION=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push the web image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./clients
+          file: ./deploy/web.Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_WEB }}:${{ github.sha }}
+            ${{ env.IMAGE_WEB }}:latest
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_FRONTEND_BASE_URL=${{ vars.NEXT_PUBLIC_FRONTEND_BASE_URL }}
+            NEXT_PUBLIC_ENVIRONMENT=production
+            NEXT_PUBLIC_SENTRY_DSN=${{ vars.NEXT_PUBLIC_SENTRY_DSN }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions: {}
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1
+        env:
+          GHCR_PAT: ${{ secrets.GHCR_PAT }}
+          GHCR_USER: ${{ github.repository_owner }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+          # The error reporter's DSN, kept out of the public repo and
+          # injected into the host-only .env.prod; write-only, so it may be
+          # a variable. Empty means reporting off.
+          SENTRY_DSN: ${{ vars.NEXT_PUBLIC_SENTRY_DSN }}
+          # SMTP: USER is the auth mailbox (a variable), PASSWORD an app
+          # password (a secret). When the password is set, email sending
+          # switches from the logger to SMTP.
+          SMTP_USER: ${{ vars.EMAIL_SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.EMAIL_SMTP_PASSWORD }}
+          # Social login: the client ids are variables, the secrets are
+          # secrets. A provider is enabled only when both are set. The
+          # Apple key is the .p8 private key, base64-encoded; the app decodes
+          # it back to a PEM at load.
+          GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          MICROSOFT_CLIENT_ID: ${{ vars.MICROSOFT_CLIENT_ID }}
+          MICROSOFT_CLIENT_SECRET: ${{ secrets.MICROSOFT_CLIENT_SECRET }}
+          APPLE_CLIENT_ID: ${{ vars.APPLE_CLIENT_ID }}
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          APPLE_KEY_ID: ${{ vars.APPLE_KEY_ID }}
+          APPLE_KEY_VALUE: ${{ secrets.APPLE_KEY_VALUE }}
+          APPLE_DOMAIN_ASSOCIATION: ${{ vars.APPLE_DOMAIN_ASSOCIATION }}
+          # Model lane keys (secrets, injected into the host-only .env.prod).
+          # An unset one leaves that lane out of the pool and the host's
+          # existing value untouched. Comma-separate the *_KEYS forms.
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEYS: ${{ secrets.GEMINI_API_KEYS }}
+          GROQ_API_KEYS: ${{ secrets.GROQ_API_KEYS }}
+          MISTRAL_API_KEYS: ${{ secrets.MISTRAL_API_KEYS }}
+          NVIDIA_API_KEYS: ${{ secrets.NVIDIA_API_KEYS }}
+          OLLAMA_API_KEYS: ${{ secrets.OLLAMA_API_KEYS }}
+          CLOUDFLARE_AI_TOKENS: ${{ secrets.CLOUDFLARE_AI_TOKENS }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          # The founder's review allowlist for the daily products card.
+          ADMIN_EMAILS: ${{ vars.ADMIN_EMAILS }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: GITHUB_SHA,GHCR_PAT,GHCR_USER,DEPLOY_PATH,SENTRY_DSN,SMTP_USER,SMTP_PASSWORD,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,MICROSOFT_CLIENT_ID,MICROSOFT_CLIENT_SECRET,APPLE_CLIENT_ID,APPLE_TEAM_ID,APPLE_KEY_ID,APPLE_KEY_VALUE,APPLE_DOMAIN_ASSOCIATION,ANTHROPIC_API_KEY,GEMINI_API_KEY,GEMINI_API_KEYS,GROQ_API_KEYS,MISTRAL_API_KEYS,NVIDIA_API_KEYS,OLLAMA_API_KEYS,CLOUDFLARE_AI_TOKENS,CLOUDFLARE_ACCOUNT_ID,ADMIN_EMAILS
+          script: |
+            set -euo pipefail
+
+            # 1. Ship the exact code and config version for this commit.
+            #    .env.prod and secrets/ are gitignored, so a hard checkout
+            #    leaves them intact.
+            repo_root="$(dirname "$DEPLOY_PATH")"
+            cd "$repo_root"
+            git fetch --quiet origin "$GITHUB_SHA"
+            git checkout --quiet --force "$GITHUB_SHA"
+
+            cd "$DEPLOY_PATH"
+            if [ -n "${GHCR_PAT:-}" ]; then
+              echo "$GHCR_PAT" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            fi
+
+            # .env.prod carries secrets: keep it (and its tmp file) owner-only.
+            umask 077
+            # Upsert a KEY=VALUE into the host-only .env.prod. Drop any
+            # existing line then append with printf %s, so a value with
+            # metacharacters can never corrupt the file.
+            upsert_env() {
+              if [ -f .env.prod ]; then
+                grep -v "^$1=" .env.prod > .env.prod.tmp 2>/dev/null || true
+                mv .env.prod.tmp .env.prod
+              fi
+              printf '%s=%s\n' "$1" "$2" >> .env.prod
+            }
+
+            # Accounts are on: submitting a product to the daily card needs a
+            # login. Readers never need one.
+            upsert_env OUTCEPTION_ACCOUNTS_ENABLED true
+
+            if [ -n "${SENTRY_DSN:-}" ]; then
+              upsert_env OUTCEPTION_SENTRY_DSN "$SENTRY_DSN"
+            fi
+            if [ -n "${ADMIN_EMAILS:-}" ]; then
+              upsert_env OUTCEPTION_ADMIN_EMAILS "$ADMIN_EMAILS"
+            fi
+
+            # Model lane keys: each is upserted only when its secret is set.
+            for provider_var in ANTHROPIC_API_KEY GEMINI_API_KEY GEMINI_API_KEYS \
+                                GROQ_API_KEYS MISTRAL_API_KEYS NVIDIA_API_KEYS \
+                                OLLAMA_API_KEYS CLOUDFLARE_AI_TOKENS \
+                                CLOUDFLARE_ACCOUNT_ID; do
+              eval "provider_value=\${$provider_var:-}"
+              if [ -n "$provider_value" ]; then
+                upsert_env "OUTCEPTION_$provider_var" "$provider_value"
+              fi
+            done
+
+            # SMTP: only flip the sender once an app password is provided.
+            # The From address must match the mailbox's own domain, so both
+            # derive from the SMTP user.
+            if [ -n "${SMTP_PASSWORD:-}" ]; then
+              smtp_user="${SMTP_USER:-hello@outception.com}"
+              upsert_env OUTCEPTION_EMAIL_SENDER smtp
+              upsert_env OUTCEPTION_EMAIL_SMTP_USER "$smtp_user"
+              upsert_env OUTCEPTION_EMAIL_SMTP_PASSWORD "$SMTP_PASSWORD"
+              upsert_env OUTCEPTION_EMAIL_FROM_LOCAL "${smtp_user%@*}"
+              upsert_env OUTCEPTION_EMAIL_FROM_DOMAIN "${smtp_user#*@}"
+            fi
+
+            # Social login: a provider is written only when its pair is set.
+            if [ -n "${GOOGLE_CLIENT_ID:-}" ] && [ -n "${GOOGLE_CLIENT_SECRET:-}" ]; then
+              upsert_env OUTCEPTION_GOOGLE_CLIENT_ID "$GOOGLE_CLIENT_ID"
+              upsert_env OUTCEPTION_GOOGLE_CLIENT_SECRET "$GOOGLE_CLIENT_SECRET"
+            fi
+            if [ -n "${MICROSOFT_CLIENT_ID:-}" ] && [ -n "${MICROSOFT_CLIENT_SECRET:-}" ]; then
+              upsert_env OUTCEPTION_MICROSOFT_CLIENT_ID "$MICROSOFT_CLIENT_ID"
+              upsert_env OUTCEPTION_MICROSOFT_CLIENT_SECRET "$MICROSOFT_CLIENT_SECRET"
+            fi
+            if [ -n "${APPLE_CLIENT_ID:-}" ] && [ -n "${APPLE_KEY_VALUE:-}" ]; then
+              upsert_env OUTCEPTION_APPLE_CLIENT_ID "$APPLE_CLIENT_ID"
+              upsert_env OUTCEPTION_APPLE_TEAM_ID "$APPLE_TEAM_ID"
+              upsert_env OUTCEPTION_APPLE_KEY_ID "$APPLE_KEY_ID"
+              upsert_env OUTCEPTION_APPLE_KEY_VALUE "$APPLE_KEY_VALUE"
+            fi
+            if [ -n "${APPLE_DOMAIN_ASSOCIATION:-}" ]; then
+              upsert_env OUTCEPTION_APPLE_DOMAIN_ASSOCIATION "$APPLE_DOMAIN_ASSOCIATION"
+            fi
+            chmod 600 .env.prod
+
+            export IMAGE_TAG="$GITHUB_SHA"
+            compose() { docker compose --env-file .env.prod -f docker-compose.prod.yml "$@"; }
+
+            # 2. Remember the running API image so the deploy can roll back.
+            prev_cid="$(compose ps -q api 2>/dev/null || true)"
+            prev_tag=""
+            if [ -n "$prev_cid" ]; then
+              prev_tag="$(docker inspect --format '{{.Config.Image}}' "$prev_cid" 2>/dev/null | sed 's/.*://')"
+            fi
+
+            # 3. Pull the new images and bring the stack up. The pull is the
+            #    only step that reaches the registry and its handshake times
+            #    out now and then; a failure here is safe because nothing
+            #    has been recreated yet, so retry rather than fail.
+            pull_attempt=1
+            until compose pull; do
+              if [ "$pull_attempt" -ge 3 ]; then
+                echo "::error::Could not pull images after 3 attempts"
+                exit 1
+              fi
+              echo "Pull failed (attempt $pull_attempt of 3); retrying shortly"
+              sleep $((pull_attempt * 20))
+              pull_attempt=$((pull_attempt + 1))
+            done
+
+            # The signing keypair lives only on the host. Mint one whenever
+            # the path is not a readable key carrying the kid the app resolves
+            # at startup. Runs as root in a container; the key stays readable
+            # only to the unprivileged uid the app runs as.
+            kid="$(sed -n 's/^OUTCEPTION_CURRENT_JWK_KID=//p' .env.prod | tail -1 | tr -d "\"'")"
+            : "${kid:=outception_dev}"
+            case "$kid" in *[!A-Za-z0-9_-]*)
+              echo "::error::Refusing to mint a JWKS for kid $kid"; exit 1;;
+            esac
+            docker run --rm --user 0:0 -e JWK_KID="$kid" -v "$PWD:/deploy" \
+              "ghcr.io/$GHCR_USER/outception:$GITHUB_SHA" sh -eu -c '
+                jwks=/deploy/secrets/jwks.json
+                if [ -f "$jwks" ] && [ -s "$jwks" ] && grep -q "\"$JWK_KID\"" "$jwks"; then
+                  exit 0
+                fi
+                echo "Minting a new JWKS keypair for kid $JWK_KID"
+                rm -rf "$jwks"
+                mkdir -p /deploy/secrets
+                /app/server/.venv/bin/python -m outception.kit.jwk "$JWK_KID" > "$jwks.tmp"
+                grep -q "\"kty\"" "$jwks.tmp"
+                mv "$jwks.tmp" "$jwks"
+                chown 1001:1001 "$jwks"
+                chmod 400 "$jwks"
+              '
+
+            # An unparseable edge config would leave TLS down. Adapt it
+            # first, in the image that will run it, so a bad config fails
+            # the deploy with production untouched.
+            if docker image inspect outception-caddy >/dev/null 2>&1; then
+              docker run --rm -v "$PWD/Caddyfile:/etc/caddy/Caddyfile:ro" \
+                -e WEB_DOMAIN=validate.invalid -e API_DOMAIN=api.validate.invalid \
+                -e CF_API_TOKEN=validation-only \
+                outception-caddy caddy adapt --adapter caddyfile \
+                --config /etc/caddy/Caddyfile > /dev/null
+            fi
+
+            compose up -d --remove-orphans
+
+            # 4. Health gate: wait for /healthz and a CORS preflight, roll
+            #    back on failure. The preflight exercises the one code path
+            #    (a partial route match through the full middleware stack)
+            #    that nothing else touches.
+            ok=0
+            for _ in $(seq 1 30); do
+              cid="$(compose ps -q api 2>/dev/null || true)"
+              if [ -n "$cid" ] && docker exec "$cid" python -c \
+                "import urllib.request,sys; urllib.request.urlopen('http://localhost:10000/healthz', timeout=5).status==200 or sys.exit(1); req=urllib.request.Request('http://localhost:10000/v1/news/sources', method='OPTIONS', headers={'Origin':'https://outception.com','Access-Control-Request-Method':'GET'}); sys.exit(0 if urllib.request.urlopen(req, timeout=5).status==200 else 1)" \
+                >/dev/null 2>&1; then ok=1; break; fi
+              sleep 3
+            done
+
+            if [ "$ok" != "1" ]; then
+              echo "::error::Health check failed for $GITHUB_SHA"
+              if [ -n "$prev_tag" ] && [ "$prev_tag" != "$GITHUB_SHA" ]; then
+                echo "Rolling back to $prev_tag"
+                export IMAGE_TAG="$prev_tag"
+                # No migrate on rollback: the new deploy's migration already
+                # ran, so migrations must stay backward-compatible for the
+                # rolled-back code to run against the new schema.
+                compose up -d --no-deps api worker web
+              fi
+              exit 1
+            fi
+
+            # Previous deploys' images are tagged by commit, so a plain prune
+            # never removes them; a rollback re-pulls its tag if needed.
+            docker image prune -af
+            echo "Deployed $GITHUB_SHA"

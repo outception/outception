@@ -2,6 +2,7 @@ import ast
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
 
 Violation = tuple[int, str]
 
@@ -11,7 +12,16 @@ class Rule:
     name: str
     skip_code: str
     summary: str
-    check: Callable[[ast.Module], list[Violation]]
+    check: Callable[[ast.Module], list[Violation]] | None = None
+    # Rules that need to know which file they are looking at (the key
+    # boundary allows the governor) take the path as well.
+    check_with_path: Callable[[ast.Module, Path], list[Violation]] | None = None
+
+    def run(self, tree: ast.Module, path: Path) -> list[Violation]:
+        if self.check_with_path is not None:
+            return self.check_with_path(tree, path)
+        assert self.check is not None
+        return self.check(tree)
 
 
 _SKIP_RE = re.compile(r"#\s*lint-skip(?::\s*(?P<codes>[^#]*))?")

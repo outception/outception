@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Capture the live tree's parity fixtures. Runs ONLY in the external venv of
 the live package, with cwd at the live server directory (reads .env.testing).
 Writes nothing into the live tree; output goes to the directory in argv[1]."""
@@ -13,7 +14,6 @@ from pathlib import Path
 os.environ["PYTHONTZPATH"] = ""
 
 from fastapi import Response
-from outception.news import metadata
 from outception.news.endpoints import (
     _COLUMN_ORDER,
     _SOURCES_BODY,
@@ -25,6 +25,8 @@ from outception.news.heatmap import HEATMAPS
 from outception.news.registry import DISABLED_SOURCES
 from outception.news.search import _SOURCE_INDEX
 from outception.news.templates import resolve_templates
+
+from outception.news import metadata
 
 OUT = Path(sys.argv[1])
 LIVE = Path.cwd().parent

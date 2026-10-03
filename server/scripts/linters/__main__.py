@@ -11,13 +11,14 @@ import ast
 import sys
 from pathlib import Path
 
-from . import frontend_url, hash_secret, subquery
+from . import frontend_url, hash_secret, llm_key_boundary, subquery
 from .base import Rule, line_has_skip
 
 RULES: tuple[Rule, ...] = (
     subquery.RULE,
     frontend_url.RULE,
     hash_secret.RULE,
+    llm_key_boundary.RULE,
 )
 
 
@@ -63,7 +64,7 @@ def main() -> int:
             continue
         source_lines = source.splitlines()
         for rule in rules:
-            for lineno, message in rule.check(tree):
+            for lineno, message in rule.run(tree, path):
                 if line_has_skip(source_lines, lineno, rule.skip_code):
                     continue
                 violations.append((path, lineno, rule.name, message))

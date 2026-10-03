@@ -188,7 +188,7 @@ class CorrelationID:
 class ClientContext:
     """Mobile client identification headers for the current request,
     so they can be attached to events emitted outside the logging
-    path — notably PostHog. Empty outside an HTTP request (e.g. workers)."""
+    path, such as the error reporter. Empty outside an HTTP request (workers)."""
 
     _client_context: typing.ClassVar[contextvars.ContextVar[dict[str, str] | None]] = (
         contextvars.ContextVar("outception.client_context", default=None)

@@ -113,12 +113,29 @@ async def get_redis(request: Request) -> Redis:
     return request.state.redis
 
 
+type SyncRedis = "_sync_redis.Redis[str]"
+
+
+def create_sync_redis(process_name: ProcessName) -> "_sync_redis.Redis[str]":
+    """Blocking client for the scheduler's main loop, which is not async.
+    No retry policy: the one caller (the heartbeat) treats a failed publish
+    as non-fatal; a missed beat just means the next one lands."""
+    return _sync_redis.Redis.from_url(
+        settings.redis_url,
+        decode_responses=True,
+        socket_timeout=5,
+        client_name=f"{settings.ENV.value}.{process_name}",
+    )
+
+
 __all__ = [
     "REDIS_RETRY",
     "REDIS_RETRY_ON_ERRROR",
     "FailoverRedis",
     "Redis",
     "SyncFailoverRedis",
+    "SyncRedis",
     "create_redis",
+    "create_sync_redis",
     "get_redis",
 ]

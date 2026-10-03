@@ -44,8 +44,6 @@ if __name__ == "__main__":
     else:
         os.environ["OUTCEPTION_ENV"] = "testing"
 
-    from outception.webhook.webhooks import get_webhook_routes
-
     from outception.api import router
 
     route_contexts = tuple(iter_route_contexts(router.routes))
@@ -53,7 +51,7 @@ if __name__ == "__main__":
     schema = get_openapi(
         arguments.version,
         routes_for_version(route_contexts, arguments.version),
-        get_webhook_routes(),
+        [],
     )
     json.dump(schema, sys.stdout)
     sys.stdout.flush()

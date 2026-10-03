@@ -1,0 +1,57 @@
+# Names that never appear in the shipped repo or product: code identifiers
+# that reach a client, UI strings, comments, commit messages, docs, store and
+# landing copy, health messages. One name per line, matched case-insensitive
+# on word boundaries. A trailing comment says why. Publishers and data
+# sources are exempt; so is outception.ai.
+#
+# Where these may still exist: the governor's provider modules under
+# news/summaries/providers, the env contract (config.py field names and the
+# .env.*.example files), deploy/, dependency manifests and the ported
+# integration modules the naming linter allowlists.
+
+# model vendors and models
+anthropic   # model vendor
+claude      # model name
+openai      # model vendor
+chatgpt     # product name
+gpt         # model family
+gemini      # model name
+groq        # model vendor
+mistral     # model vendor
+nvidia      # model vendor
+ollama      # model host
+deepseek    # model vendor
+llama       # model family
+kimi        # model name
+
+# hosting, cloud and edge
+hetzner     # host
+vercel      # host
+cloudflare  # edge and inference vendor
+aws         # cloud vendor
+amazon      # cloud vendor
+tailscale   # network vendor
+
+# analytics and tracking
+posthog     # analytics
+tinybird    # analytics
+mixpanel    # analytics
+plausible   # analytics
+hotjar      # analytics
+
+# email providers
+resend      # email provider
+sendgrid    # email provider
+mailgun     # email provider
+postmark    # email provider
+
+# map and tile providers
+mapbox      # tiles
+maptiler    # tiles
+leaflet     # map library in reader-facing text
+
+# reference projects the plans drew ideas from
+polar       # the upstream the toolchain came from
+horizon     # a reference news pipeline
+screenpipe  # a reference repo
+gods-eye-view  # a reference globe
