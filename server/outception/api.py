@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 import outception.news.sources  # noqa: F401 - registers source getters on import
 from outception.auth.endpoints import router as auth_router
+from outception.cards.endpoints import router as cards_router
 from outception.config import settings
 from outception.feedback.endpoints import router as feedback_router
 from outception.launches.endpoints import router as launches_router
@@ -30,3 +31,5 @@ router.include_router(news_router)
 router.include_router(feedback_router)
 # /launches: the archive is public, the rest needs a login
 router.include_router(launches_router)
+# /cards: one envelope for every kind
+router.include_router(cards_router)

@@ -1,0 +1,278 @@
+{
+ "city-unitedstates-newyork": [
+  40.71,
+  -74.01
+ ],
+ "city-unitedkingdom-london": [
+  51.51,
+  -0.13
+ ],
+ "city-ireland-dublin": [
+  53.35,
+  -6.26
+ ],
+ "city-canada-toronto": [
+  43.65,
+  -79.38
+ ],
+ "city-australia-sydney": [
+  -33.87,
+  151.21
+ ],
+ "city-newzealand-auckland": [
+  -36.85,
+  174.76
+ ],
+ "city-india-mumbai": [
+  19.08,
+  72.88
+ ],
+ "city-china-shanghai": [
+  31.23,
+  121.47
+ ],
+ "city-japan-tokyo": [
+  35.68,
+  139.69
+ ],
+ "city-southkorea-seoul": [
+  37.57,
+  126.98
+ ],
+ "city-germany-berlin": [
+  52.52,
+  13.41
+ ],
+ "city-france-paris": [
+  48.86,
+  2.35
+ ],
+ "city-italy-rome": [
+  41.9,
+  12.5
+ ],
+ "city-spain-madrid": [
+  40.42,
+  -3.7
+ ],
+ "city-portugal-lisbon": [
+  38.72,
+  -9.14
+ ],
+ "city-netherlands-amsterdam": [
+  52.37,
+  4.9
+ ],
+ "city-belgium-brussels": [
+  50.85,
+  4.35
+ ],
+ "city-switzerland-zurich": [
+  47.38,
+  8.54
+ ],
+ "city-austria-vienna": [
+  48.21,
+  16.37
+ ],
+ "city-sweden-stockholm": [
+  59.33,
+  18.07
+ ],
+ "city-norway-oslo": [
+  59.91,
+  10.75
+ ],
+ "city-denmark-copenhagen": [
+  55.68,
+  12.57
+ ],
+ "city-finland-helsinki": [
+  60.17,
+  24.94
+ ],
+ "city-poland-warsaw": [
+  52.23,
+  21.01
+ ],
+ "city-czechrepublic-prague": [
+  50.08,
+  14.44
+ ],
+ "city-hungary-budapest": [
+  47.5,
+  19.04
+ ],
+ "city-romania-bucharest": [
+  44.43,
+  26.1
+ ],
+ "city-greece-athens": [
+  37.98,
+  23.73
+ ],
+ "city-turkey-istanbul": [
+  41.01,
+  28.98
+ ],
+ "city-russia-moscow": [
+  55.76,
+  37.62
+ ],
+ "city-ukraine-kyiv": [
+  50.45,
+  30.52
+ ],
+ "city-croatia-zagreb": [
+  45.81,
+  15.98
+ ],
+ "city-serbia-belgrade": [
+  44.79,
+  20.47
+ ],
+ "city-bulgaria-sofia": [
+  42.7,
+  23.32
+ ],
+ "city-brazil-saopaulo": [
+  -23.55,
+  -46.63
+ ],
+ "city-mexico-mexicocity": [
+  19.43,
+  -99.13
+ ],
+ "city-argentina-buenosaires": [
+  -34.6,
+  -58.38
+ ],
+ "city-colombia-bogota": [
+  4.71,
+  -74.07
+ ],
+ "city-chile-santiago": [
+  -33.45,
+  -70.67
+ ],
+ "city-peru-lima": [
+  -12.05,
+  -77.04
+ ],
+ "city-venezuela-caracas": [
+  10.48,
+  -66.9
+ ],
+ "city-ecuador-quito": [
+  -0.18,
+  -78.47
+ ],
+ "city-egypt-cairo": [
+  30.04,
+  31.24
+ ],
+ "city-nigeria-lagos": [
+  6.52,
+  3.38
+ ],
+ "city-southafrica-johannesburg": [
+  -26.2,
+  28.05
+ ],
+ "city-kenya-nairobi": [
+  -1.29,
+  36.82
+ ],
+ "city-morocco-casablanca": [
+  33.57,
+  -7.59
+ ],
+ "city-algeria-algiers": [
+  36.75,
+  3.06
+ ],
+ "city-tunisia-tunis": [
+  36.81,
+  10.18
+ ],
+ "city-ghana-accra": [
+  5.6,
+  -0.19
+ ],
+ "city-ethiopia-addisababa": [
+  9.02,
+  38.75
+ ],
+ "city-tanzania-daressalaam": [
+  -6.79,
+  39.28
+ ],
+ "city-saudiarabia-riyadh": [
+  24.71,
+  46.68
+ ],
+ "city-unitedarabemirates-dubai": [
+  25.2,
+  55.27
+ ],
+ "city-qatar-doha": [
+  25.29,
+  51.53
+ ],
+ "city-israel-jerusalem": [
+  31.77,
+  35.21
+ ],
+ "city-iran-tehran": [
+  35.69,
+  51.39
+ ],
+ "city-iraq-baghdad": [
+  33.31,
+  44.37
+ ],
+ "city-pakistan-karachi": [
+  24.86,
+  67.01
+ ],
+ "city-bangladesh-dhaka": [
+  23.81,
+  90.41
+ ],
+ "city-srilanka-colombo": [
+  6.93,
+  79.85
+ ],
+ "city-indonesia-jakarta": [
+  -6.21,
+  106.85
+ ],
+ "city-malaysia-kualalumpur": [
+  3.14,
+  101.69
+ ],
+ "city-singapore-singaporecity": [
+  1.35,
+  103.82
+ ],
+ "city-thailand-bangkok": [
+  13.76,
+  100.5
+ ],
+ "city-vietnam-hochiminhcity": [
+  10.82,
+  106.63
+ ],
+ "city-philippines-manila": [
+  14.6,
+  120.98
+ ],
+ "city-taiwan-taipei": [
+  25.03,
+  121.57
+ ],
+ "city-hongkong-hongkongcity": [
+  22.32,
+  114.17
+ ]
+}

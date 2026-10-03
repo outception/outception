@@ -57,6 +57,7 @@ from .schemas import (
     TemplatesResponse,
     WeatherResponse,
 )
+from .story import StoryResponse, get_story
 from .summaries import queue as summary_queue
 from .summaries import service as summaries
 from .summaries import stream as summary_stream
@@ -722,6 +723,19 @@ async def _get_source(
         raise OutceptionError(
             f"News source unavailable: {resolved}", status_code=502
         ) from exc
+
+
+@router.get("/story/{story_id}", response_model=StoryResponse, tags=[APITag.public])
+async def get_story_route(
+    story_id: str,
+    response: Response,
+    session: AsyncSession = Depends(get_db_session),
+) -> StoryResponse:
+    """One story across its publishers: the cluster with every member."""
+    story = await get_story(session, story_id)
+    response.headers["Cache-Control"] = "public, max-age=60, s-maxage=300"
+    response.headers["Vary"] = "Origin"
+    return story
 
 
 @router.get("/{source_id}", response_model=SourceResponse, tags=[APITag.public])
