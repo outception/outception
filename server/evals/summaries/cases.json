@@ -1,0 +1,8 @@
+[
+  {"id": "council-plan", "fixture": "summaries/fixtures/council-plan.html", "required_facts": ["12 million", "Thursday"], "forbidden_claims": ["unanimous"], "max_chars": 600},
+  {"id": "rate-hold", "fixture": "summaries/fixtures/rate-hold.html", "required_facts": ["4.25", "labour market"], "forbidden_claims": ["cut rates"], "max_chars": 600},
+  {"id": "launch-success", "fixture": "summaries/fixtures/launch-success.html", "required_facts": ["nine minutes", "December"], "forbidden_claims": ["failed"], "max_chars": 600},
+  {"id": "cup-exit", "fixture": "summaries/fixtures/cup-exit.html", "required_facts": ["penalties", "quarter-final"], "forbidden_claims": ["won the cup"], "max_chars": 600},
+  {"id": "patch-release", "fixture": "summaries/fixtures/patch-release.html", "required_facts": ["2.4.1", "remote code"], "forbidden_claims": ["no fix"], "max_chars": 600},
+  {"id": "consent-wall", "fixture": "summaries/fixtures/consent-wall.html", "required_facts": ["NO_ARTICLE"], "forbidden_claims": ["cookie"], "max_chars": 40}
+]

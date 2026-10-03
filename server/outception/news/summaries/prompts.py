@@ -23,8 +23,8 @@ class Prompt:
 
 
 @cache
-def load_prompt(name: str) -> Prompt:
-    raw = (PROMPTS_DIR / f"{name}.md").read_text()
+def load_prompt(name: str, directory: Path = PROMPTS_DIR) -> Prompt:
+    raw = (directory / f"{name}.md").read_text()
     match = _FRONT_MATTER.match(raw)
     if match is None:
         raise ValueError(f"prompt {name} has no front matter")

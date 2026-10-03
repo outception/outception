@@ -1,0 +1,14 @@
+{
+  "id": "sports",
+  "template": "sports-fan",
+  "min_score": 6,
+  "max_items": 30,
+  "categories": [
+    {"id": "results", "max": 10, "criteria": "match, race and fight results, standings changes, titles decided"},
+    {"id": "transfers", "max": 6, "criteria": "signings, trades, contracts, managers hired and fired"},
+    {"id": "injuries", "max": 4, "criteria": "injuries, suspensions and returns that change a team's chances"},
+    {"id": "offfield", "max": 10, "criteria": "governance, rules, finances, broadcasting and controversies"}
+  ],
+  "extra_sources": ["heatmap-ucl"],
+  "exclude_sources": []
+}

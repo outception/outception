@@ -1,0 +1,14 @@
+{
+  "id": "developer",
+  "template": "developer",
+  "min_score": 6,
+  "max_items": 30,
+  "categories": [
+    {"id": "launches", "max": 8, "criteria": "a release, a new tool, a language or framework version, a platform change developers must act on"},
+    {"id": "security", "max": 6, "criteria": "a vulnerability, a breach, a supply-chain incident, a patch developers must apply"},
+    {"id": "research", "max": 6, "criteria": "a paper, a benchmark, a technique or a result that changes how systems get built"},
+    {"id": "industry", "max": 10, "criteria": "companies, funding, hiring, pricing, licensing and policy that shape developers' work"}
+  ],
+  "extra_sources": ["heatmap-tech"],
+  "exclude_sources": []
+}

@@ -69,6 +69,9 @@ class HealthService:
         if redis_ok:
             dependencies["worker"] = await self._worker(observed, now)
             await self._llm(observed)
+            await self._tables(observed)
+            await self._briefing(observed, now)
+            await self._scoring(observed, now)
         else:
             dependencies["worker"] = "unknown"
 
@@ -135,6 +138,57 @@ class HealthService:
             if len(cooling) + len(disabled) == len(configured):
                 observed["llm_chain_exhausted"] = f"{lane} lane: all providers cooling"
         _ = Lane
+
+    async def _tables(self, observed: dict[str, str]) -> None:
+        from outception.news.heatmap.specs import LIVE_NET, PROVIDER_NET
+
+        providers = [*PROVIDER_NET, *LIVE_NET]
+        flags = await self.redis.mget(
+            [COOLDOWN_KEY.format(provider=p) for p in providers]
+        )
+        cooling = [
+            p for p, flag in zip(providers, flags, strict=True) if flag is not None
+        ]
+        if cooling:
+            observed["table_provider_cooling"] = "cooling: " + ", ".join(
+                sorted(cooling)
+            )
+
+    async def _briefing(self, observed: dict[str, str], now: float) -> None:
+        if not settings.BRIEFING_ENABLED:
+            return
+        from outception.news.briefing.builder import BUILT_AT_KEY, STALE_AFTER_MS
+        from outception.news.briefing.profiles import enabled_profile_ids
+
+        profiles = enabled_profile_ids()
+        if not profiles:
+            return
+        stamps = await self.redis.mget(
+            [BUILT_AT_KEY.format(profile=p) for p in profiles]
+        )
+        stale: list[str] = []
+        for profile, raw in zip(profiles, stamps, strict=True):
+            try:
+                built_at = int(raw) / 1000 if raw is not None else None
+            except TypeError, ValueError:
+                built_at = None
+            if built_at is None or (now - built_at) * 1000 > STALE_AFTER_MS:
+                stale.append(profile)
+        if stale:
+            observed["briefing_build_stale"] = "no fresh build for " + ", ".join(stale)
+
+    async def _scoring(self, observed: dict[str, str], now: float) -> None:
+        from outception.news.briefing.scorer import CALLS_HOUR_KEY, NULLS_HOUR_KEY
+
+        hour = datetime.fromtimestamp(now, tz=UTC).strftime("%Y%m%d%H")
+        calls_raw, nulls_raw = await self.redis.mget(
+            [CALLS_HOUR_KEY.format(hour=hour), NULLS_HOUR_KEY.format(hour=hour)]
+        )
+        calls, nulls = int(calls_raw or 0), int(nulls_raw or 0)
+        if calls >= 5 and nulls / calls > 0.2:
+            observed["scoring_null_rate_high"] = (
+                f"{nulls} of {calls} scores null this hour"
+            )
 
     async def _with_clearing(
         self, observed: dict[str, str], now: float, redis_ok: bool

@@ -21,6 +21,7 @@ from bs4 import BeautifulSoup
 
 from outception.net.guard import is_fetchable_async
 
+from .clusters.urlkey import url_key
 from .schemas import NewsItem
 
 log = structlog.get_logger()
@@ -232,9 +233,10 @@ def parse_rss(text: str, *, limit: int = 30) -> list[NewsItem]:
         title = entry.get("title")
         if not link or not title:
             continue
-        if link in seen:
+        key = url_key(link)
+        if key in seen:
             continue
-        seen.add(link)
+        seen.add(key)
         pub_date: int | None = None
         parsed = entry.get("published_parsed") or entry.get("updated_parsed")
         if parsed is not None:

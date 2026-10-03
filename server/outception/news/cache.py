@@ -33,6 +33,7 @@ _KEY_SORTED = "news:source:{id}:{sort}"
 # Which sources currently hold a canonical (hot) entry - maintained by `set`
 # and pruned by readers. See the comment there for why it exists.
 WARM_SOURCES_KEY = "news:warm-sources"
+CLUSTER_PENDING_KEY = "news:cluster:pending"
 
 # A source's headline titles alone, lowercased, one per line. Headline search
 # substring-scans every warm source on every query, and over the full payloads
@@ -193,5 +194,8 @@ async def set(
         # (the set has no per-member TTL), so this is a HINT: search prunes the
         # ids that come back empty (see search._warm_source_ids).
         pipe.sadd(WARM_SOURCES_KEY, source_id)
+        # The clusterer drains this set: every fresh write is a chance to
+        # see the same story again under another publisher.
+        pipe.sadd(CLUSTER_PENDING_KEY, source_id)
     await pipe.execute()
     return updated

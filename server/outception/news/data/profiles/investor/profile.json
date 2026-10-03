@@ -1,0 +1,14 @@
+{
+  "id": "investor",
+  "template": "investor",
+  "min_score": 6,
+  "max_items": 30,
+  "categories": [
+    {"id": "markets", "max": 8, "criteria": "index, sector and asset moves, rates, currencies, commodities"},
+    {"id": "companies", "max": 10, "criteria": "earnings, guidance, deals, management, listings"},
+    {"id": "economy", "max": 6, "criteria": "central banks, inflation, employment, growth, trade"},
+    {"id": "policy", "max": 6, "criteria": "regulation, tax, sanctions, antitrust and court rulings that move prices"}
+  ],
+  "extra_sources": ["heatmap-tech", "heatmap-crypto", "heatmap-fx"],
+  "exclude_sources": []
+}

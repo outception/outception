@@ -39,6 +39,7 @@ from . import (
     search,
     weather,
 )
+from .briefing.endpoints import router as briefing_router
 from .catalog import registry as catalog_registry
 from .catalog.decks import default_cards as compose_default_cards
 from .catalog.decks import resolve_templates
@@ -64,6 +65,9 @@ from .summaries.errors import SummaryUnavailable
 log = structlog.get_logger()
 
 router = APIRouter(prefix="/news", tags=["news"])
+
+# /news/briefing/*: declared before the catch-all source route below.
+router.include_router(briefing_router)
 
 # Cap concurrent outbound fetches so a cold-cache batch doesn't open a
 # connection per source at once. Sized so the background cache-warmer can

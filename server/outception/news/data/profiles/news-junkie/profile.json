@@ -1,0 +1,14 @@
+{
+  "id": "news-junkie",
+  "template": "news-junkie",
+  "min_score": 6,
+  "max_items": 30,
+  "categories": [
+    {"id": "world", "max": 10, "criteria": "conflicts, elections, diplomacy, disasters and major events across countries"},
+    {"id": "politics", "max": 8, "criteria": "governments, legislation, courts, parties and leaders"},
+    {"id": "business", "max": 6, "criteria": "companies, markets and economies as general news"},
+    {"id": "science", "max": 6, "criteria": "discoveries, health, climate and technology as general news"}
+  ],
+  "extra_sources": [],
+  "exclude_sources": []
+}
