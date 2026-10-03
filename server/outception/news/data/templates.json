@@ -16,7 +16,8 @@
       "heatmap-tech",
       "kickstarter",
       "sci-vibecoding",
-      "sci-aicodingassistants"
+      "sci-aicodingassistants",
+      "products-of-the-day"
     ],
     "extras": [],
     "profile": "developer"
@@ -262,7 +263,8 @@
       "tech-chatgpt",
       "tech-claudeai",
       "youtube-twominutepapers",
-      "podcast-lexfridmanpodcast"
+      "podcast-lexfridmanpodcast",
+      "products-of-the-day"
     ],
     "extras": [],
     "profile": "ai-insider"
@@ -485,7 +487,8 @@
       "podcast-howibuiltthis",
       "podcast-thediaryofaceo",
       "podcast-acquiredpodcast",
-      "podcast-lennyspodcast"
+      "podcast-lennyspodcast",
+      "products-of-the-day"
     ],
     "extras": [
       "country:business"

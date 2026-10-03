@@ -3,6 +3,8 @@ from fastapi import APIRouter
 import outception.news.sources  # noqa: F401 - registers source getters on import
 from outception.auth.endpoints import router as auth_router
 from outception.config import settings
+from outception.feedback.endpoints import router as feedback_router
+from outception.launches.endpoints import router as launches_router
 from outception.news.endpoints import router as news_router
 from outception.oauth2.endpoints.oauth2 import router as oauth2_router
 from outception.user.endpoints import router as user_router
@@ -23,3 +25,8 @@ if settings.ACCOUNTS_ENABLED:
 
 # /news
 router.include_router(news_router)
+
+# /feedback
+router.include_router(feedback_router)
+# /launches: the archive is public, the rest needs a login
+router.include_router(launches_router)

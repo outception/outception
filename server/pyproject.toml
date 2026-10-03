@@ -51,6 +51,7 @@ dependencies = [
   "joserfc>=1.7.4",
   "sgp4>=2.27",
   "gtfs-realtime-bindings>=3.0.0",
+  "pillow>=12.3.0",
 ]
 
 [dependency-groups]

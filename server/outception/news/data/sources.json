@@ -157053,5 +157053,18 @@
   "config": {
    "provider": "transit"
   }
+ },
+ {
+  "id": "products-of-the-day",
+  "name": "Products of the day",
+  "color": "goldenrod",
+  "column": "tech",
+  "type": "hottest",
+  "home": "https://outception.com/launches",
+  "desc": "Five products a day, chosen by hand, the house line first",
+  "interval": 86400000,
+  "logo": "https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/1f4e6.png",
+  "adapter": "products",
+  "config": {}
  }
 ]

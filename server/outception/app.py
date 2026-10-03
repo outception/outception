@@ -4,6 +4,7 @@ from typing import TypedDict
 
 import structlog
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from outception import worker  # noqa
 from outception.api import router
@@ -187,6 +188,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[State]:
 
 def create_app() -> FastAPI:
     app = FastAPI(lifespan=lifespan, openapi_url=None)
+    app.mount(
+        "/media",
+        StaticFiles(directory=settings.MEDIA_DIR, check_dir=False),
+        name="media",
+    )
 
     app.add_middleware(OperationalErrorMiddleware)
     if settings.is_sandbox():

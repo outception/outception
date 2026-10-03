@@ -111,6 +111,8 @@ class Settings(BaseSettings):
 
     # Emails allowed on the founder's review pages (Products of the day).
     ADMIN_EMAILS: list[str] = []
+    # Re-encoded product logos live here and are served under /media.
+    MEDIA_DIR: str = "media"
 
     SECRET: str = INSECURE_DEFAULT_SECRET
     HASH_SECRETS: dict[str, str] = {}

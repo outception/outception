@@ -11,6 +11,7 @@ from . import (
     hackernews,  # noqa: F401
     lobsters,  # noqa: F401
     mastodon,  # noqa: F401
+    products,  # noqa: F401
     steam,  # noqa: F401
     youtube,  # noqa: F401
 )
