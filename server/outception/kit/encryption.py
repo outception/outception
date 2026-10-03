@@ -134,7 +134,9 @@ def get_key_provider() -> KeyProvider:
     if settings.is_production() or settings.is_sandbox():
         key_id = settings.AWS_KMS_KEY_ID
         if key_id is None:
-            raise RuntimeError("OUTCEPTION_AWS_KMS_KEY_ID is required in this environment")
+            raise RuntimeError(
+                "OUTCEPTION_AWS_KMS_KEY_ID is required in this environment"
+            )
         return KMSKeyProvider(key_id)
     return LocalKeyProvider(settings.ENCRYPTION_LOCAL_KEY)
 

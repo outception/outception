@@ -16,21 +16,6 @@ from outception.models.email_log import (
 log: Logger = structlog.get_logger()
 
 
-def extract_organization_id(
-    email_props: dict[str, Any],
-) -> UUID | None:
-    org = email_props.get("organization")
-    if org is None:
-        return None
-    if isinstance(org, dict) and "id" in org:
-        return UUID(org["id"])
-    log.warning(
-        "email_log.organization_id_extraction_failed",
-        organization_value=org,
-    )
-    return None
-
-
 class EmailLogRepository(RepositoryBase[EmailLog], RepositoryIDMixin[EmailLog, UUID]):
     model = EmailLog
 
@@ -82,6 +67,5 @@ class EmailLogRepository(RepositoryBase[EmailLog], RepositoryIDMixin[EmailLog, U
                 processor_id=processor_id,
                 error=error,
                 deduplication_key=deduplication_key,
-                organization_id=extract_organization_id(props),
             )
         )

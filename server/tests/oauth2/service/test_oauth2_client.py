@@ -4,7 +4,9 @@ import pytest
 from pytest_mock import MockerFixture
 
 from outception.enums import TokenType
-from outception.oauth2.service.oauth2_client import oauth2_client as oauth2_client_service
+from outception.oauth2.service.oauth2_client import (
+    oauth2_client as oauth2_client_service,
+)
 from outception.postgres import AsyncSession
 
 

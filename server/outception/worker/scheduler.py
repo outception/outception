@@ -10,10 +10,6 @@ from outception import tasks
 from outception.logfire import configure_logfire
 from outception.logging import configure as configure_logging
 from outception.sentry import configure_sentry
-from outception.subscription.scheduler import (
-    SubscriptionJobStore,
-    SubscriptionResumeJobStore,
-)
 
 from ._broker import scheduler_middleware
 from ._health import _run_exposition_server, set_heartbeat_checker
@@ -61,8 +57,6 @@ def start() -> None:
     scheduler = LogfireBlockingScheduler()
 
     scheduler.add_jobstore(MemoryJobStore(), "memory")
-    scheduler.add_jobstore(SubscriptionJobStore(), "subscription")
-    scheduler.add_jobstore(SubscriptionResumeJobStore(), "subscription_resume")
 
     for func, cron_trigger in scheduler_middleware.cron_triggers:
         scheduler.add_job(func, cron_trigger, jobstore="memory")

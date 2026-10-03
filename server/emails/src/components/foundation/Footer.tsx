@@ -1,4 +1,5 @@
 import { Section } from 'react-email'
+import { BRAND_NAME } from '../brand'
 import Divider from './Divider'
 import { Text } from './Text'
 
@@ -9,7 +10,7 @@ const Footer = ({ email }: { email: string | null }) => (
       {email && (
         <Text variant="caption" align="center" noMargin>
           This email was sent to{' '}
-          {/* oxlint-disable-next-line email-ds/no-raw-text-elements -- footer value uses the dark tone, label stays muted */}
+          {/* eslint-disable-next-line email-ds/no-raw-text-elements -- footer value uses the dark tone, label stays muted */}
           <a
             href={`mailto:${email}`}
             className="font-semibold text-gray-900 no-underline"
@@ -20,7 +21,7 @@ const Footer = ({ email }: { email: string | null }) => (
         </Text>
       )}
       <Text variant="detail" weight="semibold" align="center" noMargin={!email}>
-        Outception Software Inc
+        {BRAND_NAME}
       </Text>
     </Section>
   </>

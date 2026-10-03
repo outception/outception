@@ -10,6 +10,6 @@ class TestCacheControlMiddleware:
         assert response.headers["cache-control"] == "private, no-store"
 
     async def test_error_response(self, client: AsyncClient) -> None:
-        response = await client.get("/v1/customers/")
+        response = await client.get("/v1/users/me")
         assert response.status_code == 401
         assert response.headers["cache-control"] == "private, no-store"

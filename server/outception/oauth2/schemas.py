@@ -7,7 +7,6 @@ from pydantic import (
     AfterValidator,
     AnyUrl,
     BeforeValidator,
-    Discriminator,
     EmailStr,
     Field,
     HttpUrl,
@@ -86,22 +85,11 @@ class AuthorizeUser(Schema):
     avatar_url: str | None
 
 
-class AuthorizeOrganization(Schema):
-    id: UUID4
-    slug: str
-    name: str
-    avatar_url: str | None
-
-
 class AuthorizeResponseBase(Schema):
     client: OAuth2ClientPublic
     sub_type: SubType
-    sub: AuthorizeUser | AuthorizeOrganization | None
+    sub: AuthorizeUser | None
     scopes: Scopes
-    organizations: list[AuthorizeOrganization]
-    # Whether the resolved request (param or client default) is for an
-    # organization, so the consent screen forces a single-org selection.
-    requires_single_organization: bool = False
     scope_display_names: dict[str, str] = Field(
         default={s.value: name for s, name in SCOPES_SUPPORTED_DISPLAY_NAMES.items()}
     )
@@ -112,15 +100,7 @@ class AuthorizeResponseUser(AuthorizeResponseBase):
     sub: AuthorizeUser | None
 
 
-class AuthorizeResponseOrganization(AuthorizeResponseBase):
-    sub_type: Literal[SubType.organization]
-    sub: AuthorizeOrganization | None
-
-
-AuthorizeResponse = Annotated[
-    AuthorizeResponseUser | AuthorizeResponseOrganization,
-    Discriminator(discriminator="sub_type"),
-]
+AuthorizeResponse = AuthorizeResponseUser
 
 authorize_response_adapter: TypeAdapter[AuthorizeResponse] = TypeAdapter(
     AuthorizeResponse
@@ -148,7 +128,7 @@ class RefreshTokenRequest(TokenRequestBase):
 class WebTokenRequest(TokenRequestBase):
     grant_type: Literal["web"]
     session_token: str
-    sub_type: Literal["user", "organization"] = Field(default="user")
+    sub_type: Literal["user"] = Field(default="user")
     sub: UUID4 | None = None
     scope: str | None = Field(default=None)
 
@@ -186,7 +166,6 @@ class IntrospectTokenResponse(Schema):
     scope: str
     sub_type: SubType
     sub: str
-    organizations: list[str]
     aud: str
     iss: str
     exp: int
@@ -200,12 +179,7 @@ class UserInfoUser(Schema):
     email_verified: bool | None = None
 
 
-class UserInfoOrganization(Schema):
-    sub: str
-    name: str | None = None
-
-
-UserInfo = UserInfoUser | UserInfoOrganization
+UserInfo = UserInfoUser
 
 
 def add_oauth2_form_schemas(openapi_schema: dict[str, Any]) -> dict[str, Any]:

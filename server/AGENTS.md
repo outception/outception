@@ -357,7 +357,9 @@ Name the singleton the bare domain noun in its module; importers alias it with a
 # service.py
 appeal_case = AppealCaseService()
 # caller
-from outception.organization_review.appeal_case import appeal_case as appeal_case_service
+from outception.organization_review.appeal_case import (
+    appeal_case as appeal_case_service,
+)
 ```
 
 ### Creating ORM objects — pass objects, not ids

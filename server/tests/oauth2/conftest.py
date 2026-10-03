@@ -21,11 +21,8 @@ from outception.kit.db.postgres import Engine, Session, create_sync_engine
 from outception.models import (
     Model,
     OAuth2AuthorizationCode,
-    OAuth2AuthorizationCodeOrganization,
     OAuth2Client,
     OAuth2Token,
-    OAuth2TokenOrganization,
-    Organization,
     User,
 )
 from outception.oauth2.authorization_server import AuthorizationServer
@@ -104,8 +101,6 @@ async def create_oauth2_token(
     refresh_token: str,
     scopes: list[str],
     user: User | None = None,
-    organization: Organization | None = None,
-    organizations: list[Organization] | None = None,
     access_token_revoked_at: int | None = None,
     refresh_token_revoked_at: int | None = None,
     issued_at: int | None = None,
@@ -130,14 +125,6 @@ async def create_oauth2_token(
     if user is not None:
         token.user_id = user.id
         token.sub_type = SubType.user
-    if organization is not None:
-        token.organization_id = organization.id
-        token.sub_type = SubType.organization
-    if organizations is not None:
-        token.organization_scopes = [
-            OAuth2TokenOrganization(organization_id=organization.id)
-            for organization in organizations
-        ]
     await save_fixture(token)
     return token
 
@@ -150,8 +137,6 @@ async def create_oauth2_authorization_code(
     scopes: list[str],
     redirect_uri: str,
     user: User | None = None,
-    organization: Organization | None = None,
-    organizations: list[Organization] | None = None,
     code_verifier: str | None = None,
     code_challenge_method: Literal["plain", "S256"] | None = None,
 ) -> OAuth2AuthorizationCode:
@@ -161,11 +146,6 @@ async def create_oauth2_authorization_code(
         scope=" ".join(scopes),
         redirect_uri=redirect_uri,
     )
-    if organizations is not None:
-        authorization_code.organization_scopes = [
-            OAuth2AuthorizationCodeOrganization(organization_id=organization.id)
-            for organization in organizations
-        ]
     if code_challenge_method is not None:
         assert code_verifier is not None, "code_verifier must be provided"
         authorization_code.code_challenge_method = code_challenge_method  # pyright: ignore
@@ -180,8 +160,5 @@ async def create_oauth2_authorization_code(
     if user is not None:
         authorization_code.user_id = user.id
         authorization_code.sub_type = SubType.user
-    if organization is not None:
-        authorization_code.organization_id = organization.id
-        authorization_code.sub_type = SubType.organization
     await save_fixture(authorization_code)
     return authorization_code

@@ -23,7 +23,7 @@ from outception.kit.http import is_localhost
 from outception.models import AuthenticationSession
 from outception.postgres import AsyncSession, get_db_session
 
-from .factors import get_factors, get_org_factors
+from .factors import get_factors
 from .schemas import AuthenticationSession as AuthenticationSessionSchema
 
 TOKEN_PREFIX = "outception_auth_session_"
@@ -132,13 +132,6 @@ class AuthenticationSessionService(AuthenticationSessionServiceBase):
 async def get_authentication_session_service(
     session: AsyncSession = Depends(get_db_session),
     factors: set[FactorBase[typing.Any]] = Depends(get_factors),
-) -> AuthenticationSessionService:
-    return AuthenticationSessionService(session, factors)
-
-
-async def get_org_authentication_session_service(
-    session: AsyncSession = Depends(get_db_session),
-    factors: set[FactorBase[typing.Any]] = Depends(get_org_factors),
 ) -> AuthenticationSessionService:
     return AuthenticationSessionService(session, factors)
 

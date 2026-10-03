@@ -63,27 +63,6 @@ def _timeout_lock_error_matcher(exc: BaseException) -> bool:
     return isinstance(exc, TimeoutLockError)
 
 
-def _external_event_already_handled_error_matcher(exc: BaseException) -> bool:
-    # Import deferred to avoid circular dependency with outception.worker
-    from outception.external_event.service import ExternalEventAlreadyHandled
-
-    return isinstance(exc, ExternalEventAlreadyHandled)
-
-
-def _tinybird_operational_error_matcher(exc: BaseException) -> bool:
-    # Import deferred to avoid circular dependency with outception.worker
-    from outception.integrations.tinybird.client import TinybirdOperationalError
-
-    return isinstance(exc, TinybirdOperationalError)
-
-
-def _outception_self_client_operational_error_matcher(exc: BaseException) -> bool:
-    # Import deferred to avoid circular dependency with outception.worker
-    from outception.integrations.outception.client import OutceptionSelfClientOperationalError
-
-    return isinstance(exc, OutceptionSelfClientOperationalError)
-
-
 def _email_sender_operational_error_matcher(exc: BaseException) -> bool:
     # Import deferred to avoid circular dependency
     from outception.email.sender import EmailSenderOperationalError
@@ -96,9 +75,6 @@ _operation_error_matchers: dict[str, OperationalErrorMatcher] = {
     "sql_lock_not_available_error": _sql_lock_not_available_error_matcher,
     "sql_deadlock_error": _sql_deadlock_error_matcher,
     "timeout_lock_error": _timeout_lock_error_matcher,
-    "external_event_already_handled": _external_event_already_handled_error_matcher,
-    "tinybird_operational_error": _tinybird_operational_error_matcher,
-    "outception_self_client_operational_error": _outception_self_client_operational_error_matcher,
     "email_sender_operational_error": _email_sender_operational_error_matcher,
 }
 

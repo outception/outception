@@ -1,4 +1,3 @@
-import uuid
 from collections.abc import Iterable
 from typing import Any
 
@@ -12,11 +11,9 @@ from authlib.oauth2.rfc6749.grants import BaseGrant, TokenEndpointMixin
 from authlib.oauth2.rfc6749.hooks import hooked
 from sqlalchemy import select
 
-from outception.auth.models import AuthSubject
-from outception.authz.repository import select_accessible_org_ids
 from outception.kit.crypto import get_current_secret_id, get_token_hash_candidates
 from outception.kit.utils import utc_now
-from outception.models import User, UserSession
+from outception.models import UserSession
 
 from ..sub_type import SubType, SubTypeValue
 
@@ -71,9 +68,7 @@ class WebGrant(BaseGrant, TokenEndpointMixin):
             raise InvalidRequestError("Invalid sub_type") from e
 
         sub: str | None = data.get("sub")
-        if sub_type == SubType.organization and sub is None:
-            raise InvalidRequestError("Missing 'sub' for organization sub_type")
-        elif sub_type == SubType.user and sub is not None:
+        if sub is not None:
             raise InvalidRequestError("Can't specify 'sub' for user sub_type")
 
         scope = data.get("scope", "")
@@ -95,36 +90,4 @@ class WebGrant(BaseGrant, TokenEndpointMixin):
             user_session.token = current
 
         user = user_session.user
-        session_organization_ids = [
-            scope.organization_id for scope in user_session.organization_scopes
-        ]
-        # ``AuthSubject`` uses ``None`` for an unrestricted session (an empty set
-        # would mean "scoped to nothing"); an empty list stays unrestricted below.
-        auth_subject: AuthSubject[User] = AuthSubject(
-            user, set(), user_session, frozenset(session_organization_ids) or None
-        )
-
-        if sub_type == SubType.organization:
-            assert sub is not None
-            try:
-                sub_uuid = uuid.UUID(sub)
-            except ValueError as e:
-                raise InvalidRequestError("Invalid 'sub' UUID") from e
-            # The OAuth server only issues user tokens now; sub_type=organization
-            # mints a user token down-scoped to the single requested org. It must
-            # be one the session can access (membership, its down-scope, and SSO
-            # enforcement), so the token can never be broader than its session.
-            accessible_organization_ids = set(
-                self.server.session.execute(select_accessible_org_ids(auth_subject))
-                .scalars()
-                .all()
-            )
-            if sub_uuid not in accessible_organization_ids:
-                raise InvalidGrantError()
-            self.request.organization_ids = [sub_uuid]
-        else:
-            # Inherit the session's down-scope so the token can't be broader
-            # than the session it's exchanged from (empty == unrestricted).
-            self.request.organization_ids = session_organization_ids
-
         return SubType.user, user

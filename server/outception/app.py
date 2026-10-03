@@ -9,15 +9,9 @@ from outception import worker  # noqa
 from outception.api import router
 from outception.auth.exception_handlers import (
     OutceptionAuthRedirectionError,
-    SSORequired,
     auth_redirection_error_exception_handler,
-    sso_required_exception_handler,
 )
 from outception.auth.middlewares import AuthSubjectMiddleware
-from outception.auth.models import ORGANIZATION_HEADER
-from outception.backoffice import app as backoffice_app
-from outception.checkout import ip_geolocation
-from outception.checkout_link.app import app as checkout_link_redirect_app
 from outception.config import settings
 from outception.exception_handlers import add_exception_handlers
 from outception.health.endpoints import router as health_router
@@ -47,12 +41,14 @@ from outception.middlewares import (
     MaxBodySizeMiddleware,
     OperationalErrorMiddleware,
     PathRewriteMiddleware,
-    RootPathMiddleware,
     SandboxResponseHeaderMiddleware,
     TransactionalMiddleware,
 )
 from outception.oauth2.endpoints.well_known import router as well_known_router
-from outception.oauth2.exception_handlers import OAuth2Error, oauth2_error_exception_handler
+from outception.oauth2.exception_handlers import (
+    OAuth2Error,
+    oauth2_error_exception_handler,
+)
 from outception.observability.http_middleware import HttpMetricsMiddleware
 from outception.observability.memory_profile import (
     start_memory_profiler,
@@ -68,11 +64,9 @@ from outception.postgres import (
     create_async_read_engine,
     create_sync_engine,
 )
-from outception.posthog import configure_posthog
 from outception.redis import Redis, create_redis
 from outception.sentry import configure_sentry
 from outception.version import CURRENT_API_VERSION, VERSIONS
-from outception.webhook.webhooks import get_webhook_routes
 
 from . import rate_limit
 
@@ -103,7 +97,7 @@ def configure_cors(app: FastAPI) -> None:
         allow_origins=["*"],
         allow_credentials=False,  # No cookies allowed
         allow_methods=["*"],
-        allow_headers=["Authorization", VERSION_HEADER, ORGANIZATION_HEADER],
+        allow_headers=["Authorization", VERSION_HEADER],
         expose_headers=[VERSION_HEADER],
     )
     configs.append(api_config)
@@ -120,7 +114,6 @@ class State(TypedDict):
     sync_sessionmaker: SyncSessionMaker
 
     redis: Redis
-    ip_geolocation_client: ip_geolocation.IPGeolocationClient | None
 
 
 @contextlib.asynccontextmanager
@@ -163,15 +156,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[State]:
 
     redis = create_redis("app")
 
-    try:
-        ip_geolocation_client = ip_geolocation.get_client()
-    except FileNotFoundError:
-        log.info(
-            "IP geolocation database not found. "
-            "Checkout won't automatically geolocate IPs."
-        )
-        ip_geolocation_client = None
-
     log.info("Outception API started")
 
     yield {
@@ -182,7 +166,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[State]:
         "sync_engine": sync_engine,
         "sync_sessionmaker": sync_sessionmaker,
         "redis": redis,
-        "ip_geolocation_client": ip_geolocation_client,
     }
 
     # Stop background threads
@@ -198,8 +181,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[State]:
     if async_read_engine is not async_engine:
         await async_read_engine.dispose()
     sync_engine.dispose()
-    if ip_geolocation_client is not None:
-        ip_geolocation_client.close()
 
     log.info("Outception API stopped")
 
@@ -220,10 +201,6 @@ def create_app() -> FastAPI:
         app.add_middleware(TransactionalMiddleware)
         app.add_middleware(rate_limit.get_middleware, redis=rate_limit_redis)
     app.add_middleware(PathRewriteMiddleware, pattern=r"^/api/v1", replacement="/v1")
-    if settings.is_vercel():
-        # The app origin mounts the API at /api (api.* hosts serve it
-        # unprefixed), so prefixed requests must generate prefixed URLs.
-        app.add_middleware(RootPathMiddleware, prefix="/api")
     app.add_middleware(LogCorrelationIdMiddleware)
     app.add_middleware(MaxBodySizeMiddleware, limit=settings.API_MAX_REQUEST_BODY_SIZE)
     if not settings.is_testing():
@@ -236,30 +213,17 @@ def create_app() -> FastAPI:
     app.add_exception_handler(
         OutceptionAuthRedirectionError, auth_redirection_error_exception_handler
     )
-    app.add_exception_handler(SSORequired, sso_required_exception_handler)
 
-    # /.well-known
-    app.include_router(well_known_router)
+    # /.well-known: OAuth2 and OIDC discovery, JWKS and the Apple domain
+    # association. All of it is account machinery, so it follows the same gate
+    # as the auth routers: with accounts off it must not exist.
+    if settings.ACCOUNTS_ENABLED:
+        app.include_router(well_known_router)
 
     # /healthz
     app.include_router(health_router)
 
-    if settings.BACKOFFICE_ENABLED:
-        if settings.BACKOFFICE_HOST is None:
-            app.mount("/backoffice", backoffice_app)
-        else:
-            app.host(settings.BACKOFFICE_HOST, backoffice_app)
-
-    if settings.CHECKOUT_LINK_HOST is not None:
-        app.host(settings.CHECKOUT_LINK_HOST, checkout_link_redirect_app)
-
-    add_versioned_routers(
-        app,
-        router,
-        get_webhook_routes(),
-        VERSIONS,
-        CURRENT_API_VERSION,
-    )
+    add_versioned_routers(app, router, [], VERSIONS, CURRENT_API_VERSION)
 
     return app
 
@@ -267,7 +231,6 @@ def create_app() -> FastAPI:
 configure_sentry()
 configure_logfire("server")
 configure_logging(logfire=True)
-configure_posthog()
 
 app = create_app()
 instrument_fastapi(app)

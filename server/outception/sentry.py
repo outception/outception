@@ -6,7 +6,6 @@ import sentry_sdk
 from dramatiq import get_broker
 from sentry_sdk.integrations.argv import ArgvIntegration
 from sentry_sdk.integrations.atexit import AtexitIntegration
-from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
 from sentry_sdk.integrations.dedupe import DedupeIntegration
 from sentry_sdk.integrations.dramatiq import DramatiqIntegration as _DramatiqIntegration
 from sentry_sdk.integrations.dramatiq import SentryMiddleware
@@ -23,8 +22,6 @@ from outception.observability.http_telemetry import url_without_request_values
 
 if TYPE_CHECKING:
     from sentry_sdk._types import Event, Hint
-
-POSTHOG_ID_TAG = "posthog_distinct_id"
 
 
 class DramatiqIntegration(_DramatiqIntegration):
@@ -56,7 +53,7 @@ def before_send(event: Event, hint: Hint) -> Event | None:
     return event
 
 
-def configure_sentry(*, aws_lambda: bool = False) -> None:
+def configure_sentry() -> None:
     sentry_sdk.init(
         dsn=settings.SENTRY_DSN,
         traces_sample_rate=None,  # `0` still opts in to trace continuation
@@ -85,7 +82,6 @@ def configure_sentry(*, aws_lambda: bool = False) -> None:
             StarletteIntegration(transaction_style="endpoint"),
             FastApiIntegration(transaction_style="endpoint"),
             DramatiqIntegration(),
-            *([AwsLambdaIntegration()] if aws_lambda else []),
         ],
     )
 
@@ -94,4 +90,3 @@ def set_sentry_user(auth_subject: AuthSubject[Subject]) -> None:
     if is_user(auth_subject):
         user = auth_subject.subject
         sentry_sdk.set_user({"id": str(user.id)})
-        sentry_sdk.set_tag(POSTHOG_ID_TAG, user.posthog_distinct_id)

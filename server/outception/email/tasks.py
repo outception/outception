@@ -11,7 +11,7 @@ from outception.observability.task_logging import LoggableField
 from outception.worker import AsyncSessionMaker, CronTrigger, TaskPriority, actor
 
 from .react import render_from_json
-from .repository import EmailLogRepository, extract_organization_id
+from .repository import EmailLogRepository
 from .sender import Attachment, email_sender
 
 log: Logger = structlog.get_logger()
@@ -21,9 +21,6 @@ def _build_tags(template: str | None, email_props: dict[str, Any]) -> dict[str, 
     tags: dict[str, str] = {}
     if template is not None:
         tags["category"] = template
-    organization_id = extract_organization_id(email_props)
-    if organization_id is not None:
-        tags["tenant_id"] = str(organization_id)
     return tags
 
 

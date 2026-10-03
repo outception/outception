@@ -3,19 +3,20 @@ from inspect import Parameter, Signature
 from typing import Annotated, Any
 
 from fastapi import Depends, Request, Security
-from fastapi.security import HTTPBearer, OpenIdConnect
+from fastapi.security import OpenIdConnect
 from makefun import with_signature
 
+from outception.auth.exceptions import SessionNotFreshError
 from outception.auth.scope import Scope
+from outception.config import settings
 from outception.exceptions import NotPermitted, Unauthorized
+from outception.kit.utils import utc_now
+from outception.models import UserSession
 from outception.oauth2.exceptions import InsufficientScopeError
 
 from .models import (
     Anonymous,
     AuthSubject,
-    Customer,
-    Member,
-    Organization,
     Subject,
     SubjectType,
     User,
@@ -28,38 +29,6 @@ oidc_scheme = OpenIdConnect(
     openIdConnectUrl="/.well-known/openid-configuration",
     auto_error=False,
 )
-oat_scheme = HTTPBearer(
-    scheme_name="oat",
-    auto_error=False,
-    description="You can generate an **Organization Access Token** from your organization's settings.",
-)
-pat_scheme = HTTPBearer(
-    scheme_name="pat",
-    auto_error=False,
-    description="You can generate a **Personal Access Token** from your [settings](https://outception.sh/settings).",
-)
-customer_session_scheme = HTTPBearer(
-    scheme_name="customer_session",
-    auto_error=False,
-    description=(
-        "Customer session tokens are specific tokens "
-        "that are used to authenticate customers on your organization. "
-        "You can create those sessions programmatically using the "
-        "[Create Customer Session endpoint](/api-reference/customer-sessions/create-customer-session)."
-    ),
-)
-member_session_scheme = HTTPBearer(
-    scheme_name="member_session",
-    auto_error=False,
-    description=(
-        "Member session tokens are specific tokens "
-        "that are used to authenticate members on your organization. "
-        "You can create those sessions programmatically using the "
-        "[Create Member Session endpoint](/api-reference/customer-sessions/create-customer-session)."
-    ),
-)
-
-
 _auth_subject_factory_cache: dict[
     frozenset[SubjectType], Callable[..., Awaitable[AuthSubject[Subject]]]
 ] = {}
@@ -78,7 +47,7 @@ def _get_auth_subject_factory(
             annotation=Request,
         )
     ]
-    if User in allowed_subjects or Organization in allowed_subjects:
+    if User in allowed_subjects:
         parameters += [
             Parameter(
                 name="oauth2_credentials",
@@ -86,38 +55,6 @@ def _get_auth_subject_factory(
                 default=Depends(oidc_scheme),
             )
         ]
-    if User in allowed_subjects:
-        parameters += [
-            Parameter(
-                name="personal_access_token_credentials",
-                kind=Parameter.KEYWORD_ONLY,
-                default=Depends(pat_scheme),
-            ),
-        ]
-    if Organization in allowed_subjects:
-        parameters += [
-            Parameter(
-                name="organization_access_token_credentials",
-                kind=Parameter.KEYWORD_ONLY,
-                default=Depends(oat_scheme),
-            )
-        ]
-    if Customer in allowed_subjects:
-        parameters.append(
-            Parameter(
-                name="customer_session_credentials",
-                kind=Parameter.KEYWORD_ONLY,
-                default=Depends(customer_session_scheme),
-            )
-        )
-    if Member in allowed_subjects:
-        parameters.append(
-            Parameter(
-                name="member_session_credentials",
-                kind=Parameter.KEYWORD_ONLY,
-                default=Depends(member_session_scheme),
-            )
-        )
 
     signature = Signature(parameters)
 
@@ -245,3 +182,71 @@ async def _web_user(
 
 
 WebUserSession = Annotated[AuthSubject[User], Depends(_web_user)]
+
+
+# ---------------------------------------------------------------------------
+# Scoped authorizers.
+#
+# ``WebUser{Read,Write,WriteFresh}``: a User via web session only; API tokens
+# are rejected. ``User{Read,Write}``: any User subject (web session or OAuth2
+# access token) with the matching scope, for endpoints the app calls with a
+# token. Read aliases accept the read or the write scope; write aliases
+# require the write scope.
+# ---------------------------------------------------------------------------
+
+
+def WebUserAuthorizer(required_scopes: set[Scope]) -> Any:
+    async def dependency(auth_subject: WebUserSession) -> AuthSubject[User]:
+        if not (auth_subject.scopes & required_scopes):
+            raise InsufficientScopeError({s.value for s in required_scopes})
+        return auth_subject
+
+    return dependency
+
+
+def ensure_session_fresh(auth_subject: AuthSubject[User]) -> None:
+    """Require a recently authenticated web session for sensitive operations.
+
+    Logging in always creates a new ``UserSession``, so ``created_at`` is the
+    time of the last authentication.
+    """
+    if not isinstance(auth_subject.session, UserSession):
+        raise NotPermitted()
+    if (
+        utc_now() - auth_subject.session.created_at
+        > settings.USER_SESSION_FRESHNESS_TTL
+    ):
+        raise SessionNotFreshError()
+
+
+def WebUserAuthorizerFresh(required_scopes: set[Scope]) -> Any:
+    async def dependency(
+        auth_subject: Annotated[
+            AuthSubject[User], Depends(WebUserAuthorizer(required_scopes))
+        ],
+    ) -> AuthSubject[User]:
+        ensure_session_fresh(auth_subject)
+        return auth_subject
+
+    return dependency
+
+
+WebUserRead = Annotated[
+    AuthSubject[User],
+    Depends(WebUserAuthorizer({Scope.user_read, Scope.user_write})),
+]
+WebUserWrite = Annotated[
+    AuthSubject[User],
+    Depends(WebUserAuthorizer({Scope.user_write})),
+]
+WebUserWriteFresh = Annotated[
+    AuthSubject[User],
+    Depends(WebUserAuthorizerFresh({Scope.user_write})),
+]
+
+_UserRead = Authenticator(
+    allowed_subjects={User}, required_scopes={Scope.user_read, Scope.user_write}
+)
+_UserWrite = Authenticator(allowed_subjects={User}, required_scopes={Scope.user_write})
+UserRead = Annotated[AuthSubject[User], Depends(_UserRead)]
+UserWrite = Annotated[AuthSubject[User], Depends(_UserWrite)]

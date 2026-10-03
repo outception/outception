@@ -185,7 +185,10 @@ class PaginationAPIRoute(APIRoute):
                 "type": "page_limit",
                 "item_schema": {"$ref": f"#/components/schemas/{item_schema_name}"},
             }
-            self.openapi_extra = {**openapi_extra, "x-outception-pagination": pagination}
+            self.openapi_extra = {
+                **openapi_extra,
+                "x-outception-pagination": pagination,
+            }
 
 
 def generate_unique_id_function(route: APIRoute) -> str:

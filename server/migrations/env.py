@@ -2,11 +2,24 @@ import asyncio
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import pool
+from sqlalchemy import TypeDecorator, pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from outception.config import settings
 from outception.models import Model
+
+
+def render_item(type_, obj, autogen_context):
+    # The project's column types (StringEnum, EncryptedStringType) only add
+    # Python-side behaviour over a plain SQLAlchemy type, so migrations declare
+    # the underlying type and never import application code.
+    if (
+        type_ == "type"
+        and isinstance(obj, TypeDecorator)
+        and type(obj).__module__.startswith("outception.")
+    ):
+        return f"sa.{type(obj.impl).__name__}()"
+    return False
 
 
 def include_object(object, name, type_, reflected, compare_to):
@@ -69,6 +82,7 @@ def run_migrations_offline() -> None:
         dialect_opts={"paramstyle": "named"},
         compare_type=True,
         include_object=include_object,
+        render_item=render_item,
     )
 
     with context.begin_transaction():
@@ -81,6 +95,7 @@ def do_run_migrations(connection):
         target_metadata=target_metadata,
         compare_type=True,
         include_object=include_object,
+        render_item=render_item,
     )
 
     with context.begin_transaction():

@@ -1,5 +1,4 @@
 from typing import TYPE_CHECKING, Any, cast
-from uuid import UUID
 
 from authlib.integrations.sqla_oauth2 import OAuth2TokenMixin
 from sqlalchemy import Index, String, text
@@ -7,11 +6,10 @@ from sqlalchemy.orm import Mapped, declared_attr, mapped_column, relationship
 
 from outception.auth.scope import Scope, scope_to_set
 from outception.kit.db.models import RecordModel
-from outception.oauth2.sub_type import SubType, SubTypeModelMixin
+from outception.oauth2.sub_type import SubTypeModelMixin
 
 if TYPE_CHECKING:
     from .oauth2_client import OAuth2Client
-    from .oauth2_token_organization import OAuth2TokenOrganization
 
 
 class OAuth2Token(RecordModel, OAuth2TokenMixin, SubTypeModelMixin):
@@ -29,7 +27,7 @@ class OAuth2Token(RecordModel, OAuth2TokenMixin, SubTypeModelMixin):
         ),
     )
 
-    client_id: Mapped[str] = mapped_column(String(52), nullable=False)
+    client_id: Mapped[str] = mapped_column(String(64), nullable=False)
     nonce: Mapped[str | None] = mapped_column(String, index=True, nullable=True)
 
     @declared_attr
@@ -41,17 +39,6 @@ class OAuth2Token(RecordModel, OAuth2TokenMixin, SubTypeModelMixin):
             lazy="raise",
         )
 
-    @declared_attr
-    def organization_scopes(cls) -> Mapped[list["OAuth2TokenOrganization"]]:
-        # Down-scope links (M2M). Eager-loaded so the auth middleware can read
-        # the scope on every request without a lazy load. No rows means the
-        # token is unrestricted.
-        return relationship(
-            "OAuth2TokenOrganization",
-            lazy="selectin",
-            cascade="all, delete-orphan",
-        )
-
     @property
     def expires_at(self) -> int:
         return cast(int, self.issued_at) + cast(int, self.expires_in)
@@ -59,20 +46,6 @@ class OAuth2Token(RecordModel, OAuth2TokenMixin, SubTypeModelMixin):
     @property
     def scopes(self) -> set[Scope]:
         return scope_to_set(cast(str, self.get_scope()))
-
-    @property
-    def organization_ids(self) -> frozenset[UUID] | None:
-        """Organizations this token is down-scoped to, or ``None`` if unrestricted.
-
-        Only meaningful for user-subject tokens; organization-subject tokens are
-        never down-scoped.
-        """
-        if self.sub_type != SubType.user:
-            return None
-        return (
-            frozenset(scope.organization_id for scope in self.organization_scopes)
-            or None
-        )
 
     def get_introspection_data(self, issuer: str) -> dict[str, Any]:
         return {
@@ -83,9 +56,6 @@ class OAuth2Token(RecordModel, OAuth2TokenMixin, SubTypeModelMixin):
             "scope": self.get_scope(),
             "sub_type": self.sub_type,
             "sub": str(self.sub.id),
-            "organizations": [
-                str(scope.organization_id) for scope in self.organization_scopes
-            ],
             "aud": self.client_id,
             "iss": issuer,
             "exp": self.expires_at,

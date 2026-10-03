@@ -4,18 +4,14 @@ from sqlalchemy import ForeignKey, String, Text, UniqueConstraint, Uuid
 from sqlalchemy.orm import Mapped, declared_attr, mapped_column, relationship
 
 from outception.kit.db.models import RecordModel
-from outception.models.organization import Organization
 from outception.models.user import User
 
 
 class OAuth2Grant(RecordModel):
     __tablename__ = "oauth2_grants"
-    __table_args__ = (
-        UniqueConstraint("client_id", "user_id"),
-        UniqueConstraint("client_id", "organization_id"),
-    )
+    __table_args__ = (UniqueConstraint("client_id", "user_id"),)
 
-    client_id: Mapped[str] = mapped_column(String(52), nullable=False, index=True)
+    client_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     scope: Mapped[str] = mapped_column(Text, default="", nullable=False)
     user_id: Mapped[UUID | None] = mapped_column(
         Uuid,
@@ -23,20 +19,10 @@ class OAuth2Grant(RecordModel):
         nullable=True,
         index=True,
     )
-    organization_id: Mapped[UUID | None] = mapped_column(
-        Uuid,
-        ForeignKey("organizations.id", ondelete="cascade"),
-        nullable=True,
-        index=True,
-    )
 
     @declared_attr
     def user(cls) -> Mapped[User | None]:
         return relationship(User, lazy="joined")
-
-    @declared_attr
-    def organization(cls) -> Mapped[Organization | None]:
-        return relationship(Organization, lazy="joined")
 
     @property
     def scopes(self) -> list[str]:

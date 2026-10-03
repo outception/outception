@@ -1,10 +1,12 @@
-"""Report `OUTCEPTION_*` variables Terraform provisions that nothing reads.
+"""Fail when the env contract and the settings disagree.
 
-The drift starts when a reader goes away: the setting leaves `config.py`, the
-Terraform that provisions it stays, and `extra="allow"` means the app never
-complains. A credential nobody reads is a credential nobody watches.
+`.env.prod.example` is the contract: every `OUTCEPTION_*` name an operator
+has to know about. Every name there must be a field of `Settings`, and every
+field of `Settings` must appear there, so a setting never goes unprovisioned
+and a provisioned value is never silently ignored (`extra="allow"` means the
+app itself would not complain).
 
-Exit codes follow the linter convention: 0 clean, 1 orphans found, 2 the check
+Exit codes follow the linter convention: 0 clean, 1 drift found, 2 the check
 itself failed. Run it from `server/`:
 
     uv run python -m scripts.check_env_vars
@@ -12,36 +14,40 @@ itself failed. Run it from `server/`:
 
 import ast
 import re
-import subprocess
 import sys
 import traceback
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[2]
-CONFIG = REPO / "server" / "outception" / "config.py"
+SERVER = Path(__file__).resolve().parents[1]
+CONFIG = SERVER / "outception" / "config.py"
+CONTRACT = SERVER / ".env.prod.example"
 
-NAME = re.compile(r"OUTCEPTION_[A-Z0-9_]+")
+NAME = re.compile(r"^\s*(?:export\s+)?(OUTCEPTION_[A-Z0-9_]+)\s*=", re.MULTILINE)
 
-# Read somewhere this script cannot see.
-ALLOWED: frozenset[str] = frozenset()
-
-
-def _grep(*paths: str) -> set[str]:
-    result = subprocess.run(
-        ["git", "grep", "-hoE", NAME.pattern, "--", *paths],
-        cwd=REPO,
-        capture_output=True,
-        text=True,
-        check=False,  # git grep exits 1 when it matches nothing
-    )
-    return set(result.stdout.split())
-
-
-def provisioned() -> set[str]:
-    return _grep("terraform/**/*.tf")
+# Fields that are read from the environment but intentionally absent from the
+# contract: development-only switches nobody sets in production.
+INTERNAL: frozenset[str] = frozenset(
+    {
+        "OUTCEPTION_TESTING",
+        "OUTCEPTION_SQLALCHEMY_DEBUG",
+        "OUTCEPTION_LOCAL_JWKS",
+        "OUTCEPTION_LOCAL_JWK_KID",
+        "OUTCEPTION_ENCRYPTION_LOCAL_KEY",
+        "OUTCEPTION_EMAIL_RENDERER_BINARY_PATH",
+        "OUTCEPTION_WORKER_PROMETHEUS_DIR",
+        "OUTCEPTION_POSTGRES_URL_NON_POOLING",
+        "OUTCEPTION_REDIS_URL",
+    }
+)
 
 
-def read() -> set[str]:
+def contract() -> set[str]:
+    if not CONTRACT.exists():
+        raise RuntimeError(f"{CONTRACT} is missing")
+    return set(NAME.findall(CONTRACT.read_text()))
+
+
+def fields() -> set[str]:
     tree = ast.parse(CONFIG.read_text())
     settings = next(
         (
@@ -53,28 +59,32 @@ def read() -> set[str]:
     )
     if settings is None:
         raise RuntimeError(f"No Settings class in {CONFIG}")
-    fields = {
+    return {
         f"OUTCEPTION_{statement.target.id}"
         for statement in settings.body
         if isinstance(statement, ast.AnnAssign)
         and isinstance(statement.target, ast.Name)
+        and not statement.target.id.startswith("_")
+        and statement.target.id.isupper()
     }
-    return fields | _grep("clients", "server")
 
 
 def main() -> int:
-    orphans = provisioned() - read() - ALLOWED
-    if not orphans:
-        print("OK: every OUTCEPTION_* variable Terraform sets is read.")
+    declared = contract()
+    read = fields()
+    unknown = declared - read
+    missing = read - declared - INTERNAL
+    if not unknown and not missing:
+        print(f"OK: {len(declared)} OUTCEPTION_* names agree with the settings.")
         return 0
-
-    print(f"{len(orphans)} OUTCEPTION_* variable(s) provisioned but never read:\n")
-    for name in sorted(orphans):
-        print(f"  {name}")
-    print(
-        "\nRemove them from terraform/, or add them to ALLOWED in this script "
-        "with a reason."
-    )
+    if unknown:
+        print(f"{len(unknown)} name(s) in {CONTRACT.name} that no setting reads:")
+        for name in sorted(unknown):
+            print(f"  {name}")
+    if missing:
+        print(f"{len(missing)} setting(s) missing from {CONTRACT.name}:")
+        for name in sorted(missing):
+            print(f"  {name}")
     return 1
 
 

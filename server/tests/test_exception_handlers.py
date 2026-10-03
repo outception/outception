@@ -75,7 +75,9 @@ class TestRequestValidationExceptionHandler:
         assert isinstance(error["input"]["raw"], str)
         assert isinstance(error["input"]["list"][0], str)
 
-    async def test_outception_request_validation_error_with_non_utf8_bytes(self) -> None:
+    async def test_outception_request_validation_error_with_non_utf8_bytes(
+        self,
+    ) -> None:
         exc = OutceptionRequestValidationError(
             [
                 {

@@ -42,7 +42,7 @@ class TestPaginateHasMore:
     ) -> None:
         users = [await create_user(save_fixture) for _ in range(2)]
         for user in users:
-            for platform in (OAuthPlatform.github, OAuthPlatform.google):
+            for platform in (OAuthPlatform.microsoft, OAuthPlatform.google):
                 oauth_account = OAuthAccount(
                     platform=platform,
                     account_id=f"{platform}-{user.id}",

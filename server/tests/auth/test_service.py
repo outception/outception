@@ -1,37 +1,21 @@
 import pytest
-from sqlalchemy import select
 
 from outception.auth.scope import Scope
 from outception.auth.service import auth as auth_service
-from outception.models import Organization, User, UserSessionOrganization
+from outception.models import User
 from outception.postgres import AsyncSession
 
 
 @pytest.mark.asyncio
 class TestCreateUserSession:
-    async def test_unscoped_by_default(self, session: AsyncSession, user: User) -> None:
-        _, user_session = await auth_service._create_user_session(
-            session, user, user_agent="", scopes=list(Scope)
-        )
-
-        result = await session.execute(
-            select(UserSessionOrganization).where(
-                UserSessionOrganization.user_session_id == user_session.id
-            )
-        )
-        assert result.scalars().all() == []
-
-    async def test_scoped_to_organizations(
-        self, session: AsyncSession, user: User, organization: Organization
+    async def test_creates_a_session_with_every_scope(
+        self, session: AsyncSession, user: User
     ) -> None:
-        _, user_session = await auth_service._create_user_session(
-            session,
-            user,
-            user_agent="",
-            scopes=list(Scope),
-            organization_ids=frozenset({organization.id}),
+        token, user_session = await auth_service._create_user_session(
+            session, user, user_agent="agent", scopes=list(Scope)
         )
 
-        assert [
-            scope.organization_id for scope in user_session.organization_scopes
-        ] == [organization.id]
+        assert token.startswith("outception_us_")
+        assert user_session.user_id == user.id
+        assert set(user_session.scopes) == set(Scope)
+        assert user_session.user_agent == "agent"

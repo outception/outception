@@ -7,7 +7,6 @@ from pydantic import UUID4, Field, computed_field
 
 from outception.kit.schemas import IDSchema, Schema, StripValidator
 from outception.kit.utils import human_readable_size
-from outception.organization.schemas import OrganizationID
 
 
 class S3FileCreatePart(Schema):
@@ -33,7 +32,7 @@ class S3FileCreateMultipart(Schema):
 
 
 class S3FileCreate(Schema):
-    organization_id: OrganizationID | None = None
+    organization_id: UUID4 | None = None
     name: str
     mime_type: str
     size: int

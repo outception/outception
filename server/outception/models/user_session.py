@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import TYPE_CHECKING
 from uuid import UUID
 
 from sqlalchemy import TIMESTAMP, ForeignKey, String, Text, Uuid
@@ -12,9 +11,6 @@ from outception.kit.db.models.base import RecordModel
 from outception.kit.extensions.sqlalchemy import StringEnum
 from outception.kit.utils import utc_now
 from outception.models.user import User
-
-if TYPE_CHECKING:
-    from outception.models.user_session_organization import UserSessionOrganization
 
 
 def get_expires_at() -> datetime:
@@ -42,14 +38,3 @@ class UserSession(RecordModel):
     @declared_attr
     def user(cls) -> Mapped[User]:
         return relationship(User, lazy="joined")
-
-    @declared_attr
-    def organization_scopes(cls) -> Mapped[list["UserSessionOrganization"]]:
-        # Down-scope links (M2M). Eager-loaded so the auth middleware can read
-        # the scope on every request without a lazy load. No rows means the
-        # session is unrestricted.
-        return relationship(
-            "UserSessionOrganization",
-            lazy="selectin",
-            cascade="all, delete-orphan",
-        )

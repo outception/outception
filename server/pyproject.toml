@@ -2,7 +2,6 @@
 name = "outception"
 version = "0.0.0"
 readme = "README.md"
-# 3.14 floor: the Vercel build image ships an earlier 3.14 patch.
 requires-python = ">=3.14"
 dependencies = [
   "fastapi==0.141.1",
@@ -12,14 +11,13 @@ dependencies = [
   "sqlalchemy[asyncio]>=2.0.51",
   "greenlet>=3.5.5",
   "structlog>=26.1.0",
-  "githubkit==0.16.1",
-  "redis>=5.0.4",
+  # hiredis parses replies in C; without it every MGET on the hot paths is
+  # decoded in pure Python.
+  "redis[hiredis]>=5.0.4",
   "sse-starlette>=3.4.5",
-  "stripe>=14,<15",
   "pyjwt>=2.13.0",
   "pydantic>=2.13.4",
   "sentry-sdk[fastapi,sqlalchemy]>=2.64.0",
-  "posthog>=7.21.1",
   "python-slugify>=8.0.1",
   "python-multipart>=0.0.32",
   "safe-redirect-url>=0.1.1",
@@ -27,50 +25,26 @@ dependencies = [
   "httpx>=0.23.0",
   "pydantic-settings>=2.14.2",
   "email-validator>=2.1.0.post1",
-  "python-dateutil>=2.9.0.post0",
-  "pydantic-extra-types>=2.9.0",
   "sqlalchemy-utils>=0.41.1",
   "authlib>=1.7.2",
-  "standardwebhooks>=1.0.0",
   "typer>=0.26.7",
   "logfire[fastapi,httpx,sqlalchemy,redis]>=4.38.0",
   "makefun>=1.15.6",
   "boto3>=1.43.38",
-  "itsdangerous>=2.2.0",
   "cryptography>=48.0.1",
-  "babel>=2.16.0",
   "pycountry>=24.6.1",
-  "python-stdnum>=2.1",
-  "ipinfo-db>=0.0.4",
   "taskipy>=1.10.3",
   "psycopg2-binary>=2.9.12",
   "apscheduler>=3.11.3",
-  "plain-client>=0.0.3",
-  "tagflow>=0.7.0",
-  "exponent-server-sdk>=2.1.0",
   "dramatiq[redis,watch]>=1.17.1",
   "prometheus-client>=0.25.0",
   "python-snappy>=0.7.3",
-  "fpdf2>=2.8.3",
-  "arabic-reshaper>=3.0.1",
-  "python-bidi>=0.6.11",
-  "pydantic-ai-slim[openai]>=2.2.0",
-  "genai-prices>=0.0.67",
   "asgi-ratelimit>=0.10.0",
-  "aiocsv>=1.4.1",
   "alembic-utils>=0.8.8",
-  "clickhouse-connect[async]>=1.4.1",
-  "trafilatura>=2.1.0",
-  "firecrawl-py>=4.31.0",
-  "outception-sdk==1.0.0a22",
   "anyio==4.15.1", # Potential culprit for Sep 23-24 memory leak
-  "markdown-it-py>=4.2.0",
   "tzdata>=2026.2",
   "reauth==0.4.1",
-  "langcodes>=3.5.1",
-  "pypdf>=6.14.2",
-  "google-auth[requests]>=2.38.0",
-  "tld>=0.13.2",
+  "aiosmtplib>=5.1.2",
   "joserfc>=1.7.4",
 ]
 
@@ -91,50 +65,34 @@ dev = [
   "pytest-cov>=5.0.0",
   "types-python-slugify>=8.0.0.3",
   "types-requests>=2.33.0.20260518",
-  "boto3-stubs[s3,sqs,lambda,scheduler]>=1.43.26",
+  "boto3-stubs[s3]>=1.43.26",
   "freezegun>=1.5.1",
   "fakeredis[lua]>=2.36.1",
   "pytest-xdist[psutil]>=3.8.0",
   "sqlalchemy-utils>=0.41.2",
-  "minio>=7.2.9",
-  "locust>=2.44.1",
   "debugpy>=1.8.21",
-  "pydantic-evals>=1.103.0",
-  "gepa>=0.1.0",
-  # Quarantined due to supply chain attack:
-  # * https://futuresearch.ai/blog/litellm-pypi-supply-chain-attack/
-  # * https://pypi.org/project/litellm/
-  # "litellm==1.82.3",
   "pytest-split>=0.11.0",
   "openapi-kit>=0.3.1",
 ]
 
 [tool.taskipy.tasks]
 emails = { cmd = "cd emails && pnpm i --frozen-lockfile && pnpm run build", help = "build emails" }
-backoffice = { cmd = "pnpm -C outception/backoffice install --frozen-lockfile && pnpm -C outception/backoffice build", help = "build backoffice CSS and JS" }
 api = { cmd = "env AUTHLIB_INSECURE_TRANSPORT=true uvicorn outception.app:app --reload --workers 1 --host 127.0.0.1 --port 8000", help = "run api service" }
 worker = { cmd = "dramatiq -p 1 -t 1 --watch outception -f outception.worker.scheduler:start outception.worker.run", help = "run worker" }
 test = { cmd = "OUTCEPTION_ENV=testing python -m pytest --cov outception/ --cov-report=term-missing", help = "run all tests" }
 test_fast = { cmd = "OUTCEPTION_ENV=testing python -m pytest -n auto -p no:sugar --no-cov", help = "run all tests, but fast" }
-loadtest = { cmd = "locust -f load_tests/locustfile.py --host=http://127.0.0.1:8000", help = "run load tests (interactive)" }
 lint = { cmd = "ruff format . && ruff check --fix . && task lint_ast", help = "run linters with autofix" }
 lint_check = { cmd = "ruff format --check . && ruff check . && task lint_ast", help = "run ruff linter" }
 lint_ast = { cmd = "python -m scripts.linters", help = "run all custom AST lint rules" }
 lint_subquery = { cmd = "python -m scripts.linters --only subquery", help = "flag .subquery() calls that don't narrow columns" }
-lint_org_scope = { cmd = "python -m scripts.linters --only org-scope", help = "flag inline UserOrganization filters that bypass select_user_org_ids" }
 lint_types = { cmd = "mypy --num-workers 2 outception scripts tests", help = "run mypy type verify" }
 db_migrate = { cmd = "python -m scripts.db upgrade", help = "run alembic upgrade" }
 db_recreate = { cmd = "python -m scripts.db recreate", help = "drop and recreate database" }
 db_reparent = { cmd = "python -m scripts.db reparent", help = "try to auto-fix conflicting migrations" }
 check_migrations = { cmd = "python -m scripts.check_migrations", help = "check new migrations have a single head and a later filename" }
-tb_deploy = { cmd = "python -m scripts.tinybird", help = "deploy tinybird datasources" }
-preview = { cmd = "python -m scripts.preview", help = "manage preview environments" }
+generate_dev_jwks = { cmd = "python -m outception.kit.jwk outception_dev > ./.jwks.json", help = "generate a development JWKS file" }
+generate_openapi = { cmd = "python -m scripts.generate_openapi", help = "print the OpenAPI document" }
 clean = { cmd = "find * -name '*.pyc' -delete && find * -name '__pycache__' -delete", help = "clean up .pyc and __pycache__" }
-verify_github_app = { cmd = "python -m outception.verify_github_app", help = "verify that the github app is correctly configured" }
-seeds_load = { cmd = "python -m scripts.seeds_load", help = "load sample/test data into the database" }
-enable_payments = { cmd = "python -m scripts.enable_payments", help = "enable payments for an organization by slug" }
-loadtest_setup = { cmd = "python -m scripts.loadtest_setup", help = "setup load test data for event ingestion" }
-pre_deploy = { cmd = "task db_migrate", help = "Pre-deploy command run by Render" }
 
 [tool.pytest.ini_options]
 markers = [
@@ -187,6 +145,7 @@ ignore = [
   "F401", # remove unused import
 ]
 "scripts/*" = ["T20"]
+"tests/news/fixtures/parity/*" = ["T20", "ASYNC221"] # a capture script, run by hand in the live venv
 "docker/*" = ["T20"]
 "tests/**/test_*_benchmark.py" = ["T20"] # benchmarks report their measurements
 
@@ -210,10 +169,7 @@ warn_untyped_fields = true
 
 [tool.uv]
 exclude-newer = "1 week"
-exclude-newer-package = { reauth = false, outception-sdk = false }
+exclude-newer-package = { reauth = false }
 
 [tool.uv.sources]
 dramatiq = { git = "https://github.com/frankie567/dramatiq", rev = "memory-leak-asyncio-ter" }
-
-[tool.vercel]
-entrypoint = "outception.app:app"

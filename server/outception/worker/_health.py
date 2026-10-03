@@ -2,7 +2,6 @@ import asyncio
 import contextlib
 import os
 from collections.abc import AsyncGenerator, Callable, Mapping
-from datetime import timedelta
 from typing import Any
 
 import logfire
@@ -20,16 +19,13 @@ from starlette.responses import JSONResponse
 from starlette.routing import Route
 
 from outception.config import settings
-from outception.external_event.repository import ExternalEventRepository
 from outception.kit.db.postgres import AsyncSessionMaker, create_async_sessionmaker
 from outception.kit.http import HSTSMiddleware
-from outception.kit.utils import utc_now
 from outception.logfire import configure_logfire
 from outception.logging import Logger
 from outception.logging import configure as configure_logging
 from outception.postgres import AsyncEngine, create_async_engine
 from outception.redis import Redis
-from outception.webhook.repository import WebhookEventRepository
 
 log: Logger = structlog.get_logger()
 
@@ -80,53 +76,6 @@ async def health(request: Request) -> JSONResponse:
     return JSONResponse({"status": "ok"})
 
 
-UNDELIVERED_WEBHOOKS_MINIMUM_AGE = timedelta(minutes=5)
-UNDELIVERED_WEBHOOKS_MAXIMUM_AGE = timedelta(hours=6)
-UNDELIVERED_WEBHOOKS_ALERT_THRESHOLD = 10
-
-UNHANDLED_EXTERNAL_EVENTS_MINIMUM_AGE = timedelta(minutes=5)
-UNHANDLED_EXTERNAL_EVENTS_ALERT_THRESHOLD = 10
-
-
-async def webhooks(request: Request) -> JSONResponse:
-    async_sessionmaker: AsyncSessionMaker = request.state.async_sessionmaker
-    async with async_sessionmaker() as session:
-        repository = WebhookEventRepository(session)
-        undelivered_webhooks = await repository.count_undelivered(
-            older_than=utc_now() - UNDELIVERED_WEBHOOKS_MINIMUM_AGE,
-            newer_than=utc_now() - UNDELIVERED_WEBHOOKS_MAXIMUM_AGE,
-        )
-        if undelivered_webhooks > UNDELIVERED_WEBHOOKS_ALERT_THRESHOLD:
-            return JSONResponse(
-                {
-                    "status": "error",
-                    "undelivered_webhooks": undelivered_webhooks,
-                },
-                status_code=503,
-            )
-
-    return JSONResponse({"status": "ok"})
-
-
-async def external_events(request: Request) -> JSONResponse:
-    async_sessionmaker: AsyncSessionMaker = request.state.async_sessionmaker
-    async with async_sessionmaker() as session:
-        repository = ExternalEventRepository(session)
-        unhandled_events = await repository.get_all_unhandled(
-            older_than=utc_now() - UNHANDLED_EXTERNAL_EVENTS_MINIMUM_AGE
-        )
-        if len(unhandled_events) > UNHANDLED_EXTERNAL_EVENTS_ALERT_THRESHOLD:
-            return JSONResponse(
-                {
-                    "status": "error",
-                    "unhandled_external_events": len(unhandled_events),
-                },
-                status_code=503,
-            )
-
-    return JSONResponse({"status": "ok"})
-
-
 def _create_lifespan(
     *, database: bool
 ) -> Callable[[Starlette], contextlib.AbstractAsyncContextManager[Mapping[str, Any]]]:
@@ -162,13 +111,6 @@ async def handle_server_error(request: Request, exc: Exception) -> JSONResponse:
 
 def create_app(*, database: bool = True) -> Starlette:
     routes = [Route("/", health, methods=["GET"])]
-    # The webhooks and external-events probes query PostgreSQL; only expose them
-    # when the worker has a database.
-    if database:
-        routes += [
-            Route("/webhooks", webhooks, methods=["GET"]),
-            Route("/unhandled-external-events", external_events, methods=["GET"]),
-        ]
     app = Starlette(
         routes=routes,
         lifespan=_create_lifespan(database=database),

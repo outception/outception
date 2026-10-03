@@ -11,11 +11,9 @@ import dramatiq
 import structlog
 from dramatiq.common import dq_name
 
-from outception.config import settings
 from outception.logging import CorrelationID, Logger
 from outception.redis import Redis
 
-from . import _sqs
 from ._debounce import set_debounce_key
 
 log: Logger = structlog.get_logger()
@@ -39,25 +37,11 @@ _job_queue_manager: contextvars.ContextVar["JobQueueManager | None"] = (
 
 FLUSH_BATCH_SIZE = 50
 
+# The broker keeps message bodies in Redis hashes; keep a payload well under
+# what a single hash field should carry.
+MAX_JOB_PAYLOAD_BYTES = 256 * 1024
 UUID_JSON_BYTES = 40
-EVENT_INGESTED_CHUNK_SIZE = _sqs.MAX_JOB_PAYLOAD_BYTES // UUID_JSON_BYTES
-
-
-SQS_ACTORS_WILDCARD = "*"
-
-
-def resolve_sqs_actors() -> set[str]:
-    """Expand the allowlist, resolving the wildcard to every declared actor."""
-    if settings.WORKER_SQS_ACTORS == {SQS_ACTORS_WILDCARD}:
-        return dramatiq.get_broker().get_declared_actors()
-    return settings.WORKER_SQS_ACTORS
-
-
-def should_route_to_sqs(actor_name: str) -> bool:
-    if not settings.WORKER_SQS_ENABLED:
-        return False
-    actors = settings.WORKER_SQS_ACTORS
-    return actors == {SQS_ACTORS_WILDCARD} or actor_name in actors
+EVENT_INGESTED_CHUNK_SIZE = MAX_JOB_PAYLOAD_BYTES // UUID_JSON_BYTES
 
 
 class JobQueueManager:
@@ -97,10 +81,7 @@ class JobQueueManager:
             self.reset()
             return
 
-        sqs_jobs = [job for job in self._enqueued_jobs if should_route_to_sqs(job[0])]
-        redis_jobs = [
-            job for job in self._enqueued_jobs if not should_route_to_sqs(job[0])
-        ]
+        redis_jobs = list(self._enqueued_jobs)
 
         queue_messages = defaultdict[str, list[tuple[str, Any]]](list)
         all_messages: list[tuple[str, str]] = []
@@ -158,33 +139,6 @@ class JobQueueManager:
             log.debug(
                 "outception.worker.job_flushed", actor=actor_name, message_id=message_id
             )
-
-        # Send SQS last so an SQS failure can't drop the Redis jobs above.
-        if sqs_jobs:
-            correlation_id = CorrelationID.get()
-            prepared_sqs_jobs: list[_sqs.Job] = []
-            for actor_name, args, kwargs, delay in sqs_jobs:
-                fn = broker.get_actor(actor_name)
-                message_id = str(uuid.uuid4())
-                debounce_key: str | None = None
-
-                debounce = await set_debounce_key(redis, fn, message_id, args, kwargs)
-                if debounce is not None:
-                    debounce_key, debounce_delay = debounce
-                    delay = max(delay or 0, debounce_delay)
-
-                prepared_sqs_jobs.append(
-                    _sqs.Job(
-                        actor_name,
-                        args,
-                        kwargs,
-                        delay,
-                        correlation_id,
-                        message_id,
-                        debounce_key,
-                    )
-                )
-            await _sqs.send_jobs(prepared_sqs_jobs)
 
         self.reset()
 

@@ -13,7 +13,6 @@ from pathlib import Path
 os.environ["PYTHONTZPATH"] = ""
 
 from fastapi import Response
-
 from outception.news import metadata
 from outception.news.endpoints import (
     _COLUMN_ORDER,
@@ -31,18 +30,49 @@ OUT = Path(sys.argv[1])
 LIVE = Path.cwd().parent
 GAME_IDS = ("crossword", "sudoku", "solitaire", "cube")
 COUNTRIES = [
-    "US", "GB", "IE", "CA", "AU", "NZ", "IN", "NG", "ZA", "SG",
-    "PH", "DE", "FR", "ES", "IT", "NL", "SE", "NO", "PL", "PT",
-    "CH", "AT", "BE", "BR", "MX", "AR", "JP", "KR", "ID", "TR",
+    "US",
+    "GB",
+    "IE",
+    "CA",
+    "AU",
+    "NZ",
+    "IN",
+    "NG",
+    "ZA",
+    "SG",
+    "PH",
+    "DE",
+    "FR",
+    "ES",
+    "IT",
+    "NL",
+    "SE",
+    "NO",
+    "PL",
+    "PT",
+    "CH",
+    "AT",
+    "BE",
+    "BR",
+    "MX",
+    "AR",
+    "JP",
+    "KR",
+    "ID",
+    "TR",
 ]
 
 
 def dump(name: str, obj: object) -> None:
-    (OUT / name).write_text(json.dumps(obj, indent=1, ensure_ascii=False, sort_keys=False) + "\n")
+    (OUT / name).write_text(
+        json.dumps(obj, indent=1, ensure_ascii=False, sort_keys=False) + "\n"
+    )
 
 
 async def main() -> None:
-    head = subprocess.check_output(["git", "-C", str(LIVE), "rev-parse", "HEAD"], text=True).strip()
+    head = subprocess.check_output(
+        ["git", "-C", str(LIVE), "rev-parse", "HEAD"], text=True
+    ).strip()
 
     decks: dict[str, list[str]] = {}
     decks_raw: dict[str, list[str]] = {}
@@ -52,7 +82,9 @@ async def main() -> None:
         decks_raw[key] = raw
         decks[key] = [sid for sid in raw if sid not in GAME_IDS]
     dump("default_cards.json", decks)
-    dump("templates.json", {cc or "": resolve_templates(cc) for cc in [None, *COUNTRIES]})
+    dump(
+        "templates.json", {cc or "": resolve_templates(cc) for cc in [None, *COUNTRIES]}
+    )
 
     (OUT / "sources_body.json").write_bytes(_SOURCES_BODY)
     assert hashlib.md5(_SOURCES_BODY).hexdigest()[:20] == _SOURCES_ETAG.strip('"')
@@ -71,7 +103,19 @@ async def main() -> None:
                 "model": "SourceMeta",
                 "model_dump": {"by_alias": True, "exclude_none": True},
                 "json_dumps": {"ensure_ascii": False, "separators": [",", ":"]},
-                "fields": ["id", "interval", "name", "color", "column", "type", "home", "title", "desc", "redirect", "logo"],
+                "fields": [
+                    "id",
+                    "interval",
+                    "name",
+                    "color",
+                    "column",
+                    "type",
+                    "home",
+                    "title",
+                    "desc",
+                    "redirect",
+                    "logo",
+                ],
             },
             "order": "SOURCES registration order, stable-sorted by column rank; disabled ids excluded",
             "column_order": _COLUMN_ORDER,
@@ -92,9 +136,25 @@ async def main() -> None:
     )
     dump(
         "search_index.json",
-        [{"id": sid, "blob": blob, "meta": meta.model_dump(by_alias=True, exclude_none=True)} for sid, blob, meta in _SOURCE_INDEX],
+        [
+            {
+                "id": sid,
+                "blob": blob,
+                "meta": meta.model_dump(by_alias=True, exclude_none=True),
+            }
+            for sid, blob, meta in _SOURCE_INDEX
+        ],
     )
-    print("decks", len(decks), "templates countries", len(COUNTRIES) + 1, "rows", len(_SOURCES_PAYLOAD), "etag", _SOURCES_ETAG)
+    print(
+        "decks",
+        len(decks),
+        "templates countries",
+        len(COUNTRIES) + 1,
+        "rows",
+        len(_SOURCES_PAYLOAD),
+        "etag",
+        _SOURCES_ETAG,
+    )
 
 
 asyncio.run(main())

@@ -15,12 +15,10 @@ from reauth.factors.oauth2.base import (
 from reauth.factors.oauth2.oidc import OIDCException
 from reauth.factors.oauth2.state import ExpiredStateException, InvalidStateException
 
-from outception.authz.dependencies import AuthorizeWebUserWrite
+from outception.auth.dependencies import WebUserWrite
 from outception.config import settings
 from outception.kit.http import ReturnTo
-from outception.postgres import AsyncSession
 from outception.routing import APIRouter
-from outception.user.repository import UserRepository
 from outception.user.service import user as user_service
 
 from ..authentication_session import (
@@ -30,20 +28,8 @@ from ..authentication_session import (
     get_optional_authentication_session,
 )
 from ..exceptions import GetEmailError, OutceptionAuthRedirectionError
-from ..helpers import (
-    OIDC_ERROR_MESSAGE,
-    check_factor,
-    get_sso_redirect_url,
-    set_state_cookie,
-)
+from ..helpers import OIDC_ERROR_MESSAGE, check_factor, set_state_cookie
 from .factor import OAuth2FactorMixin
-
-
-async def _get_sso_redirect(
-    session: AsyncSession, email: str, context: dict[str, typing.Any] | None
-) -> RedirectResponse | None:
-    url = await get_sso_redirect_url(session, email, context)
-    return RedirectResponse(url, status_code=303) if url is not None else None
 
 
 def get_oauth_login_router(
@@ -131,7 +117,9 @@ def get_oauth_login_router(
         except GetEmailError as e:
             raise OutceptionAuthRedirectionError(e.message) from e
         except OAuth2CallbackException as e:
-            raise OutceptionAuthRedirectionError(e.message or "OAuth2 callback error") from e
+            raise OutceptionAuthRedirectionError(
+                e.message or "OAuth2 callback error"
+            ) from e
         except OAuth2TokenException as e:
             raise OutceptionAuthRedirectionError("OAuth2 error") from e
         except OAuth2GetProfileException as e:
@@ -159,17 +147,10 @@ def get_oauth_login_router(
                 raise OutceptionAuthRedirectionError("No active authentication session")
 
         session = authentication_session_service.session
-        context = authentication_session.context
 
         # Existing or linked user
         if enrollment is not None:
             identity_id = enrollment.identity_id
-            user = await UserRepository.from_session(session).get_by_id(identity_id)
-            if user is not None and (
-                sso_redirect := await _get_sso_redirect(session, user.email, context)
-            ):
-                set_state_cookie(request, sso_redirect, "", 0)
-                return sso_redirect
         # New user
         else:
             assert oauth_account is not None
@@ -180,10 +161,6 @@ def get_oauth_login_router(
                 )
             except GetEmailError as e:
                 raise OutceptionAuthRedirectionError(e.message) from e
-
-            if sso_redirect := await _get_sso_redirect(session, email, context):
-                set_state_cookie(request, sso_redirect, "", 0)
-                return sso_redirect
 
             user, _ = await user_service.get_by_email_or_create(session, email)
             try:
@@ -215,7 +192,7 @@ def get_oauth_link_router(
     @router.get("/authorize", name=f"auth.{identifier}.link_authorize")
     async def _authorize(
         request: Request,
-        auth_subject: AuthorizeWebUserWrite,
+        auth_subject: WebUserWrite,
         return_to: ReturnTo,
         factor: OAuth2Factor[typing.Any] = Depends(factor_dependency),
     ) -> RedirectResponse:
@@ -245,7 +222,7 @@ def get_oauth_link_router(
     @router.get("/callback", name=f"auth.{identifier}.link_callback")
     async def _callback(
         request: Request,
-        auth_subject: AuthorizeWebUserWrite,
+        auth_subject: WebUserWrite,
         code: str | None = Query(None),
         error: str | None = Query(None),
         error_description: str | None = Query(None),
@@ -253,9 +230,7 @@ def get_oauth_link_router(
         state: str | None = Query(None),
         factor: OAuth2Factor[typing.Any] = Depends(factor_dependency),
     ) -> RedirectResponse:
-        default_return_to = settings.generate_frontend_url(
-            "/dashboard/account/preferences"
-        )
+        default_return_to = settings.generate_frontend_url("/account/preferences")
         error_parameters = {"type": "oauth_link_error", "factor": identifier}
         if state is None:
             raise OutceptionAuthRedirectionError(

@@ -1,6 +1,5 @@
 import time
 from typing import cast
-from uuid import UUID
 
 import structlog
 
@@ -9,12 +8,9 @@ from outception.email.sender import enqueue_email_template
 from outception.enums import TokenType
 from outception.kit.services import ResourceServiceReader
 from outception.logging import Logger
-from outception.models import OAuth2Token, User
+from outception.models import OAuth2Token
 from outception.oauth2.repository import OAuth2TokenRepository
 from outception.postgres import AsyncSession
-from outception.user_organization.service import (
-    user_organization as user_organization_service,
-)
 
 log: Logger = structlog.get_logger()
 
@@ -47,18 +43,6 @@ class OAuth2TokenService(ResourceServiceReader[OAuth2Token]):
         repository = OAuth2TokenRepository.from_session(session)
         await repository.delete_expired()
 
-    async def revoke_for_sso_enforcement(
-        self, session: AsyncSession, organization_id: UUID
-    ) -> None:
-        """Revoke tokens scoped to an organization once it enforces SSO.
-
-        Such tokens were scoped before enforcement (so through a non-SSO session);
-        revoking forces the app to re-consent through SSO. Unrestricted tokens are
-        handled at request time and are left untouched here.
-        """
-        repository = OAuth2TokenRepository.from_session(session)
-        await repository.revoke_scoped_to_organization(organization_id)
-
     async def revoke_leaked(
         self,
         session: AsyncSession,
@@ -83,13 +67,7 @@ class OAuth2TokenService(ResourceServiceReader[OAuth2Token]):
         session.add(oauth2_token)
 
         # Notify
-        recipients: list[str]
-        sub = oauth2_token.sub
-        if isinstance(sub, User):
-            recipients = [sub.email]
-        else:
-            members = await user_organization_service.list_by_org(session, sub.id)
-            recipients = [member.user.email for member in members]
+        recipients: list[str] = [oauth2_token.sub.email]
 
         oauth2_client = oauth2_token.client
 

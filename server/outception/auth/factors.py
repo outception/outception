@@ -26,7 +26,6 @@ from sqlalchemy import delete, select, update
 from outception.config import settings
 from outception.email.schemas import LoginCodeEmail, LoginCodeProps
 from outception.email.sender import enqueue_email_template
-from outception.exceptions import ResourceNotFound
 from outception.kit.crypto import (
     get_current_secret_id,
     get_legacy_secret,
@@ -35,16 +34,12 @@ from outception.kit.crypto import (
 from outception.kit.utils import utc_now
 from outception.logging import Logger
 from outception.models import BackupCodesEnrollment, EmailOTP, TOTPEnrollment
-from outception.organization.repository import OrganizationRepository
 from outception.postgres import AsyncSession, get_db_session
-from outception.sso.repository import OrganizationSSOConnectionRepository
 from outception.user.repository import UserRepository
 
 from .oauth2.apple import AppleFactor, get_apple_factor
-from .oauth2.github import GitHubFactor, get_github_factor
 from .oauth2.google import GoogleFactor, get_google_factor
-from .oauth2.state import OAuth2StateService, get_oauth2_state_service
-from .sso.factor import build_sso_factor
+from .oauth2.microsoft import MicrosoftFactor, get_microsoft_factor
 
 if typing.TYPE_CHECKING:
     from .schemas import EmailOTPRequest
@@ -339,47 +334,14 @@ async def get_factors(
     totp_factor: TOTPFactor = Depends(get_totp_factor),
     backup_codes_factor: BackupCodesFactor = Depends(get_backup_codes_factor),
     apple_factor: AppleFactor = Depends(get_apple_factor),
-    github_factor: GitHubFactor = Depends(get_github_factor),
     google_factor: GoogleFactor = Depends(get_google_factor),
+    microsoft_factor: MicrosoftFactor = Depends(get_microsoft_factor),
 ) -> set[FactorBase[typing.Any]]:
     return {
         email_otp_factor,
         totp_factor,
         backup_codes_factor,
         apple_factor,
-        github_factor,
         google_factor,
+        microsoft_factor,
     }
-
-
-async def get_org_factors(
-    slug: str,
-    base_factors: set[FactorBase[typing.Any]] = Depends(get_factors),
-    session: AsyncSession = Depends(get_db_session),
-    state_service: OAuth2StateService = Depends(get_oauth2_state_service),
-) -> set[FactorBase[typing.Any]]:
-    organization_repository = OrganizationRepository.from_session(session)
-    organization = await organization_repository.get_by_slug(slug)
-    if organization is None:
-        raise ResourceNotFound()
-
-    sso_repository = OrganizationSSOConnectionRepository.from_session(session)
-    connections = (
-        await sso_repository.get_enabled_by_organization(organization.id)
-        if organization.is_sso_enabled
-        else []
-    )
-
-    sso_factors: set[FactorBase[typing.Any]] = {
-        build_sso_factor(
-            connection,
-            organization_slug=organization.slug,
-            state_service=state_service,
-        )
-        for connection in connections
-    }
-
-    if organization.sso_enforced:
-        return sso_factors
-
-    return base_factors | sso_factors

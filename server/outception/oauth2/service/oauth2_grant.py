@@ -26,8 +26,6 @@ class OAuth2GrantService(ResourceServiceReader[OAuth2Grant]):
             grant = OAuth2Grant(client_id=client_id, scope=scope)
             if sub_type == SubType.user:
                 grant.user_id = sub_id
-            elif sub_type == SubType.organization:
-                grant.organization_id = sub_id
             else:
                 raise NotImplementedError()
         else:
@@ -66,8 +64,6 @@ class OAuth2GrantService(ResourceServiceReader[OAuth2Grant]):
         statement = select(OAuth2Grant).where(OAuth2Grant.client_id == client_id)
         if sub_type == SubType.user:
             statement = statement.where(OAuth2Grant.user_id == sub_id)
-        elif sub_type == SubType.organization:
-            statement = statement.where(OAuth2Grant.organization_id == sub_id)
         else:
             raise NotImplementedError()
         result = session.execute(statement)

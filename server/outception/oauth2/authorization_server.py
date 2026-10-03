@@ -1,7 +1,6 @@
 import json
 import time
 import typing
-import uuid
 
 import structlog
 from authlib.oauth2 import AuthorizationServer as _AuthorizationServer
@@ -33,7 +32,6 @@ from outception.kit.crypto import (
 )
 from outception.logging import Logger
 from outception.models import OAuth2Client, OAuth2Token, User
-from outception.models.oauth2_token_organization import OAuth2TokenOrganization
 from outception.oauth2.sub_type import SubTypeValue
 
 from .constants import (
@@ -388,14 +386,6 @@ class AuthorizationServer(_AuthorizationServer):
             **token_data, client_id=client.client_id, sub_type=sub_type
         )
         oauth2_token.sub = sub
-
-        organization_ids: list[uuid.UUID] = (
-            getattr(request, "organization_ids", None) or []
-        )
-        oauth2_token.organization_scopes = [
-            OAuth2TokenOrganization(organization_id=organization_id)
-            for organization_id in organization_ids
-        ]
 
         self.session.add(oauth2_token)
         self.session.flush()

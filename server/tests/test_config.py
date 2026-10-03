@@ -41,7 +41,10 @@ class TestBuildPostgresDsn:
     def test_no_fallback(self) -> None:
         dsn = build_dsn("asyncpg", fallback_host=None, fallback_port=None)
 
-        assert dsn == "postgresql+asyncpg://outception:s3cret@primary.example.com:6432/outception"
+        assert (
+            dsn
+            == "postgresql+asyncpg://outception:s3cret@primary.example.com:6432/outception"
+        )
 
     @pytest.mark.parametrize(
         "password",
@@ -86,48 +89,3 @@ class TestBuildPostgresDsn:
         connect_args = get_connect_args(build_dsn("asyncpg", fallback_port=None))
 
         assert connect_args["port"] == [6432, 6432]
-
-
-class TestGetCustomerPortalUrlOverride:
-    def test_no_override(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setattr(settings, "CUSTOMER_PORTAL_URL_OVERRIDES", {})
-
-        assert settings.get_customer_portal_url_override("org_id", "product_id") is None
-
-    def test_organization_override(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setattr(
-            settings,
-            "CUSTOMER_PORTAL_URL_OVERRIDES",
-            {"org_id": "https://example.com/portal"},
-        )
-
-        assert (
-            settings.get_customer_portal_url_override("org_id", "product_id")
-            == "https://example.com/portal"
-        )
-
-    def test_product_override(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setattr(
-            settings,
-            "CUSTOMER_PORTAL_URL_OVERRIDES",
-            {"org_id": {"product_id": "https://example.com/product-portal"}},
-        )
-
-        assert (
-            settings.get_customer_portal_url_override("org_id", "product_id")
-            == "https://example.com/product-portal"
-        )
-
-    def test_product_not_in_organization_override(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        monkeypatch.setattr(
-            settings,
-            "CUSTOMER_PORTAL_URL_OVERRIDES",
-            {"org_id": {"product_id": "https://example.com/product-portal"}},
-        )
-
-        assert (
-            settings.get_customer_portal_url_override("org_id", "other_product_id")
-            is None
-        )

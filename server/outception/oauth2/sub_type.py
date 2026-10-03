@@ -7,25 +7,18 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, declared_attr, mapped_column, relationship
 
 if TYPE_CHECKING:
-    from outception.models import Organization, User
+    from outception.models import User
 
 
 class SubType(StrEnum):
     user = "user"
-    organization = "organization"
 
 
-SubTypeValue = tuple[SubType, "User | Organization"]
+SubTypeValue = tuple[SubType, "User"]
 
 
 def is_sub_user(v: SubTypeValue) -> TypeGuard[tuple[Literal[SubType.user], "User"]]:
     return v[0] == SubType.user
-
-
-def is_sub_organization(
-    v: SubTypeValue,
-) -> TypeGuard[tuple[Literal[SubType.organization], "Organization"]]:
-    return v[0] == SubType.organization
 
 
 class SubTypeModelMixin:
@@ -33,41 +26,24 @@ class SubTypeModelMixin:
     user_id: Mapped[UUID | None] = mapped_column(
         Uuid, ForeignKey("users.id", ondelete="cascade"), nullable=True
     )
-    organization_id: Mapped[UUID | None] = mapped_column(
-        Uuid, ForeignKey("organizations.id", ondelete="cascade"), nullable=True
-    )
 
     @declared_attr
     def user(cls) -> Mapped["User | None"]:
         return relationship("User", lazy="joined")
 
-    @declared_attr
-    def organization(cls) -> Mapped["Organization | None"]:
-        return relationship("Organization", lazy="joined")
-
     @hybrid_property
-    def sub(self) -> "User | Organization":
-        sub: User | Organization | None = None
-        if self.sub_type == SubType.user:
-            sub = self.user
-        elif self.sub_type == SubType.organization:
-            sub = self.organization
-        else:
+    def sub(self) -> "User":
+        if self.sub_type != SubType.user:
             raise NotImplementedError()
-
-        if sub is None:
+        if self.user is None:
             raise ValueError("Sub is not found.")
-
-        return sub
+        return self.user
 
     @sub.inplace.setter
-    def _sub_setter(self, value: "User | Organization") -> None:
-        if self.sub_type == SubType.user:
-            self.user_id = value.id
-        elif self.sub_type == SubType.organization:
-            self.organization_id = value.id
-        else:
+    def _sub_setter(self, value: "User") -> None:
+        if self.sub_type != SubType.user:
             raise NotImplementedError()
+        self.user_id = value.id
 
     def get_sub_type_value(self) -> SubTypeValue:
         return self.sub_type, self.sub

@@ -9,42 +9,18 @@ from sqlalchemy import select
 
 from outception.auth.oauth2.google import GoogleFactor
 from outception.config import settings
-from outception.kit.utils import utc_now
-from outception.models import Organization, OrganizationDomain, User
+from outception.models import User
 from outception.postgres import AsyncSession
-from tests.auth.sso.test_endpoints import create_sso_connection
-from tests.fixtures.database import SaveFixture
-
-
-async def create_sso_domain(
-    save_fixture: SaveFixture,
-    organization: Organization,
-    *,
-    verified: bool = True,
-    sso_enforced: bool = True,
-    connection_enabled: bool = True,
-) -> None:
-    organization.sso_enforced = sso_enforced
-    await create_sso_connection(save_fixture, organization, enabled=connection_enabled)
-    await save_fixture(
-        OrganizationDomain(
-            organization=organization,
-            domain="acme.com",
-            verified_at=utc_now() if verified else None,
-        )
-    )
 
 
 async def google_callback(
     client: httpx.AsyncClient,
     mocker: MockerFixture,
     callback_result: OAuth2Enrollment | OAuth2Account,
-    *,
-    sso_discovery: bool = True,
 ) -> httpx.Response:
     start = await client.post(
         "/v1/auth/start",
-        json={"return_to": "/dashboard", "sso_discovery": sso_discovery},
+        json={"return_to": "/dashboard"},
     )
     assert start.status_code == 201
 
@@ -80,7 +56,7 @@ def google_account() -> OAuth2Account:
 
 @pytest.mark.asyncio
 class TestLoginCallback:
-    async def test_new_user_without_sso(
+    async def test_new_user(
         self,
         login_client: httpx.AsyncClient,
         mocker: MockerFixture,
@@ -94,63 +70,3 @@ class TestLoginCallback:
             select(User).where(User.email == "jane@acme.com")
         )
         assert result.scalars().unique().one_or_none() is not None
-
-    async def test_new_user_with_sso(
-        self,
-        login_client: httpx.AsyncClient,
-        mocker: MockerFixture,
-        session: AsyncSession,
-        save_fixture: SaveFixture,
-        organization: Organization,
-    ) -> None:
-        await create_sso_domain(save_fixture, organization)
-
-        response = await google_callback(login_client, mocker, google_account())
-
-        assert response.status_code == 303
-        assert response.headers["location"] == settings.generate_frontend_url(
-            f"/auth/sso/{organization.slug}?return_to=%2Fdashboard"
-        )
-        result = await session.execute(
-            select(User).where(User.email == "jane@acme.com")
-        )
-        assert result.scalars().unique().one_or_none() is None
-
-    async def test_existing_user_with_sso(
-        self,
-        login_client: httpx.AsyncClient,
-        mocker: MockerFixture,
-        save_fixture: SaveFixture,
-        organization: Organization,
-        user: User,
-    ) -> None:
-        await create_sso_domain(save_fixture, organization)
-        user.email = "jane@acme.com"
-        await save_fixture(user)
-
-        response = await google_callback(
-            login_client,
-            mocker,
-            OAuth2Enrollment.from_account(user.id, google_account()),
-        )
-
-        assert response.status_code == 303
-        assert response.headers["location"] == settings.generate_frontend_url(
-            f"/auth/sso/{organization.slug}?return_to=%2Fdashboard"
-        )
-
-    async def test_sso_discovery_disabled(
-        self,
-        login_client: httpx.AsyncClient,
-        mocker: MockerFixture,
-        save_fixture: SaveFixture,
-        organization: Organization,
-    ) -> None:
-        await create_sso_domain(save_fixture, organization)
-
-        response = await google_callback(
-            login_client, mocker, google_account(), sso_discovery=False
-        )
-
-        assert response.status_code == 303
-        assert response.headers["location"] == settings.generate_frontend_url("/auth")

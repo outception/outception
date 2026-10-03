@@ -1,5 +1,4 @@
 import typing
-from uuid import UUID
 
 from fastapi import Depends, Request, Response
 from fastapi.responses import RedirectResponse
@@ -20,28 +19,31 @@ from reauth.factors.totp import (
     NotEnrolledTOTPException,
 )
 
-from outception.auth.dependencies import WebUserOrAnonymous
+from outception.auth.dependencies import (
+    WebUserOrAnonymous,
+    WebUserRead,
+    WebUserWriteFresh,
+)
 from outception.auth.exceptions import (
     OutceptionAuthError,
     OutceptionAuthRedirectionError,
     SessionNotFreshError,
-    SSORequired,
     UnavailableFactorError,
 )
 from outception.auth.models import is_user
-from outception.auth.oauth2.github import get_github_factor
 from outception.auth.oauth2.google import get_google_factor
-from outception.authz.dependencies import AuthorizeWebUserRead, AuthorizeWebUserWriteFresh
+from outception.auth.oauth2.microsoft import get_microsoft_factor
 from outception.config import settings
 from outception.exceptions import NotPermitted, ResourceNotFound
 from outception.kit.http import get_ip_address, get_safe_return_url
 from outception.openapi import APITag
 from outception.postgres import AsyncSession, get_db_session
+from outception.redis import Redis, get_redis
 from outception.routing import APIRouter
 from outception.user.repository import UserRepository
 from outception.user.service import user as user_service
-from outception.user_organization.repository import UserOrganizationRepository
 
+from . import lockout
 from .authentication_session import (
     AuthenticationSessionService,
     InvalidAuthenticationSession,
@@ -57,7 +59,6 @@ from .factors import (
     get_email_otp_factor,
     get_totp_factor,
 )
-from .helpers import get_sso_redirect_url
 from .oauth2.apple import get_apple_factor
 from .oauth2.router import get_oauth_link_router, get_oauth_login_router
 from .schemas import AuthenticationSession as AuthenticationSessionSchema
@@ -74,22 +75,22 @@ from .schemas import (
     TOTPStatus,
 )
 from .service import auth as auth_service
-from .sso.endpoints import router as sso_login_router
 from .turnstile import verify_turnstile
 
 TOTP_ISSUER = (
-    "Outception" if settings.is_production() else f"Outception {settings.ENV.value.capitalize()}"
+    "Outception"
+    if settings.is_production()
+    else f"Outception {settings.ENV.value.capitalize()}"
 )
 
 router = APIRouter(prefix="/auth", tags=["auth", APITag.private])
 router.include_router(
     get_oauth_login_router(get_apple_factor, "apple", callback_method="POST")
 )
-router.include_router(get_oauth_login_router(get_github_factor, "github"))
-router.include_router(get_oauth_link_router(get_github_factor, "github"))
 router.include_router(get_oauth_login_router(get_google_factor, "google"))
 router.include_router(get_oauth_link_router(get_google_factor, "google"))
-router.include_router(sso_login_router)
+router.include_router(get_oauth_login_router(get_microsoft_factor, "microsoft"))
+router.include_router(get_oauth_link_router(get_microsoft_factor, "microsoft"))
 
 
 @router.get("/logout")
@@ -111,7 +112,6 @@ async def start(
 ) -> AuthenticationSessionSchema:
     token, authentication_session = await authentication_session_service.start(
         return_to=authentication_session_start.return_to,
-        sso_discovery=authentication_session_start.sso_discovery,
     )
     await authentication_session_service.set_cookie(
         request, response, token, authentication_session.expires_at
@@ -166,27 +166,12 @@ async def complete(
     user_repository = UserRepository.from_session(session)
     user = await user_repository.get_by_id(identity_id)
     if user is None:
-        raise OutceptionAuthRedirectionError("User not found for authenticated identity")
+        raise OutceptionAuthRedirectionError(
+            "User not found for authenticated identity"
+        )
 
     context = authentication_session.context or {}
-
-    # An SSO-authenticated session stays scoped to its organization, whichever
-    # completion path (including the global 2FA pages) it reaches.
-    organization_ids: frozenset[UUID] | None = None
-    factor: LoginMethod
-    sso_organization_id = context.get("sso_organization_id")
-    if sso_organization_id is not None:
-        organization_id = UUID(sso_organization_id)
-        user_organization_repository = UserOrganizationRepository.from_session(session)
-        membership = await user_organization_repository.get_by_user_and_organization(
-            user.id, organization_id
-        )
-        if membership is None:
-            raise OutceptionAuthRedirectionError("You are not a member of this organization")
-        organization_ids = frozenset({organization_id})
-        factor = "sso"
-    else:
-        factor = typing.cast(LoginMethod, authentication_session.used_factors[0])
+    factor = typing.cast(LoginMethod, authentication_session.used_factors[0])
 
     response = await auth_service.get_login_response(
         session,
@@ -194,7 +179,6 @@ async def complete(
         user,
         return_to=context.get("return_to"),
         factor=factor,
-        organization_ids=organization_ids,
     )
     await authentication_session_service.set_cookie(request, response, "", 0)
     return response
@@ -207,10 +191,6 @@ async def complete(
         403: {
             "description": "Turnstile verification failed",
             "model": NotPermitted.schema(),
-        },
-        409: {
-            "description": "The email domain signs in through single sign-on",
-            "model": SSORequired.schema(),
         },
     },
 )
@@ -231,14 +211,6 @@ async def email_otp_request(
     if email_otp_factor not in factors:
         raise UnavailableFactorError(email_otp_factor.identifier)
 
-    sso_redirect_url = await get_sso_redirect_url(
-        authentication_session_service.session,
-        email_otp_request.email,
-        authentication_session.context,
-    )
-    if sso_redirect_url is not None:
-        raise SSORequired(sso_redirect_url)
-
     await email_otp_factor.request(email_otp_request, authentication_session)
 
 
@@ -256,19 +228,24 @@ async def email_otp_verify(
     ),
     email_otp_factor: EmailOTPFactor = Depends(get_email_otp_factor),
     session: AsyncSession = Depends(get_db_session),
+    redis: Redis = Depends(get_redis),
 ) -> AuthenticationSessionSchema:
     factors = await authentication_session_service.get_available_factors(
         authentication_session
     )
     if email_otp_factor not in factors:
         raise UnavailableFactorError(email_otp_factor.identifier)
+    if await lockout.is_locked(redis, str(authentication_session.id)):
+        raise OutceptionAuthError("Invalid or expired OTP", 403)
 
     try:
         identity_id, email = await email_otp_factor.consume(
             email_otp_verify.code, authentication_session.id
         )
     except (InvalidOTPException, ExpiredOTPException) as e:
+        await lockout.note_failure(redis, str(authentication_session.id))
         raise OutceptionAuthError("Invalid or expired OTP", 403) from e
+    await lockout.clear(redis, str(authentication_session.id))
 
     # New user
     if identity_id is None:
@@ -285,7 +262,7 @@ async def email_otp_verify(
 
 @router.get("/totp", responses={404: {"description": "TOTP factor not enrolled"}})
 async def totp_status(
-    auth_subject: AuthorizeWebUserRead,
+    auth_subject: WebUserRead,
     totp_factor: TOTPFactor = Depends(get_totp_factor),
 ) -> TOTPStatus:
     user = auth_subject.subject
@@ -301,7 +278,7 @@ async def totp_status(
     responses={403: {"model": SessionNotFreshError.schema()}},
 )
 async def totp_enroll(
-    auth_subject: AuthorizeWebUserWriteFresh,
+    auth_subject: WebUserWriteFresh,
     totp_factor: TOTPFactor = Depends(get_totp_factor),
 ) -> TOTPEnrollment:
     user = auth_subject.subject
@@ -334,7 +311,7 @@ async def totp_enroll(
 )
 async def totp_enable(
     enable: TOTPEnable,
-    auth_subject: AuthorizeWebUserWriteFresh,
+    auth_subject: WebUserWriteFresh,
     totp_factor: TOTPFactor = Depends(get_totp_factor),
 ) -> None:
     user = auth_subject.subject
@@ -354,7 +331,7 @@ async def totp_enable(
     responses={403: {"model": SessionNotFreshError.schema()}},
 )
 async def totp_delete(
-    auth_subject: AuthorizeWebUserWriteFresh,
+    auth_subject: WebUserWriteFresh,
     totp_factor: TOTPFactor = Depends(get_totp_factor),
     backup_codes_factor: BackupCodesFactor = Depends(get_backup_codes_factor),
 ) -> None:
@@ -378,19 +355,24 @@ async def totp_verify(
         get_authentication_session_service
     ),
     totp_factor: TOTPFactor = Depends(get_totp_factor),
+    redis: Redis = Depends(get_redis),
 ) -> AuthenticationSessionSchema:
     factors = await authentication_session_service.get_available_factors(
         authentication_session
     )
     if totp_factor not in factors:
         raise UnavailableFactorError(totp_factor.identifier)
+    if await lockout.is_locked(redis, str(authentication_session.id)):
+        raise OutceptionAuthError("Invalid TOTP code", 403)
 
     try:
         await totp_factor.verify(authentication_session.identity_id, enable.code)
     except NotEnrolledTOTPException as e:
         raise OutceptionAuthError("TOTP factor not enrolled", 403) from e
     except InvalidTOTPCodeException as e:
+        await lockout.note_failure(redis, str(authentication_session.id))
         raise OutceptionAuthError("Invalid TOTP code", 403) from e
+    await lockout.clear(redis, str(authentication_session.id))
 
     authentication_session = await authentication_session_service.advance(
         authentication_session, authentication_session.identity_id, totp_factor
@@ -403,7 +385,7 @@ async def totp_verify(
     responses={404: {"description": "Backup codes factor not enrolled"}},
 )
 async def backup_codes_status(
-    auth_subject: AuthorizeWebUserRead,
+    auth_subject: WebUserRead,
     backup_codes_factor: BackupCodesFactor = Depends(get_backup_codes_factor),
 ) -> BackupCodesStatus:
     user = auth_subject.subject
@@ -421,7 +403,7 @@ async def backup_codes_status(
     responses={403: {"model": SessionNotFreshError.schema()}},
 )
 async def backup_codes_enroll(
-    auth_subject: AuthorizeWebUserWriteFresh,
+    auth_subject: WebUserWriteFresh,
     backup_codes_factor: BackupCodesFactor = Depends(get_backup_codes_factor),
 ) -> BackupCodesEnrollment:
     user = auth_subject.subject
@@ -437,19 +419,24 @@ async def backup_codes_verify(
         get_authentication_session_service
     ),
     backup_codes_factor: BackupCodesFactor = Depends(get_backup_codes_factor),
+    redis: Redis = Depends(get_redis),
 ) -> AuthenticationSessionSchema:
     factors = await authentication_session_service.get_available_factors(
         authentication_session
     )
     if backup_codes_factor not in factors:
         raise UnavailableFactorError(backup_codes_factor.identifier)
+    if await lockout.is_locked(redis, str(authentication_session.id)):
+        raise OutceptionAuthError("Invalid or expired backup code", 400)
 
     try:
         await backup_codes_factor.verify(
             authentication_session.identity_id, verify.code
         )
     except (InvalidBackupCodeException, AlreadyUsedBackupCodeException) as e:
+        await lockout.note_failure(redis, str(authentication_session.id))
         raise OutceptionAuthError("Invalid or expired backup code", 400) from e
+    await lockout.clear(redis, str(authentication_session.id))
 
     authentication_session = await authentication_session_service.advance(
         authentication_session, authentication_session.identity_id, backup_codes_factor

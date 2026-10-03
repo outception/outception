@@ -9,7 +9,6 @@ from outception.kit.repository import (
     RepositorySoftDeletionMixin,
     RepositorySortingMixin,
 )
-from outception.kit.repository.base import SortingClause
 from outception.models import OAuthAccount, User
 
 from .sorting import UserSortProperty
@@ -59,27 +58,3 @@ class UserRepository(
         if not included_blocked:
             statement = statement.where(User.blocked_at.is_(None))
         return await self.get_all(statement)
-
-    async def get_by_identity_verification_id(
-        self,
-        identity_verification_id: str,
-        *,
-        include_deleted: bool = False,
-        included_blocked: bool = False,
-        for_update: bool = False,
-    ) -> User | None:
-        statement = self.get_base_statement(include_deleted=include_deleted).where(
-            User.identity_verification_id == identity_verification_id
-        )
-        if not included_blocked:
-            statement = statement.where(User.blocked_at.is_(None))
-        if for_update:
-            statement = statement.with_for_update(of=User)
-        return await self.get_one_or_none(statement)
-
-    def get_sorting_clause(self, property: UserSortProperty) -> SortingClause:
-        match property:
-            case UserSortProperty.created_at:
-                return self.model.created_at
-            case UserSortProperty.email:
-                return self.model.email

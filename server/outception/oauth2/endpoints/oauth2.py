@@ -1,17 +1,13 @@
-from collections.abc import Sequence
 from typing import Literal, cast
 
 from fastapi import Depends, Form, HTTPException, Request, Response
 from fastapi.openapi.constants import REF_TEMPLATE
 
-from outception.auth.dependencies import WebUserOrAnonymous
+from outception.auth.dependencies import WebUserOrAnonymous, WebUserRead, WebUserWrite
 from outception.auth.models import is_user
-from outception.authz.dependencies import AuthorizeWebUserRead, AuthorizeWebUserWrite
-from outception.authz.service import get_accessible_org_ids
 from outception.kit.pagination import ListResource, PaginationParamsQuery
-from outception.models import OAuth2Token, Organization
+from outception.models import OAuth2Token
 from outception.openapi import APITag
-from outception.organization.repository import OrganizationRepository
 from outception.postgres import AsyncSession, get_db_session
 from outception.routing import APIRouter
 
@@ -50,7 +46,7 @@ router = APIRouter(prefix="/oauth2", tags=["oauth2"])
     response_model=ListResource[OAuth2Client],
 )
 async def list(
-    auth_subject: AuthorizeWebUserRead,
+    auth_subject: WebUserRead,
     pagination: PaginationParamsQuery,
     session: AsyncSession = Depends(get_db_session),
 ) -> ListResource[OAuth2Client]:
@@ -171,21 +167,6 @@ async def authorize(
             save_consent=False,
         )
 
-    organizations: Sequence[Organization] = []
-    if is_user(auth_subject):
-        # Any organization the user belongs to can be a down-scope target (the
-        # token is the user's own access narrowed, not full-org access).
-        accessible_org_ids = await get_accessible_org_ids(session, auth_subject)
-        organization_repository = OrganizationRepository.from_session(session)
-        all_organizations = await organization_repository.get_all_by_user(
-            auth_subject.subject.id
-        )
-        organizations = [
-            organization
-            for organization in all_organizations
-            if organization.id in accessible_org_ids
-        ]
-
     payload = grant.request.payload
     assert payload is not None
 
@@ -195,8 +176,6 @@ async def authorize(
             "scopes": payload.scope,
             "sub_type": grant.sub_type,
             "sub": grant.sub,
-            "organizations": organizations,
-            "requires_single_organization": grant.requires_single_organization,
         }
     )
 
@@ -204,7 +183,7 @@ async def authorize(
 @router.post("/consent", tags=[APITag.private])
 async def consent(
     request: Request,
-    auth_subject: AuthorizeWebUserWrite,
+    auth_subject: WebUserWrite,
     action: Literal["allow", "deny"] = Form(...),
     authorization_server: AuthorizationServer = Depends(get_authorization_server),
 ) -> Response:

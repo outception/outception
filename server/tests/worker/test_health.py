@@ -281,13 +281,13 @@ class TestHealthMiddlewareForks:
 
 
 class TestCreateApp:
-    def test_database_exposes_db_routes(self) -> None:
+    def test_database_exposes_liveness(self) -> None:
         paths = {
             route.path
             for route in create_app(database=True).routes
             if isinstance(route, Route)
         }
-        assert paths == {"/", "/webhooks", "/unhandled-external-events"}
+        assert paths == {"/"}
 
     def test_no_database_exposes_only_liveness(self) -> None:
         paths = {

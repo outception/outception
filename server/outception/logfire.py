@@ -17,7 +17,10 @@ from opentelemetry.sdk.trace.sampling import (
     SamplingResult,
 )
 
-from outception.observability.http_telemetry import HttpURLSpanProcessor, server_request_hook
+from outception.observability.http_telemetry import (
+    HttpURLSpanProcessor,
+    server_request_hook,
+)
 from outception.observability.s3_span_exporter import S3SpanExporter
 
 if TYPE_CHECKING:
@@ -146,10 +149,6 @@ class PidSpanProcessor(SpanProcessor):
 def _detect_platform() -> str | None:
     if os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
         return "aws"
-    if os.environ.get("RENDER") or os.environ.get("RENDER_SERVICE_NAME"):
-        return "render"
-    if settings.is_vercel():
-        return "vercel"
     return None
 
 

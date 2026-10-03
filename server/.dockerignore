@@ -4,13 +4,9 @@
 .venv/
 .vscode/
 
-.minio/
-outception_backoffice/
 tests/
 emails/node_modules/
-outception/backoffice/node_modules/
 
-ip-geolocation.mmdb
 .env*
-.jkws.json
+.jwks.json
 .DS_Store

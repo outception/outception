@@ -26,10 +26,7 @@ from sqlalchemy.schema import Index, UniqueConstraint
 
 from outception.kit.db.models import RecordModel
 from outception.kit.encryption import EncryptedString, EncryptedStringType
-from outception.kit.extensions.sqlalchemy.types import StringEnum
 from outception.kit.schemas import Schema
-
-from .account import Account
 
 OAUTH_ACCOUNT_ACCESS_TOKEN_CONTEXT = {
     "table": "oauth_accounts",
@@ -43,25 +40,9 @@ OAUTH_ACCOUNT_REFRESH_TOKEN_CONTEXT = {
 
 class OAuthPlatform(StrEnum):
     # maximum allowed length is 32 chars
-    github = "github"
-    github_repository_benefit = "github_repository_benefit"
     google = "google"
     apple = "apple"
-
-
-class IdentityVerificationStatus(StrEnum):
-    unverified = "unverified"
-    pending = "pending"
-    verified = "verified"
-    failed = "failed"
-
-    def get_display_name(self) -> str:
-        return {
-            IdentityVerificationStatus.unverified: "Unverified",
-            IdentityVerificationStatus.pending: "Pending",
-            IdentityVerificationStatus.verified: "Verified",
-            IdentityVerificationStatus.failed: "Failed",
-        }[self]
+    microsoft = "microsoft"
 
 
 class OAuthAccount(RecordModel):
@@ -184,21 +165,6 @@ class User(RecordModel):
     email_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     avatar_url: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
 
-    account_id: Mapped[UUID | None] = mapped_column(
-        Uuid,
-        ForeignKey("accounts.id", ondelete="set null"),
-        nullable=True,
-    )
-
-    @declared_attr
-    def account(cls) -> Mapped[Account | None]:
-        return relationship(
-            Account,
-            lazy="raise",
-            back_populates="users",
-            foreign_keys="[User.account_id]",
-        )
-
     @declared_attr
     def oauth_accounts(cls) -> Mapped[list[OAuthAccount]]:
         return relationship(OAuthAccount, lazy="joined", back_populates="user")
@@ -217,27 +183,6 @@ class User(RecordModel):
     @hybrid_property
     def accepted_terms_of_service(self) -> bool:
         return self.accepted_terms_of_service_at is not None
-
-    stripe_customer_id: Mapped[str | None] = mapped_column(
-        String, nullable=True, default=None, unique=True
-    )
-
-    resend_id: Mapped[str | None] = mapped_column(
-        String, nullable=True, default=None, unique=True
-    )
-
-    identity_verification_status: Mapped[IdentityVerificationStatus] = mapped_column(
-        StringEnum(IdentityVerificationStatus),
-        nullable=False,
-        default=IdentityVerificationStatus.unverified,
-    )
-    identity_verification_id: Mapped[str | None] = mapped_column(
-        String, nullable=True, default=None, unique=True
-    )
-
-    @property
-    def identity_verified(self) -> bool:
-        return self.identity_verification_status == IdentityVerificationStatus.verified
 
     # Time of blocking traffic/activity for given user
     blocked_at: Mapped[datetime | None] = mapped_column(
@@ -295,16 +240,6 @@ class User(RecordModel):
             None,
         )
 
-    def get_github_account(self) -> OAuthAccount | None:
-        return self.get_oauth_account(OAuthPlatform.github)
-
-    @property
-    def posthog_distinct_id(self) -> str:
-        return f"user:{self.id}"
-
     @property
     def public_name(self) -> str:
-        github_oauth_account = self.get_github_account()
-        if github_oauth_account is not None and github_oauth_account.account_username:
-            return github_oauth_account.account_username
         return self.email[0]

@@ -20,15 +20,16 @@ from redis.retry import Retry
 
 from outception.config import settings
 from outception.logging import CorrelationID, Logger
-from outception.observability.task_logging import set_sentry_task_context, task_log_context
+from outception.observability.task_logging import (
+    set_sentry_task_context,
+    task_log_context,
+)
 from outception.operational_errors import handle_operational_error
 from outception.redis import REDIS_RETRY_ON_ERRROR, SyncFailoverRedis
 
-from . import _sqs
 from ._asyncio import MonitoredAsyncIO
 from ._debounce import DebounceMiddleware
 from ._encoder import JSONEncoder
-from ._enqueue import should_route_to_sqs
 from ._health import HealthMiddleware
 from ._httpx import HTTPXMiddleware
 from ._metrics import PrometheusMiddleware
@@ -179,36 +180,8 @@ class LogfireMiddleware(dramatiq.Middleware):
 
 
 class RoutingRedisBroker(RedisBroker):
-    """RedisBroker that diverts SQS-allowlisted actors to SQS at enqueue time.
-
-    Native dramatiq dispatch (cron ``actor.send``, the subscription cycle,
-    retries, pipelines) all funnel through ``enqueue``, so the gate applied here
-    covers every scheduled path. The buffered ``enqueue_job`` path bypasses this
-    method and applies the same gate in ``JobQueueManager.flush``.
-    """
-
-    def enqueue(
-        self, message: dramatiq.Message[Any], *, delay: int | None = None
-    ) -> dramatiq.Message[Any]:
-        if should_route_to_sqs(message.actor_name):
-            _sqs.send_jobs_sync(
-                [
-                    _sqs.Job(
-                        message.actor_name,
-                        message.args,
-                        message.kwargs,
-                        delay,
-                        CorrelationID.get(),
-                        message.message_id,
-                        message.options.get("debounce_key"),
-                        message_options=_sqs.extract_group_completion_options(
-                            message.options
-                        ),
-                    )
-                ]
-            )
-            return message
-        return super().enqueue(message, delay=delay)
+    """The Redis broker. Every dispatch path (cron ``actor.send``, retries,
+    pipelines and the buffered ``enqueue_job`` flush) lands on Redis."""
 
 
 def get_broker(*, database: bool = True) -> dramatiq.Broker:

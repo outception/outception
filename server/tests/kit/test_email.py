@@ -29,7 +29,10 @@ class TestNormalizeEmail:
         assert normalize_email("pieter@OUTCEPTION.SH") == "pieter@outception.sh"
 
     def test_keeps_dots_outside_gmail(self) -> None:
-        assert normalize_email("pieter.smith@outception.sh") == "pieter.smith@outception.sh"
+        assert (
+            normalize_email("pieter.smith@outception.sh")
+            == "pieter.smith@outception.sh"
+        )
 
     def test_strips_dots_for_gmail(self) -> None:
         assert normalize_email("pieter.smith@gmail.com") == "pietersmith@gmail.com"

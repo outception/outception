@@ -1,4 +1,10 @@
-import { Footer, Intro, Text, WrapperOutception } from '../components/foundation'
+import { BRAND_NAME } from '../components/brand'
+import {
+  Footer,
+  Intro,
+  Text,
+  WrapperOutception,
+} from '../components/foundation'
 import OTPCode from '../components/OTPCode'
 import type { schemas } from '../types'
 
@@ -13,7 +19,7 @@ export function LoginCode({
       preview={`Your code to sign in is ${code}. It is valid for the next ${code_lifetime_minutes.toFixed()} minutes.`}
     >
       <Intro>
-        Here is your code to sign in to Outception.{' '}
+        Here is your code to sign in to {BRAND_NAME}.{' '}
         <Text as="span" weight="bold">
           This code is only valid for the next {code_lifetime_minutes} minutes.
         </Text>
@@ -31,7 +37,7 @@ LoginCode.PreviewProps = {
   email: 'john@example.com',
   code: 'ABC123',
   code_lifetime_minutes: 30,
-  domain: 'outception.sh',
+  domain: 'outception.com',
 }
 
 export default LoginCode

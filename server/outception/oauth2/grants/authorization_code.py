@@ -1,6 +1,5 @@
 import time
 import typing
-import uuid
 
 import structlog
 from authlib.oauth2.rfc6749.errors import (
@@ -20,21 +19,13 @@ from authlib.oidc.core.util import create_half_hash
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from outception.auth.models import AuthSubject
-from outception.authz.repository import select_accessible_org_ids
 from outception.kit.crypto import (
     generate_token,
     get_token_hash,
     get_token_hash_candidates,
 )
 from outception.kit.signer import get_signer, sign_jws
-from outception.models import (
-    OAuth2AuthorizationCode,
-    OAuth2AuthorizationCodeOrganization,
-    OAuth2Client,
-    Organization,
-    User,
-)
+from outception.models import OAuth2AuthorizationCode, OAuth2Client, User
 
 from ..constants import (
     AUTHORIZATION_CODE_PREFIX,
@@ -65,10 +56,7 @@ def _exists_nonce(
 
 class SubTypeGrantMixin:
     sub_type: SubType | None = None
-    sub: User | Organization | None = None
-    # The OAuth server only issues user tokens now. ``sub_type=organization``
-    # is kept as a hint that forces the token to a single org down-scope.
-    requires_single_organization: bool = False
+    sub: User | None = None
 
 
 class AuthorizationCodeGrant(SubTypeGrantMixin, _AuthorizationCodeGrant):
@@ -138,79 +126,9 @@ class AuthorizationCodeGrant(SubTypeGrantMixin, _AuthorizationCodeGrant):
         )
         authorization_code.sub = self.sub
 
-        if self.sub_type == SubType.user:
-            assert request.auth_subject is not None
-            authorization_code.organization_scopes = [
-                OAuth2AuthorizationCodeOrganization(organization_id=organization_id)
-                for organization_id in self._resolve_organization_ids(
-                    request.auth_subject, payload
-                )
-            ]
-
         self.server.session.add(authorization_code)
         self.server.session.flush()
         return authorization_code
-
-    def _resolve_organization_ids(
-        self, auth_subject: AuthSubject[User], payload: StarletteOAuth2Payload
-    ) -> list[uuid.UUID]:
-        """Organizations the issued token is down-scoped to.
-
-        The consent-time selection, validated against the orgs the authenticating
-        session can access: membership intersected with the session's own
-        down-scope. A non-SSO session may not explicitly select an SSO-enforced org
-        Unrestricted token are filtered at request time instead (``select_accessible_org_ids``).
-        """
-        accessible_organization_ids = set(
-            self.server.session.execute(select_accessible_org_ids(auth_subject))
-            .scalars()
-            .all()
-        )
-
-        try:
-            selected = {
-                uuid.UUID(value)
-                for value in payload.form_datalist.get("organizations", [])
-            }
-        except ValueError as e:
-            raise InvalidRequestError("Invalid 'organizations' UUID") from e
-
-        for organization_id in selected:
-            if organization_id not in accessible_organization_ids:
-                raise InvalidRequestError(
-                    f"Organization {organization_id} is not accessible"
-                )
-
-        if selected:
-            result = list(selected)
-        elif auth_subject.organization_ids is not None:
-            # No explicit selection over a scoped session: inherit its down-scope
-            # so the token is never broader than the session. An empty set can't
-            # be expressed as a down-scope (no rows == unrestricted), so refuse.
-            if not accessible_organization_ids:
-                raise InvalidRequestError("The session has no accessible organizations")
-            result = list(accessible_organization_ids)
-        else:
-            result = []
-
-        # sub_type=organization must yield exactly one org. The radio UI enforces
-        # this client-side; defend it server-side too rather than silently
-        # widening (empty) or picking arbitrarily (>1).
-        if self.requires_single_organization:
-            if not result:
-                raise InvalidRequestError(
-                    "sub_type=organization requires selecting an organization"
-                )
-            if len(result) > 1:
-                log.warning(
-                    "oauth2.organization_sub_type_multiple_orgs",
-                    client_id=payload.client_id,
-                    user_id=str(auth_subject.subject.id),
-                    organization_ids=[str(value) for value in result],
-                )
-                result = [min(result, key=str)]
-
-        return result
 
     def query_authorization_code(
         self, code: str, client: OAuth2Client
@@ -237,9 +155,6 @@ class AuthorizationCodeGrant(SubTypeGrantMixin, _AuthorizationCodeGrant):
     def authenticate_user(
         self, authorization_code: OAuth2AuthorizationCode
     ) -> SubTypeValue | None:
-        self.request.organization_ids = [
-            scope.organization_id for scope in authorization_code.organization_scopes
-        ]
         return authorization_code.get_sub_type_value()
 
 
@@ -317,17 +232,11 @@ class ValidateSubAndPrompt:
         sub_type: str | None = payload.data.get("sub_type")
         if sub_type:
             try:
-                requested_sub_type = SubType(sub_type)
+                SubType(sub_type)
             except ValueError as e:
                 raise InvalidRequestError("Invalid sub_type") from e
-        else:
-            client: OAuth2Client = typing.cast(OAuth2Client, grant.client)
-            requested_sub_type = client.default_sub_type
 
-        # The OAuth server only issues user tokens now; sub_type=organization
-        # just forces a single-org down-scope (resolved from `organizations` at
-        # consent). The legacy `sub` param is ignored.
-        grant.requires_single_organization = requested_sub_type == SubType.organization
+        # The server only issues user tokens; the legacy `sub` param is ignored.
         grant.sub_type = SubType.user
         grant.sub = grant.request.user
 

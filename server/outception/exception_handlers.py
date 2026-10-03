@@ -13,7 +13,9 @@ from outception.exceptions import (
 )
 
 
-async def outception_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+async def outception_exception_handler(
+    request: Request, exc: Exception
+) -> JSONResponse:
     assert isinstance(exc, OutceptionError)
     return JSONResponse(
         status_code=exc.status_code,

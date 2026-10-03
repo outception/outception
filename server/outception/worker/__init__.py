@@ -17,6 +17,7 @@ from outception.observability.task_logging import register_task_logging
 from ._broker import get_broker
 from ._encoder import JSONEncoder
 from ._enqueue import (
+    MAX_JOB_PAYLOAD_BYTES,
     BulkJobDelayCalculator,
     JobQueueManager,
     enqueue_events,
@@ -27,7 +28,6 @@ from ._httpx import HTTPXMiddleware
 from ._queues import TaskPriority, TaskQueue
 from ._redis import RedisMiddleware
 from ._sqlalchemy import AsyncReadSessionMaker, AsyncSessionMaker
-from ._sqs import MAX_JOB_PAYLOAD_BYTES
 
 _ = _prometheus_metrics  # for mypy and ruff: ensure import is used
 

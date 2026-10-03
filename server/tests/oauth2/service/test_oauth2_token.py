@@ -6,7 +6,7 @@ from pytest_mock import MockerFixture
 
 from outception.email.schemas import OAuth2LeakedTokenEmail
 from outception.enums import TokenType
-from outception.models import OAuth2Client, OAuth2Token, Organization, User, UserOrganization
+from outception.models import OAuth2Client, OAuth2Token, User
 from outception.oauth2.service.oauth2_token import oauth2_token as oauth2_token_service
 from outception.postgres import AsyncSession
 from tests.fixtures.database import SaveFixture
@@ -28,8 +28,6 @@ class TestRevokeLeaked:
         [
             ("outception_at_u_123", TokenType.access_token),
             ("outception_rt_u_123", TokenType.refresh_token),
-            ("outception_at_o_123", TokenType.access_token),
-            ("outception_rt_o_123", TokenType.refresh_token),
         ],
     )
     async def test_false_positive(
@@ -70,44 +68,6 @@ class TestRevokeLeaked:
             refresh_token="outception_rt_u_123",
             scopes=["openid"],
             user=user,
-        )
-
-        result = await oauth2_token_service.revoke_leaked(
-            session, token, token_type, notifier="github", url="https://github.com"
-        )
-        assert result is True
-
-        assert oauth2_token.access_token_revoked_at is not None
-        assert oauth2_token.refresh_token_revoked_at is not None
-
-        enqueue_email_mock.assert_called_once()
-        assert isinstance(enqueue_email_mock.call_args[0][0], OAuth2LeakedTokenEmail)
-
-    @pytest.mark.parametrize(
-        ("token", "token_type"),
-        [
-            ("outception_at_o_123", TokenType.access_token),
-            ("outception_rt_o_123", TokenType.refresh_token),
-        ],
-    )
-    async def test_true_positive_organization(
-        self,
-        token: str,
-        token_type: TokenType,
-        save_fixture: SaveFixture,
-        session: AsyncSession,
-        oauth2_client: OAuth2Client,
-        organization: Organization,
-        user_organization: UserOrganization,
-        enqueue_email_mock: MagicMock,
-    ) -> None:
-        oauth2_token = await create_oauth2_token(
-            save_fixture,
-            client=oauth2_client,
-            access_token="outception_at_o_123",
-            refresh_token="outception_rt_o_123",
-            scopes=["openid"],
-            organization=organization,
         )
 
         result = await oauth2_token_service.revoke_leaked(
@@ -354,128 +314,3 @@ class TestDeleteExpired:
 
         preserved = await session.get(OAuth2Token, valid.id)
         assert preserved is not None
-
-
-@pytest.mark.asyncio
-class TestRevokeForSSOEnforcement:
-    async def test_revokes_token_scoped_to_org(
-        self,
-        save_fixture: SaveFixture,
-        session: AsyncSession,
-        oauth2_client: OAuth2Client,
-        user: User,
-        organization: Organization,
-    ) -> None:
-        token = await create_oauth2_token(
-            save_fixture,
-            client=oauth2_client,
-            access_token="outception_at_u_sso1",
-            refresh_token="outception_rt_u_sso1",
-            scopes=["openid"],
-            user=user,
-            organizations=[organization],
-        )
-
-        await oauth2_token_service.revoke_for_sso_enforcement(session, organization.id)
-
-        await session.refresh(token)
-        assert token.access_token_revoked_at
-        assert token.refresh_token_revoked_at
-
-    async def test_revokes_token_scoped_to_multiple_orgs(
-        self,
-        save_fixture: SaveFixture,
-        session: AsyncSession,
-        oauth2_client: OAuth2Client,
-        user: User,
-        organization: Organization,
-        organization_second: Organization,
-    ) -> None:
-        # Revoked even though it also covers a non-enforced org.
-        token = await create_oauth2_token(
-            save_fixture,
-            client=oauth2_client,
-            access_token="outception_at_u_sso2",
-            refresh_token="outception_rt_u_sso2",
-            scopes=["openid"],
-            user=user,
-            organizations=[organization, organization_second],
-        )
-
-        await oauth2_token_service.revoke_for_sso_enforcement(session, organization.id)
-
-        await session.refresh(token)
-        assert token.access_token_revoked_at
-
-    async def test_ignores_token_scoped_to_other_org(
-        self,
-        save_fixture: SaveFixture,
-        session: AsyncSession,
-        oauth2_client: OAuth2Client,
-        user: User,
-        organization: Organization,
-        organization_second: Organization,
-    ) -> None:
-        token = await create_oauth2_token(
-            save_fixture,
-            client=oauth2_client,
-            access_token="outception_at_u_sso4",
-            refresh_token="outception_rt_u_sso4",
-            scopes=["openid"],
-            user=user,
-            organizations=[organization_second],
-        )
-
-        await oauth2_token_service.revoke_for_sso_enforcement(session, organization.id)
-
-        await session.refresh(token)
-        assert not token.access_token_revoked_at
-
-    async def test_ignores_unrestricted_token(
-        self,
-        save_fixture: SaveFixture,
-        session: AsyncSession,
-        oauth2_client: OAuth2Client,
-        user: User,
-        organization: Organization,
-    ) -> None:
-        # No org rows == unrestricted; handled at request time, not revoked here.
-        token = await create_oauth2_token(
-            save_fixture,
-            client=oauth2_client,
-            access_token="outception_at_u_sso5",
-            refresh_token="outception_rt_u_sso5",
-            scopes=["openid"],
-            user=user,
-        )
-
-        await oauth2_token_service.revoke_for_sso_enforcement(session, organization.id)
-
-        await session.refresh(token)
-        assert not token.access_token_revoked_at
-
-    async def test_leaves_fully_revoked_token_untouched(
-        self,
-        save_fixture: SaveFixture,
-        session: AsyncSession,
-        oauth2_client: OAuth2Client,
-        user: User,
-        organization: Organization,
-    ) -> None:
-        token = await create_oauth2_token(
-            save_fixture,
-            client=oauth2_client,
-            access_token="outception_at_u_sso6",
-            refresh_token="outception_rt_u_sso6",
-            scopes=["openid"],
-            user=user,
-            organizations=[organization],
-            access_token_revoked_at=1,
-            refresh_token_revoked_at=1,
-        )
-
-        await oauth2_token_service.revoke_for_sso_enforcement(session, organization.id)
-
-        await session.refresh(token)
-        assert token.access_token_revoked_at == 1
-        assert token.refresh_token_revoked_at == 1

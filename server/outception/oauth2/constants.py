@@ -8,15 +8,13 @@ CLIENT_REGISTRATION_TOKEN_PREFIX = "outception_crt_"
 AUTHORIZATION_CODE_PREFIX = "outception_ac_"
 ACCESS_TOKEN_PREFIX: dict[SubType, str] = {
     SubType.user: "outception_at_u_",
-    SubType.organization: "outception_at_o_",
 }
 REFRESH_TOKEN_PREFIX: dict[SubType, str] = {
     SubType.user: "outception_rt_u_",
-    SubType.organization: "outception_rt_o_",
 }
 
 ISSUER = settings.BASE_URL
-SERVICE_DOCUMENTATION = "https://outception.sh/docs"
+SERVICE_DOCUMENTATION = "https://outception.com/docs"
 SUBJECT_TYPES_SUPPORTED = ["public"]
 ID_TOKEN_SIGNING_ALG = "RS256"
 ID_TOKEN_SIGNING_ALG_VALUES_SUPPORTED = [ID_TOKEN_SIGNING_ALG]

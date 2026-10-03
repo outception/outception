@@ -32,7 +32,7 @@ class TestEmailSend:
     ) -> None:
         mock_send = mocker.patch(
             "outception.email.tasks.email_sender.send",
-            return_value="resend_123",
+            return_value="message_123",
         )
 
         await email_send(
@@ -51,7 +51,7 @@ class TestEmailSend:
         result = await session.execute(select(EmailLog))
         log = result.scalar_one()
         assert log.status == EmailLogStatus.sent
-        assert log.processor_id == "resend_123"
+        assert log.processor_id == "message_123"
         assert log.to_email_addr == "test@example.com"
         assert log.subject == "Test Subject"
         assert log.error is None
@@ -91,7 +91,7 @@ class TestEmailSend:
     ) -> None:
         mocker.patch(
             "outception.email.tasks.email_sender.send",
-            return_value="resend_123",
+            return_value="message_123",
         )
 
         await email_send(
@@ -109,112 +109,6 @@ class TestEmailSend:
         result = await session.execute(select(EmailLog))
         log = result.scalar_one()
         assert log.deduplication_key == "some_reminder:abc:2026-4"
-
-    async def test_template_email_extracts_organization_id(
-        self,
-        session: AsyncSession,
-        mocker: MockerFixture,
-    ) -> None:
-        mocker.patch(
-            "outception.email.tasks.email_sender.send",
-            return_value=None,
-        )
-        mocker.patch(
-            "outception.email.tasks.render_from_json",
-            return_value="<p>Rendered</p>",
-        )
-
-        org_id = "01942f38-d81f-7cd7-a40e-a80ae5e3cecd"
-        props_json = (
-            '{"email": "test@example.com",'
-            f' "organization": {{"id": "{org_id}", "name": "Test Org"}}}}'
-        )
-
-        await email_send(
-            to_email_addr="test@example.com",
-            subject="Test Subject",
-            html_content=None,
-            from_name="Outception",
-            from_email_addr="noreply@outception.sh",
-            email_headers=None,
-            reply_to_name=None,
-            reply_to_email_addr=None,
-            template="order_confirmation",
-            props_json=props_json,
-        )
-
-        result = await session.execute(select(EmailLog))
-        log = result.scalar_one()
-        assert log.email_template == "order_confirmation"
-        assert str(log.organization_id) == org_id
-        assert log.email_props["organization"]["name"] == "Test Org"
-
-    async def test_send_includes_category_and_tenant_tags(
-        self,
-        session: AsyncSession,
-        mocker: MockerFixture,
-    ) -> None:
-        mock_send = mocker.patch(
-            "outception.email.tasks.email_sender.send",
-            return_value=None,
-        )
-        mocker.patch(
-            "outception.email.tasks.render_from_json",
-            return_value="<p>Rendered</p>",
-        )
-
-        org_id = "01942f38-d81f-7cd7-a40e-a80ae5e3cecd"
-        props_json = (
-            '{"email": "test@example.com",'
-            f' "organization": {{"id": "{org_id}", "name": "Test Org"}}}}'
-        )
-
-        await email_send(
-            to_email_addr="test@example.com",
-            subject="Test Subject",
-            html_content=None,
-            from_name="Outception",
-            from_email_addr="noreply@outception.sh",
-            email_headers=None,
-            reply_to_name=None,
-            reply_to_email_addr=None,
-            template="order_confirmation",
-            props_json=props_json,
-        )
-
-        assert mock_send.call_args.kwargs["tags"] == {
-            "category": "order_confirmation",
-            "tenant_id": org_id,
-        }
-
-    async def test_send_tags_omit_tenant_without_organization(
-        self,
-        session: AsyncSession,
-        mocker: MockerFixture,
-    ) -> None:
-        mock_send = mocker.patch(
-            "outception.email.tasks.email_sender.send",
-            return_value=None,
-        )
-        mocker.patch(
-            "outception.email.tasks.render_from_json",
-            return_value="<p>Rendered</p>",
-        )
-
-        await email_send(
-            to_email_addr="test@example.com",
-            subject="Test Subject",
-            html_content=None,
-            from_name="Outception",
-            from_email_addr="noreply@outception.sh",
-            email_headers=None,
-            reply_to_name=None,
-            reply_to_email_addr=None,
-            template="login_code",
-            props_json='{"email": "test@example.com"}',
-        )
-
-        assert mock_send.call_args.kwargs["tags"] == {"category": "login_code"}
 
     async def test_processor_reflects_settings(
         self,

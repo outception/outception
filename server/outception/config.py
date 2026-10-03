@@ -1,22 +1,19 @@
-import functools
+import base64
 import json
 import os
 import tempfile
 from datetime import timedelta
 from enum import StrEnum
 from pathlib import Path
-from typing import Annotated, Any, Literal
-from urllib.parse import parse_qs, unquote, urlparse
+from typing import Annotated, Literal
+from urllib.parse import parse_qs, quote, unquote, urlparse
 
 from annotated_types import Ge
-from pydantic import AfterValidator, DirectoryPath, model_validator
-from pydantic_ai.models import Model, infer_model, parse_model_id
-from pydantic_ai.providers.gateway import gateway_provider
+from pydantic import AfterValidator, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import URL
 
-from outception.enums import EmailSender, TaxProcessor
-from outception.kit.address import Address, CountryAlpha2
+from outception.enums import EmailSender
 
 # A token hash reads `<secret_id>$<digest>`. The digest is 64 characters
 HASH_SEPARATOR = "$"
@@ -48,15 +45,9 @@ class Environment(StrEnum):
     testing = "testing"  # Used for running tests
     sandbox = "sandbox"
     production = "production"
-    test = "test"  # Used for the test environment in Render
 
 
 def _validate_email_renderer_binary_path(value: Path) -> Path:
-    # On Vercel the binary is produced later in the build (see vercel.toml),
-    # after this import-time check runs.
-    if "VERCEL" in os.environ:
-        return value
-
     if not value.exists() and not value.is_file():
         raise ValueError(
             f"""
@@ -74,18 +65,21 @@ def _validate_email_renderer_binary_path(value: Path) -> Path:
 env = Environment(os.getenv("OUTCEPTION_ENV", Environment.development))
 if env == Environment.testing:
     env_file = ".env.testing"
-elif env == Environment.test:
-    env_file = ".env.test"
 else:
     env_file = ".env"
 file_extension = ".exe" if os.name == "nt" else ""
+
+# The development default for ``SECRET``. It is fine locally but must never be
+# used in a hosted environment: it keys all token hashing (OAuth codes, OTPs,
+# sessions), so a known value means forgeable credentials. Enforced by
+# ``_require_strong_secret`` below.
+INSECURE_DEFAULT_SECRET = "super secret jwt secret"
 
 
 class Settings(BaseSettings):
     ENV: Environment = Environment.development
     SQLALCHEMY_DEBUG: bool = False
-    POSTHOG_DEBUG: bool = False
-    LOG_LEVEL: str = "DEBUG"
+    LOG_LEVEL: str = "INFO"
     TESTING: bool = False
 
     WORKER_HEALTH_CHECK_INTERVAL: timedelta = timedelta(seconds=30)
@@ -96,37 +90,29 @@ class Settings(BaseSettings):
     WORKER_EVENT_LOOP_WATCHDOG_MAX_MISSES: int = 3
     WORKER_PROMETHEUS_DIR: Path = Path(tempfile.gettempdir()) / "prometheus_multiproc"
 
-    # Grafana Cloud Prometheus
+    # Prometheus remote write. Unset in production: the counters stay in the
+    # process registry and are exposed on the internal network only.
     GRAFANA_CLOUD_PROMETHEUS_WRITE_URL: str | None = None
     GRAFANA_CLOUD_PROMETHEUS_WRITE_USERNAME: str | None = None
     GRAFANA_CLOUD_PROMETHEUS_WRITE_PASSWORD: str | None = None
     GRAFANA_CLOUD_PROMETHEUS_WRITE_INTERVAL: Annotated[int, Ge(1)] = 60  # seconds
-    GRAFANA_CLOUD_PROMETHEUS_QUERY_URL: str | None = None
-    GRAFANA_CLOUD_PROMETHEUS_QUERY_USER: str | None = None
-    GRAFANA_CLOUD_PROMETHEUS_QUERY_KEY: str | None = None
-
-    # Slack
-    SLACK_BOT_TOKEN: str | None = None
-    SLACK_CHANNEL: str | None = None
-    MERCHANT_MIGRATION_SLACK_CHANNEL: str = "C0B76J9KR8F"
-
-    # SLO Report
-    SLO_REPORT_ENABLED: bool = True
-
-    WEBHOOK_MAX_RETRIES: int = 10
-    WEBHOOK_FIFO_GUARD_DELAY_MS: int = 300  # p95 is 236ms
-    WEBHOOK_FIFO_GUARD_MAX_AGE: timedelta = timedelta(minutes=1)
-    WEBHOOK_EVENT_RETENTION_PERIOD: timedelta = timedelta(days=90)
-    WEBHOOK_DELIVERY_PAYLOAD_RETENTION_PERIOD: timedelta = timedelta(days=90)
-    WEBHOOK_FAILURE_THRESHOLD: int = 10
 
     WORKER_DEFAULT_DEBOUNCE_MIN_THRESHOLD: timedelta = timedelta(seconds=15)
     WORKER_DEFAULT_DEBOUNCE_MAX_THRESHOLD: timedelta = timedelta(minutes=15)
 
-    CUSTOMER_METER_UPDATE_DEBOUNCE_MIN_THRESHOLD: timedelta = timedelta(seconds=15)
-    CUSTOMER_METER_UPDATE_DEBOUNCE_MAX_THRESHOLD: timedelta = timedelta(minutes=180)
+    # Accounts (login, sessions, the OAuth2 provider, follows, server prefs).
+    # When false none of those routers are mounted: the endpoints do not
+    # exist, so they cannot be hit. Unset resolves per environment (see
+    # `_default_accounts_enabled`): on in development and testing so the
+    # suite keeps its auth coverage, off in the internet-facing environments
+    # until the deploy sets it. Readers never need an account; submitting a
+    # product to the daily card does.
+    ACCOUNTS_ENABLED: bool | None = None
 
-    SECRET: str = "super secret jwt secret"
+    # Emails allowed on the founder's review pages (Products of the day).
+    ADMIN_EMAILS: list[str] = []
+
+    SECRET: str = INSECURE_DEFAULT_SECRET
     HASH_SECRETS: dict[str, str] = {}
     CURRENT_HASH_SECRET_ID: str | None = None
     # The key set the LocalSigner signs with: a document, or a path to one.
@@ -139,26 +125,30 @@ class Settings(BaseSettings):
 
     ALLOWED_HOSTS: set[str] = {"127.0.0.1:3000", "localhost:3000"}
 
-    # User-Agent sent by Outception's outbound HTTP clients (e.g. URL reachability
-    # checks). Excludes the org review website/setup collectors, which use a
-    # browser-like UA to avoid bot detection by CDNs.
-    OUTCEPTION_USER_AGENT: str = "Outception/1.0 (+https://outception.sh)"
+    # Reverse proxies (by IP or CIDR) whose client-IP forwarding headers we
+    # trust. A request's peer IP must fall inside one of these ranges before a
+    # forwarding header is honoured; otherwise the header is ignored and the
+    # socket peer IP is used. Leave empty to never trust forwarding headers
+    # (correct when nothing sits in front of the app). In production set this
+    # to the reverse proxy or CDN edge that terminates inbound requests.
+    TRUSTED_PROXY_IPS: list[str] = []
+
+    # Client-IP forwarding headers to honour (in priority order, first present
+    # wins) when the peer is a trusted proxy. Set this to match whatever the
+    # edge emits.
+    TRUSTED_CLIENT_IP_HEADERS: list[str] = ["CF-Connecting-IP", "True-Client-IP"]
+
+    # User-Agent sent by the outbound HTTP clients (feed fetches, reachability
+    # checks). The field name is kept for parity with the live env file.
+    OUTCEPTION_USER_AGENT: str = "Outception/1.0 (+https://outception.com)"
 
     # Base URL for the backend. Used by generate_external_url to
     # generate URLs to the backend accessible from the outside.
     BASE_URL: str = "http://127.0.0.1:8000"
-    BACKOFFICE_ENABLED: bool = True
-    BACKOFFICE_HOST: str | None = None
-    CHECKOUT_LINK_HOST: str | None = None  # e.g., "buy.outception.sh" in production
 
     # URL to frontend app.
-    # Update to ngrok domain or similar in case you want
-    # working Github badges in development.
     FRONTEND_BASE_URL: str = "http://127.0.0.1:3000"
     FRONTEND_DEFAULT_RETURN_PATH: str = "/"
-    CHECKOUT_BASE_URL: str = (
-        "http://127.0.0.1:8000/v1/checkout-links/{client_secret}/redirect"
-    )
 
     # Authentication session
     AUTHENTICATION_SESSION_TTL: timedelta = timedelta(minutes=15)
@@ -184,23 +174,8 @@ class Settings(BaseSettings):
     USER_SESSION_COOKIE_KEY: str = "outception_session"
     USER_SESSION_COOKIE_DOMAIN: str | None = "127.0.0.1"
 
-    # Customer session
-    CUSTOMER_SESSION_TTL: timedelta = timedelta(hours=1)
-    CUSTOMER_SESSION_CODE_TTL: timedelta = timedelta(minutes=30)
-    CUSTOMER_SESSION_CODE_LENGTH: int = 6
-
-    # Impersonation session
-    IMPERSONATION_COOKIE_KEY: str = "outception_original_session"
-    IMPERSONATION_INDICATOR_COOKIE_KEY: str = "outception_is_impersonating"
-
     # Email verification
     EMAIL_VERIFICATION_TTL_SECONDS: int = 60 * 30  # 30 minutes
-
-    # Checkout
-    CHECKOUT_TTL_SECONDS: int = 60 * 60 * 24  # 24 hours
-    EXPIRED_CHECKOUT_RETENTION_PERIOD: timedelta = timedelta(days=90)
-    IP_GEOLOCATION_DATABASE_DIRECTORY_PATH: DirectoryPath = Path(__file__).parent.parent
-    IP_GEOLOCATION_DATABASE_NAME: str = "ip-geolocation.mmdb"
 
     # Database
     POSTGRES_USER: str = "outception"
@@ -211,8 +186,8 @@ class Settings(BaseSettings):
     POSTGRES_PORT_FALLBACK: int | None = None
     POSTGRES_DATABASE: str = "outception"
     POSTGRES_SSL: bool = False
-    # Full connection URL, as injected by managed Postgres integrations
-    # (e.g. Neon). When set, its components take precedence over the parts above.
+    # Full connection URL, as injected by managed Postgres integrations.
+    # When set, its components take precedence over the parts above.
     POSTGRES_URL_NON_POOLING: str | None = None
     DATABASE_POOL_SIZE: int = 5
     DATABASE_SYNC_POOL_SIZE: int = 1  # Specific pool size for sync connection: since we only use it in OAuth2 router, don't waste resources.
@@ -233,6 +208,11 @@ class Settings(BaseSettings):
     REDIS_HOST: str = "127.0.0.1"
     REDIS_PORT: int = 6379
     REDIS_DB: int = 0
+    # Optional Redis AUTH. Redis is the job broker, the rate-limit store and
+    # the card cache, so if it is ever reachable beyond a trusted network these
+    # let an operator turn on authentication. Empty (default) means no auth.
+    REDIS_USERNAME: str | None = None
+    REDIS_PASSWORD: str | None = None
     # Full connection URL, for managed Redis requiring auth or TLS (rediss://),
     # which the parts above cannot express. Takes precedence when set.
     REDIS_URL: str | None = None
@@ -249,131 +229,165 @@ class Settings(BaseSettings):
     EMAIL_SENDER: EmailSender = EmailSender.logger
     RESEND_API_KEY: str = ""
     RESEND_API_BASE_URL: str = "https://api.resend.com"
-    RESEND_WEBHOOK_SECRET: str = ""
-    RESEND_ACTIVE_USERS_SEGMENT_ID: str | None = None
+    # SMTP (used when EMAIL_SENDER=smtp). Production sends through SMTP:
+    # host, port, STARTTLS, user = the sending address, password = an app
+    # password of that account.
+    EMAIL_SMTP_HOST: str = "smtp.gmail.com"
+    EMAIL_SMTP_PORT: int = 587
+    EMAIL_SMTP_USER: str = ""
+    EMAIL_SMTP_PASSWORD: str = ""
+    EMAIL_SMTP_STARTTLS: bool = True
     EMAIL_FROM_NAME: str = "Outception"
-    EMAIL_FROM_DOMAIN: str = "notifications.outception.sh"
-    EMAIL_FROM_LOCAL: str = "mail"
+    EMAIL_FROM_DOMAIN: str = "outception.com"
+    EMAIL_FROM_LOCAL: str = "no-reply"
     EMAIL_DEFAULT_REPLY_TO_NAME: str = "Outception Support"
-    EMAIL_DEFAULT_REPLY_TO_EMAIL_ADDRESS: str = "support@outception.sh"
+    EMAIL_DEFAULT_REPLY_TO_EMAIL_ADDRESS: str = "support@outception.com"
     EMAIL_LOG_RETENTION_PERIOD: timedelta = timedelta(days=660)
 
-    EXTERNAL_EVENT_RETENTION_PERIOD: timedelta = timedelta(days=30)
-
     TURNSTILE_SECRET: str = ""
-
-    # Github App
-    GITHUB_CLIENT_ID: str = ""
-    GITHUB_CLIENT_SECRET: str = ""
-
-    # GitHub App for repository benefits
-    GITHUB_REPOSITORY_BENEFITS_APP_NAMESPACE: str = ""
-    GITHUB_REPOSITORY_BENEFITS_APP_IDENTIFIER: str = ""
-    GITHUB_REPOSITORY_BENEFITS_APP_PRIVATE_KEY: str = ""
-    GITHUB_REPOSITORY_BENEFITS_CLIENT_ID: str = ""
-    GITHUB_REPOSITORY_BENEFITS_CLIENT_SECRET: str = ""
-
-    # Discord
-    DISCORD_CLIENT_ID: str = ""
-    DISCORD_CLIENT_SECRET: str = ""
-    DISCORD_BOT_TOKEN: str = ""
-    DISCORD_BOT_PERMISSIONS: str = (
-        "268435459"  # Manage Roles, Kick Members, Create Instant Invite
-    )
-    DISCORD_PROXY_URL: str = ""
 
     # Google
     GOOGLE_CLIENT_ID: str = ""
     GOOGLE_CLIENT_SECRET: str = ""
-    # Service account (JSON key) used to fetch the organization review AUP from
-    # Google Drive. The document must be shared with the service account email.
-    GOOGLE_SERVICE_ACCOUNT_JSON: str = ""
 
-    # Organization review Acceptable Use Policy source (Google Doc, fetched via
-    # the Drive API and cached in-process).
-    ORGANIZATION_REVIEW_AUP_DOCUMENT_ID: str = (
-        "13dRNFns8e_BD7yJ0uagDp3_1RB1-hGgam93d3p_9piw"
-    )
-    ORGANIZATION_REVIEW_AUP_CACHE_TTL_SECONDS: int = 3600
+    # Microsoft (common tenant, OpenID Connect)
+    MICROSOFT_CLIENT_ID: str = ""
+    MICROSOFT_CLIENT_SECRET: str = ""
 
-    # Apple
+    # Apple. APPLE_KEY_VALUE is the "Sign in with Apple" .p8 private key, used
+    # to sign the ES256 client-secret JWT. See the validator below: CI ships
+    # it base64-encoded because an env file cannot carry the key's newlines.
     APPLE_CLIENT_ID: str = ""
     APPLE_TEAM_ID: str = ""
     APPLE_KEY_ID: str = ""
     APPLE_KEY_VALUE: str = ""
+    # Public token Apple hands you when configuring the Services ID domain;
+    # served at /.well-known/apple-developer-domain-association.txt so Apple
+    # can verify domain ownership before it accepts the Return URL.
+    APPLE_DOMAIN_ASSOCIATION: str = ""
 
-    # Pydantic AI Gateway
-    PYDANTIC_AI_GATEWAY_API_KEY: str = "DummyKey"
-    PYDANTIC_AI_GATEWAY_MODEL: str = "openai:gpt-5.5"
+    @field_validator("APPLE_KEY_VALUE", mode="after")
+    @classmethod
+    def _normalize_apple_key(cls, value: str) -> str:
+        """Resolve the Apple .p8 key to a real multi-line PEM. Accepts a raw
+        PEM, a single-line PEM with escaped ``\\n`` newlines, or (the CI path)
+        base64 of the .p8 file."""
+        if not value:
+            return value
+        if "-----BEGIN" in value:
+            return value.replace("\\n", "\n")
+        try:
+            decoded = base64.b64decode(value, validate=True).decode("utf-8")
+        except ValueError, UnicodeDecodeError:
+            return value
+        return decoded if "-----BEGIN" in decoded else value
 
-    # Organization review website scraping. Firecrawl Cloud backs the JS-render
-    # path of the collector: it renders JavaScript, follows redirects, and
-    # egresses from Firecrawl's network rather than ours.
-    FIRECRAWL_API_KEY: str | None = None
+    # Summaries. The free lanes come first; the paid provider is the backup
+    # for summaries only. No key set means summaries are disabled.
+    GEMINI_API_KEY: str | None = None
+    # One free-tier key per account, comma separated and tried in order. Falls
+    # back to the single GEMINI_API_KEY above when unset.
+    GEMINI_API_KEYS: str | None = None
+    GEMINI_SUMMARY_MODEL: str = "gemini-3.5-flash-lite"
+    # Free-tier calls per minute for summaries; headroom under the published
+    # limit keeps a burst from tripping a cooldown.
+    GEMINI_RPM_CAP: int = 12
+    GROQ_API_KEY: str | None = None
+    GROQ_API_KEYS: str | None = None
+    GROQ_MODEL: str = "openai/gpt-oss-120b"
+    GROQ_RPM_CAP: int = 20
+    MISTRAL_API_KEY: str | None = None
+    MISTRAL_API_KEYS: str | None = None
+    MISTRAL_MODEL: str = "ministral-8b-latest"
+    MISTRAL_RPM_CAP: int = 30
+    NVIDIA_API_KEY: str | None = None
+    NVIDIA_API_KEYS: str | None = None
+    NVIDIA_MODEL: str = "moonshotai/kimi-k3"
+    NVIDIA_RPM_CAP: int = 30
+    OLLAMA_API_KEY: str | None = None
+    OLLAMA_API_KEYS: str | None = None
+    OLLAMA_MODEL: str = "gpt-oss:120b"
+    OLLAMA_RPM_CAP: int = 20
+    CLOUDFLARE_ACCOUNT_ID: str | None = None
+    CLOUDFLARE_AI_TOKEN: str | None = None
+    CLOUDFLARE_AI_TOKENS: str | None = None
+    CLOUDFLARE_MODEL: str = "@cf/openai/gpt-oss-120b"
+    CLOUDFLARE_RPM_CAP: int = 20
+    # Our own ceiling on requests per UTC day, well inside the free allowance,
+    # so the account never reaches the point where a paid plan would bill.
+    CLOUDFLARE_DAILY_CAP: int = 150
+    ANTHROPIC_API_KEY: str | None = None
+    SUMMARY_MODEL: str = "claude-haiku-4-5-20251001"
+    # Global cost brake: summaries generated per UTC day across all readers
+    # (cache hits do not count).
+    SUMMARY_DAILY_CAP: int = 5000
+    # Paid summaries per UTC day once the free lanes are spent.
+    SUMMARY_PAID_DAILY_CAP: int = 50
+    # Background summary warming per UTC day (free lanes only).
+    SUMMARY_WARM_DAILY_CAP: int = 3500
+    # Of that warm allowance, how much may go on speculative warming: articles
+    # nobody has opened yet.
+    SUMMARY_PRETAP_DAILY_CAP: int = 400
+    # Resolve aggregator article links to the publisher URL before summarizing.
+    GNEWS_RESOLVE_ENABLED: bool = True
+    # When a publisher blocks the fetch or serves only a teaser, fetch the
+    # article text through the reader fallback service instead.
+    READER_FALLBACK_ENABLED: bool = True
+    JINA_API_KEY: str | None = None
+    # Table providers that need a free registration. Without a key the gated
+    # tables are dropped from the roster; the keyless ones always serve.
+    FINNHUB_API_KEY: str | None = None
+    FOOTBALL_DATA_API_KEY: str | None = None
+    CRICKETDATA_API_KEY: str | None = None
+    # Company logo avatars for table tiles.
+    LOGO_DEV_PUBLISHABLE_KEY: str | None = None
 
-    # How long an organization stays in `offboarding` before it automatically
-    # transitions to the terminal `offboarded` state. Measured from the last paid
-    # (not fully refunded) order, i.e. the post-chargeback-risk wind-down window.
-    ORGANIZATION_OFFBOARDING_PERIOD: timedelta = timedelta(days=120)
+    # The model governor: every model call reserves against these caps and
+    # settles afterwards. Two lanes, interactive (readers) and background
+    # (warming, scoring, resolving), each with hourly and daily caps, a global
+    # hourly cap and a daily cap on the paid lane. LLM_DISABLED is the kill
+    # switch: summaries serve cached or teaser text and scoring pauses.
+    LLM_DISABLED: bool = False
+    LLM_INTERACTIVE_HOURLY_CAP: int = 600
+    LLM_INTERACTIVE_DAILY_CAP: int = 5000
+    LLM_BACKGROUND_HOURLY_CAP: int = 400
+    LLM_BACKGROUND_DAILY_CAP: int = 5000
+    LLM_GLOBAL_HOURLY_CAP: int = 900
+    LLM_PAID_DAILY_CAP: int = 50
+    LLM_BACKGROUND_SUBCAP_WARM: int = 3500
+    LLM_BACKGROUND_SUBCAP_SCORE: int = 1000
+    LLM_BACKGROUND_SUBCAP_RESOLVE: int = 500
 
-    # Delay after an org becomes denied/blocked/offboarded before its customers'
-    # subscriptions are auto-cancelled — silently, without notifying customers.
-    ORGANIZATION_SUBSCRIPTION_CANCELLATION_DELAY: timedelta = timedelta(days=7)
+    # The house decision model: a typed decision engine served from its own
+    # container. Unset means every decision chain ends at the LLM rendering.
+    ENGINE_URL: str | None = None
+    ENGINE_API_KEY: str | None = None
+    ENGINE_TIMEOUT_S: float = 2.0
+    # Per-task provider order, comma separated; `llm_decider` is always last.
+    DECISION_CHAIN_SCORE: str = "llm_decider"
+    DECISION_CHAIN_CATEGORY: str = "llm_decider"
+    DECISION_CHAIN_ROUTE: str = "llm_decider"
+    DECISION_CHAIN_RESOLVE: str = "llm_decider"
+    # Record the house model's answer beside the primary's without using it.
+    DECISION_SHADOW: bool = False
+    # An own generation endpoint, for whenever a generation model exists.
+    OWN_GENERATION_URL: str | None = None
+    OWN_GENERATION_MODEL: str | None = None
+    OWN_GENERATION_API_KEY: str | None = None
 
-    # Stripe
-    STRIPE_SECRET_KEY: str = ""
-    STRIPE_PUBLISHABLE_KEY: str = ""
-    # Stripe webhook secrets
-    STRIPE_WEBHOOK_SECRET: str = ""
-    STRIPE_CONNECT_WEBHOOK_SECRET: str = ""
-    # Account risk signals (preview). Empty disables the endpoint.
-    STRIPE_ACCOUNT_RISK_WEBHOOK_SECRET: str = ""
-    STRIPE_STATEMENT_DESCRIPTOR: str = "OUTCEPTION"
-    # The Stripe account merchants copy or import their saved cards into. Shown to
-    # the merchant so they can address the transfer to us.
-    MERCHANT_MIGRATION_DESTINATION_STRIPE_ACCOUNT_ID: str = ""
+    # Briefings
+    BRIEFING_ENABLED: bool = False
+    BRIEFING_PROFILES: list[str] = []
+    BRIEFING_BUILD_CRON: str = "0 5 * * *"
 
-    # Numeral
-    NUMERAL_API_KEY: str | None = None
+    # Feedback digest and push notifications
+    FEEDBACK_DIGEST_EMAIL: str | None = None
+    WEB_PUSH_VAPID_PUBLIC_KEY: str | None = None
+    WEB_PUSH_VAPID_PRIVATE_KEY: str | None = None
+    WEB_PUSH_SUBJECT: str | None = None
 
     # Sentry
     SENTRY_DSN: str | None = None
-
-    # Discord
-    FAVICON_URL: str = "https://raw.githubusercontent.com/outceptionsource/outception/2648cf7472b5128704a097cd1eb3ae5f1dd847e5/docs/docs/assets/favicon.png"
-    THUMBNAIL_URL: str = "https://raw.githubusercontent.com/outceptionsource/outception/4fd899222e200ca70982f437039f549b7a822ecc/clients/apps/web/public/email-logo-dark.png"
-
-    # Posthog
-    POSTHOG_PROJECT_API_KEY: str = ""
-
-    # Tinybird
-    TINYBIRD_API_URL: str = "http://localhost:7181"
-    TINYBIRD_API_TOKEN: str | None = None
-    TINYBIRD_READ_TOKEN: str | None = None
-    TINYBIRD_CLICKHOUSE_URL: str = "http://localhost:7182"
-    TINYBIRD_CLICKHOUSE_USERNAME: str = "default"
-    TINYBIRD_CLICKHOUSE_TOKEN: str | None = None
-    TINYBIRD_WORKSPACE: str | None = None
-    TINYBIRD_BRANCH: str | None = None
-    # Logo.dev (for company logo avatars)
-    LOGO_DEV_PUBLISHABLE_KEY: str | None = None
-    PERSONAL_EMAIL_DOMAINS: set[str] = {
-        "gmail.com",
-        "yahoo.com",
-        "hotmail.com",
-        "outlook.com",
-        "aol.com",
-        "icloud.com",
-        "mail.com",
-        "protonmail.com",
-        "proton.me",
-        "zoho.com",
-        "gmx.com",
-        "yandex.com",
-        "msn.com",
-        "live.com",
-        "qq.com",
-    }
 
     # Memory Profiling
     MEMORY_PROFILE_ENABLED: bool = False
@@ -383,23 +397,15 @@ class Settings(BaseSettings):
     # Logfire
     LOGFIRE_TOKEN: str | None = None
     LOGFIRE_IGNORED_ACTORS: set[str] = {
-        "organization_access_token.record_usage",
-        "personal_access_token.record_usage",
+        # The task span records the whole message payload, and email.send's
+        # props carry the live login code. Log stores must never hold live
+        # credentials.
+        "email.send",
     }
     # S3 logs storage
     S3_LOGS_BUCKET_NAME: str | None = None
 
-    LINEAR_API_KEY: str | None = None
-    LINEAR_TEAM_ID: str | None = None
-    LINEAR_PAYOUT_AMOUNT_MISMATCH_TEMPLATE_ID: str | None = None
-
-    # Plain
-    PLAIN_REQUEST_SIGNING_SECRET: str | None = None
-    PLAIN_TOKEN: str | None = None
-    PLAIN_CHAT_SECRET: str | None = None
-    PLAIN_DEFAULT_TIER_EXTERNAL_ID: str | None = None
-
-    # AWS (File Downloads)
+    # AWS (logs and backups only)
     AWS_ACCESS_KEY_ID: str = "outception-development"
     AWS_SECRET_ACCESS_KEY: str = "outception123456789"
     AWS_REGION: str = "us-east-2"
@@ -409,6 +415,15 @@ class Settings(BaseSettings):
     AWS_S3_CONNECT_TIMEOUT_SECONDS: float = 5.0
     AWS_S3_READ_TIMEOUT_SECONDS: float = 20.0
     AWS_S3_MAX_ATTEMPTS: int = 3
+    # Override to http://127.0.0.1:9000 in .env during development
+    S3_ENDPOINT_URL: str | None = None
+    # Endpoint used when generating presigned URLs handed to a browser.
+    # Defaults to S3_ENDPOINT_URL.
+    S3_PUBLIC_ENDPOINT_URL: str | None = None
+
+    @property
+    def s3_presign_endpoint_url(self) -> str | None:
+        return self.S3_PUBLIC_ENDPOINT_URL or self.S3_ENDPOINT_URL
 
     # Secrets encryption. Production and sandbox wrap data keys with a KMS key
     # (AWS_KMS_KEY_ID); local and CI use a static key instead, so tests make no
@@ -425,231 +440,9 @@ class Settings(BaseSettings):
     # instead.
     AWS_HASH_SECRET_ARN: str | None = None
 
-    # Worker SQS/Lambda execution engine (POC)
-    # When enabled, jobs enqueued for an allowlisted actor are routed to an
-    # SQS queue consumed by the Lambda worker instead of Redis.
-    WORKER_SQS_ENABLED: bool = False
-    WORKER_SQS_ACTORS: set[str] = {
-        "dummy",
-        "observability.invariants.enqueue",
-        "observability.invariants.check",
-    }
-    WORKER_SQS_QUEUE_PREFIX: str = "outception-tasks"
-    # Override to http://127.0.0.1:4566 in .env to target LocalStack
-    SQS_ENDPOINT_URL: str | None = None
-    WORKER_SQS_SCHEDULER_ROLE_ARN: str | None = None
-
-    # Downloadable files
-    S3_FILES_BUCKET_NAME: str = "outception-s3"
-    S3_FILES_PUBLIC_BUCKET_NAME: str = "outception-s3-public"
-    S3_FILES_PRESIGN_TTL: int = 3600  # 60 minutes
-    S3_FILES_DOWNLOAD_SECRET: str = "supersecret"
-    S3_FILES_DOWNLOAD_SALT: str = "saltysalty"
-    # Override to http://127.0.0.1:9000 in .env during development
-    S3_ENDPOINT_URL: str | None = None
-    # Endpoint used when generating presigned URLs handed to the browser.
-    # In local dev Minio must be reached as http://localhost:9000 from the host,
-    # while server-side calls use the in-network http://minio:9000. Defaults to
-    # S3_ENDPOINT_URL (production: same real AWS endpoint).
-    S3_PUBLIC_ENDPOINT_URL: str | None = None
-
-    @property
-    def s3_presign_endpoint_url(self) -> str | None:
-        return self.S3_PUBLIC_ENDPOINT_URL or self.S3_ENDPOINT_URL
-
-    MINIO_USER: str = "outception"
-    MINIO_PWD: str = "outceptionoutception"
-
-    # Chargeback Stop
-    CHARGEBACK_STOP_WEBHOOK_SECRET: str = ""
-
-    # Outception's usage of Outception
-    OUTCEPTION_ACCESS_TOKEN: str = ""
-    OUTCEPTION_WEBHOOK_SECRET: str = ""
-    OUTCEPTION_ORGANIZATION_ID: str = ""
-    OUTCEPTION_FREE_PRODUCT_ID: str = ""
-    # Scale plan product, used by the Startup Program to grant a 100% discount
-    OUTCEPTION_SCALE_PRODUCT_ID: str = ""
-    OUTCEPTION_API_URL: str = "https://api.outception.sh"
-
-    @property
-    def OUTCEPTION_SELF_ENABLED(self) -> bool:
-        return all(
-            [
-                self.OUTCEPTION_ACCESS_TOKEN,
-                self.OUTCEPTION_ORGANIZATION_ID,
-                self.OUTCEPTION_FREE_PRODUCT_ID,
-            ]
-        )
-
-    @property
-    def STARTUP_PROGRAM_ENABLED(self) -> bool:
-        # All three are required: org_id to scope reads, scale_product_id to
-        # attach the discount to, access_token so the SDK calls can auth.
-        return bool(
-            self.OUTCEPTION_ORGANIZATION_ID
-            and self.OUTCEPTION_SCALE_PRODUCT_ID
-            and self.OUTCEPTION_ACCESS_TOKEN
-        )
-
-    # Customer portal URL overrides per organization: either a single URL for the
-    # whole organization, or a mapping of product ID to URL
-    CUSTOMER_PORTAL_URL_OVERRIDES: dict[str, str | dict[str, str]] = {}
-
-    def get_customer_portal_url_override(
-        self, organization_id: str, product_id: str | None
-    ) -> str | None:
-        override = self.CUSTOMER_PORTAL_URL_OVERRIDES.get(organization_id)
-        if isinstance(override, dict):
-            return override.get(product_id) if product_id is not None else None
-        return override
-
-    # Invoices
-    S3_CUSTOMER_INVOICES_BUCKET_NAME: str = "outception-customer-invoices"
-    S3_CUSTOMER_RECEIPTS_BUCKET_NAME: str = "outception-customer-receipts"
-    S3_PAYOUT_INVOICES_BUCKET_NAME: str = "outception-payout-invoices"
-    INVOICES_NAME: str = "Outception Software, Inc."
-    INVOICES_ADDRESS: Address = Address(
-        line1="548 Market St",
-        line2="PMB 61301",
-        postal_code="94104",
-        city="San Francisco",
-        state="US-CA",
-        country=CountryAlpha2("US"),
-    )
-    INVOICES_ADDITIONAL_INFO: str | None = "[support@outception.sh](mailto:support@outception.sh)"
-    INVOICES_VAT_NUMBERS: dict[str, str] = {}
-    PAYOUT_INVOICES_PREFIX: str = "OUTCEPTION-"
-
     # Application behaviours
     API_PAGINATION_MAX_LIMIT: int = 100
     API_MAX_REQUEST_BODY_SIZE: int = 10 * 1024 * 1024
-
-    ACCOUNT_PAYOUT_DELAY: timedelta = timedelta(seconds=1)
-    ACCOUNT_DEFAULT_PAYOUT_INTERVAL: timedelta = timedelta(hours=24)
-    ACCOUNT_PAYOUT_MINIMUM_BALANCE: int = 1000
-
-    _DEFAULT_ACCOUNT_PAYOUT_MINIMUM_BALANCE: int = 1000
-    ACCOUNT_PAYOUT_MINIMUM_BALANCE_PER_PAYOUT_CURRENCY: dict[str, int] = {
-        "all": 4000,
-        "amd": 4000,
-        "aoa": 3000,
-        "azn": 4000,
-        "bam": 4000,
-        "bob": 4000,
-        "btn": 4000,
-        "chf": 1500,
-        "clp": 4000,
-        "cop": 5000,
-        "eur": 1300,
-        "gbp": 1500,
-        "ghs": 4000,
-        "gmd": 4000,
-        "gyd": 4000,
-        "khr": 4000,
-        "krw": 4000,
-        "lak": 4000,
-        "mdl": 4000,
-        "mga": 4000,
-        "mkd": 4000,
-        "mnt": 4000,
-        "myr": 4000,
-        "mzn": 4000,
-        "nad": 4000,
-        "pyg": 4000,
-        "rsd": 4000,
-        "thb": 4000,
-        "twd": 4000,
-        "uzs": 4000,
-        # USD, default
-        "usd": _DEFAULT_ACCOUNT_PAYOUT_MINIMUM_BALANCE,
-    }
-
-    # Stripe enforces per-country minimum payout amounts in the recipient's
-    # local currency. For most countries the per-currency minimum above
-    # already exceeds the country minimum after FX conversion, but a few
-    # don't fit that pattern: USD-denominated countries with a higher local
-    # minimum than the default $10, and BSD (not listed per-currency above).
-    # Values are in USD cents and indexed by ISO 3166-1 alpha-2 country
-    # code, rounded up to the next multiple of $5 USD for FX headroom. See:
-    # https://docs.stripe.com/global-payouts/send-money
-    ACCOUNT_PAYOUT_MINIMUM_BALANCE_PER_PAYOUT_COUNTRY: dict[str, int] = {
-        "BS": 3000,  # Bahamas: 25 BSD
-        "SV": 3000,  # El Salvador: 30 USD
-        "PA": 5000,  # Panama: 50 USD
-    }
-    PLATFORM_FEE_BASIS_POINTS: int = 500
-    PLATFORM_FEE_FIXED: int = 50
-    PLATFORM_SUBSCRIPTION_FEE_BASIS_POINTS: int = 0
-    PLATFORM_FEE_BASIS_POINTS_EARLY_ACCESS: int = 400
-    PLATFORM_FEE_FIXED_EARLY_ACCESS: int = 40
-    PLATFORM_SUBSCRIPTION_FEE_BASIS_POINTS_EARLY_ACCESS: int = 50
-
-    ORGANIZATION_BLOCKED_WORDS: list[str] = [
-        "porn",
-        "porno",
-        "pornography",
-        "sex",
-        "sexual",
-        "sexy",
-        "nsfw",
-        "xxx",
-        "hentai",
-        "erotic",
-        "erotica",
-        "fetish",
-        "nude",
-        "nudes",
-        "nudity",
-        "onlyfans",
-        "camgirl",
-        "escort",
-    ]
-
-    ORGANIZATION_SLUG_RESERVED_KEYWORDS: list[str] = [
-        # Landing pages
-        "benefits",
-        "donations",
-        "issue-funding",
-        "newsletters",
-        "products",
-        "careers",
-        "legal",
-        # App
-        "docs",
-        "login",
-        "signup",
-        "oauth2",
-        "checkout",
-        "embed",
-        "maintainer",
-        "dashboard",
-        "feed",
-        "for-you",
-        "posts",
-        "purchases",
-        "funding",
-        "rewards",
-        "settings",
-        "backoffice",
-        "maintainer",
-        "finance",
-        # Misc
-        ".well-known",
-    ]
-
-    # Dunning Configuration
-    DUNNING_RETRY_INTERVALS: list[timedelta] = [
-        timedelta(days=2),  # First retry after 2 days
-        timedelta(days=5),  # Second retry after 7 days (2 + 5)
-        timedelta(days=7),  # Third retry after 14 days (2 + 5 + 7)
-        timedelta(days=7),  # Fourth retry after 21 days (2 + 5 + 7 + 7)
-    ]
-    CUSTOMER_RETRY_MAX_ATTEMPTS: int = 5
-    PAYMENT_LOCK_STALE_THRESHOLD: timedelta = timedelta(hours=1)
-
-    TAX_PROCESSORS: list[TaxProcessor] = [TaxProcessor.stripe]
-    TAX_RECORD_PROCESSOR: TaxProcessor = TaxProcessor.stripe
 
     model_config = SettingsConfigDict(
         env_prefix="outception_",
@@ -663,55 +456,34 @@ class Settings(BaseSettings):
     def redis_url(self) -> str:
         if self.REDIS_URL:
             return self.REDIS_URL
-        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+        auth = ""
+        if self.REDIS_PASSWORD:
+            user = quote(self.REDIS_USERNAME or "", safe="")
+            auth = f"{user}:{quote(self.REDIS_PASSWORD, safe='')}@"
+        return f"redis://{auth}{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
 
     @model_validator(mode="after")
-    def apply_vercel_defaults(self) -> "Settings":
-        """Derive URL and cookie defaults from the deployment's own URL on Vercel.
+    def _default_accounts_enabled(self) -> "Settings":
+        if self.ACCOUNTS_ENABLED is None:
+            self.ACCOUNTS_ENABLED = self.ENV not in {
+                Environment.production,
+                Environment.sandbox,
+            }
+        return self
 
-        Deployment URLs change with every deployment, so these can't be set
-        statically. The app origin serves the API under /api, and cookies are
-        host-only since no fixed Domain can match the deployment host.
-        Explicitly configured values are left untouched.
-        """
-        vercel_url = os.environ.get("VERCEL_URL")
-        if not self.is_vercel() or not vercel_url:
-            return self
-
-        # Production deployments have a stable URL (the assigned domain);
-        # prefer it over the per-deployment URL for generated links.
-        production_url = os.environ.get("VERCEL_PROJECT_PRODUCTION_URL")
-        canonical_url = (
-            production_url
-            if os.environ.get("VERCEL_ENV") == "production" and production_url
-            else vercel_url
-        )
-
-        # Accept every host the deployment is reachable at.
-        allowed_hosts = {
-            host
-            for host in (
-                vercel_url,
-                os.environ.get("VERCEL_BRANCH_URL"),
-                production_url,
+    @model_validator(mode="after")
+    def _require_strong_secret(self) -> "Settings":
+        # A hosted environment must never run with the development default
+        # SECRET: it keys all token hashing, so a known value makes every
+        # credential forgeable. Fail fast at startup rather than serve traffic.
+        if (
+            self.ENV in {Environment.production, Environment.sandbox}
+            and self.SECRET == INSECURE_DEFAULT_SECRET
+        ):
+            raise ValueError(
+                "OUTCEPTION_SECRET must be set to a strong, unique value in "
+                f"{self.ENV}: it is still the insecure development default."
             )
-            if host
-        }
-
-        defaults: dict[str, Any] = {
-            "FRONTEND_BASE_URL": f"https://{canonical_url}",
-            "BASE_URL": f"https://{canonical_url}/api",
-            "CHECKOUT_BASE_URL": (
-                f"https://{canonical_url}/api/v1/checkout-links/{{client_secret}}/redirect"
-            ),
-            "ALLOWED_HOSTS": allowed_hosts,
-            "AUTHENTICATION_SESSION_COOKIE_DOMAIN": None,
-            "OAUTH2_SESSION_STATE_COOKIE_DOMAIN": None,
-            "USER_SESSION_COOKIE_DOMAIN": None,
-        }
-        for field, value in defaults.items():
-            if field not in self.model_fields_set:
-                setattr(self, field, value)
         return self
 
     @model_validator(mode="after")
@@ -848,16 +620,10 @@ class Settings(BaseSettings):
         return self.is_environment({Environment.testing})
 
     def is_sandbox(self) -> bool:
-        return self.is_environment({Environment.sandbox, Environment.test})
+        return self.is_environment({Environment.sandbox})
 
     def is_production(self) -> bool:
         return self.is_environment({Environment.production})
-
-    def is_test(self) -> bool:
-        return self.is_environment({Environment.test})
-
-    def is_vercel(self) -> bool:
-        return "VERCEL" in os.environ
 
     def generate_external_url(self, path: str) -> str:
         return f"{self.BASE_URL}{path}"
@@ -867,42 +633,7 @@ class Settings(BaseSettings):
 
     @property
     def frontend_hostname(self) -> str:
-        return urlparse(self.FRONTEND_BASE_URL).hostname or "outception.sh"
-
-    def generate_backoffice_url(self, path: str) -> str:
-        if self.BACKOFFICE_HOST is None:
-            return self.generate_external_url(f"/backoffice{path}")
-        return f"https://{self.BACKOFFICE_HOST}{path}"
-
-    @property
-    def stripe_descriptor_suffix_max_length(self) -> int:
-        return 22 - len("* ") - len(self.STRIPE_STATEMENT_DESCRIPTOR)
-
-    def get_minimum_payout(self, currency: str, country: str) -> int:
-        currency_minimum = self.ACCOUNT_PAYOUT_MINIMUM_BALANCE_PER_PAYOUT_CURRENCY.get(
-            currency.lower(), self._DEFAULT_ACCOUNT_PAYOUT_MINIMUM_BALANCE
-        )
-        country_minimum = self.ACCOUNT_PAYOUT_MINIMUM_BALANCE_PER_PAYOUT_COUNTRY.get(
-            country.upper(), 0
-        )
-        return max(currency_minimum, country_minimum)
-
-    def get_pydantic_gateway_model(
-        self, model: str | None = None
-    ) -> tuple[Model, str, str]:
-        model = model or settings.PYDANTIC_AI_GATEWAY_MODEL
-        model_provider, model_name = parse_model_id(model)
-        assert model_provider is not None
-        return (
-            infer_model(
-                model,
-                provider_factory=functools.partial(
-                    gateway_provider, api_key=self.PYDANTIC_AI_GATEWAY_API_KEY
-                ),
-            ),
-            model_provider,
-            model_name,
-        )
+        return urlparse(self.FRONTEND_BASE_URL).hostname or "outception.com"
 
 
 settings = Settings()

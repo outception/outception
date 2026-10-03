@@ -32,11 +32,3 @@ def test_sandbox_uses_default_credential_chain(mocker: MockerFixture) -> None:
     mocker.patch.object(settings, "ENV", Environment.sandbox)
 
     assert get_credentials() == (None, None)
-
-
-def test_test_environment_uses_default_credential_chain(
-    mocker: MockerFixture,
-) -> None:
-    mocker.patch.object(settings, "ENV", Environment.test)
-
-    assert get_credentials() == (None, None)

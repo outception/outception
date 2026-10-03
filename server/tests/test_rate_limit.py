@@ -105,7 +105,9 @@ class TestIdentityCacheRoundTrip:
         )
 
         identity = await _authenticate(
-            _http_scope(headers=[(b"authorization", b"Bearer outception_pat_round_trip")]),
+            _http_scope(
+                headers=[(b"authorization", b"Bearer outception_pat_round_trip")]
+            ),
             redis=redis,
         )
 
@@ -179,7 +181,9 @@ class TestAuthenticate:
     async def test_cookie_cache_miss_uses_cookie_hash_pending_auth(
         self, redis: Redis
     ) -> None:
-        header = f"{settings.USER_SESSION_COOKIE_KEY}=outception_us_unknown".encode("ascii")
+        header = f"{settings.USER_SESSION_COOKIE_KEY}=outception_us_unknown".encode(
+            "ascii"
+        )
         identity = await _authenticate(
             _http_scope(headers=[(b"cookie", header)], client=("9.9.9.9", 1234)),
             redis=redis,
@@ -197,7 +201,9 @@ class TestAuthenticate:
             redis, "outception_us_b", ("user:cookie", RateLimitGroup.web)
         )
 
-        cookie_header = f"{settings.USER_SESSION_COOKIE_KEY}=outception_us_b".encode("ascii")
+        cookie_header = f"{settings.USER_SESSION_COOKIE_KEY}=outception_us_b".encode(
+            "ascii"
+        )
         identity = await _authenticate(
             _http_scope(
                 headers=[
@@ -250,16 +256,9 @@ def _select_rule(
 
 _SENSITIVE_PATHS: list[tuple[str, str]] = [
     ("/v1/login-code/request", "login-code"),
-    ("/v1/customer-portal/customer-session/request", "customer-session-login"),
-    ("/v1/customer-portal/customer-session/authenticate", "customer-session-login"),
-    (
-        "/v1/customer-portal/customers/me/email-update/request",
-        "customer-email-update",
-    ),
-    ("/v1/customer-portal/license-keys/validate", "customer-license-key"),
-    ("/v1/customer-seats/claim/abc-123/stream", "seat-claim-stream"),
-    ("/v1/checkouts/xyz-789/confirm", "checkout-confirm"),
-    ("/v1/feedbacks/", "feedback-submit"),
+    ("/v1/auth/email-otp/request", "auth-email-otp"),
+    ("/v1/auth/totp/verify", "auth-totp"),
+    ("/v1/auth/backup-codes/verify", "auth-backup-codes"),
 ]
 
 
@@ -288,84 +287,3 @@ class TestSensitiveEndpointZoneIsolation:
             f"Path {path!r} for group {group.value!r} resolved to "
             f"zone {rule.zone!r}, expected {expected_zone!r}"
         )
-
-
-@pytest.mark.parametrize("rules", [_PRODUCTION_RULES, _SANDBOX_RULES])
-@pytest.mark.parametrize(
-    "path", ["/v1/email-update/request", "/v1/email-update/verify"]
-)
-@pytest.mark.parametrize("group", [RateLimitGroup.default, RateLimitGroup.web])
-class TestEmailUpdateZone:
-    """Email update is a web-session-only endpoint, so its callers resolve to
-    the `web` group; without a dedicated `web` rule they would fall through to
-    the catch-all "api" zone and its permissive per-second limits."""
-
-    def test_resolves_to_email_update_zone(
-        self, rules: dict[str, Sequence[Rule]], path: str, group: RateLimitGroup
-    ) -> None:
-        rule = _select_rule(rules, path, group)
-        assert rule is not None
-        assert rule.zone == "email-update"
-
-
-@pytest.mark.parametrize("rules", [_PRODUCTION_RULES, _SANDBOX_RULES])
-@pytest.mark.parametrize("group", list(RateLimitGroup))
-class TestCompassAssistantZone:
-    """Every call costs an LLM run, so no caller may reach the catch-all "api"
-    zone. Rules are selected by exact group match and an unmatched group falls
-    through rather than being denied, so every group needs its own rule."""
-
-    def test_resolves_to_compass_zone(
-        self, rules: dict[str, Sequence[Rule]], group: RateLimitGroup
-    ) -> None:
-        rule = _select_rule(rules, "/v1/compass/assistant", group)
-
-        assert rule is not None, f"No rule selected for group={group.value!r}"
-        assert rule.zone == "compass-assistant", (
-            f"Group {group.value!r} resolved to zone {rule.zone!r} — it would "
-            f"fall through to the catch-all allowance"
-        )
-
-
-@pytest.mark.parametrize("rules", [_PRODUCTION_RULES, _SANDBOX_RULES])
-@pytest.mark.parametrize("path", ["/v1/refunds", "/v1/refunds/"])
-@pytest.mark.parametrize(
-    "group",
-    [
-        RateLimitGroup.default,
-        RateLimitGroup.web,
-        RateLimitGroup.restricted,
-        RateLimitGroup.pending_auth,
-    ],
-)
-class TestRefundsPostZone:
-    """Refund creation is capped for normal groups. Elevated is omitted so it
-    falls through to the catch-all `api` zone."""
-
-    def test_post_resolves_to_refunds_zone(
-        self, rules: dict[str, Sequence[Rule]], path: str, group: RateLimitGroup
-    ) -> None:
-        rule = _select_rule(rules, path, group, method="POST")
-        assert rule is not None, (
-            f"No rule selected for path={path!r} group={group.value!r} POST"
-        )
-        assert rule.zone == "refunds"
-        assert rule.hour == 10
-        assert rule.block_time == 3600
-
-
-@pytest.mark.parametrize("rules", [_PRODUCTION_RULES, _SANDBOX_RULES])
-class TestRefundsElevatedAndGetFallThrough:
-    def test_elevated_post_falls_through_to_api(
-        self, rules: dict[str, Sequence[Rule]]
-    ) -> None:
-        rule = _select_rule(
-            rules, "/v1/refunds/", RateLimitGroup.elevated, method="POST"
-        )
-        assert rule is not None
-        assert rule.zone == "api"
-
-    def test_get_uses_api_zone(self, rules: dict[str, Sequence[Rule]]) -> None:
-        rule = _select_rule(rules, "/v1/refunds/", RateLimitGroup.default, method="GET")
-        assert rule is not None
-        assert rule.zone == "api"

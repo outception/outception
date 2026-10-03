@@ -10,39 +10,22 @@ from reauth.factors import FactorBase
 from outception.kit.http import ReturnTo
 from outception.kit.schemas import Schema
 
-from .sso.factor import SSOFactorMixin
-
 # The login method recorded in the `outception_last_login_method` cookie.
 LoginMethod = typing.Literal[
-    "email_otp", "totp", "backup_codes", "apple", "github", "google", "sso"
+    "email_otp", "totp", "backup_codes", "apple", "google", "microsoft"
 ]
 
 
 class BaseFactor(Schema):
     type: typing.Literal[
-        "email_otp", "totp", "backup_codes", "apple", "github", "google"
+        "email_otp", "totp", "backup_codes", "apple", "google", "microsoft"
     ]
 
 
-class SSOFactor(Schema):
-    type: typing.Literal["sso"] = "sso"
-    connection_id: UUID4
-    organization_slug: str
-    name: str | None = Field(
-        description="Human-friendly label for the connection, shown on the login page."
-    )
+Factor = BaseFactor
 
 
-Factor = typing.Annotated[BaseFactor | SSOFactor, Field(discriminator="type")]
-
-
-def _factor_to_schema(factor: FactorBase[typing.Any]) -> BaseFactor | SSOFactor:
-    if isinstance(factor, SSOFactorMixin):
-        return SSOFactor(
-            connection_id=factor.connection_id,
-            organization_slug=factor.organization_slug,
-            name=factor.name,
-        )
+def _factor_to_schema(factor: FactorBase[typing.Any]) -> BaseFactor:
     return BaseFactor.model_validate({"type": factor.identifier})
 
 
@@ -51,12 +34,7 @@ class AuthenticationSessionStart(Schema):
 
 
 class GlobalAuthenticationSessionStart(AuthenticationSessionStart):
-    sso_discovery: bool = Field(
-        default=True,
-        description=(
-            "Send users of an SSO-enforced email domain to their organization's SSO."
-        ),
-    )
+    pass
 
 
 class AuthenticationSession(Schema):

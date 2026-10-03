@@ -27,7 +27,7 @@ class OAuth2Client(RateLimitGroupMixin, RecordModel, OAuth2ClientMixin):
     __tablename__ = "oauth2_clients"
     __table_args__ = (UniqueConstraint("client_id"),)
 
-    client_id: Mapped[str] = mapped_column(String(52), nullable=False)
+    client_id: Mapped[str] = mapped_column(String(64), nullable=False)
     # Cancels the plaintext column authlib's mixin declares.
     client_secret = None
     # HMAC for synchronous verification and value lookup; the encrypted
