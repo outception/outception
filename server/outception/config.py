@@ -321,8 +321,6 @@ class Settings(BaseSettings):
     # Global cost brake: summaries generated per UTC day across all readers
     # (cache hits do not count).
     SUMMARY_DAILY_CAP: int = 5000
-    # Paid summaries per UTC day once the free lanes are spent.
-    SUMMARY_PAID_DAILY_CAP: int = 50
     # Background summary warming per UTC day (free lanes only).
     SUMMARY_WARM_DAILY_CAP: int = 3500
     # Of that warm allowance, how much may go on speculative warming: articles

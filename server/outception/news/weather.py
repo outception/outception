@@ -43,7 +43,7 @@ _FORECAST_DAYS = 4
 # ISO-3166 country → (capital city, latitude, longitude). The fallback location
 # when the reader denies precise geolocation, so the card still shows local
 # weather from the IP country alone. Full coverage of UN members and observers
-# plus the inhabited territories Cloudflare's CF-IPCountry can emit; ordered by
+# plus the inhabited territories the edge's CF-IPCountry header can emit; ordered by
 # code. An unmapped code still falls through to the global default.
 _CAPITALS: dict[str, tuple[str, float, float]] = {
     "AD": ("Andorra la Vella", 42.5063, 1.5218),

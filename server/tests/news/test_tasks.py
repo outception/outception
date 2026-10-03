@@ -116,7 +116,9 @@ class TestAlwaysWarmSources:
         mocker.patch.dict(
             "outception.news.registry.GETTERS", {source_id: getter}, clear=True
         )
-        mocker.patch("outception.news.summary.gemini.configured", return_value=True)
+        mocker.patch(
+            "outception.news.summaries.queue.free_configured", return_value=True
+        )
 
         await warm_demanded_sources()
 

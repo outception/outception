@@ -57,11 +57,22 @@ Task = Literal["score", "category", "route", "resolve"]
 
 
 class Provider(Protocol):
+    """`system` is the instruction block where the endpoint has one; a
+    provider without the notion prepends it. `ready` answers whether the
+    provider could serve right now (a key pool with an unbenched key); the
+    governor's own cooldowns and caps come on top."""
+
     id: str
 
-    async def generate(self, prompt: str, lane: Lane) -> Reply: ...
+    async def generate(
+        self, prompt: str, lane: Lane, *, system: str | None = None
+    ) -> Reply: ...
 
-    def stream(self, prompt: str, lane: Lane) -> AsyncIterator[str]: ...
+    def stream(
+        self, prompt: str, lane: Lane, *, system: str | None = None
+    ) -> AsyncIterator[str]: ...
+
+    async def ready(self) -> bool: ...
 
     def classify(self, exc: Exception) -> ErrorClass: ...
 

@@ -25,12 +25,16 @@ from outception.locker import Locker, TimeoutLockError
 from outception.redis import Redis, create_redis
 from outception.worker import CronTrigger, TaskPriority, actor
 
-from . import cache, free_llm, gemini, heatmap, registry, summary
+from . import cache, heatmap, registry
 from .catalog import registry as catalog_registry
 from .catalog.decks import default_cards
 from .endpoints import SOURCE_DEMAND_KEY, SOURCE_DEMAND_TTL_SECONDS
 from .fetch import FETCH_TIMEOUT_SECONDS, StaleFeedError
 from .registry import DISABLED_SOURCES
+from .summaries import queue as summary_queue
+from .summaries import service as summaries
+from .summaries.providers.lanes import Lane
+from .summaries.providers.registry import build_chains
 
 log = structlog.get_logger()
 
@@ -136,8 +140,8 @@ async def _demanded_single_sources(redis: Redis) -> set[str]:
     Two O(log n) ops - the per-key form this replaces SCANned the entire
     keyspace (translation and known-headline keys included, hundreds of
     thousands of keys) every run to recover a few dozen ids."""
-    horizon = time.time() - SOURCE_DEMAND_TTL_SECONDS
-    await redis.zremrangebyscore(SOURCE_DEMAND_KEY, "-inf", horizon)
+    cutoff = time.time() - SOURCE_DEMAND_TTL_SECONDS
+    await redis.zremrangebyscore(SOURCE_DEMAND_KEY, "-inf", cutoff)
     members = await redis.zrange(SOURCE_DEMAND_KEY, 0, -1)
     return {
         member.decode() if isinstance(member, bytes) else str(member)
@@ -264,7 +268,7 @@ async def warm_demanded_sources() -> None:
                     # daily warm budget.
                     pretap_cd = f"news:summary:pretap-cd:{source_id}"
                     if await redis.set(pretap_cd, "1", ex=8 * 60 * 60, nx=True):
-                        await summary.note_warm_candidates(
+                        await summary_queue.note_warm_candidates(
                             redis,
                             [
                                 item.url
@@ -371,7 +375,7 @@ async def warm_summaries() -> None:
             # queue: without this check a run drew its full draw cap of
             # candidates - urgent handoffs included, whose entire purpose is
             # a later retry - and threw them all away with zero summaries.
-            if not (await gemini.available(redis) or await free_llm.available(redis)):
+            if not await build_chains(redis).available(Lane.background):
                 log.info("news.warm_summaries.providers_benched")
                 return
             draws = 0
@@ -380,12 +384,12 @@ async def warm_summaries() -> None:
                 and draws < _SUMMARY_WARM_DRAW_CAP
                 and time.monotonic() < deadline
             ):
-                candidate = await summary.pop_warm_candidate(redis)
+                candidate = await summary_queue.pop_warm_candidate(redis)
                 if candidate is None:
                     break
                 draws += 1
                 url, lang, origin = candidate
-                outcome = await summary.warm_summary(redis, url, lang, origin)
+                outcome = await summaries.warm_summary(redis, url, lang, origin)
                 if outcome == "warmed":
                     warmed += 1
                     consecutive_failures = 0
@@ -397,7 +401,7 @@ async def warm_summaries() -> None:
                 elif outcome == "unavailable":
                     # Providers got benched mid-run: the candidate is still
                     # good - put it back where it came from and stop draining.
-                    await summary.requeue_warm_candidate(
+                    await summary_queue.requeue_warm_candidate(
                         redis, url, lang, origin=origin
                     )
                     break

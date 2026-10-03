@@ -1,7 +1,7 @@
 """The feed adapters: one factory per family over the shared parser.
 
 - `rss`: a publisher's own feed; raises on an empty answer and treats a feed
-  whose newest item is older than the horizon as abandoned, so a feed the
+  whose newest item is older than the cutoff as abandoned, so a feed the
   publisher stopped posting to never re-caches years-old headlines.
 - `rss_lenient`: a feed where empty is a real answer (alerts).
 - `gnews`: an aggregator feed (country, topic, city or search); empty is a
@@ -26,7 +26,7 @@ _SHOPPING_FALLBACK = 5
 
 
 def _abandoned(items: list[NewsItem]) -> bool:
-    """Whether every dated item predates the staleness horizon. Undated feeds
+    """Whether every dated item predates the staleness cutoff. Undated feeds
     are left alone; the absence of dates says nothing about freshness."""
     dated = [item.pub_date for item in items if item.pub_date]
     if not dated:

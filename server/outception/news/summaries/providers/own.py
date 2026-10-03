@@ -162,15 +162,22 @@ class OwnModel:
             return False
         return response.status_code == 200
 
-    async def generate(self, prompt: str, lane: Lane) -> Reply:
+    async def ready(self) -> bool:
+        return self.configured
+
+    async def generate(
+        self, prompt: str, lane: Lane, *, system: str | None = None
+    ) -> Reply:
         if not settings.OWN_GENERATION_URL:
             raise ModelError(
                 self.id, ErrorClass.transient, detail="no generation endpoint"
             )
         raise ModelError(self.id, ErrorClass.transient, detail="generation not wired")
 
-    async def stream(self, prompt: str, lane: Lane) -> AsyncIterator[str]:
-        reply = await self.generate(prompt, lane)
+    async def stream(
+        self, prompt: str, lane: Lane, *, system: str | None = None
+    ) -> AsyncIterator[str]:
+        reply = await self.generate(prompt, lane, system=system)
         yield reply.text
 
     def classify(self, exc: Exception) -> ErrorClass:

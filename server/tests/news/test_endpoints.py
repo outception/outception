@@ -175,13 +175,13 @@ class TestGetSummary:
     async def test_finished_result_is_edge_cacheable(
         self, client: AsyncClient, mocker: MockerFixture
     ) -> None:
-        from outception.news.summary import SummaryResult
+        from outception.news.summaries.service import SummaryResult
 
         mocker.patch(
             "outception.news.endpoints._summarizable", AsyncMock(return_value=True)
         )
         mocker.patch(
-            "outception.news.summary.get_summary_result",
+            "outception.news.endpoints.summaries.get_summary_result",
             AsyncMock(return_value=SummaryResult("The summary.", "summary")),
         )
         response = await client.get("/v1/news/summary", params={"url": self._URL})

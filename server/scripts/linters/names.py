@@ -41,6 +41,20 @@ ALLOWED_PATHS: tuple[str, ...] = (
     "server/scripts/linters/",
     "server/scripts/check_env_vars.py",
     "server/tests/news/fixtures/parity/",
+    # Publishers and data sources are content, and the catalog is where they
+    # are named.
+    "server/outception/news/data/",
+    # The tests of the allowlisted modules name what those modules name.
+    "server/tests/news/summaries/",
+    "server/tests/news/test_summary.py",
+    "server/tests/auth/test_turnstile.py",
+    "server/tests/integrations/",
+    "server/tests/kit/test_aws.py",
+    "server/tests/kit/test_hash_secrets.py",
+    "server/tests/kit/test_http.py",
+    "server/tests/kit/test_signer.py",
+    "server/tests/scripts/test_linters.py",
+    "server/tests/health/test_service.py",
     "server/pyproject.toml",
     "server/uv.lock",
     "server/Dockerfile",
@@ -88,7 +102,13 @@ SKIP_NAMES = frozenset({"pnpm-lock.yaml", "package-lock.json", "yarn.lock", "uv.
 # The planning documents are git-excluded and may name anything; that is
 # why they are excluded. The upstream skills directory goes with the client
 # prune.
-SKIP_RELATIVE = ("START_HERE.md", ".agents-sync.md", "NEWS_GLOBE_PLAN.md", "IMPROVEMENT_PROPOSALS.md", ".agents/")
+SKIP_RELATIVE = (
+    "START_HERE.md",
+    ".agents-sync.md",
+    "NEWS_GLOBE_PLAN.md",
+    "IMPROVEMENT_PROPOSALS.md",
+    ".agents/",
+)
 
 
 def load_denylist(path: Path = DENYLIST) -> list[str]:

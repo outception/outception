@@ -37,7 +37,6 @@ from . import (
     heatmap,
     registry,
     search,
-    summary,
     weather,
 )
 from .catalog import registry as catalog_registry
@@ -57,6 +56,10 @@ from .schemas import (
     TemplatesResponse,
     WeatherResponse,
 )
+from .summaries import queue as summary_queue
+from .summaries import service as summaries
+from .summaries import stream as summary_stream
+from .summaries.errors import SummaryUnavailable
 
 log = structlog.get_logger()
 
@@ -150,7 +153,7 @@ async def get_source_meta(source_id: str, response: Response) -> SourceMeta:
 
 
 def _ip_country(header: str | None) -> str | None:
-    """Cloudflare's two-letter IP country, or None. ``XX`` (unknown), ``T1``
+    """The edge's two-letter IP country, or None. ``XX`` (unknown), ``T1``
     (Tor) and the regional ``EU``/``AP`` codes are sentinels, not countries -
     left in they'd miss the capitals table and silently yield London weather.
 
@@ -158,7 +161,7 @@ def _ip_country(header: str | None) -> str | None:
     trust signal. That is safe here only because both readers map it through a
     closed set (``_CAPITALS`` / the source roster) and the cards response is
     edge-cacheable (``public``) and therefore sends ``Vary: CF-IPCountry`` -
-    note Cloudflare ignores Vary, so if CF edge caching is ever enabled for
+    note the edge cache ignores Vary, so if edge caching is ever enabled for
     the API, key the cards cache on the ``country`` query param instead."""
     if not header:
         return None
@@ -187,7 +190,7 @@ async def default_cards(
     """The default "Your stack" seeded for a fresh visitor: one representative
     source per major category (world, tech, music, culture, weather, sports,
     science, markets, crypto, betting, gaming). When the reader's ``country``
-    is known (Cloudflare IP country), the generic sports sources are swapped for
+    is known (the edge's IP country), the generic sports sources are swapped for
     that country's native sports/teams (e.g. Ireland → Gaelic football + hurling,
     USA → NFL/NBA/MLB). Retired sources are dropped."""
     # Anonymous and identical for everyone in a country, so let the edge serve
@@ -225,7 +228,7 @@ async def get_summary_availability(
     few milliseconds so the reader is sent to the article immediately rather
     than after a failed generation."""
     response.headers["Cache-Control"] = "no-store"
-    return SummaryAvailability(available=await summary.is_available(redis, url, "en"))
+    return SummaryAvailability(available=await summaries.is_available(redis, url, "en"))
 
 
 @router.get("/summary/stream", tags=[APITag.public])
@@ -233,7 +236,7 @@ async def stream_article_summary(
     url: str = Query(..., min_length=12, max_length=2048),
     redis: Redis = Depends(get_redis),
 ) -> StreamingResponse:
-    """The AI summary as server-sent events, so the panel shows the text as it
+    """The summary as server-sent events, so the panel shows the text as it
     is written: `text` (a whole cached or publisher result), `delta` pieces,
     then `done` - or `error` when the reader should open the article."""
 
@@ -248,11 +251,11 @@ async def stream_article_summary(
             # the client one existed.
             if not (
                 await _summarizable(redis, url)
-                or await summary.has_cached(redis, url, "en")
+                or await summaries.has_cached(redis, url, "en")
             ):
                 yield 'data: {"error": "unavailable"}\n\n'
                 return
-            async for event in summary.stream_summary(redis, url, "en"):
+            async for event in summary_stream.stream_summary(redis, url, "en"):
                 yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
         except OutceptionError as exc:
             yield f'data: {{"error": "{exc.status_code}"}}\n\n'
@@ -281,17 +284,17 @@ async def get_article_summary(
     url: str = Query(..., min_length=12, max_length=2048),
     redis: Redis = Depends(get_redis),
 ) -> SummaryResponse:
-    """AI summary for a headline tap. One model call per article - everything
+    """The summary for a headline tap. One model call per article - everything
     else is served from cache (and the edge can cache it too)."""
     # The allowlist bounds who can aim a fetch and the day's model budget at a
     # URL; a summary already in the cache costs neither. Known-markers expire
     # sooner than the summary cache, so gating on the allowlist alone 502'd
     # readers out of finished summaries.
-    if not await _summarizable(redis, url) and not await summary.has_cached(
+    if not await _summarizable(redis, url) and not await summaries.has_cached(
         redis, url, "en"
     ):
-        raise summary.SummaryUnavailable()
-    result = await summary.get_summary_result(redis, url, "en")
+        raise SummaryUnavailable()
+    result = await summaries.get_summary_result(redis, url, "en")
     response.headers["Cache-Control"] = (
         "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800"
     )
@@ -330,11 +333,11 @@ async def get_weather(
 ) -> WeatherResponse:
     """Current conditions and a short forecast for the reader's location. The
     browser sends precise ``latitude``/``longitude`` when geolocation is
-    granted; otherwise it sends the IP ``country`` (from Cloudflare) and we
+    granted; otherwise it sends the IP ``country`` (from the edge) and we
     resolve that country's capital. Proxied from Open-Meteo, cache-first.
 
     Native clients have no IP-country cookie to read, so when they send neither
-    coordinates nor a country we fall back to Cloudflare's header ourselves -
+    coordinates nor a country we fall back to the edge's header ourselves -
     otherwise a phone whose UI language is US English would be given US weather
     wherever it actually is."""
     result = await weather.get_weather(
@@ -739,7 +742,7 @@ async def get_source(
         # One batched call, not one per hero: this is the hottest read path,
         # and per-URL queueing cost two Redis round trips EACH (twelve per
         # serve) where the batch costs two total.
-        await summary.note_warm_candidates(
+        await summary_queue.note_warm_candidates(
             redis,
             [item.url for item in response.items[:_WARM_HERO_COUNT] if item.url],
             "en",

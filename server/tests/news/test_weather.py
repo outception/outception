@@ -54,7 +54,7 @@ class TestCapitalCoverage:
 
     def test_broad_iso_coverage(self) -> None:
         # Comprehensive map - every UN member plus observers and the inhabited
-        # territories Cloudflare emits (~230 codes).
+        # territories the edge emits (~230 codes).
         assert len(weather._CAPITALS) >= 200
 
     def test_all_entries_are_well_formed(self) -> None:

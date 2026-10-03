@@ -44,7 +44,7 @@ class NewsFetchError(Exception):
 
 class StaleFeedError(NewsFetchError):
     """The feed still answers, but everything in it predates the staleness
-    horizon. A publisher can abandon a feed without taking it down: it keeps
+    cutoff. A publisher can abandon a feed without taking it down: it keeps
     returning 200 and a well-formed body, so a fetch that only checks for
     items happily re-caches years-old headlines forever."""
 

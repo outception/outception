@@ -33,15 +33,22 @@ class FakeProvider:
         self.replies = list(replies)
         self.calls = 0
 
-    async def generate(self, prompt: str, lane: Lane) -> Reply:
+    async def ready(self) -> bool:
+        return True
+
+    async def generate(
+        self, prompt: str, lane: Lane, *, system: str | None = None
+    ) -> Reply:
         self.calls += 1
         reply = self.replies.pop(0)
         if isinstance(reply, Exception):
             raise reply
         return Reply(text=reply, model=f"{self.id}-model", tokens_in=10, tokens_out=5)
 
-    async def stream(self, prompt: str, lane: Lane) -> AsyncIterator[str]:
-        reply = await self.generate(prompt, lane)
+    async def stream(
+        self, prompt: str, lane: Lane, *, system: str | None = None
+    ) -> AsyncIterator[str]:
+        reply = await self.generate(prompt, lane, system=system)
         yield reply.text
 
     def classify(self, exc: Exception) -> ErrorClass:
