@@ -92,10 +92,6 @@ def test_order_is_column_rank_then_registration(tmp_path: Path) -> None:
         ),
         ({"sources.json": [{"id": "a", "name": "A", "color": "#000"}]}, "no adapter"),
         (
-            {"disabled.json": [{"id": "ghost", "reason": "x", "since": "2026-10-01"}]},
-            "unknown id ghost",
-        ),
-        (
             {"templates.json": [{"id": "developer", "sources": ["ghost"]}]},
             "names unknown id",
         ),
@@ -109,7 +105,7 @@ def test_order_is_column_rank_then_registration(tmp_path: Path) -> None:
         ),
         (
             {"decks/default.json": {"base": [{"id": "ghost"}]}},
-            "deck entry names unknown id",
+            "names unknown id",
         ),
         (
             {

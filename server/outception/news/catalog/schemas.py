@@ -9,18 +9,6 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-Column = Literal[
-    "news",
-    "world",
-    "sports",
-    "finance",
-    "science",
-    "entertainment",
-    "tech",
-    "social",
-    "betting",
-]
-
 # Default card set order: lead with mainstream and global news and sports the
 # way a front page does, and push tech, social and niche columns lower.
 # Sources keep their registration order within a column (stable sort).
@@ -47,7 +35,7 @@ class SourceRow(BaseModel):
     id: str
     name: str
     color: str
-    column: Column | None = None
+    column: str | None = None
     type: Literal["hottest", "realtime", "heatmap", "game"] | None = None
     home: str | None = None
     title: str | None = None
@@ -69,8 +57,10 @@ class DisabledRow(BaseModel):
 
 class TemplateRow(BaseModel):
     """A Starter: a static roster plus `extras`, references to the country
-    tables (`country:<table>`) resolved per request. A Starter is also a
-    briefing profile id."""
+    tables resolved per request: `country:<table>` adds the country's ids,
+    `country:<table>|<id>` adds the fallback id when the country has none,
+    `country:news` the country card and `country:education` the country's
+    education card. A Starter is also a briefing profile id."""
 
     model_config = ConfigDict(extra="forbid")
 

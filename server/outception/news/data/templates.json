@@ -1,1 +1,597 @@
-[]
+[
+ {
+  "id": "developer",
+  "sources": [
+   "github",
+   "hackernews",
+   "producthunt",
+   "lobsters",
+   "techcrunch",
+   "theverge",
+   "arstechnica",
+   "youtube-theverge",
+   "youtube-mkbhd",
+   "openai",
+   "tech-new",
+   "heatmap-tech",
+   "kickstarter",
+   "sci-vibecoding",
+   "sci-aicodingassistants"
+  ],
+  "extras": [],
+  "profile": "developer"
+ },
+ {
+  "id": "investor",
+  "sources": [
+   "heatmap-finance",
+   "heatmap-tech",
+   "marketwatch",
+   "podcast-freakonomics",
+   "podcast-planetmoney",
+   "coindesk",
+   "heatmap-crypto"
+  ],
+  "extras": [
+   "country:business",
+   "country:property"
+  ],
+  "profile": "investor"
+ },
+ {
+  "id": "news-junkie",
+  "sources": [
+   "bbc-world",
+   "youtube-bbcnews",
+   "cnn",
+   "youtube-cnn",
+   "guardian",
+   "aljazeera",
+   "dw",
+   "france24",
+   "time",
+   "thehill",
+   "podcast-thedailypodcast"
+  ],
+  "extras": [],
+  "profile": "news-junkie"
+ },
+ {
+  "id": "sports-fan",
+  "sources": [
+   "bbcsport",
+   "legalsportsreport",
+   "podcast-newheightspodcast",
+   "podcast-pardonmytake",
+   "podcast-thebillsimmonspodcast"
+  ],
+  "extras": [
+   "country:sports",
+   "country:sport_tables|heatmap-ucl"
+  ],
+  "profile": "sports-fan"
+ },
+ {
+  "id": "movie-buff",
+  "sources": [
+   "variety",
+   "movie-new",
+   "tv-new",
+   "anime-new",
+   "youtube-mrbeast",
+   "podcast-smartless",
+   "podcast-conanobrienneedsafriend"
+  ],
+  "extras": [
+   "country:podcast|podcast-tedtalksdaily"
+  ],
+  "profile": "movie-buff"
+ },
+ {
+  "id": "music-lover",
+  "sources": [
+   "music-new",
+   "podcast-h3podcast"
+  ],
+  "extras": [],
+  "profile": "music-lover"
+ },
+ {
+  "id": "gamer",
+  "sources": [
+   "game-new",
+   "heatmap-steam",
+   "podcast-distractible"
+  ],
+  "extras": [],
+  "profile": "gamer"
+ },
+ {
+  "id": "science-nerd",
+  "sources": [
+   "sciencedaily",
+   "youtube-veritasium",
+   "youtube-kurzgesagt",
+   "youtube-vox",
+   "podcast-radiolab",
+   "podcast-hubermanlab",
+   "podcast-lexfridmanpodcast"
+  ],
+  "extras": [],
+  "profile": "science-nerd"
+ },
+ {
+  "id": "foodie-traveler",
+  "sources": [
+   "life-recipes",
+   "youtube-markwiens",
+   "life-budgettravel",
+   "youtube-yestheory"
+  ],
+  "extras": [
+   "country:travel",
+   "country:deals"
+  ],
+  "profile": "foodie-traveler"
+ },
+ {
+  "id": "comedy-fun",
+  "sources": [
+   "jokes",
+   "quotes",
+   "youtube-mrbeast",
+   "podcast-2bears1cave",
+   "podcast-badfriends",
+   "podcast-flagrant"
+  ],
+  "extras": [],
+  "profile": "comedy-fun"
+ },
+ {
+  "id": "fitness-buff",
+  "sources": [
+   "gtopic-health",
+   "life-fitness",
+   "life-nutrition",
+   "life-wellness",
+   "life-mentalhealth",
+   "life-sleepscience",
+   "menshealth",
+   "womenshealth",
+   "podcast-hubermanlab",
+   "youtube-athleanx",
+   "youtube-chloeting",
+   "heatmap-health-buzz"
+  ],
+  "extras": [
+   "country:health"
+  ],
+  "profile": "fitness-buff"
+ },
+ {
+  "id": "fashionista",
+  "sources": [
+   "life-fashion",
+   "life-beauty",
+   "life-skincare",
+   "life-streetwear",
+   "life-sneakers",
+   "vogue",
+   "wwd",
+   "fashionista",
+   "sneakernews",
+   "whowhatwear",
+   "youtube-hautelemode"
+  ],
+  "extras": [],
+  "profile": "fashionista"
+ },
+ {
+  "id": "petrolhead",
+  "sources": [
+   "car-new",
+   "life-cars",
+   "life-electriccars",
+   "motor1",
+   "caranddriver",
+   "roadandtrack",
+   "electrek",
+   "insideevs",
+   "youtube-carwow",
+   "youtube-dougdemuro",
+   "youtube-throttlehouse",
+   "heatmap-f1",
+   "sport-formula-1"
+  ],
+  "extras": [],
+  "profile": "petrolhead"
+ },
+ {
+  "id": "crypto-trader",
+  "sources": [
+   "heatmap-crypto",
+   "coindesk",
+   "cointelegraph",
+   "decrypt",
+   "theblock",
+   "bitcoinmagazine",
+   "blockworks",
+   "bankless",
+   "gsearch-bitcoin",
+   "gsearch-stablecoins"
+  ],
+  "extras": [],
+  "profile": "crypto-trader"
+ },
+ {
+  "id": "space-explorer",
+  "sources": [
+   "nasa",
+   "space",
+   "spacenews",
+   "nasaspaceflight",
+   "universetoday",
+   "life-space",
+   "gsearch-starship",
+   "gsearch-jwst",
+   "youtube-nasa",
+   "youtube-spacex",
+   "youtube-scottmanley",
+   "youtube-pbsspacetime"
+  ],
+  "extras": [],
+  "profile": "space-explorer"
+ },
+ {
+  "id": "ai-insider",
+  "sources": [
+   "openai",
+   "deepmind",
+   "googleai",
+   "huggingface",
+   "thedecoder",
+   "gsearch-llm",
+   "gsearch-agi",
+   "tech-chatgpt",
+   "tech-claudeai",
+   "youtube-twominutepapers",
+   "podcast-lexfridmanpodcast"
+  ],
+  "extras": [],
+  "profile": "ai-insider"
+ },
+ {
+  "id": "true-crime",
+  "sources": [
+   "podcast-crimejunkie",
+   "podcast-myfavoritemurder",
+   "podcast-casefile",
+   "podcast-morbid",
+   "podcast-rottenmango",
+   "podcast-serialpodcast",
+   "podcast-datelinenbcpodcast",
+   "youtube-mrballen",
+   "themarshallproject",
+   "courthousenews"
+  ],
+  "extras": [],
+  "profile": "true-crime"
+ },
+ {
+  "id": "history-buff",
+  "sources": [
+   "life-history",
+   "life-ancienthistory",
+   "life-archaeology",
+   "historyextra",
+   "smithsonianmag",
+   "atlasobscura",
+   "podcast-hardcorehistory",
+   "podcast-therestishistory",
+   "youtube-kingsandgenerals",
+   "youtube-historymatters",
+   "youtube-simplehistory"
+  ],
+  "extras": [],
+  "profile": "history-buff"
+ },
+ {
+  "id": "bookworm",
+  "sources": [
+   "book-new",
+   "life-books",
+   "life-bestsellers",
+   "lithub",
+   "kirkusreviews",
+   "bookriot",
+   "tordotcom",
+   "theparisreview",
+   "book-booktok",
+   "gsearch-bestsellers"
+  ],
+  "extras": [],
+  "profile": "bookworm"
+ },
+ {
+  "id": "pop-culture",
+  "sources": [
+   "pagesix",
+   "justjared",
+   "vanityfair",
+   "avclub",
+   "life-celebritynews",
+   "life-popculture",
+   "royals",
+   "horoscope-daily",
+   "gsearch-celebrity",
+   "gsearch-awardshows",
+   "podcast-callherdaddy"
+  ],
+  "extras": [],
+  "profile": "pop-culture"
+ },
+ {
+  "id": "esports-fan",
+  "sources": [
+   "sport-lol-esports",
+   "sport-cs-esports",
+   "esportsinsider",
+   "dexerto",
+   "heatmap-steam",
+   "game-valorant",
+   "game-leagueoflegends",
+   "game-counterstrike2",
+   "gsearch-esportstournament",
+   "team-esports-t1esports",
+   "team-esports-g2esports",
+   "team-esports-fnatic"
+  ],
+  "extras": [],
+  "profile": "esports-fan"
+ },
+ {
+  "id": "outdoors",
+  "sources": [
+   "life-hiking",
+   "life-camping",
+   "life-nationalparks",
+   "life-nature",
+   "life-wildlife",
+   "gearjunkie",
+   "outsideonline",
+   "youtube-bbcearth",
+   "gsearch-birdwatching",
+   "gsearch-climbing"
+  ],
+  "extras": [],
+  "profile": "outdoors"
+ },
+ {
+  "id": "anime-manga",
+  "sources": [
+   "anime-new",
+   "gsearch-anime",
+   "life-anime",
+   "life-manga",
+   "life-comics",
+   "life-cosplay",
+   "life-fanculture"
+  ],
+  "extras": [],
+  "profile": "anime-manga"
+ },
+ {
+  "id": "football-fan",
+  "sources": [
+   "bbcfootball",
+   "sport-premier-league",
+   "sport-champions-league",
+   "sport-europa-league",
+   "heatmap-premier-league",
+   "heatmap-ucl",
+   "youtube-brfootball",
+   "youtube-daznfootball",
+   "gsearch-fantasyfootball",
+   "game-footballmanager"
+  ],
+  "extras": [],
+  "profile": "football-fan"
+ },
+ {
+  "id": "cricket-fan",
+  "sources": [
+   "heatmap-cricket",
+   "sport-ipl",
+   "sport-test-cricket",
+   "sport-big-bash",
+   "sport-the-hundred",
+   "gsearch-cricket",
+   "gsearch-cricketwc"
+  ],
+  "extras": [],
+  "profile": "cricket-fan"
+ },
+ {
+  "id": "fight-fan",
+  "sources": [
+   "heatmap-ufc",
+   "sport-ufc",
+   "sport-boxing",
+   "youtube-ufc",
+   "youtube-boxing",
+   "youtube-daznboxing",
+   "gsearch-ufc"
+  ],
+  "extras": [],
+  "profile": "fight-fan"
+ },
+ {
+  "id": "deal-hunter",
+  "sources": [
+   "heatmap-deals-buzz",
+   "dealcatcher",
+   "branddeals-amazon",
+   "branddeals-apple",
+   "branddeals-nike",
+   "branddeals-playstation",
+   "branddeals-lego",
+   "branddeals-ikea",
+   "branddeals-costco",
+   "life-frugalliving",
+   "life-creditcards"
+  ],
+  "extras": [
+   "country:deals"
+  ],
+  "profile": "deal-hunter"
+ },
+ {
+  "id": "personal-finance",
+  "sources": [
+   "life-personalfinance",
+   "life-investing",
+   "life-budgeting",
+   "life-indexfunds",
+   "life-retirement",
+   "life-sidehustles",
+   "life-passiveincome",
+   "gsearch-personalfinance",
+   "podcast-planetmoney",
+   "youtube-whiteboardfinance",
+   "youtube-theswedishinvestor",
+   "book-thepsychologyofmoney"
+  ],
+  "extras": [],
+  "profile": "personal-finance"
+ },
+ {
+  "id": "founder",
+  "sources": [
+   "producthunt",
+   "kickstarter",
+   "tcstartups",
+   "eustartups",
+   "gsearch-startups",
+   "gsearch-startupfunding",
+   "life-entrepreneurship",
+   "life-smallbusiness",
+   "podcast-howibuiltthis",
+   "podcast-thediaryofaceo",
+   "podcast-acquiredpodcast",
+   "podcast-lennyspodcast"
+  ],
+  "extras": [
+   "country:business"
+  ],
+  "profile": "founder"
+ },
+ {
+  "id": "home-garden",
+  "sources": [
+   "life-interiordesign",
+   "life-homedecor",
+   "life-diyprojects",
+   "life-gardening",
+   "life-houseplants",
+   "life-smarthome",
+   "gsearch-homeimprovement",
+   "gsearch-gardening",
+   "branddeals-ikea"
+  ],
+  "extras": [
+   "country:property"
+  ],
+  "profile": "home-garden"
+ },
+ {
+  "id": "academia",
+  "sources": [
+   "insidehighered",
+   "gsearch-universities",
+   "gsearch-scholarships",
+   "gsearch-studentloans",
+   "gsearch-onlinecourses",
+   "youtube-khanacademy",
+   "youtube-crashcourse",
+   "podcast-tedtalksdaily",
+   "podcast-stuffyoushouldknow",
+   "life-psychology",
+   "life-philosophy",
+   "life-productivity"
+  ],
+  "extras": [
+   "country:education"
+  ],
+  "profile": "academia"
+ },
+ {
+  "id": "researcher",
+  "sources": [
+   "nature",
+   "newscientist",
+   "physorg",
+   "quanta",
+   "scientificamerican",
+   "technologyreview",
+   "statnews",
+   "sciencealert",
+   "gsearch-brainresearch",
+   "sci-nobelprize",
+   "sci-clinicaltrials",
+   "sci-peerreview"
+  ],
+  "extras": [],
+  "profile": "researcher"
+ },
+ {
+  "id": "clean-energy",
+  "sources": [
+   "sci-fusionenergy",
+   "sci-fusionprogress",
+   "sci-greenhydrogen",
+   "sci-hydrogenfuelcells",
+   "sci-smallmodularreactors",
+   "sci-solidstatebatteries",
+   "sci-gridscalestorage",
+   "sci-energytransition",
+   "sci-enhancedgeothermal",
+   "sci-airbornewindenergy",
+   "sci-pylonwindturbines",
+   "sci-plasticmagnets",
+   "life-renewableenergy",
+   "electrek",
+   "heatmap-energy"
+  ],
+  "extras": [],
+  "profile": "clean-energy"
+ },
+ {
+  "id": "photographer",
+  "sources": [
+   "petapixel",
+   "life-photography",
+   "life-photographygear",
+   "life-travelphotography",
+   "life-cameras",
+   "gsearch-photoawards",
+   "gsearch-filmphotography",
+   "gsearch-photographytopic"
+  ],
+  "extras": [],
+  "profile": "photographer"
+ },
+ {
+  "id": "my-country",
+  "sources": [],
+  "extras": [
+   "country:news",
+   "country:top_city",
+   "country:property",
+   "country:business",
+   "country:events",
+   "country:health",
+   "country:deals"
+  ],
+  "profile": "my-country"
+ }
+]

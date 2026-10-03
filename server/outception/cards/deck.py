@@ -81,11 +81,22 @@ def _entry_applies(entry: DeckEntry, inp: DeckInput) -> bool:
 
 
 def resolve(ref: str, data: DeckData, country: str | None) -> tuple[str, ...]:
-    """An injected ref is a literal id or `country:<table>`, which resolves
-    to the country's table (empty when the country has none)."""
-    if ref.startswith("country:"):
-        return _country_table(data, country, ref[len("country:") :])
-    return (ref,)
+    """An injected ref is a literal id or a country reference:
+    `country:<table>` resolves to the country's table (empty when the
+    country has none), `country:<table>|<id>` falls back to `<id>` when it
+    has none, `country:news` is the country card and `country:education`
+    the country's education card."""
+    if not ref.startswith("country:"):
+        return (ref,)
+    table, _, fallback = ref[len("country:") :].partition("|")
+    if table == "news":
+        return (f"gnews-{country.lower()}",) if country else ()
+    if table == "education":
+        return (f"education-{country.lower()}",) if country else ()
+    ids = _country_table(data, country, table)
+    if ids:
+        return ids
+    return (fallback,) if fallback else ()
 
 
 def compose_default_deck(data: DeckData, inp: DeckInput) -> list[str]:

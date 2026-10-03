@@ -1,0 +1,77 @@
+{
+ "table": "sport_tables",
+ "entries": {
+  "US": [
+   "heatmap-nfl",
+   "heatmap-nba"
+  ],
+  "CA": [
+   "heatmap-nhl"
+  ],
+  "MX": [
+   "heatmap-liga-mx"
+  ],
+  "GB": [
+   "heatmap-premier-league"
+  ],
+  "IE": [
+   "heatmap-premier-league"
+  ],
+  "ES": [
+   "heatmap-la-liga"
+  ],
+  "DE": [
+   "heatmap-bundesliga"
+  ],
+  "AT": [
+   "heatmap-bundesliga"
+  ],
+  "CH": [
+   "heatmap-bundesliga"
+  ],
+  "IT": [
+   "heatmap-serie-a"
+  ],
+  "FR": [
+   "heatmap-ligue-1",
+   "heatmap-top14"
+  ],
+  "NL": [
+   "heatmap-eredivisie"
+  ],
+  "PT": [
+   "heatmap-primeira-liga"
+  ],
+  "BR": [
+   "heatmap-brasileirao"
+  ],
+  "IN": [
+   "heatmap-cricket"
+  ],
+  "PK": [
+   "heatmap-cricket"
+  ],
+  "BD": [
+   "heatmap-cricket"
+  ],
+  "LK": [
+   "heatmap-cricket"
+  ],
+  "AU": [
+   "heatmap-cricket"
+  ],
+  "NZ": [
+   "heatmap-cricket"
+  ],
+  "ZA": [
+   "heatmap-urc",
+   "heatmap-cricket"
+  ],
+  "JP": [
+   "heatmap-mlb"
+  ],
+  "KR": [
+   "heatmap-mlb"
+  ]
+ }
+}

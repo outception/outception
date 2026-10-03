@@ -1,0 +1,311 @@
+{
+ "table": "sports",
+ "entries": {
+  "IE": [
+   "sport-gaelic-football",
+   "sport-hurling",
+   "team-gaafootball-dublin",
+   "sport-premier-league"
+  ],
+  "GB": [
+   "sport-premier-league",
+   "sport-champions-league",
+   "team-rugby-leinsterrugby",
+   "sport-six-nations"
+  ],
+  "US": [
+   "sport-nfl",
+   "sport-nba",
+   "sport-mlb",
+   "sport-nhl"
+  ],
+  "CA": [
+   "sport-nhl",
+   "sport-nba",
+   "sport-mlb",
+   "sport-nfl"
+  ],
+  "IN": [
+   "sport-ipl",
+   "team-cricket-mumbaiindians",
+   "team-cricket-indianationalcricketteam",
+   "sport-test-cricket"
+  ],
+  "AU": [
+   "sport-afl",
+   "sport-nrl",
+   "team-cricket-australianationalcricketteam",
+   "sport-rugby-championship"
+  ],
+  "NZ": [
+   "team-rugby-newzealandallblacks",
+   "sport-rugby-championship",
+   "team-cricket-newzealandcricketteam",
+   "sport-nrl"
+  ],
+  "ES": [
+   "sport-la-liga",
+   "team-soccer-realmadrid",
+   "team-soccer-fcbarcelona",
+   "sport-champions-league"
+  ],
+  "IT": [
+   "sport-serie-a",
+   "team-soccer-juventus",
+   "team-soccer-acmilan",
+   "sport-champions-league"
+  ],
+  "DE": [
+   "sport-bundesliga",
+   "team-soccer-bayernmunich",
+   "team-soccer-borussiadortmund",
+   "sport-champions-league"
+  ],
+  "FR": [
+   "sport-ligue-1",
+   "team-soccer-parissaintgermain",
+   "sport-six-nations",
+   "sport-champions-league"
+  ],
+  "BR": [
+   "sport-brasileirao",
+   "team-soccer-flamengo",
+   "team-soccer-palmeiras",
+   "sport-formula-1"
+  ],
+  "AR": [
+   "team-soccer-bocajuniors",
+   "team-soccer-riverplate",
+   "team-soccer-argentinanationalfootballteam",
+   "sport-la-liga"
+  ],
+  "MX": [
+   "sport-liga-mx",
+   "team-soccer-clubamerica",
+   "team-soccer-chivasguadalajara",
+   "sport-mlb"
+  ],
+  "PT": [
+   "sport-primeira-liga",
+   "team-soccer-benfica",
+   "team-soccer-fcporto",
+   "sport-champions-league"
+  ],
+  "NL": [
+   "sport-eredivisie",
+   "team-soccer-ajax",
+   "team-soccer-psveindhoven",
+   "sport-champions-league"
+  ],
+  "JP": [
+   "sport-npb",
+   "team-soccer-japannationalfootballteam",
+   "sport-nba",
+   "sport-motogp"
+  ],
+  "KR": [
+   "sport-kbo",
+   "sport-nba",
+   "sport-premier-league",
+   "sport-lol-esports"
+  ],
+  "ZA": [
+   "team-rugby-southafricaspringboks",
+   "team-cricket-southafricacricketteam",
+   "sport-rugby-championship",
+   "sport-premier-league"
+  ],
+  "PK": [
+   "team-cricket-pakistancricketteam",
+   "sport-ipl",
+   "sport-test-cricket",
+   "sport-premier-league"
+  ],
+  "SA": [
+   "sport-saudi-league",
+   "team-soccer-alnassr",
+   "team-soccer-alhilal",
+   "sport-formula-1"
+  ],
+  "TR": [
+   "team-soccer-galatasaray",
+   "team-soccer-fenerbahce",
+   "team-soccer-besiktas",
+   "sport-euroleague"
+  ],
+  "SC": [
+   "sport-spfl",
+   "team-soccer-celticfc",
+   "team-soccer-rangersfc",
+   "sport-six-nations"
+  ],
+  "BE": [
+   "team-soccer-clubbrugge",
+   "team-soccer-anderlecht",
+   "sport-champions-league",
+   "sport-formula-1"
+  ],
+  "GR": [
+   "team-soccer-olympiacos",
+   "sport-euroleague",
+   "sport-champions-league",
+   "sport-premier-league"
+  ],
+  "UA": [
+   "team-soccer-shakhtardonetsk",
+   "team-soccer-dynamokyiv",
+   "sport-champions-league",
+   "sport-atp-tennis"
+  ],
+  "RU": [
+   "team-soccer-zenitsaintpetersburg",
+   "sport-nhl",
+   "sport-champions-league",
+   "sport-atp-tennis"
+  ],
+  "AT": [
+   "team-soccer-salzburg",
+   "sport-formula-1",
+   "sport-bundesliga",
+   "sport-champions-league"
+  ],
+  "EG": [
+   "team-soccer-alahly",
+   "team-soccer-zamalek",
+   "sport-premier-league",
+   "sport-champions-league"
+  ],
+  "RS": [
+   "team-soccer-redstarbelgrade",
+   "sport-euroleague",
+   "sport-atp-tennis",
+   "sport-champions-league"
+  ],
+  "BD": [
+   "team-cricket-bangladeshcricketteam",
+   "sport-ipl",
+   "sport-test-cricket",
+   "sport-premier-league"
+  ],
+  "LK": [
+   "team-cricket-srilankacricketteam",
+   "sport-ipl",
+   "sport-test-cricket",
+   "sport-premier-league"
+  ],
+  "AF": [
+   "team-cricket-afghanistancricketteam",
+   "sport-ipl",
+   "sport-test-cricket",
+   "sport-premier-league"
+  ],
+  "CN": [
+   "sport-nba",
+   "sport-lol-esports",
+   "sport-premier-league",
+   "sport-formula-1"
+  ],
+  "SE": [
+   "sport-nhl",
+   "sport-premier-league",
+   "sport-champions-league",
+   "sport-atp-tennis"
+  ],
+  "FI": [
+   "sport-nhl",
+   "sport-formula-1",
+   "sport-premier-league",
+   "sport-motogp"
+  ],
+  "NO": [
+   "sport-premier-league",
+   "team-soccer-manchestercity",
+   "sport-champions-league",
+   "sport-cycling"
+  ],
+  "CH": [
+   "sport-champions-league",
+   "sport-formula-1",
+   "sport-atp-tennis",
+   "sport-nhl"
+  ],
+  "PH": [
+   "sport-nba",
+   "sport-premier-league",
+   "sport-ufc",
+   "sport-boxing"
+  ],
+  "ID": [
+   "sport-premier-league",
+   "sport-motogp",
+   "sport-lol-esports",
+   "sport-champions-league"
+  ],
+  "TH": [
+   "sport-premier-league",
+   "sport-motogp",
+   "sport-ufc",
+   "sport-champions-league"
+  ],
+  "NG": [
+   "sport-premier-league",
+   "team-soccer-chelsea",
+   "sport-champions-league",
+   "sport-nba"
+  ],
+  "MA": [
+   "sport-champions-league",
+   "sport-la-liga",
+   "team-soccer-parissaintgermain",
+   "sport-premier-league"
+  ],
+  "CO": [
+   "sport-cycling",
+   "sport-la-liga",
+   "sport-champions-league",
+   "sport-mlb"
+  ],
+  "CL": [
+   "sport-la-liga",
+   "sport-champions-league",
+   "sport-atp-tennis",
+   "sport-formula-1"
+  ],
+  "PE": [
+   "sport-la-liga",
+   "sport-champions-league",
+   "sport-brasileirao",
+   "sport-atp-tennis"
+  ],
+  "SG": [
+   "sport-premier-league",
+   "sport-formula-1",
+   "sport-nba",
+   "sport-champions-league"
+  ],
+  "AE": [
+   "sport-formula-1",
+   "sport-premier-league",
+   "sport-champions-league",
+   "sport-ipl"
+  ],
+  "QA": [
+   "team-soccer-parissaintgermain",
+   "sport-champions-league",
+   "sport-formula-1",
+   "sport-premier-league"
+  ],
+  "CZ": [
+   "sport-nhl",
+   "sport-champions-league",
+   "sport-premier-league",
+   "sport-atp-tennis"
+  ],
+  "PL": [
+   "team-soccer-fcbarcelona",
+   "sport-champions-league",
+   "sport-premier-league",
+   "sport-formula-1"
+  ]
+ }
+}

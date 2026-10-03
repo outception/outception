@@ -133,6 +133,19 @@ def load_catalog(data_dir: Path = DATA_DIR) -> Catalog:
     return catalog
 
 
+def _ref_problem(ref: str, owner: str, known: set[str], tables: set[str]) -> str | None:
+    """A reference is a literal id or a country reference (`country:<table>`,
+    optionally `|<fallback id>`)."""
+    if not ref.startswith("country:"):
+        return None if ref in known else f"{owner} names unknown id {ref}"
+    table, _, fallback = ref[len("country:") :].partition("|")
+    if table not in tables:
+        return f"{owner}: unknown country table {ref}"
+    if fallback and fallback not in known:
+        return f"{owner}: unknown fallback {fallback}"
+    return None
+
+
 def _check(catalog: Catalog) -> None:
     problems: list[str] = []
     seen: set[str] = set()
@@ -140,8 +153,6 @@ def _check(catalog: Catalog) -> None:
         if row.id in seen:
             problems.append(f"duplicate source id {row.id}")
         seen.add(row.id)
-        if row.column is not None and row.column not in COLUMN_ORDER:
-            problems.append(f"{row.id}: unknown column {row.column}")
         if row.redirect is not None and row.redirect not in {
             r.id for r in catalog.sources
         }:
@@ -152,46 +163,30 @@ def _check(catalog: Catalog) -> None:
     for signal in catalog.live_signals:
         if signal.id in seen:
             problems.append(f"live signal {signal.id} collides with a source id")
-    for disabled_id in catalog.disabled:
-        if disabled_id not in known:
-            problems.append(f"disabled.json names unknown id {disabled_id}")
-    table_names = {
-        name for tables in catalog.country_tables.values() for name in tables
-    }
-    for tables in catalog.country_tables.values():
-        for name, ids in tables.items():
+    # Disabled ids may outlive their rows: the audit list is history.
+    tables = {name for by_name in catalog.country_tables.values() for name in by_name}
+    tables |= {"news", "education"}  # resolved from the country code itself
+    for by_name in catalog.country_tables.values():
+        for name, ids in by_name.items():
             for source_id in ids:
                 if source_id not in known:
                     problems.append(
                         f"country table {name} names unknown id {source_id}"
                     )
     for template in catalog.templates:
-        for source_id in template.sources:
-            if source_id not in known:
-                problems.append(f"template {template.id} names unknown id {source_id}")
-        for ref in template.extras:
-            if ref.startswith("country:"):
-                if ref[len("country:") :] not in table_names:
-                    problems.append(
-                        f"template {template.id}: unknown country table {ref}"
-                    )
-            elif ref not in known:
-                problems.append(f"template {template.id} names unknown id {ref}")
+        owner = f"template {template.id}"
+        for ref in [*template.sources, *template.extras]:
+            if (problem := _ref_problem(ref, owner, known, tables)) is not None:
+                problems.append(problem)
     for entry in catalog.deck.base:
+        owner = f"deck entry {entry.id}"
         if entry.id not in known and entry.id != "weather":
-            problems.append(f"deck entry names unknown id {entry.id}")
-        if entry.swap is not None and entry.swap not in table_names:
-            problems.append(
-                f"deck entry {entry.id}: unknown country table {entry.swap}"
-            )
+            problems.append(f"{owner} names unknown id {entry.id}")
+        if entry.swap is not None and entry.swap not in tables:
+            problems.append(f"{owner}: unknown country table {entry.swap}")
         for ref in entry.inject_after:
-            if ref.startswith("country:"):
-                if ref[len("country:") :] not in table_names:
-                    problems.append(
-                        f"deck entry {entry.id}: unknown country table {ref}"
-                    )
-            elif ref not in known:
-                problems.append(f"deck entry {entry.id} injects unknown id {ref}")
+            if (problem := _ref_problem(ref, owner, known, tables)) is not None:
+                problems.append(problem)
     template_ids = {template.id for template in catalog.templates}
     for country, profile in catalog.deck.briefing_profile_by_country.items():
         if profile not in template_ids:

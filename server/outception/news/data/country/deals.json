@@ -1,0 +1,599 @@
+{
+ "table": "deals",
+ "entries": {
+  "GB": [
+   "hotukdeals"
+  ],
+  "DE": [
+   "mydealz"
+  ],
+  "FR": [
+   "dealabs"
+  ],
+  "ES": [
+   "chollometro"
+  ],
+  "NL": [
+   "peppernl"
+  ],
+  "PL": [
+   "pepperpl"
+  ],
+  "MX": [
+   "promodescuentos"
+  ],
+  "AT": [
+   "preisjaeger"
+  ],
+  "CH": [
+   "preispirat"
+  ],
+  "US": [
+   "slickdeals"
+  ],
+  "KR": [
+   "ppomppu"
+  ],
+  "IT": [
+   "dimmicosacerchi"
+  ],
+  "MY": [
+   "everydayonsales"
+  ],
+  "AU": [
+   "ozbargain"
+  ],
+  "NZ": [
+   "cheapies"
+  ],
+  "SG": [
+   "singpromos"
+  ],
+  "IE": [
+   "deals-ie"
+  ],
+  "PT": [
+   "deals-pt"
+  ],
+  "BE": [
+   "deals-be"
+  ],
+  "SE": [
+   "deals-se"
+  ],
+  "NO": [
+   "deals-no"
+  ],
+  "DK": [
+   "deals-dk"
+  ],
+  "FI": [
+   "deals-fi"
+  ],
+  "CZ": [
+   "deals-cz"
+  ],
+  "HU": [
+   "deals-hu"
+  ],
+  "RO": [
+   "deals-ro"
+  ],
+  "GR": [
+   "deals-gr"
+  ],
+  "TR": [
+   "deals-tr"
+  ],
+  "CA": [
+   "deals-ca"
+  ],
+  "BR": [
+   "deals-br"
+  ],
+  "AR": [
+   "deals-ar"
+  ],
+  "CL": [
+   "deals-cl"
+  ],
+  "CO": [
+   "deals-co"
+  ],
+  "JP": [
+   "deals-jp"
+  ],
+  "IN": [
+   "deals-in"
+  ],
+  "PH": [
+   "deals-ph"
+  ],
+  "ID": [
+   "deals-id"
+  ],
+  "TH": [
+   "deals-th"
+  ],
+  "VN": [
+   "deals-vn"
+  ],
+  "AE": [
+   "deals-ae"
+  ],
+  "IL": [
+   "deals-il"
+  ],
+  "ZA": [
+   "deals-za"
+  ],
+  "NG": [
+   "deals-ng"
+  ],
+  "KE": [
+   "deals-ke"
+  ],
+  "EG": [
+   "deals-eg"
+  ],
+  "SA": [
+   "deals-sa"
+  ],
+  "SK": [
+   "deals-sk"
+  ],
+  "BG": [
+   "deals-bg"
+  ],
+  "HR": [
+   "deals-hr"
+  ],
+  "SI": [
+   "deals-si"
+  ],
+  "LT": [
+   "deals-lt"
+  ],
+  "LV": [
+   "deals-lv"
+  ],
+  "EE": [
+   "deals-ee"
+  ],
+  "LU": [
+   "deals-lu"
+  ],
+  "MT": [
+   "deals-mt"
+  ],
+  "CY": [
+   "deals-cy"
+  ],
+  "UA": [
+   "deals-ua"
+  ],
+  "RS": [
+   "deals-rs"
+  ],
+  "GE": [
+   "deals-ge"
+  ],
+  "AZ": [
+   "deals-az"
+  ],
+  "AM": [
+   "deals-am"
+  ],
+  "RU": [
+   "deals-ru"
+  ],
+  "CN": [
+   "deals-cn"
+  ],
+  "TW": [
+   "deals-tw"
+  ],
+  "HK": [
+   "deals-hk"
+  ],
+  "MN": [
+   "deals-mn"
+  ],
+  "MM": [
+   "deals-mm"
+  ],
+  "KH": [
+   "deals-kh"
+  ],
+  "LA": [
+   "deals-la"
+  ],
+  "BD": [
+   "deals-bd"
+  ],
+  "PK": [
+   "deals-pk"
+  ],
+  "LK": [
+   "deals-lk"
+  ],
+  "NP": [
+   "deals-np"
+  ],
+  "JO": [
+   "deals-jo"
+  ],
+  "LB": [
+   "deals-lb"
+  ],
+  "KW": [
+   "deals-kw"
+  ],
+  "QA": [
+   "deals-qa"
+  ],
+  "OM": [
+   "deals-om"
+  ],
+  "BH": [
+   "deals-bh"
+  ],
+  "IQ": [
+   "deals-iq"
+  ],
+  "IR": [
+   "deals-ir"
+  ],
+  "KZ": [
+   "deals-kz"
+  ],
+  "UZ": [
+   "deals-uz"
+  ],
+  "MA": [
+   "deals-ma"
+  ],
+  "DZ": [
+   "deals-dz"
+  ],
+  "TN": [
+   "deals-tn"
+  ],
+  "LY": [
+   "deals-ly"
+  ],
+  "GH": [
+   "deals-gh"
+  ],
+  "SN": [
+   "deals-sn"
+  ],
+  "CI": [
+   "deals-ci"
+  ],
+  "CM": [
+   "deals-cm"
+  ],
+  "TZ": [
+   "deals-tz"
+  ],
+  "UG": [
+   "deals-ug"
+  ],
+  "ET": [
+   "deals-et"
+  ],
+  "RW": [
+   "deals-rw"
+  ],
+  "AF": [
+   "deals-af"
+  ],
+  "IS": [
+   "deals-is"
+  ],
+  "MZ": [
+   "deals-mz"
+  ],
+  "ZW": [
+   "deals-zw"
+  ],
+  "ZM": [
+   "deals-zm"
+  ],
+  "BW": [
+   "deals-bw"
+  ],
+  "PE": [
+   "deals-pe"
+  ],
+  "VE": [
+   "deals-ve"
+  ],
+  "EC": [
+   "deals-ec"
+  ],
+  "UY": [
+   "deals-uy"
+  ],
+  "BO": [
+   "deals-bo"
+  ],
+  "PY": [
+   "deals-py"
+  ],
+  "CR": [
+   "deals-cr"
+  ],
+  "GT": [
+   "deals-gt"
+  ],
+  "CU": [
+   "deals-cu"
+  ],
+  "DO": [
+   "deals-do"
+  ],
+  "PA": [
+   "deals-pa"
+  ],
+  "HN": [
+   "deals-hn"
+  ],
+  "JM": [
+   "deals-jm"
+  ],
+  "TT": [
+   "deals-tt"
+  ],
+  "BB": [
+   "deals-bb"
+  ],
+  "BS": [
+   "deals-bs"
+  ],
+  "GD": [
+   "deals-gd"
+  ],
+  "LC": [
+   "deals-lc"
+  ],
+  "VC": [
+   "deals-vc"
+  ],
+  "AG": [
+   "deals-ag"
+  ],
+  "KN": [
+   "deals-kn"
+  ],
+  "DM": [
+   "deals-dm"
+  ],
+  "BZ": [
+   "deals-bz"
+  ],
+  "GY": [
+   "deals-gy"
+  ],
+  "HT": [
+   "deals-ht"
+  ],
+  "NI": [
+   "deals-ni"
+  ],
+  "SV": [
+   "deals-sv"
+  ],
+  "SR": [
+   "deals-sr"
+  ],
+  "PS": [
+   "deals-ps"
+  ],
+  "SY": [
+   "deals-sy"
+  ],
+  "YE": [
+   "deals-ye"
+  ],
+  "ML": [
+   "deals-ml"
+  ],
+  "NE": [
+   "deals-ne"
+  ],
+  "TD": [
+   "deals-td"
+  ],
+  "BJ": [
+   "deals-bj"
+  ],
+  "TG": [
+   "deals-tg"
+  ],
+  "BF": [
+   "deals-bf"
+  ],
+  "GN": [
+   "deals-gn"
+  ],
+  "SL": [
+   "deals-sl"
+  ],
+  "LR": [
+   "deals-lr"
+  ],
+  "GM": [
+   "deals-gm"
+  ],
+  "MR": [
+   "deals-mr"
+  ],
+  "GQ": [
+   "deals-gq"
+  ],
+  "CV": [
+   "deals-cv"
+  ],
+  "ST": [
+   "deals-st"
+  ],
+  "GW": [
+   "deals-gw"
+  ],
+  "GA": [
+   "deals-ga"
+  ],
+  "CG": [
+   "deals-cg"
+  ],
+  "CD": [
+   "deals-cd"
+  ],
+  "AO": [
+   "deals-ao"
+  ],
+  "SD": [
+   "deals-sd"
+  ],
+  "SO": [
+   "deals-so"
+  ],
+  "ER": [
+   "deals-er"
+  ],
+  "DJ": [
+   "deals-dj"
+  ],
+  "CF": [
+   "deals-cf"
+  ],
+  "SS": [
+   "deals-ss"
+  ],
+  "BI": [
+   "deals-bi"
+  ],
+  "NA": [
+   "deals-na"
+  ],
+  "MW": [
+   "deals-mw"
+  ],
+  "LS": [
+   "deals-ls"
+  ],
+  "SZ": [
+   "deals-sz"
+  ],
+  "MG": [
+   "deals-mg"
+  ],
+  "MU": [
+   "deals-mu"
+  ],
+  "SC": [
+   "deals-sc"
+  ],
+  "KM": [
+   "deals-km"
+  ],
+  "FJ": [
+   "deals-fj"
+  ],
+  "PG": [
+   "deals-pg"
+  ],
+  "SB": [
+   "deals-sb"
+  ],
+  "VU": [
+   "deals-vu"
+  ],
+  "WS": [
+   "deals-ws"
+  ],
+  "TO": [
+   "deals-to"
+  ],
+  "KI": [
+   "deals-ki"
+  ],
+  "FM": [
+   "deals-fm"
+  ],
+  "MH": [
+   "deals-mh"
+  ],
+  "PW": [
+   "deals-pw"
+  ],
+  "NR": [
+   "deals-nr"
+  ],
+  "TV": [
+   "deals-tv"
+  ],
+  "BN": [
+   "deals-bn"
+  ],
+  "TL": [
+   "deals-tl"
+  ],
+  "BT": [
+   "deals-bt"
+  ],
+  "MV": [
+   "deals-mv"
+  ],
+  "KP": [
+   "deals-kp"
+  ],
+  "TM": [
+   "deals-tm"
+  ],
+  "KG": [
+   "deals-kg"
+  ],
+  "TJ": [
+   "deals-tj"
+  ],
+  "AL": [
+   "deals-al"
+  ],
+  "MK": [
+   "deals-mk"
+  ],
+  "BA": [
+   "deals-ba"
+  ],
+  "ME": [
+   "deals-me"
+  ],
+  "XK": [
+   "deals-xk"
+  ],
+  "MD": [
+   "deals-md"
+  ],
+  "BY": [
+   "deals-by"
+  ],
+  "MC": [
+   "deals-mc"
+  ],
+  "AD": [
+   "deals-ad"
+  ],
+  "SM": [
+   "deals-sm"
+  ],
+  "LI": [
+   "deals-li"
+  ],
+  "VA": [
+   "deals-va"
+  ]
+ }
+}
