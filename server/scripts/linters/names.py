@@ -23,6 +23,8 @@ DENYLIST = REPO / "docs" / "naming" / "denylist.txt"
 # and backups, the error reporter, and recorded live data.
 ALLOWED_PATHS: tuple[str, ...] = (
     "server/outception/news/summaries/providers/",
+    "server/outception/news/heatmap/providers/",
+    "server/outception/news/heatmap/specs.py",
     "server/outception/config.py",
     "server/.env.prod.example",
     "server/.env.template",

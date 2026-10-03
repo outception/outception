@@ -19,7 +19,7 @@ _WORLD_SPEC = heatmap.HEATMAPS["heatmap-world-buzz"]
 
 
 def _demand(heatmap_id: str = "heatmap-world-buzz") -> str:
-    return heatmap._DEMAND_KEY.format(id=heatmap_id)
+    return heatmap.DEMAND_KEY.format(id=heatmap_id)
 
 
 def _family_ids(count: int) -> list[str]:

@@ -156913,5 +156913,145 @@
   "config": {
    "provider": "f1"
   }
+ },
+ {
+  "id": "live-quakes",
+  "name": "Earthquakes",
+  "color": "orangered",
+  "column": "science",
+  "type": "heatmap",
+  "home": "https://earthquake.usgs.gov",
+  "desc": "Earthquakes of the last day, magnitude 2.5 and up, biggest first",
+  "interval": 120000,
+  "logo": "https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/1f30d.png",
+  "config": {
+   "provider": "quakes"
+  }
+ },
+ {
+  "id": "live-storms",
+  "name": "Tropical Storms",
+  "color": "steelblue",
+  "column": "science",
+  "type": "heatmap",
+  "home": "https://www.nhc.noaa.gov",
+  "desc": "Active tropical storms in the Atlantic and Pacific, strongest first",
+  "interval": 600000,
+  "logo": "https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/1f300.png",
+  "config": {
+   "provider": "storms"
+  }
+ },
+ {
+  "id": "live-wildfires",
+  "name": "Wildfires",
+  "color": "darkorange",
+  "column": "science",
+  "type": "heatmap",
+  "home": "https://www.nifc.gov",
+  "desc": "Large wildfires burning in the United States, biggest first",
+  "interval": 600000,
+  "logo": "https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/1f525.png",
+  "config": {
+   "provider": "wildfires"
+  }
+ },
+ {
+  "id": "live-launches",
+  "name": "Rocket Launches",
+  "color": "mediumslateblue",
+  "column": "science",
+  "type": "heatmap",
+  "home": "https://ll.thespacedevs.com",
+  "desc": "Upcoming rocket launches over the next two weeks, soonest first",
+  "interval": 900000,
+  "logo": "https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/1f680.png",
+  "config": {
+   "provider": "launches"
+  }
+ },
+ {
+  "id": "live-iss",
+  "name": "Space Station Passes",
+  "color": "teal",
+  "column": "science",
+  "type": "heatmap",
+  "home": "https://spotthestation.nasa.gov",
+  "desc": "The next visible space station pass over each covered city",
+  "interval": 3600000,
+  "logo": "https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/1f6f0.png",
+  "config": {
+   "provider": "iss"
+  }
+ },
+ {
+  "id": "transit-london",
+  "name": "London Transit Alerts",
+  "color": "crimson",
+  "column": "news",
+  "type": "heatmap",
+  "home": "https://tfl.gov.uk/tube-dlr-overground/status/",
+  "desc": "Live service alerts on London's transit network, worst first",
+  "interval": 120000,
+  "logo": "https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/1f687.png",
+  "config": {
+   "provider": "transit"
+  }
+ },
+ {
+  "id": "transit-newyork",
+  "name": "New York Transit Alerts",
+  "color": "crimson",
+  "column": "news",
+  "type": "heatmap",
+  "home": "https://new.mta.info/alerts",
+  "desc": "Live service alerts on New York's transit network, worst first",
+  "interval": 120000,
+  "logo": "https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/1f687.png",
+  "config": {
+   "provider": "transit"
+  }
+ },
+ {
+  "id": "transit-dublin",
+  "name": "Dublin Transit Alerts",
+  "color": "crimson",
+  "column": "news",
+  "type": "heatmap",
+  "home": "https://www.transportforireland.ie/",
+  "desc": "Live service alerts on Dublin's transit network, worst first",
+  "interval": 120000,
+  "logo": "https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/1f687.png",
+  "config": {
+   "provider": "transit"
+  }
+ },
+ {
+  "id": "transit-sydney",
+  "name": "Sydney Transit Alerts",
+  "color": "crimson",
+  "column": "news",
+  "type": "heatmap",
+  "home": "https://transportnsw.info/alerts",
+  "desc": "Live service alerts on Sydney's transit network, worst first",
+  "interval": 120000,
+  "logo": "https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/1f687.png",
+  "config": {
+   "provider": "transit"
+  }
+ },
+ {
+  "id": "transit-toronto",
+  "name": "Toronto Transit Alerts",
+  "color": "crimson",
+  "column": "news",
+  "type": "heatmap",
+  "home": "https://www.ttc.ca/service-alerts",
+  "desc": "Live service alerts on Toronto's transit network, worst first",
+  "interval": 120000,
+  "logo": "https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/1f687.png",
+  "config": {
+   "provider": "transit"
+  }
  }
 ]

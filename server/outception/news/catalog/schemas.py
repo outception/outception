@@ -70,15 +70,43 @@ class TemplateRow(BaseModel):
     profile: str | None = None
 
 
+class TableRow(BaseModel):
+    """One table card's provider spec: what `heatmap/specs.py` builds its
+    `HeatmapSpec` from. The roster row with the same id lives in
+    `sources.json` (type `heatmap`)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    name: str
+    desc: str
+    color: str
+    provider: str
+    symbols: list[tuple[str, str]] = Field(default_factory=list)
+    column: str = "finance"
+    code: str = ""
+    interval_ms: int = 5 * 60 * 1000
+    table: bool = False
+    zone_green: int = 0
+    zone_soft: int = 0
+    zone_red: int = 0
+    zone_red_soft: int = 0
+    strip: str = ""
+
+
 class LiveSignalRow(BaseModel):
     """A live-signal table: a keyless upstream polled by the worker. Off by
-    default; switched on by data, not by a setting."""
+    default; switched on by data, not by a setting. The roster row with the
+    same id lives in `sources.json` and is served only while the signal is
+    enabled; the provider spec here is what the poller and the toolkit
+    read."""
 
     model_config = ConfigDict(extra="forbid")
 
     id: str
     name: str
     provider: str
+    code: str = ""
     interval: int  # ms
     fresh_for: int
     stale_for: int

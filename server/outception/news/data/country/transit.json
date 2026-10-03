@@ -1,0 +1,20 @@
+{
+  "table": "transit",
+  "entries": {
+    "GB": [
+      "transit-london"
+    ],
+    "US": [
+      "transit-newyork"
+    ],
+    "IE": [
+      "transit-dublin"
+    ],
+    "AU": [
+      "transit-sydney"
+    ],
+    "CA": [
+      "transit-toronto"
+    ]
+  }
+}

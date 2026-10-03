@@ -67,8 +67,13 @@ class Registry:
     @cached_property
     def rows(self) -> dict[str, SourceRow]:
         """Every row the roster knows, in registration order, minus the
-        key-gated tables."""
-        return {row.id: row for row in self.catalog.sources if not _gated_out(row)}
+        key-gated tables and the live signals not yet switched on."""
+        dark = {signal.id for signal in self.catalog.live_signals if not signal.enabled}
+        return {
+            row.id: row
+            for row in self.catalog.sources
+            if not _gated_out(row) and row.id not in dark
+        }
 
     @cached_property
     def ordered(self) -> list[SourceRow]:

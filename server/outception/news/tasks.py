@@ -21,9 +21,10 @@ from redis import RedisError
 # (stale=2358, fetched=0 in prod logs).
 import outception.news.sources  # noqa: F401 - registers source getters
 from outception.cards.deck import always_warm_ids
+from outception.exceptions import OutceptionError
 from outception.locker import Locker, TimeoutLockError
 from outception.redis import Redis, create_redis
-from outception.worker import CronTrigger, TaskPriority, actor
+from outception.worker import CronTrigger, TaskPriority, TaskQueue, actor
 
 from . import cache, heatmap, registry
 from .catalog import registry as catalog_registry
@@ -419,3 +420,61 @@ async def warm_summaries() -> None:
         await _close_quietly(redis)
 
     log.info("news.warm_summaries", warmed=warmed, failed=failed, skipped=skipped)
+
+
+# ---- Live-signal pollers ----------------------------------------------------
+#
+# The live signals are few, keyless and global, so unlike the feeds they are
+# polled by the worker and every reader is served from the cache. One run
+# refreshes every enabled signal whose cached map is older than its
+# interval; the toolkit's cooldown and daily budget sit under each fetch.
+
+_LIVE_POLL_LOCK = "news.poll_live_signals"
+_LIVE_POLL_RUN_BUDGET_SECONDS = 4 * 60
+
+
+@actor(
+    actor_name="news.poll_live_signals",
+    cron_trigger=CronTrigger(minute="*/2"),
+    queue_name=TaskQueue.NEWS_PIPELINE,
+    priority=TaskPriority.LOW,
+    max_retries=0,
+    time_limit=(_LIVE_POLL_RUN_BUDGET_SECONDS + 60) * 1000,
+)
+async def poll_live_signals() -> None:
+    redis = create_redis("worker")
+    refreshed = failed = 0
+    deadline = time.monotonic() + _LIVE_POLL_RUN_BUDGET_SECONDS
+    try:
+        async with Locker(redis).lock(
+            _LIVE_POLL_LOCK,
+            timeout=_LIVE_POLL_RUN_BUDGET_SECONDS + 30,
+            blocking_timeout=0,
+        ):
+            for heatmap_id, spec in heatmap.HEATMAPS.items():
+                if not spec.live or not spec.enabled:
+                    continue
+                if time.monotonic() > deadline:
+                    break
+                cached = await heatmap.read_cached(redis, heatmap_id)
+                if cached is not None:
+                    try:
+                        age = cache.now_ms() - int(cached["updatedTime"])
+                    except TypeError, ValueError:
+                        age = spec.interval_ms
+                    if age < spec.interval_ms:
+                        continue
+                try:
+                    await heatmap.fetch_and_store(redis, heatmap_id, cached=cached)
+                    refreshed += 1
+                except OutceptionError:
+                    failed += 1
+    except TimeoutLockError:
+        log.info("news.poll_live_signals.already_running")
+        return
+    except RedisError as exc:
+        log.info("news.poll_live_signals.redis_unavailable", error=str(exc))
+        return
+    finally:
+        await _close_quietly(redis)
+    log.info("news.poll_live_signals", refreshed=refreshed, failed=failed)

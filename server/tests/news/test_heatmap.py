@@ -10,6 +10,7 @@ from outception.exceptions import OutceptionError
 from outception.news import heatmap
 from outception.news.cache import now_ms
 from outception.news.fetch import NewsFetchError
+from outception.news.heatmap import service as _service  # noqa: F401
 from outception.redis import Redis
 
 _COINGECKO_COINS = [
@@ -48,7 +49,8 @@ class TestGetHeatmapEndpoint:
         self, client: AsyncClient, mocker: MockerFixture
     ) -> None:
         mocker.patch(
-            "outception.news.heatmap.fetch_json", return_value=_COINGECKO_COINS
+            "outception.news.heatmap.providers.http.fetch_json",
+            return_value=_COINGECKO_COINS,
         )
         response = await client.get("/v1/news/heatmap/heatmap-crypto")
         assert response.status_code == 200
@@ -64,7 +66,7 @@ class TestGetHeatmapEndpoint:
         self, client: AsyncClient, mocker: MockerFixture
     ) -> None:
         mocker.patch(
-            "outception.news.heatmap.fetch_json",
+            "outception.news.heatmap.providers.http.fetch_json",
             side_effect=NewsFetchError("down"),
         )
         response = await client.get("/v1/news/heatmap/heatmap-crypto")
@@ -76,7 +78,7 @@ class TestGetHeatmapCache:
     async def test_fresh_cache_skips_upstream(
         self, redis: Redis, mocker: MockerFixture
     ) -> None:
-        fetch = mocker.patch("outception.news.heatmap.fetch_json")
+        fetch = mocker.patch("outception.news.heatmap.providers.http.fetch_json")
         cached = {
             "id": "heatmap-crypto",
             "updatedTime": now_ms(),
@@ -93,7 +95,7 @@ class TestGetHeatmapCache:
         self, redis: Redis, mocker: MockerFixture
     ) -> None:
         mocker.patch(
-            "outception.news.heatmap.fetch_json",
+            "outception.news.heatmap.providers.http.fetch_json",
             side_effect=NewsFetchError("down"),
         )
         stale = {
@@ -139,12 +141,15 @@ class TestSingleFlight:
         }
         await redis.set("news:heatmap:heatmap-crypto", json.dumps(stale))
         fetch = mocker.patch(
-            "outception.news.heatmap.fetch_json", return_value=_COINGECKO_COINS
+            "outception.news.heatmap.providers.http.fetch_json",
+            return_value=_COINGECKO_COINS,
         )
 
         results = await asyncio.gather(
             *(heatmap.get_heatmap(redis, "heatmap-crypto") for _ in range(8))
         )
+        # The winner's refresh runs detached from the requests; let it land.
+        await asyncio.gather(*heatmap.service._refresh_tasks)
 
         # The lock guarantees the upstream is hit exactly once no matter how
         # many callers land in the stale window; losers serve cache (or the
@@ -175,7 +180,9 @@ class TestSingleFlight:
                 return {"marketCapitalization": 1_000.0}
             raise NewsFetchError("429")
 
-        mocker.patch("outception.news.heatmap.fetch_json", side_effect=fake_fetch)
+        mocker.patch(
+            "outception.news.heatmap.providers.http.fetch_json", side_effect=fake_fetch
+        )
 
         with pytest.raises(OutceptionError):
             await heatmap.get_heatmap(redis, "heatmap-test")
@@ -192,7 +199,9 @@ class TestFrankfurterHeatmap:
                 return {"date": "2026-08-13", "rates": {"EUR": 0.90, "JPY": 150.0}}
             return {"rates": {"EUR": 0.909, "JPY": 148.5}}
 
-        mocker.patch("outception.news.heatmap.fetch_json", side_effect=fake_fetch)
+        mocker.patch(
+            "outception.news.heatmap.providers.http.fetch_json", side_effect=fake_fetch
+        )
 
         result = await heatmap.get_heatmap(redis, "heatmap-fx")
 
@@ -226,7 +235,7 @@ class TestSoccerHeatmap:
         # Soccer tables ride ESPN's keyless standings JSON - no key gating.
         mocker.patch.object(settings, "FOOTBALL_DATA_API_KEY", None)
         mocker.patch(
-            "outception.news.heatmap.fetch_json",
+            "outception.news.heatmap.providers.http.fetch_json",
             return_value={
                 "standings": {"entries": [_espn_soccer_entry("Arsenal", "ARS", 45, 19)]}
             },
@@ -249,7 +258,7 @@ class TestSoccerHeatmap:
             _espn_soccer_entry("Luton Town", "LUT", 8, 19),
         ]
         mocker.patch(
-            "outception.news.heatmap.fetch_json",
+            "outception.news.heatmap.providers.http.fetch_json",
             return_value={"children": [{"standings": {"entries": entries}}]},
         )
 
@@ -290,7 +299,8 @@ class TestSoccerHeatmap:
             },
         }
         fetch = mocker.patch(
-            "outception.news.heatmap.fetch_json", side_effect=[reset, final]
+            "outception.news.heatmap.providers.http.fetch_json",
+            side_effect=[reset, final],
         )
 
         result = await heatmap.get_heatmap(redis, "heatmap-premier-league")
@@ -317,7 +327,10 @@ class TestSoccerHeatmap:
             },
         }
         # Archive fetch returns another empty table - nothing to backfill from.
-        mocker.patch("outception.news.heatmap.fetch_json", side_effect=[reset, reset])
+        mocker.patch(
+            "outception.news.heatmap.providers.http.fetch_json",
+            side_effect=[reset, reset],
+        )
 
         result = await heatmap.get_heatmap(redis, "heatmap-premier-league")
 
@@ -332,7 +345,7 @@ class TestBuzzHeatmap:
     async def test_cached_stories_become_freshness_tiles(
         self, redis: Redis, mocker: MockerFixture
     ) -> None:
-        fetch = mocker.patch("outception.news.heatmap.fetch_json")
+        fetch = mocker.patch("outception.news.heatmap.providers.http.fetch_json")
         now = now_ms()
 
         def entry(*ages_ms: int) -> str:
@@ -436,7 +449,9 @@ class TestFinnhubHeatmaps:
                 return {"c": 123.45, "dp": 1.678}
             return {"marketCapitalization": 3_000_000.0}
 
-        mocker.patch("outception.news.heatmap.fetch_json", side_effect=fake_fetch)
+        mocker.patch(
+            "outception.news.heatmap.providers.http.fetch_json", side_effect=fake_fetch
+        )
 
         result = await heatmap.get_heatmap(redis, "heatmap-test")
 
@@ -484,7 +499,9 @@ class TestFinnhubHeatmaps:
             # SQM's known bad row: a CLP-sized cap mislabeled as USD.
             return {"marketCapitalization": 16_996_592.0, "currency": "USD"}
 
-        mocker.patch("outception.news.heatmap.fetch_json", side_effect=fake_fetch)
+        mocker.patch(
+            "outception.news.heatmap.providers.http.fetch_json", side_effect=fake_fetch
+        )
 
         result = await heatmap.get_heatmap(redis, "heatmap-test")
 

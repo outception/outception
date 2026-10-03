@@ -49,6 +49,8 @@ dependencies = [
   "lxml>=6.0.2",
   "feedparser>=6.0.12",
   "joserfc>=1.7.4",
+  "sgp4>=2.27",
+  "gtfs-realtime-bindings>=3.0.0",
 ]
 
 [dependency-groups]

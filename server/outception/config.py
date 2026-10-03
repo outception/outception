@@ -335,6 +335,13 @@ class Settings(BaseSettings):
     # Table providers that need a free registration. Without a key the gated
     # tables are dropped from the roster; the keyless ones always serve.
     FINNHUB_API_KEY: str | None = None
+    # The live signals are keyless but for these: the launch library's
+    # optional token (a higher rate) and the transit agencies that ask for
+    # a free registration. Each is read by exactly one provider module.
+    LAUNCH_LIBRARY_TOKEN: str | None = None
+    TRANSIT_KEY_NEWYORK: str | None = None
+    TRANSIT_KEY_DUBLIN: str | None = None
+    TRANSIT_KEY_SYDNEY: str | None = None
     FOOTBALL_DATA_API_KEY: str | None = None
     CRICKETDATA_API_KEY: str | None = None
     # Company logo avatars for table tiles.

@@ -21,6 +21,7 @@ from .schemas import (
     DisabledRow,
     LiveSignalRow,
     SourceRow,
+    TableRow,
     TemplateRow,
 )
 
@@ -30,6 +31,7 @@ _sources_adapter = TypeAdapter(list[SourceRow])
 _disabled_adapter = TypeAdapter(list[DisabledRow])
 _templates_adapter = TypeAdapter(list[TemplateRow])
 _signals_adapter = TypeAdapter(list[LiveSignalRow])
+_tables_adapter = TypeAdapter(list[TableRow])
 _credits_adapter = TypeAdapter(list[CreditRow])
 
 
@@ -43,6 +45,7 @@ class Catalog:
     disabled: dict[str, DisabledRow]
     templates: tuple[TemplateRow, ...]
     live_signals: tuple[LiveSignalRow, ...]
+    tables: tuple[TableRow, ...]
     credits: tuple[CreditRow, ...]
     deck: DeckFile
     country_tables: dict[str, dict[str, tuple[str, ...]]] = field(default_factory=dict)
@@ -97,6 +100,9 @@ def load_catalog(data_dir: Path = DATA_DIR) -> Catalog:
         _read(data_dir / "live_signals.json", "[]"),
         "live_signals.json",
     )
+    tables = _validate(
+        _tables_adapter, _read(data_dir / "tables.json", "[]"), "tables.json"
+    )
     credits = _validate(
         _credits_adapter, _read(data_dir / "credits.json", "[]"), "credits.json"
     )
@@ -125,6 +131,7 @@ def load_catalog(data_dir: Path = DATA_DIR) -> Catalog:
         disabled={row.id: row for row in disabled},
         templates=tuple(templates),
         live_signals=tuple(signals),
+        tables=tuple(tables),
         credits=tuple(credits),
         deck=deck,
         country_tables=country_tables,
@@ -159,10 +166,23 @@ def _check(catalog: Catalog) -> None:
             problems.append(f"{row.id}: redirect to unknown id {row.redirect}")
         if row.type != "heatmap" and row.redirect is None and row.adapter is None:
             problems.append(f"{row.id}: no adapter and not a table")
-    known = seen | {signal.id for signal in catalog.live_signals}
-    for signal in catalog.live_signals:
-        if signal.id in seen:
-            problems.append(f"live signal {signal.id} collides with a source id")
+    known = set(seen)
+    # Every table card has a provider spec and every spec a roster row; a
+    # live signal is a table whose roster row is served only while enabled.
+    by_id = {row.id: row for row in catalog.sources}
+    spec_ids = {table.id for table in catalog.tables}
+    signal_ids = {signal.id for signal in catalog.live_signals}
+    for table_id in spec_ids & signal_ids:
+        problems.append(f"{table_id} is both a table spec and a live signal")
+    for table_id in spec_ids | signal_ids:
+        roster_row = by_id.get(table_id)
+        if roster_row is None:
+            problems.append(f"table {table_id} has no roster row")
+        elif roster_row.type != "heatmap":
+            problems.append(f"table {table_id}: roster row is not a table")
+    for row in catalog.sources:
+        if row.type == "heatmap" and row.id not in spec_ids | signal_ids:
+            problems.append(f"{row.id}: table without a provider spec")
     # Disabled ids may outlive their rows: the audit list is history.
     tables = {name for by_name in catalog.country_tables.values() for name in by_name}
     tables |= {"news", "education"}  # resolved from the country code itself

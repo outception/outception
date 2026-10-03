@@ -1,156 +1,191 @@
 {
- "base": [
-  {
-   "id": "bbc-world"
-  },
-  {
-   "id": "youtube-guardian"
-  },
-  {
-   "id": "nytimes"
-  },
-  {
-   "id": "youtube-cnn"
-  },
-  {
-   "id": "thehill"
-  },
-  {
-   "id": "propublica",
-   "inject_after": [
-    "sci-scientificprogress",
-    "youtube-veritasium",
-    "sci-spacediscoveries",
-    "sci-medicalprogress",
-    "sci-fusionprogress",
-    "sci-airbornewindenergy",
-    "country:top_city",
-    "country:property",
-    "country:business"
-   ]
-  },
-  {
-   "id": "marketwatch"
-  },
-  {
-   "id": "heatmap-tech"
-  },
-  {
-   "id": "coindesk"
-  },
-  {
-   "id": "heatmap-crypto",
-   "inject_after": [
-    "country:podcast|podcast-tedtalksdaily",
-    "country:english_podcast"
-   ]
-  },
-  {
-   "id": "visualcapitalist"
-  },
-  {
-   "id": "nythealth",
-   "inject_after": [
-    "country:health"
-   ]
-  },
-  {
-   "id": "theverge"
-  },
-  {
-   "id": "youtube-mkbhd"
-  },
-  {
-   "id": "openai"
-  },
-  {
-   "id": "variety"
-  },
-  {
-   "id": "youtube-mrbeast",
-   "inject_after": [
-    "country:events"
-   ]
-  },
-  {
-   "id": "movie-new"
-  },
-  {
-   "id": "tv-new"
-  },
-  {
-   "id": "anime-new"
-  },
-  {
-   "id": "music-new"
-  },
-  {
-   "id": "game-new"
-  },
-  {
-   "id": "book-new"
-  },
-  {
-   "id": "tech-new",
-   "inject_after": [
-    "country:deals",
-    "country:english"
-   ]
-  },
-  {
-   "id": "car-new"
-  },
-  {
-   "id": "youtube-carwow"
-  },
-  {
-   "id": "podcast-new"
-  },
-  {
-   "id": "life-recipes"
-  },
-  {
-   "id": "youtube-markwiens"
-  },
-  {
-   "id": "life-budgettravel"
-  },
-  {
-   "id": "youtube-yestheory",
-   "inject_after": [
-    "country:travel"
-   ]
-  },
-  {
-   "id": "life-fashion"
-  },
-  {
-   "id": "life-history"
-  },
-  {
-   "id": "youtube-vox"
-  },
-  {
-   "id": "quotes"
-  },
-  {
-   "id": "life-lifehacks"
-  },
-  {
-   "id": "bbcsport",
-   "swap": "sports"
-  },
-  {
-   "id": "heatmap-ucl",
-   "swap": "sport_tables"
-  },
-  {
-   "id": "legalsportsreport"
-  },
-  {
-   "id": "weather"
-  }
- ],
- "briefing_profile_by_country": {},
- "default_briefing_profile": "news-junkie"
+  "base": [
+    {
+      "id": "bbc-world"
+    },
+    {
+      "id": "youtube-guardian"
+    },
+    {
+      "id": "nytimes"
+    },
+    {
+      "id": "youtube-cnn"
+    },
+    {
+      "id": "thehill"
+    },
+    {
+      "id": "propublica",
+      "inject_after": [
+        "sci-scientificprogress",
+        "youtube-veritasium",
+        "sci-spacediscoveries",
+        "sci-medicalprogress",
+        "sci-fusionprogress",
+        "sci-airbornewindenergy",
+        "live-quakes",
+        "live-launches",
+        "country:top_city",
+        "live-iss",
+        "country:transit",
+        "country:property",
+        "country:business"
+      ]
+    },
+    {
+      "id": "marketwatch"
+    },
+    {
+      "id": "heatmap-tech"
+    },
+    {
+      "id": "coindesk"
+    },
+    {
+      "id": "heatmap-crypto",
+      "inject_after": [
+        "country:podcast|podcast-tedtalksdaily",
+        "country:english_podcast"
+      ]
+    },
+    {
+      "id": "visualcapitalist"
+    },
+    {
+      "id": "live-storms",
+      "countries": [
+        "US",
+        "MX",
+        "BS",
+        "CU",
+        "JM",
+        "HT",
+        "DO",
+        "PR",
+        "BZ",
+        "HN",
+        "NI",
+        "GT",
+        "SV",
+        "CR",
+        "PA",
+        "BM"
+      ],
+      "season": [
+        6,
+        11
+      ]
+    },
+    {
+      "id": "live-wildfires",
+      "countries": [
+        "US"
+      ]
+    },
+    {
+      "id": "nythealth",
+      "inject_after": [
+        "country:health"
+      ]
+    },
+    {
+      "id": "theverge"
+    },
+    {
+      "id": "youtube-mkbhd"
+    },
+    {
+      "id": "openai"
+    },
+    {
+      "id": "variety"
+    },
+    {
+      "id": "youtube-mrbeast",
+      "inject_after": [
+        "country:events"
+      ]
+    },
+    {
+      "id": "movie-new"
+    },
+    {
+      "id": "tv-new"
+    },
+    {
+      "id": "anime-new"
+    },
+    {
+      "id": "music-new"
+    },
+    {
+      "id": "game-new"
+    },
+    {
+      "id": "book-new"
+    },
+    {
+      "id": "tech-new",
+      "inject_after": [
+        "country:deals",
+        "country:english"
+      ]
+    },
+    {
+      "id": "car-new"
+    },
+    {
+      "id": "youtube-carwow"
+    },
+    {
+      "id": "podcast-new"
+    },
+    {
+      "id": "life-recipes"
+    },
+    {
+      "id": "youtube-markwiens"
+    },
+    {
+      "id": "life-budgettravel"
+    },
+    {
+      "id": "youtube-yestheory",
+      "inject_after": [
+        "country:travel"
+      ]
+    },
+    {
+      "id": "life-fashion"
+    },
+    {
+      "id": "life-history"
+    },
+    {
+      "id": "youtube-vox"
+    },
+    {
+      "id": "quotes"
+    },
+    {
+      "id": "life-lifehacks"
+    },
+    {
+      "id": "bbcsport",
+      "swap": "sports"
+    },
+    {
+      "id": "heatmap-ucl",
+      "swap": "sport_tables"
+    },
+    {
+      "id": "legalsportsreport"
+    },
+    {
+      "id": "weather"
+    }
+  ],
+  "briefing_profile_by_country": {},
+  "default_briefing_profile": "news-junkie"
 }

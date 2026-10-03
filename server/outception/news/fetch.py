@@ -172,6 +172,17 @@ async def fetch_text(
         return content.decode("utf-8", errors="replace")
 
 
+async def fetch_bytes(
+    url: str,
+    *,
+    headers: dict[str, str] | None = None,
+    params: dict[str, Any] | None = None,
+) -> bytes:
+    """The raw body, for binary feeds (protocol buffers)."""
+    content, _ = await _get(url, headers=headers, params=params)
+    return content
+
+
 async def fetch_json(
     url: str,
     *,

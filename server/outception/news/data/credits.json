@@ -1,1 +1,135 @@
-[]
+[
+  {
+    "id": "finnhub",
+    "name": "Finnhub",
+    "url": "https://finnhub.io",
+    "terms": "Market data by Finnhub, under its free API terms",
+    "used_for": "the stock tables"
+  },
+  {
+    "id": "coingecko",
+    "name": "CoinGecko",
+    "url": "https://www.coingecko.com",
+    "terms": "Crypto prices by CoinGecko, under its public API terms",
+    "used_for": "the crypto table"
+  },
+  {
+    "id": "frankfurter",
+    "name": "Frankfurter",
+    "url": "https://www.frankfurter.app",
+    "terms": "European Central Bank reference rates via Frankfurter, open data",
+    "used_for": "the currencies table"
+  },
+  {
+    "id": "er-api",
+    "name": "ExchangeRate-API",
+    "url": "https://www.exchangerate-api.com",
+    "terms": "Daily dollar rates from the open endpoint, under its free terms",
+    "used_for": "sizing stock tiles listed in other currencies"
+  },
+  {
+    "id": "steam",
+    "name": "Steam",
+    "url": "https://store.steampowered.com/stats/",
+    "terms": "Player counts from the public stats page",
+    "used_for": "the most-played games table"
+  },
+  {
+    "id": "espn",
+    "name": "ESPN",
+    "url": "https://www.espn.com",
+    "terms": "Standings, rankings and fight cards from the public site API",
+    "used_for": "the league tables"
+  },
+  {
+    "id": "cricketdata",
+    "name": "CricketData.org",
+    "url": "https://cricketdata.org",
+    "terms": "Match data under the free tier",
+    "used_for": "the cricket table"
+  },
+  {
+    "id": "jolpica",
+    "name": "Jolpica",
+    "url": "https://api.jolpi.ca",
+    "terms": "Championship data, the successor of the Ergast API, open data",
+    "used_for": "the motorsport table"
+  },
+  {
+    "id": "open-meteo",
+    "name": "Open-Meteo",
+    "url": "https://open-meteo.com",
+    "terms": "Weather data, open data under CC BY 4.0",
+    "used_for": "the weather strip"
+  },
+  {
+    "id": "usgs",
+    "name": "United States Geological Survey",
+    "url": "https://earthquake.usgs.gov",
+    "terms": "Earthquake feeds, public domain",
+    "used_for": "the earthquakes card"
+  },
+  {
+    "id": "nhc",
+    "name": "National Hurricane Center",
+    "url": "https://www.nhc.noaa.gov",
+    "terms": "Active storm data, public domain",
+    "used_for": "the tropical storms card"
+  },
+  {
+    "id": "nifc",
+    "name": "National Interagency Fire Center",
+    "url": "https://www.nifc.gov",
+    "terms": "Incident locations, public domain",
+    "used_for": "the wildfires card"
+  },
+  {
+    "id": "launch-library",
+    "name": "The Space Devs",
+    "url": "https://thespacedevs.com",
+    "terms": "Launch Library 2, under its free tier",
+    "used_for": "the rocket launches card"
+  },
+  {
+    "id": "celestrak",
+    "name": "CelesTrak",
+    "url": "https://celestrak.org",
+    "terms": "Orbital elements, free for non-commercial and attribution-bearing use",
+    "used_for": "the space station passes card"
+  },
+  {
+    "id": "tfl",
+    "name": "Transport for London",
+    "url": "https://tfl.gov.uk",
+    "terms": "Unified API, under the TfL open data terms",
+    "used_for": "the London transit alerts card"
+  },
+  {
+    "id": "mta",
+    "name": "Metropolitan Transportation Authority",
+    "url": "https://new.mta.info/developers",
+    "terms": "GTFS-realtime feeds, under the MTA developer terms",
+    "used_for": "the New York transit alerts card"
+  },
+  {
+    "id": "tfi",
+    "name": "Transport for Ireland",
+    "url": "https://www.transportforireland.ie",
+    "terms": "GTFS-realtime feeds, under the NTA developer terms",
+    "used_for": "the Dublin transit alerts card"
+  },
+  {
+    "id": "tfnsw",
+    "name": "Transport for NSW",
+    "url": "https://opendata.transport.nsw.gov.au",
+    "terms": "GTFS-realtime feeds, under the Open Data terms",
+    "used_for": "the Sydney transit alerts card"
+  },
+  {
+    "id": "ttc",
+    "name": "Toronto Transit Commission",
+    "url": "https://www.ttc.ca",
+    "terms": "GTFS-realtime feeds, open data",
+    "used_for": "the Toronto transit alerts card"
+  }
+]
