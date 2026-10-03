@@ -1,0 +1,1820 @@
+{
+ "openapi": "3.1.0",
+ "info": {
+  "title": "Outception API",
+  "summary": "Outception HTTP and Webhooks API",
+  "description": "Read the docs at https://outception.com/docs/api-reference/introduction",
+  "version": "2026-04"
+ },
+ "servers": [
+  {
+   "url": "https://api.outception.com",
+   "description": "Production environment",
+   "x-speakeasy-server-id": "production"
+  }
+ ],
+ "paths": {
+  "/v1/news/sources": {
+   "get": {
+    "tags": [
+     "news",
+     "public"
+    ],
+    "summary": "List Sources",
+    "description": "Metadata for every known source (including redirect aliases). Pass\n``ids`` (comma-separated) for just those sources - what the wall needs to\npaint its cards without downloading the multi-megabyte roster.",
+    "operationId": "news:list_sources",
+    "parameters": [
+     {
+      "name": "ids",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 8192
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Ids"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/SourceMeta"
+         },
+         "title": "Response News:List Sources"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "x-speakeasy-group": "news",
+    "x-speakeasy-name-override": "list_sources"
+   }
+  },
+  "/v1/news/sources/{source_id}": {
+   "get": {
+    "tags": [
+     "news",
+     "public"
+    ],
+    "summary": "Get Source Meta",
+    "description": "Metadata for one source - what a share-card unfurl needs, without\npulling the whole roster.",
+    "operationId": "news:get_source_meta",
+    "parameters": [
+     {
+      "name": "source_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Source Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SourceMeta"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "x-speakeasy-group": "news",
+    "x-speakeasy-name-override": "get_source_meta"
+   }
+  },
+  "/v1/news/default-deck": {
+   "get": {
+    "tags": [
+     "news",
+     "public"
+    ],
+    "summary": "Default Cards",
+    "description": "The default \"Your stack\" seeded for a fresh visitor: one representative\nsource per major category (world, tech, music, culture, weather, sports,\nscience, markets, crypto, betting, gaming). When the reader's ``country``\nis known (Cloudflare IP country), the generic sports sources are swapped for\nthat country's native sports/teams (e.g. Ireland → Gaelic football + hurling,\nUSA → NFL/NBA/MLB). Retired sources are dropped.",
+    "operationId": "news:default_deck",
+    "deprecated": true,
+    "parameters": [
+     {
+      "name": "country",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "minLength": 2,
+         "maxLength": 2
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Country"
+      }
+     },
+     {
+      "name": "CF-IPCountry",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Cf-Ipcountry"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         },
+         "title": "Response News:Default Deck"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "x-speakeasy-group": "news",
+    "x-speakeasy-name-override": "default_cards"
+   }
+  },
+  "/v1/news/default-cards": {
+   "get": {
+    "tags": [
+     "news",
+     "public"
+    ],
+    "summary": "Default Cards",
+    "description": "The default \"Your stack\" seeded for a fresh visitor: one representative\nsource per major category (world, tech, music, culture, weather, sports,\nscience, markets, crypto, betting, gaming). When the reader's ``country``\nis known (Cloudflare IP country), the generic sports sources are swapped for\nthat country's native sports/teams (e.g. Ireland → Gaelic football + hurling,\nUSA → NFL/NBA/MLB). Retired sources are dropped.",
+    "operationId": "news:default_cards",
+    "parameters": [
+     {
+      "name": "country",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "minLength": 2,
+         "maxLength": 2
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Country"
+      }
+     },
+     {
+      "name": "CF-IPCountry",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Cf-Ipcountry"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         },
+         "title": "Response News:Default Cards"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "x-speakeasy-group": "news",
+    "x-speakeasy-name-override": "default_cards"
+   }
+  },
+  "/v1/news/summary/available": {
+   "get": {
+    "tags": [
+     "news",
+     "public"
+    ],
+    "summary": "Get Summary Availability",
+    "description": "Cheap pre-check for a headline tap: known-unavailable articles (videos,\npaywalls and bot walls seen before, exhausted budget) answer false in a\nfew milliseconds so the reader is sent to the article immediately rather\nthan after a failed generation.",
+    "operationId": "news:get_summary_availability",
+    "parameters": [
+     {
+      "name": "url",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 12,
+       "maxLength": 2048,
+       "title": "Url"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SummaryAvailability"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "x-speakeasy-group": "news",
+    "x-speakeasy-name-override": "get_summary_availability"
+   }
+  },
+  "/v1/news/summary/stream": {
+   "get": {
+    "tags": [
+     "news",
+     "public"
+    ],
+    "summary": "Stream Article Summary",
+    "description": "The AI summary as server-sent events, so the panel shows the text as it\nis written: `text` (a whole cached or publisher result), `delta` pieces,\nthen `done` - or `error` when the reader should open the article.",
+    "operationId": "news:stream_article_summary",
+    "parameters": [
+     {
+      "name": "url",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 12,
+       "maxLength": 2048,
+       "title": "Url"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "x-speakeasy-group": "news",
+    "x-speakeasy-name-override": "stream_article_summary"
+   }
+  },
+  "/v1/news/summary": {
+   "get": {
+    "tags": [
+     "news",
+     "public"
+    ],
+    "summary": "Get Article Summary",
+    "description": "AI summary for a headline tap. One model call per article - everything\nelse is served from cache (and the edge can cache it too).",
+    "operationId": "news:get_article_summary",
+    "parameters": [
+     {
+      "name": "url",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 12,
+       "maxLength": 2048,
+       "title": "Url"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SummaryResponse"
+        }
+       }
+      }
+     },
+     "502": {
+      "description": "Summary unavailable for this article"
+     },
+     "503": {
+      "description": "Summaries not configured"
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "x-speakeasy-group": "news",
+    "x-speakeasy-name-override": "get_article_summary"
+   }
+  },
+  "/v1/news/crossword": {
+   "get": {
+    "tags": [
+     "news",
+     "public"
+    ],
+    "summary": "Get Crossword",
+    "description": "The daily crossword for the wall's puzzle card. One upstream fetch per\nday (Redis-cached); every reader worldwide gets the same puzzle, so the\npayload is fully cacheable at the edge.",
+    "operationId": "news:get_crossword",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CrosswordResponse"
+        }
+       }
+      }
+     }
+    },
+    "x-speakeasy-group": "news",
+    "x-speakeasy-name-override": "get_crossword"
+   }
+  },
+  "/v1/news/templates": {
+   "get": {
+    "tags": [
+     "news",
+     "public"
+    ],
+    "summary": "Get Templates",
+    "description": "Starter templates: curated source bundles by persona (developer,\ninvestor, sports fan, …), country-resolved like the default cards. Display\nnames live client-side, keyed by template id.",
+    "operationId": "news:get_templates",
+    "parameters": [
+     {
+      "name": "country",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "minLength": 2,
+         "maxLength": 2
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Country"
+      }
+     },
+     {
+      "name": "CF-IPCountry",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Cf-Ipcountry"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/TemplatesResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "x-speakeasy-group": "news",
+    "x-speakeasy-name-override": "get_templates"
+   }
+  },
+  "/v1/news/weather": {
+   "get": {
+    "tags": [
+     "news",
+     "public"
+    ],
+    "summary": "Get Weather",
+    "description": "Current conditions and a short forecast for the reader's location. The\nbrowser sends precise ``latitude``/``longitude`` when geolocation is\ngranted; otherwise it sends the IP ``country`` (from Cloudflare) and we\nresolve that country's capital. Proxied from Open-Meteo, cache-first.\n\nNative clients have no IP-country cookie to read, so when they send neither\ncoordinates nor a country we fall back to Cloudflare's header ourselves -\notherwise a phone whose UI language is US English would be given US weather\nwherever it actually is.",
+    "operationId": "news:get_weather",
+    "parameters": [
+     {
+      "name": "latitude",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "number",
+         "maximum": 90,
+         "minimum": -90
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Latitude"
+      }
+     },
+     {
+      "name": "longitude",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "number",
+         "maximum": 180,
+         "minimum": -180
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Longitude"
+      }
+     },
+     {
+      "name": "country",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "minLength": 2,
+         "maxLength": 2
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Country"
+      }
+     },
+     {
+      "name": "CF-IPCountry",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Cf-Ipcountry"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/WeatherResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "x-speakeasy-group": "news",
+    "x-speakeasy-name-override": "get_weather"
+   }
+  },
+  "/v1/news/heatmap/{heatmap_id}": {
+   "get": {
+    "tags": [
+     "news",
+     "public"
+    ],
+    "summary": "Get Heatmap",
+    "description": "Tiles for one market heatmap card (a `type: \"heatmap\"` roster source).\n\nTile area follows `weight` (market cap), color follows `changePercent`.\nServed cache-first with the same success/cache semantics as headline\nsources.",
+    "operationId": "news:get_heatmap",
+    "parameters": [
+     {
+      "name": "heatmap_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Heatmap Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HeatmapResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "x-speakeasy-group": "news",
+    "x-speakeasy-name-override": "get_heatmap"
+   }
+  },
+  "/v1/news/search": {
+   "get": {
+    "tags": [
+     "news",
+     "public"
+    ],
+    "summary": "Search News",
+    "description": "Search the wall: source names (always) and cached headlines (warm\nsources only - search never triggers an outbound fetch).",
+    "operationId": "news:search_news",
+    "parameters": [
+     {
+      "name": "q",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 2,
+       "maxLength": 80,
+       "description": "Search query.",
+       "title": "Q"
+      },
+      "description": "Search query."
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/NewsSearchResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "x-speakeasy-group": "news",
+    "x-speakeasy-name-override": "search_news"
+   }
+  },
+  "/v1/news/{source_id}": {
+   "get": {
+    "tags": [
+     "news",
+     "public"
+    ],
+    "summary": "Get Source",
+    "description": "Items for one source - cache-first with the ported TTL semantics.",
+    "operationId": "news:get_source",
+    "parameters": [
+     {
+      "name": "source_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Source Id"
+      }
+     },
+     {
+      "name": "latest",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "boolean",
+       "default": false,
+       "title": "Latest"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SourceResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "x-speakeasy-group": "news",
+    "x-speakeasy-name-override": "get_source"
+   }
+  },
+  "/v1/promoted/active": {
+   "get": {
+    "tags": [
+     "promoted",
+     "public"
+    ],
+    "summary": "Get Active Slot",
+    "description": "The Promoted card currently running, if any. At most one slot is ever\nactive; the cards renders at most one Promoted card per serve. Cacheable\nfor a short window - a run starting or ending reaches readers within a\nminute, which is plenty for time-boxed runs measured in hours or days.",
+    "operationId": "promoted:get_active_slot",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "anyOf": [
+          {
+           "$ref": "#/components/schemas/PromotedSlot"
+          },
+          {
+           "type": "null"
+          }
+         ],
+         "title": "Response Promoted:Get Active Slot"
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "components": {
+  "schemas": {
+   "CrosswordClue": {
+    "properties": {
+     "num": {
+      "type": "integer",
+      "title": "Num"
+     },
+     "clue": {
+      "type": "string",
+      "title": "Clue"
+     },
+     "row": {
+      "type": "integer",
+      "title": "Row"
+     },
+     "col": {
+      "type": "integer",
+      "title": "Col"
+     },
+     "len": {
+      "type": "integer",
+      "title": "Len"
+     }
+    },
+    "type": "object",
+    "required": [
+     "num",
+     "clue",
+     "row",
+     "col",
+     "len"
+    ],
+    "title": "CrosswordClue"
+   },
+   "CrosswordResponse": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "title": {
+      "type": "string",
+      "title": "Title"
+     },
+     "author": {
+      "type": "string",
+      "title": "Author"
+     },
+     "rows": {
+      "type": "integer",
+      "title": "Rows"
+     },
+     "cols": {
+      "type": "integer",
+      "title": "Cols"
+     },
+     "grid": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Grid"
+     },
+     "across": {
+      "items": {
+       "$ref": "#/components/schemas/CrosswordClue"
+      },
+      "type": "array",
+      "title": "Across"
+     },
+     "down": {
+      "items": {
+       "$ref": "#/components/schemas/CrosswordClue"
+      },
+      "type": "array",
+      "title": "Down"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "title",
+     "author",
+     "rows",
+     "cols",
+     "grid",
+     "across",
+     "down"
+    ],
+    "title": "CrosswordResponse",
+    "description": "The daily syndicated crossword, parsed for the wall's puzzle card:\nthe solution grid (# = block) plus numbered across/down clues."
+   },
+   "HTTPValidationError": {
+    "properties": {
+     "detail": {
+      "items": {
+       "$ref": "#/components/schemas/ValidationError"
+      },
+      "type": "array",
+      "title": "Detail"
+     }
+    },
+    "type": "object",
+    "title": "HTTPValidationError"
+   },
+   "HeatmapResponse": {
+    "properties": {
+     "status": {
+      "type": "string",
+      "enum": [
+       "success",
+       "cache"
+      ],
+      "title": "Status"
+     },
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "updatedTime": {
+      "type": "integer",
+      "title": "Updatedtime"
+     },
+     "tiles": {
+      "items": {
+       "$ref": "#/components/schemas/HeatmapTile"
+      },
+      "type": "array",
+      "title": "Tiles"
+     }
+    },
+    "type": "object",
+    "required": [
+     "status",
+     "id",
+     "updatedTime",
+     "tiles"
+    ],
+    "title": "HeatmapResponse"
+   },
+   "HeatmapTile": {
+    "properties": {
+     "symbol": {
+      "type": "string",
+      "title": "Symbol"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "changePercent": {
+      "type": "number",
+      "title": "Changepercent"
+     },
+     "price": {
+      "type": "number",
+      "title": "Price"
+     },
+     "weight": {
+      "type": "number",
+      "title": "Weight"
+     },
+     "label": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Label"
+     },
+     "url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Url"
+     },
+     "logo": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Logo"
+     }
+    },
+    "type": "object",
+    "required": [
+     "symbol",
+     "name",
+     "changePercent",
+     "price",
+     "weight"
+    ],
+    "title": "HeatmapTile",
+    "description": "One treemap tile: area from ``weight`` (market cap), color from\n``changePercent``."
+   },
+   "NewsExtra": {
+    "properties": {
+     "hover": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Hover"
+     },
+     "info": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Info"
+     },
+     "icon": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Icon"
+     },
+     "date": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Date"
+     }
+    },
+    "type": "object",
+    "title": "NewsExtra"
+   },
+   "NewsItem": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "title": {
+      "type": "string",
+      "title": "Title"
+     },
+     "url": {
+      "type": "string",
+      "title": "Url"
+     },
+     "mobileUrl": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Mobileurl"
+     },
+     "pubDate": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Pubdate"
+     },
+     "extra": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/NewsExtra"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "title",
+     "url"
+    ],
+    "title": "NewsItem"
+   },
+   "NewsSearchItem": {
+    "properties": {
+     "sourceId": {
+      "type": "string",
+      "title": "Sourceid"
+     },
+     "sourceName": {
+      "type": "string",
+      "title": "Sourcename"
+     },
+     "item": {
+      "$ref": "#/components/schemas/NewsItem"
+     }
+    },
+    "type": "object",
+    "required": [
+     "sourceId",
+     "sourceName",
+     "item"
+    ],
+    "title": "NewsSearchItem",
+    "description": "A headline matched by search, tagged with its source."
+   },
+   "NewsSearchResponse": {
+    "properties": {
+     "sources": {
+      "items": {
+       "$ref": "#/components/schemas/SourceMeta"
+      },
+      "type": "array",
+      "title": "Sources"
+     },
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/NewsSearchItem"
+      },
+      "type": "array",
+      "title": "Items"
+     }
+    },
+    "type": "object",
+    "required": [
+     "sources",
+     "items"
+    ],
+    "title": "NewsSearchResponse",
+    "description": "Search results: matching sources (by name) and matching cached\nheadlines."
+   },
+   "NewsTemplate": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "sources": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Sources"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "sources"
+    ],
+    "title": "NewsTemplate",
+    "description": "A starter template: a persona's curated source bundle, country-resolved.\nDisplay name/blurb live client-side, keyed by ``id``."
+   },
+   "PromotedSlot": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "businessName": {
+      "type": "string",
+      "maxLength": 120,
+      "title": "Businessname"
+     },
+     "videoUrl": {
+      "type": "string",
+      "title": "Videourl"
+     },
+     "clickUrl": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Clickurl"
+     },
+     "tagline": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 200
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tagline"
+     },
+     "endsAt": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Endsat"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "businessName",
+     "videoUrl",
+     "endsAt"
+    ],
+    "title": "PromotedSlot"
+   },
+   "SourceMeta": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "color": {
+      "type": "string",
+      "title": "Color"
+     },
+     "column": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Column"
+     },
+     "type": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "hottest",
+         "realtime",
+         "heatmap",
+         "game"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Type"
+     },
+     "home": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Home"
+     },
+     "title": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Title"
+     },
+     "desc": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Desc"
+     },
+     "interval": {
+      "type": "integer",
+      "title": "Interval"
+     },
+     "redirect": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Redirect"
+     },
+     "logo": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Logo"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "name",
+     "color",
+     "interval"
+    ],
+    "title": "SourceMeta"
+   },
+   "SourceResponse": {
+    "properties": {
+     "status": {
+      "type": "string",
+      "enum": [
+       "success",
+       "cache"
+      ],
+      "title": "Status"
+     },
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "updatedTime": {
+      "type": "integer",
+      "title": "Updatedtime"
+     },
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/NewsItem"
+      },
+      "type": "array",
+      "title": "Items"
+     }
+    },
+    "type": "object",
+    "required": [
+     "status",
+     "id",
+     "updatedTime",
+     "items"
+    ],
+    "title": "SourceResponse"
+   },
+   "SummaryAvailability": {
+    "properties": {
+     "available": {
+      "type": "boolean",
+      "title": "Available",
+      "description": "False when the summary is known to be unavailable"
+     }
+    },
+    "type": "object",
+    "required": [
+     "available"
+    ],
+    "title": "SummaryAvailability",
+    "description": "Whether a headline tap can expect an AI summary, decided from what the\nserver already knows - so the client either opens the summary panel or\nsends the reader straight to the article, never both in a row."
+   },
+   "SummaryResponse": {
+    "properties": {
+     "summary": {
+      "type": "string",
+      "title": "Summary",
+      "description": "Model-written summary of the article"
+     },
+     "url": {
+      "type": "string",
+      "title": "Url",
+      "description": "The article URL the summary covers"
+     },
+     "kind": {
+      "type": "string",
+      "enum": [
+       "summary",
+       "teaser"
+      ],
+      "title": "Kind",
+      "description": "'summary' is model-written from the article; 'teaser' is the publisher's own standfirst, shown when the article itself is not available (paywall, bot wall)",
+      "default": "summary"
+     }
+    },
+    "type": "object",
+    "required": [
+     "summary",
+     "url"
+    ],
+    "title": "SummaryResponse",
+    "description": "AI summary for a headline tap: the model-written text plus the\narticle URL it covers (the client links to it under the summary)."
+   },
+   "TemplatesResponse": {
+    "properties": {
+     "templates": {
+      "items": {
+       "$ref": "#/components/schemas/NewsTemplate"
+      },
+      "type": "array",
+      "title": "Templates"
+     }
+    },
+    "type": "object",
+    "required": [
+     "templates"
+    ],
+    "title": "TemplatesResponse"
+   },
+   "ValidationError": {
+    "properties": {
+     "loc": {
+      "items": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "integer"
+        }
+       ]
+      },
+      "type": "array",
+      "title": "Location"
+     },
+     "msg": {
+      "type": "string",
+      "title": "Message"
+     },
+     "type": {
+      "type": "string",
+      "title": "Error Type"
+     },
+     "input": {
+      "title": "Input"
+     },
+     "ctx": {
+      "type": "object",
+      "title": "Context"
+     }
+    },
+    "type": "object",
+    "required": [
+     "loc",
+     "msg",
+     "type"
+    ],
+    "title": "ValidationError"
+   },
+   "WeatherCurrent": {
+    "properties": {
+     "temperature": {
+      "type": "number",
+      "title": "Temperature"
+     },
+     "apparentTemperature": {
+      "type": "number",
+      "title": "Apparenttemperature"
+     },
+     "weatherCode": {
+      "type": "integer",
+      "title": "Weathercode"
+     },
+     "windSpeed": {
+      "type": "number",
+      "title": "Windspeed"
+     },
+     "humidity": {
+      "type": "integer",
+      "title": "Humidity"
+     },
+     "isDay": {
+      "type": "boolean",
+      "title": "Isday"
+     }
+    },
+    "type": "object",
+    "required": [
+     "temperature",
+     "apparentTemperature",
+     "weatherCode",
+     "windSpeed",
+     "humidity",
+     "isDay"
+    ],
+    "title": "WeatherCurrent"
+   },
+   "WeatherDaily": {
+    "properties": {
+     "date": {
+      "type": "string",
+      "title": "Date"
+     },
+     "weatherCode": {
+      "type": "integer",
+      "title": "Weathercode"
+     },
+     "tempMax": {
+      "type": "number",
+      "title": "Tempmax"
+     },
+     "tempMin": {
+      "type": "number",
+      "title": "Tempmin"
+     }
+    },
+    "type": "object",
+    "required": [
+     "date",
+     "weatherCode",
+     "tempMax",
+     "tempMin"
+    ],
+    "title": "WeatherDaily"
+   },
+   "WeatherResponse": {
+    "properties": {
+     "location": {
+      "type": "string",
+      "title": "Location"
+     },
+     "latitude": {
+      "type": "number",
+      "title": "Latitude"
+     },
+     "longitude": {
+      "type": "number",
+      "title": "Longitude"
+     },
+     "timezone": {
+      "type": "string",
+      "title": "Timezone"
+     },
+     "current": {
+      "$ref": "#/components/schemas/WeatherCurrent"
+     },
+     "daily": {
+      "items": {
+       "$ref": "#/components/schemas/WeatherDaily"
+      },
+      "type": "array",
+      "title": "Daily"
+     }
+    },
+    "type": "object",
+    "required": [
+     "location",
+     "latitude",
+     "longitude",
+     "timezone",
+     "current",
+     "daily"
+    ],
+    "title": "WeatherResponse",
+    "description": "Current conditions and a short daily forecast for the weather card,\nproxied from Open-Meteo and localized to the reader's coordinates or IP\ncountry capital."
+   },
+   "AuthorizationCodeTokenRequest": {
+    "properties": {
+     "grant_type": {
+      "const": "authorization_code",
+      "title": "Grant Type",
+      "type": "string"
+     },
+     "client_id": {
+      "title": "Client Id",
+      "type": "string"
+     },
+     "client_secret": {
+      "title": "Client Secret",
+      "type": "string"
+     },
+     "code": {
+      "title": "Code",
+      "type": "string"
+     },
+     "redirect_uri": {
+      "format": "uri",
+      "maxLength": 2083,
+      "minLength": 1,
+      "title": "Redirect Uri",
+      "type": "string"
+     }
+    },
+    "required": [
+     "grant_type",
+     "client_id",
+     "client_secret",
+     "code",
+     "redirect_uri"
+    ],
+    "title": "AuthorizationCodeTokenRequest",
+    "type": "object"
+   },
+   "RefreshTokenRequest": {
+    "properties": {
+     "grant_type": {
+      "const": "refresh_token",
+      "title": "Grant Type",
+      "type": "string"
+     },
+     "client_id": {
+      "title": "Client Id",
+      "type": "string"
+     },
+     "client_secret": {
+      "title": "Client Secret",
+      "type": "string"
+     },
+     "refresh_token": {
+      "title": "Refresh Token",
+      "type": "string"
+     }
+    },
+    "required": [
+     "grant_type",
+     "client_id",
+     "client_secret",
+     "refresh_token"
+    ],
+    "title": "RefreshTokenRequest",
+    "type": "object"
+   },
+   "WebTokenRequest": {
+    "properties": {
+     "grant_type": {
+      "const": "web",
+      "title": "Grant Type",
+      "type": "string"
+     },
+     "client_id": {
+      "title": "Client Id",
+      "type": "string"
+     },
+     "client_secret": {
+      "title": "Client Secret",
+      "type": "string"
+     },
+     "session_token": {
+      "title": "Session Token",
+      "type": "string"
+     },
+     "sub_type": {
+      "default": "user",
+      "enum": [
+       "user",
+       "organization"
+      ],
+      "title": "Sub Type",
+      "type": "string"
+     },
+     "sub": {
+      "anyOf": [
+       {
+        "format": "uuid4",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Sub"
+     },
+     "scope": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Scope"
+     }
+    },
+    "required": [
+     "grant_type",
+     "client_id",
+     "client_secret",
+     "session_token"
+    ],
+    "title": "WebTokenRequest",
+    "type": "object"
+   },
+   "RevokeTokenRequest": {
+    "properties": {
+     "token": {
+      "title": "Token",
+      "type": "string"
+     },
+     "token_type_hint": {
+      "anyOf": [
+       {
+        "enum": [
+         "access_token",
+         "refresh_token"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Token Type Hint"
+     },
+     "client_id": {
+      "title": "Client Id",
+      "type": "string"
+     },
+     "client_secret": {
+      "title": "Client Secret",
+      "type": "string"
+     }
+    },
+    "required": [
+     "token",
+     "client_id",
+     "client_secret"
+    ],
+    "title": "RevokeTokenRequest",
+    "type": "object"
+   },
+   "IntrospectTokenRequest": {
+    "properties": {
+     "token": {
+      "title": "Token",
+      "type": "string"
+     },
+     "token_type_hint": {
+      "anyOf": [
+       {
+        "enum": [
+         "access_token",
+         "refresh_token"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Token Type Hint"
+     },
+     "client_id": {
+      "title": "Client Id",
+      "type": "string"
+     },
+     "client_secret": {
+      "title": "Client Secret",
+      "type": "string"
+     }
+    },
+    "required": [
+     "token",
+     "client_id",
+     "client_secret"
+    ],
+    "title": "IntrospectTokenRequest",
+    "type": "object"
+   }
+  }
+ },
+ "tags": [
+  {
+   "name": "public",
+   "description": "Endpoints shown and documented in the Outception API documentation and available in our SDKs."
+  },
+  {
+   "name": "private",
+   "description": "Endpoints that should appear in the schema only in development to generate our internal JS SDK."
+  }
+ ]
+}
