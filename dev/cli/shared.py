@@ -1,4 +1,4 @@
-"""Shared utilities and context for the Polar Development CLI."""
+"""Shared utilities and context for the Outception Development CLI."""
 
 import json
 import os

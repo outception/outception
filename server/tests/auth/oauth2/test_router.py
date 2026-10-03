@@ -7,11 +7,11 @@ from pytest_mock import MockerFixture
 from reauth.factors.oauth2.base import OAuth2Account, OAuth2Enrollment
 from sqlalchemy import select
 
-from polar.auth.oauth2.google import GoogleFactor
-from polar.config import settings
-from polar.kit.utils import utc_now
-from polar.models import Organization, OrganizationDomain, User
-from polar.postgres import AsyncSession
+from outception.auth.oauth2.google import GoogleFactor
+from outception.config import settings
+from outception.kit.utils import utc_now
+from outception.models import Organization, OrganizationDomain, User
+from outception.postgres import AsyncSession
 from tests.auth.sso.test_endpoints import create_sso_connection
 from tests.fixtures.database import SaveFixture
 

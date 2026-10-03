@@ -4,25 +4,25 @@ from pytest_mock import MockerFixture
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
-from polar.kit.utils import utc_now
-from polar.models import (
+from outception.kit.utils import utc_now
+from outception.models import (
     NotificationRecipient,
     OAuthAccount,
     Organization,
     User,
     UserOrganization,
 )
-from polar.models.user import IdentityVerificationStatus, OAuthPlatform
-from polar.models.user_organization import OrganizationRole
-from polar.postgres import AsyncSession
-from polar.user.repository import UserRepository
-from polar.user.schemas import UserDeletionBlockedReason, UserUpdate
-from polar.user.service import (
+from outception.models.user import IdentityVerificationStatus, OAuthPlatform
+from outception.models.user_organization import OrganizationRole
+from outception.postgres import AsyncSession
+from outception.user.repository import UserRepository
+from outception.user.schemas import UserDeletionBlockedReason, UserUpdate
+from outception.user.service import (
     IdentityAlreadyVerified,
     IdentityVerificationForUnknownUser,
     IdentityVerificationProcessing,
 )
-from polar.user.service import user as user_service
+from outception.user.service import user as user_service
 from tests.fixtures.database import SaveFixture
 from tests.fixtures.random_objects import (
     create_notification_recipient,
@@ -153,7 +153,7 @@ class TestUpdate:
         await save_fixture(user)
 
         enqueue_mock = mocker.patch(
-            "polar.user.service.polar_self_service.enqueue_update_member"
+            "outception.user.service.outception_self_service.enqueue_update_member"
         )
 
         await user_service.update(
@@ -180,7 +180,7 @@ class TestUpdate:
         await save_fixture(user)
 
         enqueue_mock = mocker.patch(
-            "polar.user.service.polar_self_service.enqueue_update_member"
+            "outception.user.service.outception_self_service.enqueue_update_member"
         )
 
         await user_service.update(
@@ -203,7 +203,7 @@ class TestUpdate:
         await save_fixture(user)
 
         enqueue_mock = mocker.patch(
-            "polar.user.service.polar_self_service.enqueue_update_member"
+            "outception.user.service.outception_self_service.enqueue_update_member"
         )
 
         await user_service.update(
@@ -229,7 +229,7 @@ class TestRequestDeletion:
         assert result.blocked_reasons == []
         assert user.deleted_at is not None
         assert user.email != original_email
-        assert user.email.endswith("@anonymized.polar.sh")
+        assert user.email.endswith("@anonymized.outception.sh")
 
     async def test_blocked_with_active_organization(
         self,
@@ -265,7 +265,7 @@ class TestRequestDeletion:
 
         assert result.deleted is True
         assert user.email != original_email
-        assert user.email.endswith("@anonymized.polar.sh")
+        assert user.email.endswith("@anonymized.outception.sh")
         assert user.avatar_url is None
         assert user.meta == {}
         assert user.deleted_at is not None
@@ -340,7 +340,7 @@ class TestRequestDeletion:
         await save_fixture(user)
 
         redact_mock = mocker.patch(
-            "polar.user.service.stripe_service.redact_verification_session",
+            "outception.user.service.stripe_service.redact_verification_session",
             new_callable=mocker.AsyncMock,
         )
 
@@ -363,7 +363,7 @@ class TestRequestDeletion:
         assert user.identity_verification_id is None
 
         redact_mock = mocker.patch(
-            "polar.user.service.stripe_service.redact_verification_session",
+            "outception.user.service.stripe_service.redact_verification_session",
             new_callable=mocker.AsyncMock,
         )
 
@@ -385,7 +385,7 @@ class TestRequestDeletion:
         await save_fixture(user)
 
         mocker.patch(
-            "polar.user.service.stripe_service.redact_verification_session",
+            "outception.user.service.stripe_service.redact_verification_session",
             new_callable=mocker.AsyncMock,
             side_effect=stripe_lib.InvalidRequestError(
                 "No such verification session: vs_missing", "id"
@@ -418,7 +418,7 @@ class TestCreateIdentityVerification:
         user: User,
     ) -> None:
         create_mock = mocker.patch(
-            "polar.user.service.stripe_service.create_verification_session",
+            "outception.user.service.stripe_service.create_verification_session",
             new_callable=mocker.AsyncMock,
             return_value=_verification_session("vs_new", "requires_input"),
         )
@@ -440,12 +440,12 @@ class TestCreateIdentityVerification:
         await save_fixture(user)
 
         mocker.patch(
-            "polar.user.service.stripe_service.get_verification_session",
+            "outception.user.service.stripe_service.get_verification_session",
             new_callable=mocker.AsyncMock,
             return_value=_verification_session("vs_existing", "requires_input"),
         )
         create_mock = mocker.patch(
-            "polar.user.service.stripe_service.create_verification_session",
+            "outception.user.service.stripe_service.create_verification_session",
             new_callable=mocker.AsyncMock,
         )
 
@@ -466,12 +466,12 @@ class TestCreateIdentityVerification:
         await save_fixture(user)
 
         mocker.patch(
-            "polar.user.service.stripe_service.get_verification_session",
+            "outception.user.service.stripe_service.get_verification_session",
             new_callable=mocker.AsyncMock,
             return_value=_verification_session("vs_existing", "requires_input"),
         )
         create_mock = mocker.patch(
-            "polar.user.service.stripe_service.create_verification_session",
+            "outception.user.service.stripe_service.create_verification_session",
             new_callable=mocker.AsyncMock,
         )
 
@@ -492,12 +492,12 @@ class TestCreateIdentityVerification:
         await save_fixture(user)
 
         mocker.patch(
-            "polar.user.service.stripe_service.get_verification_session",
+            "outception.user.service.stripe_service.get_verification_session",
             new_callable=mocker.AsyncMock,
             return_value=_verification_session("vs_existing", "processing"),
         )
         create_mock = mocker.patch(
-            "polar.user.service.stripe_service.create_verification_session",
+            "outception.user.service.stripe_service.create_verification_session",
             new_callable=mocker.AsyncMock,
         )
 
@@ -519,12 +519,12 @@ class TestCreateIdentityVerification:
         await save_fixture(user)
 
         mocker.patch(
-            "polar.user.service.stripe_service.get_verification_session",
+            "outception.user.service.stripe_service.get_verification_session",
             new_callable=mocker.AsyncMock,
             return_value=_verification_session("vs_existing", "verified"),
         )
         create_mock = mocker.patch(
-            "polar.user.service.stripe_service.create_verification_session",
+            "outception.user.service.stripe_service.create_verification_session",
             new_callable=mocker.AsyncMock,
         )
 
@@ -545,12 +545,12 @@ class TestCreateIdentityVerification:
         await save_fixture(user)
 
         mocker.patch(
-            "polar.user.service.stripe_service.get_verification_session",
+            "outception.user.service.stripe_service.get_verification_session",
             new_callable=mocker.AsyncMock,
             return_value=_verification_session("vs_canceled", "canceled"),
         )
         mocker.patch(
-            "polar.user.service.stripe_service.create_verification_session",
+            "outception.user.service.stripe_service.create_verification_session",
             new_callable=mocker.AsyncMock,
             return_value=_verification_session("vs_new", "requires_input"),
         )
@@ -599,7 +599,7 @@ class TestIdentityVerificationVerified:
         await create_payout_account(save_fixture, organization_second, user)
 
         maybe_activate_mock = mocker.patch(
-            "polar.user.service.organization_service.maybe_activate",
+            "outception.user.service.organization_service.maybe_activate",
             new_callable=mocker.AsyncMock,
         )
 
@@ -635,7 +635,7 @@ class TestIdentityVerificationVerified:
         await save_fixture(user)
 
         mocker.patch(
-            "polar.user.service.organization_service.maybe_activate",
+            "outception.user.service.organization_service.maybe_activate",
             new_callable=mocker.AsyncMock,
         )
 
@@ -877,11 +877,11 @@ class TestIdentityVerificationAfterDeletion:
         await save_fixture(user)
 
         mocker.patch(
-            "polar.user.service.stripe_service.redact_verification_session",
+            "outception.user.service.stripe_service.redact_verification_session",
             new_callable=mocker.AsyncMock,
         )
         maybe_activate_mock = mocker.patch(
-            "polar.user.service.organization_service.maybe_activate",
+            "outception.user.service.organization_service.maybe_activate",
             new_callable=mocker.AsyncMock,
         )
 

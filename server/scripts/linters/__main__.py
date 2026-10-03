@@ -1,4 +1,4 @@
-"""Run the custom AST lint rules over polar/ with a single shared parse.
+"""Run the custom AST lint rules over outception/ with a single shared parse.
 
 Each rule lives in its own module and registers a `Rule` with a name (for
 `--only`), a skip code, and a `check(tree)` callable. Suppress a violation
@@ -43,7 +43,7 @@ def main() -> int:
             return 2
         rules = tuple(rule for rule in RULES if rule.name in names)
 
-    root = Path(__file__).resolve().parents[2] / "polar"
+    root = Path(__file__).resolve().parents[2] / "outception"
     if not root.exists():
         print(f"error: {root} not found", file=sys.stderr)
         return 2

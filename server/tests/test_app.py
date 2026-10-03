@@ -2,9 +2,9 @@ import pytest
 from fastapi import FastAPI, Response
 from fastapi.testclient import TestClient
 
-from polar.app import configure_cors, create_app
-from polar.config import settings
-from polar.kit.versioning import VERSION_HEADER
+from outception.app import configure_cors, create_app
+from outception.config import settings
+from outception.kit.versioning import VERSION_HEADER
 
 
 def test_external_cors_allows_and_exposes_version_header() -> None:

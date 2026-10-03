@@ -6,7 +6,7 @@ therefore answers `{}` and `None` there, silently: a lookup rewrites every hit
 to the bare legacy digest instead of the current secret, undoing the rotation
 it was meant to complete.
 
-`polar.kit.hash_secrets.get_hash_secrets` is the one place that decides where
+`outception.kit.hash_secrets.get_hash_secrets` is the one place that decides where
 the set comes from, and `get_current_secret_id` reads the id off it. The
 settings only exist for local development and tests, where that resolver falls
 back to them.
@@ -26,7 +26,7 @@ GUARDED_ATTRIBUTES = frozenset({"HASH_SECRETS", "CURRENT_HASH_SECRET_ID"})
 MESSAGE = (
     "reads settings.{attribute} directly — it is unset in production, where "
     "the set comes from Secrets Manager. Use get_hash_secrets() or "
-    "get_current_secret_id() (polar.kit.crypto)."
+    "get_current_secret_id() (outception.kit.crypto)."
 )
 
 

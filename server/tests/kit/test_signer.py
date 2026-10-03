@@ -3,9 +3,9 @@ from authlib.jose import JsonWebKey
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
-from polar.config import Environment, settings
-from polar.kit import signer
-from polar.kit.signer import KMSSigner
+from outception.config import Environment, settings
+from outception.kit import signer
+from outception.kit.signer import KMSSigner
 
 
 def test_local_signature_verifies_against_the_published_key() -> None:
@@ -70,7 +70,7 @@ def test_get_signer_requires_the_kms_key_in_production(
     monkeypatch.setattr(settings, "ENV", Environment.production)
     monkeypatch.setattr(settings, "AWS_JWKS_KMS_KEY_ID", None)
 
-    with pytest.raises(RuntimeError, match="POLAR_AWS_JWKS_KMS_KEY_ID"):
+    with pytest.raises(RuntimeError, match="OUTCEPTION_AWS_JWKS_KMS_KEY_ID"):
         signer.get_signer()
 
 

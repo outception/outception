@@ -2,9 +2,9 @@ from datetime import timedelta
 
 import pytest
 
-from polar.email.repository import EmailLogRepository
-from polar.kit.utils import utc_now
-from polar.postgres import AsyncSession
+from outception.email.repository import EmailLogRepository
+from outception.kit.utils import utc_now
+from outception.postgres import AsyncSession
 from tests.fixtures.database import SaveFixture
 from tests.fixtures.random_objects import create_email_log
 

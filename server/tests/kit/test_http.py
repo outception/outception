@@ -9,7 +9,7 @@ import httpx
 import pytest
 from pydantic import TypeAdapter
 
-from polar.kit.http import (
+from outception.kit.http import (
     SSRFBlockedError,
     SuccessUrl,
     check_url_reachable,
@@ -145,7 +145,7 @@ def _mock_transport(
     def factory(**kwargs: object) -> httpx.AsyncClient:
         return real_async_client(transport=httpx.MockTransport(handler), **kwargs)  # type: ignore[arg-type]
 
-    with patch("polar.kit.http.httpx.AsyncClient", new=factory):
+    with patch("outception.kit.http.httpx.AsyncClient", new=factory):
         yield
 
 

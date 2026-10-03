@@ -1,6 +1,6 @@
-# Contributing to Polar
+# Contributing to Outception
 
-Thank you for your interest in contributing to Polar! This document provides guidelines and information for contributing to our open-source project.
+Thank you for your interest in contributing to Outception! This document provides guidelines and information for contributing to our open-source project.
 
 ## 🚨 Important: Issue Assignment Required
 
@@ -76,15 +76,15 @@ Before contributing, set up your local development environment following the ins
 
 - **Linting**: Run `uv run task lint && uv run task lint_types`
 - **Testing**: Run `uv run task test`
-- **Structure**: Follow the modular structure in `server/polar/`
+- **Structure**: Follow the modular structure in `server/outception/`
 - **Imports**: Place all imports at the top of files
 - **Async**: Use proper async/await patterns
 
 ### Frontend (TypeScript/Next.js/React)
 
 - **Package Manager**: Use `pnpm`
-- **Components**: Prefer Orbit components from `@polar-sh/orbit`; use `@polar-sh/ui` only when no Orbit equivalent exists
-- **Styling**: Use `<Box />` from `@polar-sh/orbit/Box` with design tokens (Tailwind is deprecated for layout/spacing/color)
+- **Components**: Prefer Orbit components from `@outception-sh/orbit`; use `@outception-sh/ui` only when no Orbit equivalent exists
+- **Styling**: Use `<Box />` from `@outception-sh/orbit/Box` with design tokens (Tailwind is deprecated for layout/spacing/color)
 
 ## 🔍 Code Review Process
 
@@ -118,7 +118,7 @@ We welcome various types of contributions:
 
 ## 📄 License
 
-By contributing to Polar, you agree that your contributions will be licensed under the same license as the project.
+By contributing to Outception, you agree that your contributions will be licensed under the same license as the project.
 
 ---
 

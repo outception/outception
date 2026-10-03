@@ -8,8 +8,8 @@ from fastapi.exceptions import RequestValidationError
 from pydantic import ValidationError as PydanticValidationError
 from pydantic_core import PydanticCustomError
 
-from polar.exception_handlers import request_validation_exception_handler
-from polar.exceptions import PolarRequestValidationError
+from outception.exception_handlers import request_validation_exception_handler
+from outception.exceptions import OutceptionRequestValidationError
 
 
 def _dummy_request() -> Request:
@@ -75,8 +75,8 @@ class TestRequestValidationExceptionHandler:
         assert isinstance(error["input"]["raw"], str)
         assert isinstance(error["input"]["list"][0], str)
 
-    async def test_polar_request_validation_error_with_non_utf8_bytes(self) -> None:
-        exc = PolarRequestValidationError(
+    async def test_outception_request_validation_error_with_non_utf8_bytes(self) -> None:
+        exc = OutceptionRequestValidationError(
             [
                 {
                     "loc": ("body",),
@@ -91,13 +91,13 @@ class TestRequestValidationExceptionHandler:
 
         assert response.status_code == 422
         payload = _payload(response.body)
-        assert payload["error"] == "PolarRequestValidationError"
+        assert payload["error"] == "OutceptionRequestValidationError"
         assert isinstance(payload["detail"][0]["input"], str)
 
-    async def test_polar_request_validation_error_message_excludes_input(
+    async def test_outception_request_validation_error_message_excludes_input(
         self,
     ) -> None:
-        exc = PolarRequestValidationError(
+        exc = OutceptionRequestValidationError(
             [
                 {
                     "loc": ("body", "email"),

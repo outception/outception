@@ -10,7 +10,7 @@ from typing import Any, Literal, TypeIs, Unpack
 
 import pytest_asyncio
 
-from polar.enums import (
+from outception.enums import (
     EmailSender,
     PaymentProcessor,
     PayoutAccountType,
@@ -18,14 +18,14 @@ from polar.enums import (
     TaxBehavior,
     TaxProcessor,
 )
-from polar.kit.address import Address
-from polar.kit.currency import PresentmentCurrency
-from polar.kit.trial import TrialInterval
-from polar.kit.utils import utc_now
-from polar.kit.visibility import Visibility
-from polar.meter.aggregation import Aggregation, CountAggregation
-from polar.meter.filter import Filter, FilterClause, FilterConjunction, FilterOperator
-from polar.models import (
+from outception.kit.address import Address
+from outception.kit.currency import PresentmentCurrency
+from outception.kit.trial import TrialInterval
+from outception.kit.utils import utc_now
+from outception.kit.visibility import Visibility
+from outception.meter.aggregation import Aggregation, CountAggregation
+from outception.meter.filter import Filter, FilterClause, FilterConjunction, FilterOperator
+from outception.models import (
     Account,
     Benefit,
     BillingEntry,
@@ -79,18 +79,18 @@ from polar.models import (
     WalletTransaction,
     WebhookEndpoint,
 )
-from polar.models.benefit import BenefitType
-from polar.models.benefit_grant import (
+from outception.models.benefit import BenefitType
+from outception.models.benefit_grant import (
     BenefitGrant,
     BenefitGrantScope,
 )
-from polar.models.billing_entry import BillingEntryDirection, BillingEntryType
-from polar.models.checkout import (
+from outception.models.billing_entry import BillingEntryDirection, BillingEntryType
+from outception.models.checkout import (
     CheckoutAnalyticsMetadata,
     CheckoutStatus,
     get_expires_at,
 )
-from polar.models.custom_field import (
+from outception.models.custom_field import (
     CustomFieldCheckbox,
     CustomFieldCheckboxProperties,
     CustomFieldNumber,
@@ -102,31 +102,31 @@ from polar.models.custom_field import (
     CustomFieldTextProperties,
     CustomFieldType,
 )
-from polar.models.customer_seat import SeatStatus
-from polar.models.discount import (
+from outception.models.customer_seat import SeatStatus
+from outception.models.discount import (
     DiscountDuration,
     DiscountFixed,
     DiscountPercentage,
     DiscountType,
 )
-from polar.models.dispute import DisputeAlertProcessor, DisputeStatus
-from polar.models.email_log import EmailLogStatus
-from polar.models.event import EventSource
-from polar.models.file import FileServiceTypes
-from polar.models.member import MemberRole
-from polar.models.notification_recipient import NotificationRecipient
-from polar.models.order import OrderBillingReasonInternal, OrderStatus
-from polar.models.organization import STATUS_CAPABILITIES, OrganizationStatus
-from polar.models.payment import PaymentStatus, PaymentTrigger
-from polar.models.payout import PayoutStatus
-from polar.models.payout_attempt import PayoutAttemptStatus
-from polar.models.pledge import Pledge, PledgeState, PledgeType
-from polar.models.product_price import (
+from outception.models.dispute import DisputeAlertProcessor, DisputeStatus
+from outception.models.email_log import EmailLogStatus
+from outception.models.event import EventSource
+from outception.models.file import FileServiceTypes
+from outception.models.member import MemberRole
+from outception.models.notification_recipient import NotificationRecipient
+from outception.models.order import OrderBillingReasonInternal, OrderStatus
+from outception.models.organization import STATUS_CAPABILITIES, OrganizationStatus
+from outception.models.payment import PaymentStatus, PaymentTrigger
+from outception.models.payout import PayoutStatus
+from outception.models.payout_attempt import PayoutAttemptStatus
+from outception.models.pledge import Pledge, PledgeState, PledgeType
+from outception.models.product_price import (
     ProductPriceAmountType,
     ProductPriceType,
 )
-from polar.models.subscription import SubscriptionStatus
-from polar.models.support_case import (
+from outception.models.subscription import SubscriptionStatus
+from outception.models.support_case import (
     DisputeSupportCase,
     ReviewAppealSupportCase,
     SupportCase,
@@ -134,16 +134,16 @@ from polar.models.support_case import (
     SupportCaseMessageAuthorKind,
     SupportCaseMessageType,
 )
-from polar.models.transaction import Processor, TransactionType
-from polar.models.user import OAuthAccount, OAuthPlatform
-from polar.models.user_organization import OrganizationRole
-from polar.models.wallet import WalletType
-from polar.models.webhook_endpoint import WebhookEventType, WebhookFormat
-from polar.notification_recipient.schemas import NotificationRecipientPlatform
-from polar.product.price_set import PriceSet
-from polar.product.tiers import SeatTierType, Tiers, TierType
-from polar.tax.calculation import TaxBreakdownItem
-from polar.tax.tax_id import TaxID
+from outception.models.transaction import Processor, TransactionType
+from outception.models.user import OAuthAccount, OAuthPlatform
+from outception.models.user_organization import OrganizationRole
+from outception.models.wallet import WalletType
+from outception.models.webhook_endpoint import WebhookEventType, WebhookFormat
+from outception.notification_recipient.schemas import NotificationRecipientPlatform
+from outception.product.price_set import PriceSet
+from outception.product.tiers import SeatTierType, Tiers, TierType
+from outception.tax.calculation import TaxBreakdownItem
+from outception.tax.tax_id import TaxID
 from tests.fixtures.database import SaveFixture
 
 
@@ -303,7 +303,7 @@ async def create_pledge(
     save_fixture: SaveFixture,
     organization: Organization,
     *,
-    issue_reference: str = "polarsource/polar/1",
+    issue_reference: str = "outceptionsource/outception/1",
     pledging_organization: Organization | None = None,
     pledging_user: User | None = None,
     state: PledgeState = PledgeState.created,
@@ -2365,7 +2365,7 @@ async def create_payout(
         account_currency=account_currency,
         account_amount=account_amount,
         transactions=[transaction] if transaction else [],
-        invoice_number=invoice_number or rstr("POLAR-"),
+        invoice_number=invoice_number or rstr("OUTCEPTION-"),
         attempts=[
             PayoutAttempt(
                 processor_id=rstr("PAYOUT_ATTEMPT_PROCESSOR_ID"),
@@ -2918,7 +2918,7 @@ async def create_email_log(
         status=status,
         processor=EmailSender.resend,
         to_email_addr="customer@example.com",
-        from_email_addr="acme@polar.sh",
+        from_email_addr="acme@outception.sh",
         from_name="Acme",
         subject="Receipt",
         email_props={},

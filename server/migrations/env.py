@@ -5,8 +5,8 @@ from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from polar.config import settings
-from polar.models import Model
+from outception.config import settings
+from outception.models import Model
 
 
 def include_object(object, name, type_, reflected, compare_to):

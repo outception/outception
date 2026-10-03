@@ -8,15 +8,15 @@ from dramatiq.rate_limits.backends import RedisBackend as RateLimiterBackend
 from fakeredis import FakeRedis
 from pytest_mock import MockerFixture
 
-import polar.tasks  # noqa: F401  (registers actors with the broker)
-from polar.config import settings
-from polar.worker import _sqs
-from polar.worker._enqueue import (
+import outception.tasks  # noqa: F401  (registers actors with the broker)
+from outception.config import settings
+from outception.worker import _sqs
+from outception.worker._enqueue import (
     SQS_ACTORS_WILDCARD,
     resolve_sqs_actors,
     should_route_to_sqs,
 )
-from polar.worker._runner import run_task, validate_allowlist
+from outception.worker._runner import run_task, validate_allowlist
 
 CRON_ACTOR = "organization.unsnooze_expired"
 SUBSCRIPTION_ACTOR = "subscription.cycle"
@@ -27,7 +27,7 @@ class TestRoutingBroker:
         mocker.patch.object(settings, "WORKER_SQS_ENABLED", False)
         mocker.patch.object(settings, "WORKER_SQS_ACTORS", {CRON_ACTOR})
         super_enqueue = mocker.patch.object(RedisBroker, "enqueue")
-        send_jobs_sync = mocker.patch("polar.worker._broker._sqs.send_jobs_sync")
+        send_jobs_sync = mocker.patch("outception.worker._broker._sqs.send_jobs_sync")
 
         broker = dramatiq.get_broker()
         broker.enqueue(broker.get_actor(CRON_ACTOR).message())
@@ -39,7 +39,7 @@ class TestRoutingBroker:
         mocker.patch.object(settings, "WORKER_SQS_ENABLED", True)
         mocker.patch.object(settings, "WORKER_SQS_ACTORS", {"dummy"})
         super_enqueue = mocker.patch.object(RedisBroker, "enqueue")
-        send_jobs_sync = mocker.patch("polar.worker._broker._sqs.send_jobs_sync")
+        send_jobs_sync = mocker.patch("outception.worker._broker._sqs.send_jobs_sync")
 
         broker = dramatiq.get_broker()
         broker.enqueue(broker.get_actor(CRON_ACTOR).message())
@@ -51,7 +51,7 @@ class TestRoutingBroker:
         mocker.patch.object(settings, "WORKER_SQS_ENABLED", True)
         mocker.patch.object(settings, "WORKER_SQS_ACTORS", {CRON_ACTOR})
         super_enqueue = mocker.patch.object(RedisBroker, "enqueue")
-        send_jobs_sync = mocker.patch("polar.worker._broker._sqs.send_jobs_sync")
+        send_jobs_sync = mocker.patch("outception.worker._broker._sqs.send_jobs_sync")
 
         broker = dramatiq.get_broker()
         broker.enqueue(broker.get_actor(CRON_ACTOR).message())
@@ -67,7 +67,7 @@ class TestRoutingBroker:
         mocker.patch.object(settings, "WORKER_SQS_ENABLED", True)
         mocker.patch.object(settings, "WORKER_SQS_ACTORS", {SUBSCRIPTION_ACTOR})
         super_enqueue = mocker.patch.object(RedisBroker, "enqueue")
-        send_jobs_sync = mocker.patch("polar.worker._broker._sqs.send_jobs_sync")
+        send_jobs_sync = mocker.patch("outception.worker._broker._sqs.send_jobs_sync")
 
         broker = dramatiq.get_broker()
         subscription_id = "00000000-0000-0000-0000-000000000000"
@@ -88,7 +88,7 @@ class TestRoutingBroker:
         mocker.patch.object(settings, "WORKER_SQS_ENABLED", True)
         mocker.patch.object(settings, "WORKER_SQS_ACTORS", {"customer.webhook"})
         mocker.patch.object(RedisBroker, "enqueue")
-        send_jobs_sync = mocker.patch("polar.worker._broker._sqs.send_jobs_sync")
+        send_jobs_sync = mocker.patch("outception.worker._broker._sqs.send_jobs_sync")
 
         broker = dramatiq.get_broker()
         message = broker.get_actor("customer.webhook").message()
@@ -117,7 +117,7 @@ class TestRoutingBroker:
             "rate_limiter_backend",
             RateLimiterBackend(client=FakeRedis()),
         )
-        send_jobs_sync = mocker.patch("polar.worker._broker._sqs.send_jobs_sync")
+        send_jobs_sync = mocker.patch("outception.worker._broker._sqs.send_jobs_sync")
 
         dummy_actor = broker.get_actor("dummy")
         dummy_group = group(
@@ -139,7 +139,7 @@ class TestRoutingBroker:
         )
 
         mocker.patch(
-            "polar.worker._runner.build_registry",
+            "outception.worker._runner.build_registry",
             return_value={"dummy": mocker.AsyncMock()},
         )
         send_jobs_sync.reset_mock()

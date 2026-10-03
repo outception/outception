@@ -6,11 +6,11 @@ from typing import Any
 import pytest
 from sqlalchemy import Select, select
 
-from polar.kit.utils import utc_now
-from polar.models import OAuthAccount, User
-from polar.models.user import OAuthPlatform
-from polar.postgres import AsyncSession
-from polar.user.repository import UserRepository
+from outception.kit.utils import utc_now
+from outception.models import OAuthAccount, User
+from outception.models.user import OAuthPlatform
+from outception.postgres import AsyncSession
+from outception.user.repository import UserRepository
 from tests.fixtures.database import SaveFixture
 from tests.fixtures.random_objects import create_user
 

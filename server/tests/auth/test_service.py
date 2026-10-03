@@ -1,10 +1,10 @@
 import pytest
 from sqlalchemy import select
 
-from polar.auth.scope import Scope
-from polar.auth.service import auth as auth_service
-from polar.models import Organization, User, UserSessionOrganization
-from polar.postgres import AsyncSession
+from outception.auth.scope import Scope
+from outception.auth.service import auth as auth_service
+from outception.models import Organization, User, UserSessionOrganization
+from outception.postgres import AsyncSession
 
 
 @pytest.mark.asyncio

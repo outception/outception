@@ -30,7 +30,7 @@ def main() -> None:
                 [
                     "osascript",
                     "-e",
-                    f'display notification "Found login code {match}. Copied to clipboard" with title "Polar login email" sound name "default"',
+                    f'display notification "Found login code {match}. Copied to clipboard" with title "Outception login email" sound name "default"',
                     "-e",
                     f'set the clipboard to "{match}"',
                 ]

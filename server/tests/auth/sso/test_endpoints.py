@@ -3,15 +3,15 @@ import uuid
 import pytest
 from httpx import AsyncClient
 
-from polar.auth.sso.endpoints import get_sso_connection
-from polar.exceptions import ResourceNotFound
-from polar.models import Organization, OrganizationSSOConnection
-from polar.models.organization_sso_connection import (
+from outception.auth.sso.endpoints import get_sso_connection
+from outception.exceptions import ResourceNotFound
+from outception.models import Organization, OrganizationSSOConnection
+from outception.models.organization_sso_connection import (
     OIDCAuthMethod,
     OIDCConfiguration,
     OrganizationSSOConnectionType,
 )
-from polar.postgres import AsyncSession
+from outception.postgres import AsyncSession
 from tests.fixtures.database import SaveFixture
 
 

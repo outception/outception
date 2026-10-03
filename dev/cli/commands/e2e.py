@@ -66,7 +66,7 @@ def _pick_org(slug: str | None) -> str:
 
 
 def _intro() -> None:
-    title = gradient("Polar E2E")
+    title = gradient("Outception E2E")
     title.append("\nPlaywright checkout tests against your local stack", style="dim")
     title.justify = "center"
     console.print()

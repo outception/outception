@@ -4,8 +4,8 @@ import pytest
 import respx
 from httpx import Response
 
-from polar.auth.turnstile import verify_turnstile
-from polar.exceptions import NotPermitted
+from outception.auth.turnstile import verify_turnstile
+from outception.exceptions import NotPermitted
 
 
 @pytest.mark.asyncio

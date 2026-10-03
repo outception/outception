@@ -26,7 +26,7 @@ def _find_web_pane() -> str | None:
     created in the web dir, and any pane's path follows its foreground process.
     """
     result = run_command(
-        ["tmux", "list-panes", "-a", "-F", "#{pane_id} #{@polar_role}"],
+        ["tmux", "list-panes", "-a", "-F", "#{pane_id} #{@outception_role}"],
         capture=True,
     )
     if not result or result.returncode != 0:

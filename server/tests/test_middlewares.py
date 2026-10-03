@@ -4,7 +4,7 @@ from typing import Any, cast
 
 from starlette.types import Message, Receive, Scope, Send
 
-from polar.middlewares import MaxBodySizeMiddleware
+from outception.middlewares import MaxBodySizeMiddleware
 
 
 def _http_scope(headers: list[tuple[bytes, bytes]], method: str = "POST") -> Scope:

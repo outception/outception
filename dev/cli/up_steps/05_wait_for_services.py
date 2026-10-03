@@ -24,7 +24,7 @@ def wait_for_postgres(timeout: int = 60) -> bool:
     start_time = time.time()
     while time.time() - start_time < timeout:
         result = run_command(
-            ["docker", "compose", "exec", "-T", "db", "pg_isready", "-U", "polar"],
+            ["docker", "compose", "exec", "-T", "db", "pg_isready", "-U", "outception"],
             cwd=SERVER_DIR,
             capture=True,
         )
@@ -128,9 +128,9 @@ def run(ctx: Context) -> bool:
         if token:
             update_secrets(
                 {
-                    "POLAR_TINYBIRD_API_TOKEN": token,
-                    "POLAR_TINYBIRD_READ_TOKEN": token,
-                    "POLAR_TINYBIRD_CLICKHOUSE_TOKEN": token,
+                    "OUTCEPTION_TINYBIRD_API_TOKEN": token,
+                    "OUTCEPTION_TINYBIRD_READ_TOKEN": token,
+                    "OUTCEPTION_TINYBIRD_CLICKHOUSE_TOKEN": token,
                 }
             )
             run_command([str(ROOT_DIR / "dev" / "setup-environment")], capture=True)

@@ -1,18 +1,18 @@
 import { Container, Preview } from 'react-email'
-import PolarHeader from '../PolarHeader'
+import OutceptionHeader from '../OutceptionHeader'
 import WrapperBase from '../WrapperBase'
 
-interface WrapperPolarProps {
+interface WrapperOutceptionProps {
   children: React.ReactNode
   preview?: string
 }
 
-const WrapperPolar = ({ children, preview }: WrapperPolarProps) => {
+const WrapperOutception = ({ children, preview }: WrapperOutceptionProps) => {
   return (
     <WrapperBase>
       {preview ? <Preview>{preview}</Preview> : null}
       <Container className="px-[12px] pt-[20px] pb-[10px]">
-        <PolarHeader />
+        <OutceptionHeader />
       </Container>
       <Container className="px-[20px] pt-[10px] pb-[20px]">
         {children}
@@ -21,4 +21,4 @@ const WrapperPolar = ({ children, preview }: WrapperPolarProps) => {
   )
 }
 
-export default WrapperPolar
+export default WrapperOutception

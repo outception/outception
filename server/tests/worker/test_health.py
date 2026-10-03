@@ -17,9 +17,9 @@ from starlette.responses import JSONResponse
 from starlette.routing import Route
 from starlette.testclient import TestClient
 
-import polar.worker._health as health_module
-from polar.config import Environment, settings
-from polar.worker._health import (
+import outception.worker._health as health_module
+from outception.config import Environment, settings
+from outception.worker._health import (
     HealthMiddleware,
     _create_lifespan,
     _run_exposition_server,
@@ -138,8 +138,8 @@ class TestHealth:
 
 class TestIsSchedulerHealthy:
     def test_healthy_before_first_heartbeat(self) -> None:
-        import polar.worker.scheduler as scheduler_module
-        from polar.worker.scheduler import _is_scheduler_healthy
+        import outception.worker.scheduler as scheduler_module
+        from outception.worker.scheduler import _is_scheduler_healthy
 
         original = scheduler_module._last_heartbeat
         scheduler_module._last_heartbeat = 0.0
@@ -149,8 +149,8 @@ class TestIsSchedulerHealthy:
             scheduler_module._last_heartbeat = original
 
     def test_healthy_with_recent_heartbeat(self) -> None:
-        import polar.worker.scheduler as scheduler_module
-        from polar.worker.scheduler import _is_scheduler_healthy
+        import outception.worker.scheduler as scheduler_module
+        from outception.worker.scheduler import _is_scheduler_healthy
 
         original = scheduler_module._last_heartbeat
         scheduler_module._last_heartbeat = time.monotonic()
@@ -160,8 +160,8 @@ class TestIsSchedulerHealthy:
             scheduler_module._last_heartbeat = original
 
     def test_unhealthy_with_stale_heartbeat(self) -> None:
-        import polar.worker.scheduler as scheduler_module
-        from polar.worker.scheduler import (
+        import outception.worker.scheduler as scheduler_module
+        from outception.worker.scheduler import (
             HEARTBEAT_STALENESS_SECONDS,
             _is_scheduler_healthy,
         )
@@ -178,7 +178,7 @@ class TestIsSchedulerHealthy:
 
 class TestBoundedWaitSeconds:
     def test_caps_long_wait_to_heartbeat_interval(self) -> None:
-        from polar.worker.scheduler import (
+        from outception.worker.scheduler import (
             HEARTBEAT_INTERVAL_SECONDS,
             HEARTBEAT_STALENESS_SECONDS,
             _bounded_wait_seconds,
@@ -188,7 +188,7 @@ class TestBoundedWaitSeconds:
         assert HEARTBEAT_INTERVAL_SECONDS < HEARTBEAT_STALENESS_SECONDS
 
     def test_caps_none_wait_to_heartbeat_interval(self) -> None:
-        from polar.worker.scheduler import (
+        from outception.worker.scheduler import (
             HEARTBEAT_INTERVAL_SECONDS,
             _bounded_wait_seconds,
         )
@@ -196,7 +196,7 @@ class TestBoundedWaitSeconds:
         assert _bounded_wait_seconds(None) == HEARTBEAT_INTERVAL_SECONDS
 
     def test_keeps_short_wait_unchanged(self) -> None:
-        from polar.worker.scheduler import _bounded_wait_seconds
+        from outception.worker.scheduler import _bounded_wait_seconds
 
         assert _bounded_wait_seconds(5) == 5
 

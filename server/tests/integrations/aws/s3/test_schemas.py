@@ -1,4 +1,4 @@
-from polar.integrations.aws.s3.schemas import (
+from outception.integrations.aws.s3.schemas import (
     S3FileUploadCompleted,
     S3FileUploadCompletedPart,
 )

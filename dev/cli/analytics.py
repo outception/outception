@@ -5,7 +5,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-ANALYTICS_URL = "https://polar-dev-analytics.vercel.app/api/track"
+ANALYTICS_URL = "https://outception-dev-analytics.vercel.app/api/track"
 EVENT = "dev_cli_command"
 COMPLETED_EVENT = "dev_cli_command_completed"
 UP_STEP_EVENT = "dev_cli_up_step"
@@ -14,7 +14,7 @@ _FLAG_NAME = re.compile(r"^--?[A-Za-z][A-Za-z0-9-]{0,39}$")
 _REDACTED = "<redacted>"
 _TOKENISH = re.compile(r"^[A-Za-z0-9_.\-]+$")
 _SECRET_PREFIX = re.compile(
-    r"^(polar_|sk_|pk_|rk_|whsec_|ghp_|gho_|ghu_|ghs_|ghr_|github_pat_|glpat-|"
+    r"^(outception_|sk_|pk_|rk_|whsec_|ghp_|gho_|ghu_|ghs_|ghr_|github_pat_|glpat-|"
     r"xox[baprs]-|AKIA|ASIA|AIza|ya29\.|eyJ[A-Za-z0-9_-]+\.)"
 )
 

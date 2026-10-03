@@ -8,10 +8,10 @@ from dramatiq.errors import Retry
 from dramatiq.middleware.retries import DEFAULT_MAX_BACKOFF
 from pytest_mock import MockerFixture
 
-import polar.tasks  # noqa: F401  (registers actors with the broker)
-from polar.config import settings
-from polar.worker import _sqs
-from polar.worker._runner import (
+import outception.tasks  # noqa: F401  (registers actors with the broker)
+from outception.config import settings
+from outception.worker import _sqs
+from outception.worker._runner import (
     RetryAction,
     compute_retry_backoff,
     get_actor_max_retries,
@@ -75,13 +75,13 @@ class TestSetMessageVisibility:
 
         _sqs.set_message_visibility(
             client,
-            "arn:aws:sqs:us-east-2:123456789012:polar-sandbox-tasks-dummy",
+            "arn:aws:sqs:us-east-2:123456789012:outception-sandbox-tasks-dummy",
             "receipt-handle",
             42,
         )
 
         client.get_queue_url.assert_called_once_with(
-            QueueName="polar-sandbox-tasks-dummy"
+            QueueName="outception-sandbox-tasks-dummy"
         )
         client.change_message_visibility.assert_called_once_with(
             QueueUrl="https://sqs/queue",
@@ -206,13 +206,13 @@ class TestSendDelayedMessage:
 
         _sqs.send_delayed_message(
             client,
-            "arn:aws:sqs:us-east-2:123456789012:polar-sandbox-tasks-dummy",
+            "arn:aws:sqs:us-east-2:123456789012:outception-sandbox-tasks-dummy",
             '{"actor":"dummy"}',
             60,
         )
 
         client.get_queue_url.assert_called_once_with(
-            QueueName="polar-sandbox-tasks-dummy"
+            QueueName="outception-sandbox-tasks-dummy"
         )
         client.send_message.assert_called_once_with(
             QueueUrl="https://sqs/queue",
@@ -238,7 +238,7 @@ class TestBuildRetryScheduleName:
         first = _sqs.build_retry_schedule_name("arn:q", "msg-1", 3)
         second = _sqs.build_retry_schedule_name("arn:q", "msg-1", 3)
         assert first == second
-        assert first.startswith("polar-retry-")
+        assert first.startswith("outception-retry-")
         assert len(first) <= 64
 
     def test_varies_by_input(self) -> None:
@@ -254,20 +254,20 @@ class TestScheduleDelayedMessage:
 
         _sqs.schedule_delayed_message(
             client,
-            "arn:aws:sqs:us-east-2:123456789012:polar-tasks-default",
+            "arn:aws:sqs:us-east-2:123456789012:outception-tasks-default",
             "arn:aws:iam::123456789012:role/scheduler",
             '{"actor":"dummy"}',
             48 * 3600,
-            "polar-retry-abc123",
+            "outception-retry-abc123",
         )
 
         client.create_schedule.assert_called_once()
         kwargs = client.create_schedule.call_args.kwargs
-        assert kwargs["Name"] == "polar-retry-abc123"
+        assert kwargs["Name"] == "outception-retry-abc123"
         assert kwargs["ScheduleExpression"].startswith("at(")
         assert kwargs["ActionAfterCompletion"] == "DELETE"
         assert kwargs["Target"] == {
-            "Arn": "arn:aws:sqs:us-east-2:123456789012:polar-tasks-default",
+            "Arn": "arn:aws:sqs:us-east-2:123456789012:outception-tasks-default",
             "RoleArn": "arn:aws:iam::123456789012:role/scheduler",
             "Input": '{"actor":"dummy"}',
         }
@@ -280,7 +280,7 @@ class TestScheduleDelayedMessage:
         )
 
         _sqs.schedule_delayed_message(
-            client, "arn:q", "arn:role", "{}", 48 * 3600, "polar-retry-abc123"
+            client, "arn:q", "arn:role", "{}", 48 * 3600, "outception-retry-abc123"
         )
 
     def test_other_client_error_is_raised(self, mocker: MockerFixture) -> None:
@@ -292,7 +292,7 @@ class TestScheduleDelayedMessage:
 
         with pytest.raises(ClientError):
             _sqs.schedule_delayed_message(
-                client, "arn:q", "arn:role", "{}", 48 * 3600, "polar-retry-abc123"
+                client, "arn:q", "arn:role", "{}", 48 * 3600, "outception-retry-abc123"
             )
 
 
@@ -304,12 +304,12 @@ class TestSendToDlq:
 
         _sqs.send_to_dlq(
             client,
-            "arn:aws:sqs:us-east-2:123456789012:polar-tasks-default",
+            "arn:aws:sqs:us-east-2:123456789012:outception-tasks-default",
             '{"actor":"dummy"}',
         )
 
         client.get_queue_url.assert_called_once_with(
-            QueueName="polar-tasks-default-dlq"
+            QueueName="outception-tasks-default-dlq"
         )
         client.send_message.assert_called_once_with(
             QueueUrl="https://sqs/queue-dlq", MessageBody='{"actor":"dummy"}'

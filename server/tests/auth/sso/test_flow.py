@@ -13,8 +13,8 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi import FastAPI
 from sqlalchemy import select
 
-from polar.kit.utils import utc_now
-from polar.models import (
+from outception.kit.utils import utc_now
+from outception.models import (
     OAuth2State,
     Organization,
     OrganizationSSOConnection,
@@ -23,13 +23,13 @@ from polar.models import (
     UserSession,
     UserSessionOrganization,
 )
-from polar.models.organization_sso_connection import (
+from outception.models.organization_sso_connection import (
     OIDCAuthMethod,
     OIDCConfiguration,
     OrganizationSSOConnectionType,
 )
-from polar.models.user_organization import OrganizationRole
-from polar.postgres import AsyncSession
+from outception.models.user_organization import OrganizationRole
+from outception.postgres import AsyncSession
 from tests.fixtures.base import IsolatedSessionTestClient
 from tests.fixtures.database import SaveFixture
 
@@ -230,7 +230,7 @@ class TestSSOAuthorize:
         user_organization: UserOrganization,
     ) -> None:
         connection = await create_sso_connection(
-            save_fixture, organization, authorization_parameters={"hd": "polar.sh"}
+            save_fixture, organization, authorization_parameters={"hd": "outception.sh"}
         )
 
         with respx.mock(assert_all_mocked=False) as mock:
@@ -244,7 +244,7 @@ class TestSSOAuthorize:
 
         assert authorize.status_code == 303
         query = parse_qs(urlsplit(authorize.headers["location"]).query)
-        assert query["hd"] == ["polar.sh"]
+        assert query["hd"] == ["outception.sh"]
         assert query["client_id"] == [CLIENT_ID]
 
 

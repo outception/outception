@@ -2,20 +2,20 @@ import uuid
 
 import pytest
 
-from polar.auth.oauth2.state import OAuth2StateService
-from polar.auth.sso.factor import (
+from outception.auth.oauth2.state import OAuth2StateService
+from outception.auth.sso.factor import (
     SSOClientSecretFactor,
     SSOPrivateKeyJWTFactor,
     build_sso_factor,
 )
-from polar.kit.signer import get_signer
-from polar.models import OrganizationSSOConnection
-from polar.models.organization_sso_connection import (
+from outception.kit.signer import get_signer
+from outception.models import OrganizationSSOConnection
+from outception.models.organization_sso_connection import (
     OIDCAuthMethod,
     OIDCConfiguration,
     OrganizationSSOConnectionType,
 )
-from polar.postgres import AsyncSession
+from outception.postgres import AsyncSession
 
 
 def build_connection(

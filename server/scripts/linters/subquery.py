@@ -27,7 +27,7 @@ SAFE_NAMES = frozenset({"with_only_columns", "union", "union_all", "intersect"})
 
 MESSAGE = (
     "call .with_only_columns(...) before .subquery(), or use "
-    "count_subquery() from polar.kit.pagination. "
+    "count_subquery() from outception.kit.pagination. "
     "`deferred=True` does not propagate into .subquery(). "
     "Escape with `# lint-skip: subquery-all-columns` if full-column "
     "projection is intentional."

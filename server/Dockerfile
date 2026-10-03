@@ -22,11 +22,11 @@ RUN pnpm run build
 
 FROM node-builder AS build-backoffice
 
-COPY polar/backoffice/pnpm-lock.yaml polar/backoffice/package.json polar/backoffice/pnpm-workspace.yaml ./
+COPY outception/backoffice/pnpm-lock.yaml outception/backoffice/package.json outception/backoffice/pnpm-workspace.yaml ./
 RUN --mount=type=cache,target=/pnpm/store \
   pnpm install --frozen-lockfile --store-dir=/pnpm/store
 
-COPY polar/backoffice/ .
+COPY outception/backoffice/ .
 RUN pnpm run build
 
 # Deployment builds refresh IPInfo; font URLs and checksums are version-pinned.
@@ -52,8 +52,8 @@ RUN setcap -r /usr/bin/caddy
 # Render backend image, also used by the private backoffice.
 FROM --platform=$BUILDPLATFORM python:3.14.6-slim AS production
 
-LABEL org.opencontainers.image.source=https://github.com/polarsource/polar \
-  org.opencontainers.image.description="Polar" \
+LABEL org.opencontainers.image.source=https://github.com/outceptionsource/outception \
+  org.opencontainers.image.description="Outception" \
   org.opencontainers.image.licenses=Apache-2.0
 
 COPY --from=uv /uv /uvx /bin/
@@ -80,18 +80,18 @@ RUN --mount=type=bind,source=uv.lock,target=uv.lock \
 # Copy build artifacts in their own layers before the source, so they keep their
 # digests and are not re-uploaded when only the source changes.
 COPY --from=download-ipinfo /data /data
-COPY --from=download-cjk-fonts /fonts/ /app/server/polar/invoice/fonts/
+COPY --from=download-cjk-fonts /fonts/ /app/server/outception/invoice/fonts/
 COPY --from=build-emails-bin /app/bin/react-email-pkg /app/server/
-COPY --from=build-backoffice /app/static /app/server/polar/backoffice/static
+COPY --from=build-backoffice /app/static /app/server/outception/backoffice/static
 COPY . /app/server/
 
 ARG RELEASE_VERSION
 ENV RELEASE_VERSION=${RELEASE_VERSION} \
-  POLAR_EMAIL_RENDERER_BINARY_PATH=/app/server/react-email-pkg \
-  POLAR_IP_GEOLOCATION_DATABASE_DIRECTORY_PATH=/data \
-  POLAR_IP_GEOLOCATION_DATABASE_NAME=country_asn.mmdb
+  OUTCEPTION_EMAIL_RENDERER_BINARY_PATH=/app/server/react-email-pkg \
+  OUTCEPTION_IP_GEOLOCATION_DATABASE_DIRECTORY_PATH=/data \
+  OUTCEPTION_IP_GEOLOCATION_DATABASE_NAME=country_asn.mmdb
 
-CMD ["uv", "run", "uvicorn", "polar.app:app", \
+CMD ["uv", "run", "uvicorn", "outception.app:app", \
   "--host", "0.0.0.0", "--port", "10000", \
   "--limit-max-requests", "50000", "--limit-max-requests-jitter", "10000", \
   "--timeout-graceful-shutdown", "30"]
@@ -120,9 +120,9 @@ FROM public.ecr.aws/lambda/python:3.14 AS lambda
 
 COPY --from=lambda-build /app/server/.venv /app/server/.venv
 COPY --from=download-ipinfo /data /data
-COPY --from=download-cjk-fonts /fonts/ /app/server/polar/invoice/fonts/
+COPY --from=download-cjk-fonts /fonts/ /app/server/outception/invoice/fonts/
 COPY --from=build-emails-bin /app/bin/react-email-pkg /app/server/
-COPY --from=build-backoffice /app/static /app/server/polar/backoffice/static
+COPY --from=build-backoffice /app/static /app/server/outception/backoffice/static
 COPY . /app/server/
 
 COPY --from=tailscale /usr/local/bin/tailscaled /usr/local/bin/tailscale /var/runtime/
@@ -137,16 +137,16 @@ RUN mkdir -p /var/run /var/cache /var/lib /var/task \
   && ln -s /tmp/tailscale /var/task/tailscale
 
 COPY docker/export_lambda_secrets.py /var/runtime/export-secrets.py
-COPY --chmod=755 docker/run_lambda_worker.sh /var/runtime/polar-bootstrap
+COPY --chmod=755 docker/run_lambda_worker.sh /var/runtime/outception-bootstrap
 
 ARG RELEASE_VERSION
 ENV RELEASE_VERSION=${RELEASE_VERSION} \
   LAMBDA_TASK_ROOT=/app/server \
   PATH="/app/server/.venv/bin:$PATH" \
   PYTHONPATH="/app/server:/app/server/.venv/lib/python3.14/site-packages" \
-  POLAR_EMAIL_RENDERER_BINARY_PATH=/app/server/react-email-pkg \
-  POLAR_IP_GEOLOCATION_DATABASE_DIRECTORY_PATH=/data \
-  POLAR_IP_GEOLOCATION_DATABASE_NAME=country_asn.mmdb
+  OUTCEPTION_EMAIL_RENDERER_BINARY_PATH=/app/server/react-email-pkg \
+  OUTCEPTION_IP_GEOLOCATION_DATABASE_DIRECTORY_PATH=/data \
+  OUTCEPTION_IP_GEOLOCATION_DATABASE_NAME=country_asn.mmdb
 
-ENTRYPOINT ["/var/runtime/polar-bootstrap"]
-CMD ["polar.worker.aws_lambda.handler"]
+ENTRYPOINT ["/var/runtime/outception-bootstrap"]
+CMD ["outception.worker.aws_lambda.handler"]

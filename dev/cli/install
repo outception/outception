@@ -1,5 +1,5 @@
 #!/bin/bash
-# Installs the 'dev' alias for easy access to the Polar development CLI
+# Installs the 'dev' alias for easy access to the Outception development CLI
 # Usage: ./dev/cli/install
 
 set -e
@@ -33,7 +33,7 @@ echo ""
 echo "Restart your terminal or run:"
 echo "  source $SHELL_RC"
 echo ""
-echo "Then you can use 'dev' from anywhere in the Polar repo:"
+echo "Then you can use 'dev' from anywhere in the Outception repo:"
 echo "  dev up       # Start development environment"
 echo "  dev down     # Stop infrastructure"
 echo "  dev status   # Check status"

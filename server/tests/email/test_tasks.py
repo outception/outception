@@ -6,14 +6,14 @@ import pytest
 from pytest_mock import MockerFixture
 from sqlalchemy import select
 
-from polar.config import settings
-from polar.email.repository import EmailLogRepository
-from polar.email.sender import SendEmailError
-from polar.email.tasks import email_log_prune, email_send
-from polar.enums import EmailSender
-from polar.kit.utils import utc_now
-from polar.models.email_log import EmailLog, EmailLogStatus
-from polar.postgres import AsyncSession
+from outception.config import settings
+from outception.email.repository import EmailLogRepository
+from outception.email.sender import SendEmailError
+from outception.email.tasks import email_log_prune, email_send
+from outception.enums import EmailSender
+from outception.kit.utils import utc_now
+from outception.models.email_log import EmailLog, EmailLogStatus
+from outception.postgres import AsyncSession
 from tests.fixtures.database import SaveFixture
 from tests.fixtures.random_objects import create_email_log
 
@@ -31,7 +31,7 @@ class TestEmailSend:
         mocker: MockerFixture,
     ) -> None:
         mock_send = mocker.patch(
-            "polar.email.tasks.email_sender.send",
+            "outception.email.tasks.email_sender.send",
             return_value="resend_123",
         )
 
@@ -39,8 +39,8 @@ class TestEmailSend:
             to_email_addr="test@example.com",
             subject="Test Subject",
             html_content="<p>Hello</p>",
-            from_name="Polar",
-            from_email_addr="noreply@polar.sh",
+            from_name="Outception",
+            from_email_addr="noreply@outception.sh",
             email_headers=None,
             reply_to_name=None,
             reply_to_email_addr=None,
@@ -62,7 +62,7 @@ class TestEmailSend:
         mocker: MockerFixture,
     ) -> None:
         mocker.patch(
-            "polar.email.tasks.email_sender.send",
+            "outception.email.tasks.email_sender.send",
             side_effect=SendEmailError("connection refused"),
         )
 
@@ -71,8 +71,8 @@ class TestEmailSend:
                 to_email_addr="test@example.com",
                 subject="Test Subject",
                 html_content="<p>Hello</p>",
-                from_name="Polar",
-                from_email_addr="noreply@polar.sh",
+                from_name="Outception",
+                from_email_addr="noreply@outception.sh",
                 email_headers=None,
                 reply_to_name=None,
                 reply_to_email_addr=None,
@@ -90,7 +90,7 @@ class TestEmailSend:
         mocker: MockerFixture,
     ) -> None:
         mocker.patch(
-            "polar.email.tasks.email_sender.send",
+            "outception.email.tasks.email_sender.send",
             return_value="resend_123",
         )
 
@@ -98,8 +98,8 @@ class TestEmailSend:
             to_email_addr="test@example.com",
             subject="Test Subject",
             html_content="<p>Hello</p>",
-            from_name="Polar",
-            from_email_addr="noreply@polar.sh",
+            from_name="Outception",
+            from_email_addr="noreply@outception.sh",
             email_headers=None,
             reply_to_name=None,
             reply_to_email_addr=None,
@@ -116,11 +116,11 @@ class TestEmailSend:
         mocker: MockerFixture,
     ) -> None:
         mocker.patch(
-            "polar.email.tasks.email_sender.send",
+            "outception.email.tasks.email_sender.send",
             return_value=None,
         )
         mocker.patch(
-            "polar.email.tasks.render_from_json",
+            "outception.email.tasks.render_from_json",
             return_value="<p>Rendered</p>",
         )
 
@@ -134,8 +134,8 @@ class TestEmailSend:
             to_email_addr="test@example.com",
             subject="Test Subject",
             html_content=None,
-            from_name="Polar",
-            from_email_addr="noreply@polar.sh",
+            from_name="Outception",
+            from_email_addr="noreply@outception.sh",
             email_headers=None,
             reply_to_name=None,
             reply_to_email_addr=None,
@@ -155,11 +155,11 @@ class TestEmailSend:
         mocker: MockerFixture,
     ) -> None:
         mock_send = mocker.patch(
-            "polar.email.tasks.email_sender.send",
+            "outception.email.tasks.email_sender.send",
             return_value=None,
         )
         mocker.patch(
-            "polar.email.tasks.render_from_json",
+            "outception.email.tasks.render_from_json",
             return_value="<p>Rendered</p>",
         )
 
@@ -173,8 +173,8 @@ class TestEmailSend:
             to_email_addr="test@example.com",
             subject="Test Subject",
             html_content=None,
-            from_name="Polar",
-            from_email_addr="noreply@polar.sh",
+            from_name="Outception",
+            from_email_addr="noreply@outception.sh",
             email_headers=None,
             reply_to_name=None,
             reply_to_email_addr=None,
@@ -193,11 +193,11 @@ class TestEmailSend:
         mocker: MockerFixture,
     ) -> None:
         mock_send = mocker.patch(
-            "polar.email.tasks.email_sender.send",
+            "outception.email.tasks.email_sender.send",
             return_value=None,
         )
         mocker.patch(
-            "polar.email.tasks.render_from_json",
+            "outception.email.tasks.render_from_json",
             return_value="<p>Rendered</p>",
         )
 
@@ -205,8 +205,8 @@ class TestEmailSend:
             to_email_addr="test@example.com",
             subject="Test Subject",
             html_content=None,
-            from_name="Polar",
-            from_email_addr="noreply@polar.sh",
+            from_name="Outception",
+            from_email_addr="noreply@outception.sh",
             email_headers=None,
             reply_to_name=None,
             reply_to_email_addr=None,
@@ -222,11 +222,11 @@ class TestEmailSend:
         mocker: MockerFixture,
     ) -> None:
         mocker.patch(
-            "polar.email.tasks.email_sender.send",
+            "outception.email.tasks.email_sender.send",
             return_value=None,
         )
         mocker.patch(
-            "polar.email.tasks.settings.EMAIL_SENDER",
+            "outception.email.tasks.settings.EMAIL_SENDER",
             EmailSender.logger,
         )
 
@@ -234,8 +234,8 @@ class TestEmailSend:
             to_email_addr="test@example.com",
             subject="Test",
             html_content="<p>Hi</p>",
-            from_name="Polar",
-            from_email_addr="noreply@polar.sh",
+            from_name="Outception",
+            from_email_addr="noreply@outception.sh",
             email_headers=None,
             reply_to_name=None,
             reply_to_email_addr=None,
@@ -251,22 +251,22 @@ class TestEmailSend:
         mocker: MockerFixture,
     ) -> None:
         mocker.patch(
-            "polar.email.tasks.email_sender.send",
+            "outception.email.tasks.email_sender.send",
             side_effect=SendEmailError("send failed"),
         )
         mocker.patch(
-            "polar.email.tasks.AsyncSessionMaker",
+            "outception.email.tasks.AsyncSessionMaker",
             side_effect=RuntimeError("db down"),
         )
-        log_exception = mocker.patch("polar.email.tasks.log.exception")
+        log_exception = mocker.patch("outception.email.tasks.log.exception")
 
         with pytest.raises(SendEmailError, match="send failed"):
             await email_send(
                 to_email_addr="test@example.com",
                 subject="Test",
                 html_content="<p>Hi</p>",
-                from_name="Polar",
-                from_email_addr="noreply@polar.sh",
+                from_name="Outception",
+                from_email_addr="noreply@outception.sh",
                 email_headers=None,
                 reply_to_name=None,
                 reply_to_email_addr=None,
@@ -284,7 +284,7 @@ class TestEmailLogPrune:
         mocker: MockerFixture,
     ) -> None:
         mocker.patch(
-            "polar.email.tasks.AsyncSessionMaker",
+            "outception.email.tasks.AsyncSessionMaker",
             side_effect=lambda: _session_maker(session),
         )
         retention = settings.EMAIL_LOG_RETENTION_PERIOD

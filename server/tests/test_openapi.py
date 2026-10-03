@@ -5,8 +5,8 @@ from httpx import AsyncClient
 from openapi_kit.diff import compare
 from openapi_kit.parser import OpenAPIParser
 
-from polar.kit.versioning import APIVersion
-from polar.version import V2027_01, VERSIONS
+from outception.kit.versioning import APIVersion
+from outception.version import V2027_01, VERSIONS
 
 
 @pytest.mark.asyncio

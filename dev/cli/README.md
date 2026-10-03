@@ -1,6 +1,6 @@
-# The Polar Development CLI
+# The Outception Development CLI
 
-A CLI tool to streamline Polar development environment setup and management.
+A CLI tool to streamline Outception development environment setup and management.
 
 ## Installation
 
@@ -23,7 +23,7 @@ The CLI collects anonymous usage analytics to help improve the tool. This includ
 
 To disable analytics, set either environment variable:
 
-- `DEV_CLI_NO_ANALYTICS=1` — Polar-specific opt-out
+- `DEV_CLI_NO_ANALYTICS=1` — Outception-specific opt-out
 - `DO_NOT_TRACK=1` — Standard privacy flag
 
 ## Commands
@@ -101,7 +101,7 @@ One shared infra stack (postgres, redis, minio, tinybird) plus one app stack (ap
 ```bash
 dev docker up                           # shared infra (if needed) + this instance's app stack
 dev docker logs api                     # follow logs (auto-routes to the right project)
-dev docker exec db psql -U polar -l     # one-off command in any container
+dev docker exec db psql -U outception -l     # one-off command in any container
 dev docker down                         # stop this instance (--all to also stop shared)
 ```
 

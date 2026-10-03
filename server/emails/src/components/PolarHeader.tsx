@@ -4,9 +4,9 @@ const Header = () => (
   <Section>
     <div className="relative h-[48px]">
       <Img
-        alt="Polar Logo"
+        alt="Outception Logo"
         height="48"
-        src="https://polar-public-assets.s3.us-east-2.amazonaws.com/emails/polar-logo-black-badge.png"
+        src="https://outception-public-assets.s3.us-east-2.amazonaws.com/emails/outception-logo-black-badge.png"
       />
     </div>
   </Section>

@@ -171,7 +171,7 @@ jobs:
             if [[ "$file" == server/migrations/* ]]; then
               continue
             fi
-            if [[ "$file" == server/polar/models/* ]]; then
+            if [[ "$file" == server/outception/models/* ]]; then
               continue
             fi
             if [[ "$file" == server/scripts/* ]]; then
@@ -246,7 +246,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
 
-      - name: Find POLAR_* variables nothing reads
+      - name: Find OUTCEPTION_* variables nothing reads
         id: check
         run: |
           STATUS=0
@@ -265,7 +265,7 @@ jobs:
             echo "$OUTPUT" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
 
-            NAMES=$(echo "$OUTPUT" | grep -oE 'POLAR_[A-Z0-9_]+' | paste -sd' ' -)
+            NAMES=$(echo "$OUTPUT" | grep -oE 'OUTCEPTION_[A-Z0-9_]+' | paste -sd' ' -)
             echo "::warning title=Provisioned but never read::$NAMES"
             {
               echo "## 🔑 Env Var Check"
@@ -325,7 +325,7 @@ jobs:
       (github.event_name == 'pull_request' || github.event_name == 'merge_group')
     runs-on: blacksmith-4vcpu-ubuntu-2404
     env:
-      POLAR_EMAIL_RENDERER_BINARY_PATH: "/tmp/email-renderer"
+      OUTCEPTION_EMAIL_RENDERER_BINARY_PATH: "/tmp/email-renderer"
     steps:
       - uses: actions/checkout@v7.0.1
 
@@ -368,17 +368,17 @@ jobs:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 15
     env:
-      POLAR_ENV: testing
-      POLAR_EMAIL_RENDERER_BINARY_PATH: ${{ github.workspace }}/server/emails/bin/react-email-pkg
-      POLAR_TEST_DATABASE_TEMPLATE: polar_test
+      OUTCEPTION_ENV: testing
+      OUTCEPTION_EMAIL_RENDERER_BINARY_PATH: ${{ github.workspace }}/server/emails/bin/react-email-pkg
+      OUTCEPTION_TEST_DATABASE_TEMPLATE: outception_test
 
     services:
       postgres:
         image: postgres:15.1-bullseye
         env:
-          POSTGRES_USER: polar
-          POSTGRES_PASSWORD: polar
-          POSTGRES_DB: polar_test
+          POSTGRES_USER: outception
+          POSTGRES_PASSWORD: outception
+          POSTGRES_DB: outception_test
           POSTGRES_PORT: 5432
         options: >-
           --health-cmd pg_isready
@@ -404,8 +404,8 @@ jobs:
           - 9000:9000
           - 9001:9001
         env:
-          MINIO_ROOT_USER: polar
-          MINIO_ROOT_PASSWORD: polarpolar
+          MINIO_ROOT_USER: outception
+          MINIO_ROOT_PASSWORD: outceptionoutception
         options: >-
           --health-cmd "curl -I http://127.0.0.1:9000/minio/health/live"
           --health-interval 10s
@@ -430,12 +430,12 @@ jobs:
         working-directory: ./server/.minio
         env:
           MINIO_HOST: 127.0.0.1
-          MINIO_ROOT_USER: polar
-          MINIO_ROOT_PASSWORD: polarpolar
-          ACCESS_KEY: polar-development
-          SECRET_ACCESS_KEY: polar123456789
-          BUCKET_NAME: polar-s3
-          BUCKET_TESTING_NAME: testing-polar-s3
+          MINIO_ROOT_USER: outception
+          MINIO_ROOT_PASSWORD: outceptionoutception
+          ACCESS_KEY: outception-development
+          SECRET_ACCESS_KEY: outception123456789
+          BUCKET_NAME: outception-s3
+          BUCKET_TESTING_NAME: testing-outception-s3
           POLICY_FILE: policy.json
         run: bash github.sh
 
@@ -498,7 +498,7 @@ jobs:
         run: |
           token=$(uv run python -m scripts.tinybird_test_workspace)
           echo "::add-mask::$token"
-          echo "POLAR_TEST_TINYBIRD_TOKEN=$token" >> "$GITHUB_ENV"
+          echo "OUTCEPTION_TEST_TINYBIRD_TOKEN=$token" >> "$GITHUB_ENV"
 
       - name: ⚗️ alembic migrate
         working-directory: ./server

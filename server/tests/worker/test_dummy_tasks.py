@@ -5,9 +5,9 @@ from typing import Any, cast
 import pytest
 from pytest_mock import MockerFixture
 
-from polar.dummy.tasks import dummy_task
-from polar.redis import Redis
-from polar.worker import RedisMiddleware
+from outception.dummy.tasks import dummy_task
+from outception.redis import Redis
+from outception.worker import RedisMiddleware
 
 
 @pytest.mark.asyncio
@@ -21,7 +21,7 @@ async def test_dummy_task_uses_database_and_redis(
     async def sessionmaker() -> Any:
         yield session
 
-    mocker.patch("polar.dummy.tasks.AsyncSessionMaker", sessionmaker)
+    mocker.patch("outception.dummy.tasks.AsyncSessionMaker", sessionmaker)
     mocker.patch.object(RedisMiddleware, "get", return_value=redis)
 
     await dummy_task(redis_key="dummy:test")

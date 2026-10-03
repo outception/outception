@@ -1,0 +1,253 @@
+from uuid import UUID
+
+from fastapi import Depends, Request
+
+from outception.auth.dependencies import Authenticator
+from outception.auth.exceptions import SessionNotFreshError
+from outception.auth.models import AuthSubject
+from outception.authz.dependencies import (
+    AuthorizeUserRead,
+    AuthorizeUserWrite,
+    AuthorizeWebUserRead,
+    AuthorizeWebUserWrite,
+    AuthorizeWebUserWriteFresh,
+)
+from outception.authz.repository import AuthzRepository
+from outception.customer_portal.endpoints.downloadables import router as downloadables_router
+from outception.customer_portal.endpoints.license_keys import router as license_keys_router
+from outception.customer_portal.endpoints.order import router as order_router
+from outception.customer_portal.endpoints.subscription import router as subscription_router
+from outception.exceptions import ResourceNotFound
+from outception.kit.http import get_ip_address
+from outception.models import User
+from outception.models.user import OAuthPlatform
+from outception.openapi import APITag
+from outception.organization.schemas import OrganizationWithRole
+from outception.postgres import (
+    AsyncReadSession,
+    AsyncSession,
+    get_db_read_session,
+    get_db_session,
+)
+from outception.routing import APIRouter
+from outception.user.oauth_service import oauth_account_service
+from outception.user.service import user as user_service
+from outception.user_organization.repository import UserOrganizationRepository
+from outception.user_organization.schemas import (
+    UserOrganizationNotificationSettings,
+    UserOrganizationNotificationSettingsUpdate,
+)
+from outception.user_organization.service import (
+    UserNotMemberOfOrganization,
+)
+from outception.user_organization.service import (
+    user_organization as user_organization_service,
+)
+
+from .schemas import (
+    MemberOrganization,
+    UserDeletionResponse,
+    UserIdentityVerification,
+    UserRead,
+    UserScopes,
+    UserUpdate,
+)
+
+router = APIRouter(prefix="/users", tags=["users", APITag.private])
+
+# Include customer portal endpoints for backwards compatibility
+router.include_router(order_router, deprecated=True, include_in_schema=False)
+router.include_router(subscription_router, deprecated=True, include_in_schema=False)
+router.include_router(downloadables_router, deprecated=True, include_in_schema=False)
+router.include_router(license_keys_router, deprecated=True, include_in_schema=False)
+
+
+@router.get("/me", response_model=UserRead)
+async def get_authenticated(
+    auth_subject: AuthorizeWebUserRead,
+    session: AsyncReadSession = Depends(get_db_read_session),
+) -> UserRead:
+    user = auth_subject.subject
+    repository = UserOrganizationRepository.from_session(session)
+    # Raw membership; `organizations` is narrowed to the session's accessible
+    # set (session scope + SSO enforcement) via the shared authz chokepoint,
+    # while `member_organizations` exposes every membership so the frontend can
+    # tell "no access" apart from "not a member".
+    org_with_roles = (
+        await repository.get_organizations_with_role(  # lint-skip: org-scope
+            user.id
+        )
+    )
+    accessible_ids = await AuthzRepository.from_session(session).get_user_org_ids(
+        auth_subject
+    )
+    return UserRead.model_validate(user).model_copy(
+        update={
+            "organizations": [
+                OrganizationWithRole.from_organization(org, role)
+                for org, role in org_with_roles
+                if org.id in accessible_ids
+            ],
+            "member_organizations": [
+                MemberOrganization(
+                    id=org.id,
+                    slug=org.slug,
+                    name=org.name,
+                    avatar_url=org.avatar_url,
+                    requires_sso=org.sso_enforced,
+                )
+                for org, _ in org_with_roles
+            ],
+            "organization_scoped": auth_subject.organization_ids is not None,
+        }
+    )
+
+
+@router.patch("/me", response_model=UserRead)
+async def update_authenticated(
+    user_update: UserUpdate,
+    request: Request,
+    auth_subject: AuthorizeWebUserWrite,
+    session: AsyncSession = Depends(get_db_session),
+) -> User:
+    ip_address = get_ip_address(request)
+    return await user_service.update(
+        session, auth_subject.subject, user_update, ip_address=ip_address
+    )
+
+
+@router.patch(
+    "/me/organizations/{organization_id}/notification-settings",
+    response_model=UserOrganizationNotificationSettings,
+    responses={
+        404: {
+            "description": "User is not a member of this organization.",
+            "model": ResourceNotFound.schema(),
+        }
+    },
+)
+async def update_authenticated_notification_settings(
+    organization_id: UUID,
+    body: UserOrganizationNotificationSettingsUpdate,
+    auth_subject: AuthorizeUserWrite,
+    session: AsyncSession = Depends(get_db_session),
+) -> UserOrganizationNotificationSettings:
+    """Update the authenticated user's notification settings for an organization."""
+    if (
+        auth_subject.organization_ids is not None
+        and organization_id not in auth_subject.organization_ids
+    ):
+        raise ResourceNotFound()
+    try:
+        user_org = await user_organization_service.update_notification_settings(
+            session,
+            user_id=auth_subject.subject.id,
+            organization_id=organization_id,
+            notification_settings=body.notification_settings,
+        )
+    except UserNotMemberOfOrganization as exc:
+        raise ResourceNotFound() from exc
+
+    return UserOrganizationNotificationSettings.model_validate(user_org)
+
+
+@router.get(
+    "/me/organizations/{organization_id}/notification-settings",
+    response_model=UserOrganizationNotificationSettings,
+    responses={
+        404: {
+            "description": "User is not a member of this organization.",
+            "model": ResourceNotFound.schema(),
+        }
+    },
+)
+async def get_authenticated_notification_settings(
+    organization_id: UUID,
+    auth_subject: AuthorizeUserRead,
+    session: AsyncReadSession = Depends(get_db_read_session),
+) -> UserOrganizationNotificationSettings:
+    """Get the authenticated user's notification settings for an organization."""
+    if (
+        auth_subject.organization_ids is not None
+        and organization_id not in auth_subject.organization_ids
+    ):
+        raise ResourceNotFound()
+
+    user_org = await user_organization_service.get_by_user_and_org(
+        session, auth_subject.subject.id, organization_id
+    )
+    if user_org is None:
+        raise ResourceNotFound()
+
+    return UserOrganizationNotificationSettings.model_validate(user_org)
+
+
+@router.get("/me/scopes", response_model=UserScopes)
+async def scopes(
+    auth_subject: AuthSubject[User] = Depends(Authenticator(allowed_subjects={User})),
+) -> UserScopes:
+    return UserScopes(scopes=list(auth_subject.scopes))
+
+
+@router.post("/me/identity-verification", response_model=UserIdentityVerification)
+async def create_identity_verification(
+    auth_subject: AuthorizeWebUserWrite,
+    session: AsyncSession = Depends(get_db_session),
+) -> UserIdentityVerification:
+    return await user_service.create_identity_verification(
+        session, user=auth_subject.subject
+    )
+
+
+@router.delete(
+    "/me",
+    response_model=UserDeletionResponse,
+    responses={
+        200: {"description": "Deletion result"},
+    },
+)
+async def delete_authenticated_user(
+    auth_subject: AuthorizeUserWrite,
+    session: AsyncSession = Depends(get_db_session),
+) -> UserDeletionResponse:
+    """
+    Delete the authenticated user account.
+
+    A user can only be deleted if all organizations they are members of have been
+    deleted first. If the user has active organizations, the response will include
+    the list of organizations that must be deleted before the user account can be
+    removed.
+
+    When deleted:
+    - User's email is anonymized
+    - User's avatar and metadata are cleared
+    - User's OAuth accounts are deleted (cascade)
+    - User's Account (payout account) is deleted if present
+    """
+    return await user_service.request_deletion(session, auth_subject.subject)
+
+
+@router.delete(
+    "/me/oauth-accounts/{platform}",
+    status_code=204,
+    responses={
+        404: {"description": "OAuth account not found"},
+        400: {"description": "Cannot disconnect last authentication method"},
+        403: {"model": SessionNotFreshError.schema()},
+    },
+)
+async def disconnect_oauth_account(
+    platform: OAuthPlatform,
+    auth_subject: AuthorizeWebUserWriteFresh,
+    session: AsyncSession = Depends(get_db_session),
+) -> None:
+    """
+    Disconnect an OAuth account (GitHub or Google) from the authenticated user.
+
+    This allows users to unlink their OAuth provider while keeping their Outception account.
+    They can still authenticate using other methods (email magic link or other OAuth providers).
+
+    Note: You cannot disconnect your last authentication method if your email is not verified.
+    """
+    user = auth_subject.subject
+    await oauth_account_service.disconnect_platform(session, user, platform)

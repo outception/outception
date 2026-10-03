@@ -1,4 +1,4 @@
-# Polar
+# Outception
 
 Open source payment infrastructure platform for developers. Monorepo with a Python/FastAPI
 backend and a Next.js frontend.
@@ -22,9 +22,9 @@ per-area `AGENTS.md` linked from the Architecture and Conventions sections befor
 ## Architecture
 
 ```
-polar/
+outception/
 ├── server/                 # Python/FastAPI backend — see server/AGENTS.md
-│   ├── polar/
+│   ├── outception/
 │   │   ├── {module}/
 │   │   │   ├── endpoints.py     # FastAPI routes
 │   │   │   ├── service.py       # Business logic (singleton)
@@ -32,7 +32,7 @@ polar/
 │   │   │   ├── schemas.py       # Pydantic models
 │   │   │   └── tasks.py         # Dramatiq background jobs
 │   │   ├── models/             # SQLAlchemy models (global, not per-module)
-│   │   └── backoffice/         # Admin UI (HTMX + DaisyUI) — see server/polar/backoffice/AGENTS.md
+│   │   └── backoffice/         # Admin UI (HTMX + DaisyUI) — see server/outception/backoffice/AGENTS.md
 │   └── migrations/             # Alembic database migrations
 ├── clients/                # Turborepo + pnpm frontend — see clients/AGENTS.md
 │   ├── adapters/               # Published framework and authentication adapters
@@ -84,10 +84,10 @@ pnpm install && pnpm dev
 ```
 
 **Stripe** — add to `server/.env`:
-- `POLAR_STRIPE_SECRET_KEY`
-- `POLAR_STRIPE_PUBLISHABLE_KEY`
-- `POLAR_STRIPE_WEBHOOK_SECRET`
-- `POLAR_STRIPE_CONNECT_WEBHOOK_SECRET`
+- `OUTCEPTION_STRIPE_SECRET_KEY`
+- `OUTCEPTION_STRIPE_PUBLISHABLE_KEY`
+- `OUTCEPTION_STRIPE_WEBHOOK_SECRET`
+- `OUTCEPTION_STRIPE_CONNECT_WEBHOOK_SECRET`
 
 **Fresh worktrees** (`.claude/worktrees/`) don't carry `.env` or built artifacts. Before running
 tests in a new worktree, from the repo root:
@@ -102,7 +102,7 @@ One artifact actually blocks config import: *any existing file* at
 `EMAIL_RENDERER_BINARY_PATH` — the validator only checks that the path exists. When you need to
 collect tests, lint or typecheck without waiting on the ~60s email build, do what
 `test_sdk.yaml` does: `touch /tmp/email-renderer` and set
-`POLAR_EMAIL_RENDERER_BINARY_PATH=/tmp/email-renderer`. Tests that render an email will fail,
+`OUTCEPTION_EMAIL_RENDERER_BINARY_PATH=/tmp/email-renderer`. Tests that render an email will fail,
 nothing else will.
 
 ## Development Workflow
@@ -119,12 +119,12 @@ uv run alembic upgrade head                               # apply migrations
 ```
 
 `uv run task test` adds coverage and runs serially. Use `task test_fast` (`-n auto`, no coverage)
-interactively, or scope to a path: `POLAR_ENV=testing uv run python -m pytest tests/<module>`.
+interactively, or scope to a path: `OUTCEPTION_ENV=testing uv run python -m pytest tests/<module>`.
 
-Set `POLAR_TEST_DATABASE_TEMPLATE=polar_test` (with `polar_test` created and migrated) and each
+Set `OUTCEPTION_TEST_DATABASE_TEMPLATE=outception_test` (with `outception_test` created and migrated) and each
 xdist worker clones that database instead of replaying the whole migration history into its own
 — see `tests/fixtures/database.py`. CI does this in `test_server.yaml`. **If you add a migration,
-re-run `POLAR_ENV=testing uv run task db_migrate` to refresh the template**, or workers will
+re-run `OUTCEPTION_ENV=testing uv run task db_migrate` to refresh the template**, or workers will
 clone a stale schema.
 
 **Visual regression testing** — use `dev snap` to capture before/after screenshots across branches:
@@ -143,11 +143,11 @@ See `server/AGENTS.md` for backend command and testing specifics.
 Detailed, review-enforced patterns live next to the code — read the relevant file before writing:
 
 - **Backend** → `server/AGENTS.md`: modular structure, repository/service/endpoint patterns,
-  `lazy="raise"` relationships, status-coded `PolarError`, endpoints return ORM models,
+  `lazy="raise"` relationships, status-coded `OutceptionError`, endpoints return ORM models,
   authentication (`AuthSubject` + scopes).
 - **Frontend** → `clients/AGENTS.md`: Orbit `<Box />` design system (raw Tailwind is **deprecated**
   for layout/spacing/color/etc.), TanStack Query for data, Zustand for state, 250-line `max-lines` limit.
-- **Backoffice** → `server/polar/backoffice/AGENTS.md`: HTMX + DaisyUI patterns.
+- **Backoffice** → `server/outception/backoffice/AGENTS.md`: HTMX + DaisyUI patterns.
 
 **i18n:** add new translatable strings only to `clients/packages/i18n/src/locales/en.ts` — a CI
 job auto-translates the rest. Don't edit other locale files. (More in `clients/AGENTS.md`.)
@@ -170,18 +170,18 @@ Treat **Accepted** ADRs as binding:
 Reusable workflows live in `.agents/skills/`. `.claude/skills` is a symlink to that
 directory. Invoke as `/name` in Cursor and Claude Code, or `$name` in Codex.
 
-- `polar-code-review` — Polar-specific review of the branch diff. Bugs, security, and simplification are `/code-review`, `/security-review`, and `/simplify`.
-- `open-pr` — draft PR after lint, type-check, `test_fast`, `polar-code-review`, and cubic CLI (`CUBIC_API_KEY`). Do not mark ready unless asked.
+- `outception-code-review` — Outception-specific review of the branch diff. Bugs, security, and simplification are `/code-review`, `/security-review`, and `/simplify`.
+- `open-pr` — draft PR after lint, type-check, `test_fast`, `outception-code-review`, and cubic CLI (`CUBIC_API_KEY`). Do not mark ready unless asked.
 
 ## Documentation
 
-- **Handbook**: https://handbook.polar.sh/engineering/
+- **Handbook**: https://handbook.outception.sh/engineering/
 - **Design docs**: `handbook/engineering/design-documents/` — write one only when
-  Polar stores or processes new data, changes login or permissions, adds a
-  new system, or adds a third-party tool that can see Polar data. Not every
+  Outception stores or processes new data, changes login or permissions, adds a
+  new system, or adds a third-party tool that can see Outception data. Not every
   new API endpoint. Copy `template.mdx`.
-  https://handbook.polar.sh/engineering/design-documents/
-- **API guidelines**: https://handbook.polar.sh/engineering/rest-api-guidelines
+  https://handbook.outception.sh/engineering/design-documents/
+- **API guidelines**: https://handbook.outception.sh/engineering/rest-api-guidelines
 - **User/developer docs**: `docs/` (Mintlify) — `cd docs && pnpm dev` to serve locally.
 
 Mintlify API reference is generated from committed `docs/openapi/{version}.openapi.json`. After
@@ -213,7 +213,7 @@ for an agent — swallows a failed email-renderer build, the artifact that block
 
 It is idempotent, skips work already done, and reports failed steps in its output rather than
 aborting. It fires on session start and resume, not on every compaction. Read the script for
-what it does; its log is `polar-session-start.log` in `$TMPDIR` (`/tmp` unless overridden).
+what it does; its log is `outception-session-start.log` in `$TMPDIR` (`/tmp` unless overridden).
 
 Deliberately excluded, none of it needed for tests or linters: `dev seed`, `dev start`/tmux,
 Stripe keys or CLI, GitHub App setup, the Tinybird CLI, `dev docker`, and the web build. Redis is
@@ -229,7 +229,7 @@ Two things to know when running tests here:
 
 ## Cursor Cloud specific instructions
 
-Prefer the Polar Development CLI (`dev/cli/`, alias `dev`) — the same path local developers use.
+Prefer the Outception Development CLI (`dev/cli/`, alias `dev`) — the same path local developers use.
 See `dev/cli/README.md` for the full command list. Do **not** use `dev docker` (the heavier
 image-based stack from the `local-environment` skill) unless you specifically need it.
 Standard lint/test commands live in `server/AGENTS.md` and `clients/AGENTS.md`.
@@ -241,21 +241,21 @@ Standard lint/test commands live in `server/AGENTS.md` and `clients/AGENTS.md`.
 sudo dockerd > /tmp/dockerd.log 2>&1 &
 
 dev up --skip-integrations   # deps, infra (incl. Tinybird), migrations, builds
-dev seed                     # sample orgs/products + admin@polar.sh (NOT part of `dev up`)
-dev start                    # api + worker + web (+ stripe) in tmux session `polar`
+dev seed                     # sample orgs/products + admin@outception.sh (NOT part of `dev up`)
+dev start                    # api + worker + web (+ stripe) in tmux session `outception`
 # Stop with:  dev stop
 # Status:     dev status
 ```
 
 `--skip-integrations` avoids interactive GitHub/Stripe prompts. `dev up` does **not** load
 sample data; run `dev seed` afterward. That creates
-`admin@polar.sh` with access to seeded orgs (notably `admin-org` with a `Pro` product, plus
-`acme-corp`, `polar`, etc.). Login OTP codes print in the API pane. If seed says "Already
+`admin@outception.sh` with access to seeded orgs (notably `admin-org` with a `Pro` product, plus
+`acme-corp`, `outception`, etc.). Login OTP codes print in the API pane. If seed says "Already
 seeded" (exit 2), the DB already has `acme-corp` — use `dev seed --reset` only when you
 intentionally want a wipe.
 
-`dev start` ends by *attaching* to the `polar` tmux session; in a non-interactive agent shell,
-create/attach then immediately `tmux detach-client -s polar`, or run `dev api` / `dev worker` /
+`dev start` ends by *attaching* to the `outception` tmux session; in a non-interactive agent shell,
+create/attach then immediately `tmux detach-client -s outception`, or run `dev api` / `dev worker` /
 `dev web` as individual detached processes. The stripe pane of `dev start` will prompt to
 install the Stripe CLI via Homebrew — decline on Linux (no Homebrew); checkout/payment testing
 needs a real Stripe sandbox later (`dev stripe`, see the `local-environment` skill's
@@ -275,18 +275,18 @@ exist and the daemon may run as root on `overlayfs`; check `docker info` rather 
 **Backend config artifacts.** Config import fails without the email renderer binary
 (`server/emails/bin/react-email-pkg`, built by `dev up` / `uv run task emails`) → pydantic
 `EMAIL_RENDERER_BINARY_PATH` error. `server/.env` is **not** among them for tests:
-under `POLAR_ENV=testing` (which `tests/conftest.py` forces) `polar/config.py` loads the
+under `OUTCEPTION_ENV=testing` (which `tests/conftest.py` forces) `outception/config.py` loads the
 committed `server/.env.testing`. `server/.env` is still required before `docker compose up -d`,
 which interpolates it. `dev status` reports "Worker unknown (check manually)" by design —
-confirm with `pgrep -af dramatiq` or the `polar` tmux pane.
+confirm with `pgrep -af dramatiq` or the `outception` tmux pane.
 
 **Tests need no manual DB setup** — an autouse `sqlalchemy_utils` fixture creates and drops
-`polar_test_<worker_id>` (`polar_test_master` without xdist), not `polar_test` itself. Run
-`uv run task test_fast` or a subset with `POLAR_ENV=testing uv run python -m pytest <path>`.
-`dev/create-test-db` creates a plain, unmigrated `polar_test` and is not part of this path.
+`outception_test_<worker_id>` (`outception_test_master` without xdist), not `outception_test` itself. Run
+`uv run task test_fast` or a subset with `OUTCEPTION_ENV=testing uv run python -m pytest <path>`.
+`dev/create-test-db` creates a plain, unmigrated `outception_test` and is not part of this path.
 
 **Login.** Email OTP codes are printed in the API pane / log (`LOGIN CODE: …`). Grab with
-`tmux capture-pane -t polar:services.0 -p | grep -a "LOGIN CODE" | tail -1`. `admin@polar.sh`
+`tmux capture-pane -t outception:services.0 -p | grep -a "LOGIN CODE" | tail -1`. `admin@outception.sh`
 is the conventional test account.
 
 **Onboarding gotcha.** The org-creation wizard's "Launch Dashboard" button only submits once the

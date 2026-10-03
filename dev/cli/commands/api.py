@@ -39,7 +39,7 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
 
         os.chdir(SERVER_DIR)
         cmd = [
-            "uv", "run", "uvicorn", "polar.app:app",
+            "uv", "run", "uvicorn", "outception.app:app",
             "--reload", "--workers", "1",
             "--host", "127.0.0.1", "--port", str(target_port),
         ]

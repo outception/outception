@@ -75,25 +75,25 @@ jobs:
         run: pnpm run lint
 
       - name: 🌍 Validate i18n
-        run: pnpm --filter @polar-sh/i18n validate
+        run: pnpm --filter @outception-sh/i18n validate
 
       - name: 👀 Typecheck
         run: pnpm run typecheck
 
       - name: "🧪 Test: App"
-        run: pnpm --filter @polar-sh/app test
+        run: pnpm --filter @outception-sh/app test
 
       - name: "🧪 Test: Web"
         run: pnpm --filter web test
 
-      - name: "🧪 Test: @polar-sh/currency"
-        run: pnpm --filter @polar-sh/currency test
+      - name: "🧪 Test: @outception-sh/currency"
+        run: pnpm --filter @outception-sh/currency test
 
-      - name: "🧪 Test: @polar-sh/checkout"
-        run: pnpm --filter @polar-sh/checkout test
+      - name: "🧪 Test: @outception-sh/checkout"
+        run: pnpm --filter @outception-sh/checkout test
 
-      - name: "🧪 Test: @polar-sh/orbit"
-        run: pnpm --filter @polar-sh/orbit test
+      - name: "🧪 Test: @outception-sh/orbit"
+        run: pnpm --filter @outception-sh/orbit test
 
       - name: "🧪 Test: Adapters"
         run: pnpm turbo run test --filter='./adapters/*'
@@ -103,10 +103,10 @@ jobs:
           bun-version-file: clients/packages/cli/package.json
 
       - name: "🧪 Test: CLI"
-        run: pnpm --filter @polar-sh/cli test
+        run: pnpm --filter @outception-sh/cli test
 
       - name: "📚 CLI docs are up to date"
-        run: pnpm --filter @polar-sh/cli docs:check
+        run: pnpm --filter @outception-sh/cli docs:check
 
       - name: 🛠️ Build
         run: pnpm build

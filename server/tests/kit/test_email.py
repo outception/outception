@@ -1,17 +1,17 @@
 import pytest
 
-from polar.kit.email import EmailNotValidError, normalize_email, unalias_email
+from outception.kit.email import EmailNotValidError, normalize_email, unalias_email
 
 
 class TestUnaliasEmail:
     def test_strips_alias_suffix(self) -> None:
-        assert unalias_email("pieter+123@polar.sh") == "pieter@polar.sh"
+        assert unalias_email("pieter+123@outception.sh") == "pieter@outception.sh"
 
     def test_strips_only_first_plus(self) -> None:
-        assert unalias_email("pieter+a+b@polar.sh") == "pieter@polar.sh"
+        assert unalias_email("pieter+a+b@outception.sh") == "pieter@outception.sh"
 
     def test_passes_through_when_no_alias(self) -> None:
-        assert unalias_email("pieter@polar.sh") == "pieter@polar.sh"
+        assert unalias_email("pieter@outception.sh") == "pieter@outception.sh"
 
     def test_invalid_email_raises(self) -> None:
         with pytest.raises(EmailNotValidError):
@@ -20,16 +20,16 @@ class TestUnaliasEmail:
 
 class TestNormalizeEmail:
     def test_strips_alias_suffix(self) -> None:
-        assert normalize_email("pieter+123@polar.sh") == "pieter@polar.sh"
+        assert normalize_email("pieter+123@outception.sh") == "pieter@outception.sh"
 
     def test_lowercases_local_part(self) -> None:
-        assert normalize_email("Pieter@polar.sh") == "pieter@polar.sh"
+        assert normalize_email("Pieter@outception.sh") == "pieter@outception.sh"
 
     def test_lowercases_domain(self) -> None:
-        assert normalize_email("pieter@POLAR.SH") == "pieter@polar.sh"
+        assert normalize_email("pieter@OUTCEPTION.SH") == "pieter@outception.sh"
 
     def test_keeps_dots_outside_gmail(self) -> None:
-        assert normalize_email("pieter.smith@polar.sh") == "pieter.smith@polar.sh"
+        assert normalize_email("pieter.smith@outception.sh") == "pieter.smith@outception.sh"
 
     def test_strips_dots_for_gmail(self) -> None:
         assert normalize_email("pieter.smith@gmail.com") == "pietersmith@gmail.com"

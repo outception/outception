@@ -1,9 +1,9 @@
-from polar.auth.permission import (
+from outception.auth.permission import (
     ROLE_PERMISSIONS,
     OrganizationPermission,
     roles_with_permission,
 )
-from polar.models.user_organization import OrganizationRole
+from outception.models.user_organization import OrganizationRole
 
 
 def test_finance_role_permissions() -> None:

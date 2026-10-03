@@ -1,7 +1,7 @@
 from pytest_mock import MockerFixture
 
-from polar.config import Environment, settings
-from polar.kit.aws import get_credentials
+from outception.config import Environment, settings
+from outception.kit.aws import get_credentials
 
 
 def test_development_uses_static_credentials(mocker: MockerFixture) -> None:

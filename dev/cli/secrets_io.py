@@ -18,13 +18,13 @@ from dotenv import dotenv_values
 
 SECRETS_FILE = Path(
     os.environ.get(
-        "POLAR_SECRETS_FILE", Path.home() / ".config" / "polar" / "secrets.env"
+        "OUTCEPTION_SECRETS_FILE", Path.home() / ".config" / "outception" / "secrets.env"
     )
 )
 TEMPLATE_FILE = Path(__file__).parent.parent / "secrets.env.template"
 
 _HEADER = (
-    "# Polar Development Secrets\n"
+    "# Outception Development Secrets\n"
     "# Shared across Git worktrees. See dev/secrets.env.template\n\n"
 )
 

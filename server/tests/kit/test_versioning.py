@@ -8,7 +8,7 @@ from fastapi.routing import iter_route_contexts
 from fastapi.testclient import TestClient
 from pydantic import BaseModel, Field
 
-from polar.kit.versioning import (
+from outception.kit.versioning import (
     APIVersion,
     Version,
     add_versioned_routers,
@@ -17,8 +17,8 @@ from polar.kit.versioning import (
     routes_for_version,
     version,
 )
-from polar.openapi import APITag
-from polar.routing import APIRouter
+from outception.openapi import APITag
+from outception.routing import APIRouter
 
 CURRENT_VERSION = APIVersion(2026, 4)
 NEXT_VERSION = APIVersion(2026, 10)
@@ -181,20 +181,20 @@ def test_versioned_routes() -> None:
 
     response = client.get("/items")
     assert response.json() == {"endpoint": "current", "dependency": "overridden"}
-    assert response.headers["Polar-Version"] == "2026-04"
+    assert response.headers["Outception-Version"] == "2026-04"
 
-    response = client.get("/items", headers={"Polar-Version": "2026-10"})
+    response = client.get("/items", headers={"Outception-Version": "2026-10"})
     assert response.json() == {"endpoint": "next", "dependency": "overridden"}
-    assert response.headers["Polar-Version"] == "2026-10"
+    assert response.headers["Outception-Version"] == "2026-10"
 
     assert client.get("/version-state").json() == {"api_version_set": False}
     assert client.get(
-        "/version-state", headers={"Polar-Version": "2026-04"}
+        "/version-state", headers={"Outception-Version": "2026-04"}
     ).json() == {"api_version_set": True}
 
     assert client.get("/next-only").status_code == 404
     assert (
-        client.get("/next-only", headers={"Polar-Version": "2026-10"}).status_code
+        client.get("/next-only", headers={"Outception-Version": "2026-10"}).status_code
         == 200
     )
 

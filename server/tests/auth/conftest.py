@@ -4,7 +4,7 @@ import httpx
 import pytest_asyncio
 from fastapi import FastAPI
 
-from polar.postgres import AsyncSession
+from outception.postgres import AsyncSession
 from tests.fixtures.base import IsolatedSessionTestClient
 
 

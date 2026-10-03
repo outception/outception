@@ -12,10 +12,10 @@ from logfire.testing import CaptureLogfire
 from opentelemetry.sdk.trace import ReadableSpan
 from pytest_mock import MockerFixture
 
-import polar.tasks  # noqa: F401  (registers actors with the broker)
-from polar.worker import get_message_timestamp
-from polar.worker._debounce import now_timestamp
-from polar.worker._runner import TaskTimeoutError, run_task
+import outception.tasks  # noqa: F401  (registers actors with the broker)
+from outception.worker import get_message_timestamp
+from outception.worker._debounce import now_timestamp
+from outception.worker._runner import TaskTimeoutError, run_task
 
 
 def _task_spans(capfire: CaptureLogfire) -> list[ReadableSpan]:
@@ -44,7 +44,7 @@ class TestRunTask:
             raise exception
 
         mocker.patch(
-            "polar.worker._runner.build_registry",
+            "outception.worker._runner.build_registry",
             return_value={"dummy": raising_task},
         )
         group_callbacks = next(
@@ -74,7 +74,7 @@ class TestRunTask:
             raise Retry(delay=1000)
 
         mocker.patch(
-            "polar.worker._runner.build_registry",
+            "outception.worker._runner.build_registry",
             return_value={"dummy": raising_task},
         )
 
@@ -94,7 +94,7 @@ class TestRunTask:
             raise ValueError("boom")
 
         mocker.patch(
-            "polar.worker._runner.build_registry",
+            "outception.worker._runner.build_registry",
             return_value={"dummy": raising_task},
         )
 
@@ -110,7 +110,7 @@ class TestRunTask:
             await asyncio.sleep(10)
 
         mocker.patch(
-            "polar.worker._runner.build_registry",
+            "outception.worker._runner.build_registry",
             return_value={"dummy": slow_task},
         )
         mocker.patch.dict(
@@ -127,7 +127,7 @@ class TestRunTask:
             await asyncio.sleep(10)
 
         mocker.patch(
-            "polar.worker._runner.build_registry",
+            "outception.worker._runner.build_registry",
             return_value={"dummy": slow_task},
         )
 
@@ -139,7 +139,7 @@ class TestRunTask:
             await asyncio.sleep(0)
 
         mocker.patch(
-            "polar.worker._runner.build_registry",
+            "outception.worker._runner.build_registry",
             return_value={"dummy": fast_task},
         )
 
@@ -152,7 +152,7 @@ class TestRunTask:
             raise TimeoutError("upstream timed out")
 
         mocker.patch(
-            "polar.worker._runner.build_registry",
+            "outception.worker._runner.build_registry",
             return_value={"dummy": raising_task},
         )
 
@@ -168,7 +168,7 @@ class TestRunTask:
             seen.append(get_message_timestamp())
 
         mocker.patch(
-            "polar.worker._runner.build_registry",
+            "outception.worker._runner.build_registry",
             return_value={"dummy": recording_task},
         )
 
@@ -182,7 +182,7 @@ class TestRunTaskAgeLimit:
     async def test_stale_message_skipped(self, mocker: MockerFixture) -> None:
         task = mocker.AsyncMock()
         mocker.patch(
-            "polar.worker._runner.build_registry",
+            "outception.worker._runner.build_registry",
             return_value={"meter.enqueue_billing": task},
         )
 
@@ -196,7 +196,7 @@ class TestRunTaskAgeLimit:
     async def test_fresh_message_runs(self, mocker: MockerFixture) -> None:
         task = mocker.AsyncMock()
         mocker.patch(
-            "polar.worker._runner.build_registry",
+            "outception.worker._runner.build_registry",
             return_value={"meter.enqueue_billing": task},
         )
 
@@ -209,7 +209,7 @@ class TestRunTaskAgeLimit:
     async def test_missing_timestamp_runs(self, mocker: MockerFixture) -> None:
         task = mocker.AsyncMock()
         mocker.patch(
-            "polar.worker._runner.build_registry",
+            "outception.worker._runner.build_registry",
             return_value={"meter.enqueue_billing": task},
         )
 
@@ -220,7 +220,7 @@ class TestRunTaskAgeLimit:
     async def test_actor_without_max_age_runs(self, mocker: MockerFixture) -> None:
         task = mocker.AsyncMock()
         mocker.patch(
-            "polar.worker._runner.build_registry",
+            "outception.worker._runner.build_registry",
             return_value={"dummy": task},
         )
 
@@ -237,7 +237,7 @@ class TestRunTaskDebounce:
     def fake_redis(self, mocker: MockerFixture) -> FakeAsyncRedis:
         fake_redis = FakeAsyncRedis(decode_responses=True)
         mocker.patch(
-            "polar.worker._runner.RedisMiddleware.get", return_value=fake_redis
+            "outception.worker._runner.RedisMiddleware.get", return_value=fake_redis
         )
         return fake_redis
 
@@ -245,7 +245,7 @@ class TestRunTaskDebounce:
     def task_fn(self, mocker: MockerFixture) -> AsyncMock:
         task_fn = AsyncMock()
         mocker.patch(
-            "polar.worker._runner.build_registry", return_value={"dummy": task_fn}
+            "outception.worker._runner.build_registry", return_value={"dummy": task_fn}
         )
         return task_fn
 

@@ -9,13 +9,13 @@ os.environ["PYTHONTZPATH"] = ""
 
 from fastapi.routing import iter_route_contexts
 
-from polar.kit.versioning import (
+from outception.kit.versioning import (
     APIVersion,
     finalize_versioned_routes,
     routes_for_version,
 )
-from polar.openapi import get_openapi
-from polar.version import CURRENT_API_VERSION, VERSIONS
+from outception.openapi import get_openapi
+from outception.version import CURRENT_API_VERSION, VERSIONS
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -40,12 +40,12 @@ if __name__ == "__main__":
         parser.error(f"Unsupported API version: {arguments.version}")
 
     if arguments.private:
-        os.environ["POLAR_ENV"] = "development"
+        os.environ["OUTCEPTION_ENV"] = "development"
     else:
-        os.environ["POLAR_ENV"] = "testing"
+        os.environ["OUTCEPTION_ENV"] = "testing"
 
-    from polar.api import router
-    from polar.webhook.webhooks import get_webhook_routes
+    from outception.api import router
+    from outception.webhook.webhooks import get_webhook_routes
 
     route_contexts = tuple(iter_route_contexts(router.routes))
     finalize_versioned_routes(route_contexts, VERSIONS)

@@ -7,17 +7,17 @@ import pytest
 from starlette.requests import Request
 from starlette.types import Message, Receive, Scope, Send
 
-from polar.auth.exceptions import (
+from outception.auth.exceptions import (
     InvalidRequestedOrganization,
     RequestedOrganizationNotAccessible,
 )
-from polar.auth.middlewares import AuthSubjectMiddleware, get_auth_subject
-from polar.auth.models import ORGANIZATION_HEADER
-from polar.auth.service import auth as auth_service
-from polar.config import settings
-from polar.kit.crypto import get_token_hash
-from polar.kit.utils import utc_now
-from polar.models import (
+from outception.auth.middlewares import AuthSubjectMiddleware, get_auth_subject
+from outception.auth.models import ORGANIZATION_HEADER
+from outception.auth.service import auth as auth_service
+from outception.config import settings
+from outception.kit.crypto import get_token_hash
+from outception.kit.utils import utc_now
+from outception.models import (
     OAuth2Client,
     OAuth2Token,
     Organization,
@@ -25,12 +25,12 @@ from polar.models import (
     User,
     UserOrganization,
 )
-from polar.models.oauth2_token_organization import OAuth2TokenOrganization
-from polar.models.user_session_organization import UserSessionOrganization
-from polar.oauth2.constants import ACCESS_TOKEN_PREFIX
-from polar.oauth2.sub_type import SubType
-from polar.postgres import AsyncSession
-from polar.redis import Redis
+from outception.models.oauth2_token_organization import OAuth2TokenOrganization
+from outception.models.user_session_organization import UserSessionOrganization
+from outception.oauth2.constants import ACCESS_TOKEN_PREFIX
+from outception.oauth2.sub_type import SubType
+from outception.postgres import AsyncSession
+from outception.redis import Redis
 from tests.fixtures.database import SaveFixture
 
 
@@ -69,7 +69,7 @@ async def _create_oauth2_token(
     user: User | None = None,
     organization: Organization | None = None,
 ) -> OAuth2Token:
-    client = OAuth2Client(client_id="polar_ci_test")
+    client = OAuth2Client(client_id="outception_ci_test")
     await save_fixture(client)
     token = OAuth2Token(
         client_id=client.client_id,
@@ -318,7 +318,7 @@ class TestGetAuthSubjectRequestedOrganization:
         organization: Organization,
         user_organization: UserOrganization,
     ) -> None:
-        access_token = "polar_pat_test"
+        access_token = "outception_pat_test"
         await save_fixture(
             PersonalAccessToken(
                 comment="test",

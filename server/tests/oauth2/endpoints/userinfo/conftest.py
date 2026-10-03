@@ -1,6 +1,6 @@
 import pytest
 
-from polar.kit.db.postgres import AsyncSession
+from outception.kit.db.postgres import AsyncSession
 from tests.fixtures.database import SaveFixture, save_fixture_factory
 
 

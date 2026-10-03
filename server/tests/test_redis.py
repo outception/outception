@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from redis import ConnectionError, ReadOnlyError
 
-from polar.redis import (
+from outception.redis import (
     FailoverPipeline,
     FailoverRedis,
     SyncFailoverPipeline,

@@ -11,9 +11,9 @@
 # ]
 # ///
 """
-Polar Development CLI
+Outception Development CLI
 
-A CLI tool to streamline Polar development environment setup and management.
+A CLI tool to streamline Outception development environment setup and management.
 """
 
 import importlib.util
@@ -48,7 +48,7 @@ from shared import (
 
 app = typer.Typer(
     name="dev",
-    help="Polar Development CLI - streamline your dev environment",
+    help="Outception Development CLI - streamline your dev environment",
     no_args_is_help=True,
     context_settings={"help_option_names": ["-h", "--help"]},
 )
@@ -181,7 +181,7 @@ def up(
     Installs dependencies, starts infrastructure, runs migrations,
     and prompts to configure GitHub and Stripe integrations.
     """
-    print_banner("Polar dev", "Setting up your development environment")
+    print_banner("Outception dev", "Setting up your development environment")
 
     ctx = Context(
         clean=clean,
@@ -244,7 +244,7 @@ def help() -> None:
     console.print()
     console.print(
         Panel(
-            Text("Polar Development CLI", justify="center", style="bold"),
+            Text("Outception Development CLI", justify="center", style="bold"),
             border_style="blue",
             padding=(1, 4),
         )

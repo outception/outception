@@ -1,13 +1,13 @@
 import pytest
 from httpx import AsyncClient
 
-from polar.auth.models import AuthSubject
-from polar.auth.permission import OrganizationPermission
-from polar.auth.scope import READ_ONLY_SCOPES
-from polar.kit.utils import utc_now
-from polar.models import Organization, User, UserOrganization
-from polar.models.organization import OrganizationStatus
-from polar.models.user_organization import OrganizationRole
+from outception.auth.models import AuthSubject
+from outception.auth.permission import OrganizationPermission
+from outception.auth.scope import READ_ONLY_SCOPES
+from outception.kit.utils import utc_now
+from outception.models import Organization, User, UserOrganization
+from outception.models.organization import OrganizationStatus
+from outception.models.user_organization import OrganizationRole
 from tests.fixtures.auth import AuthSubjectFixture
 from tests.fixtures.database import SaveFixture
 

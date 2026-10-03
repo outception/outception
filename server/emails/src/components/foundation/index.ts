@@ -1,4 +1,4 @@
-export { default as WrapperPolar } from './WrapperPolar'
+export { default as WrapperOutception } from './WrapperOutception'
 export { default as WrapperOrganization } from './WrapperOrganization'
 export { default as Footer } from './Footer'
 export { default as FooterCustomer } from './FooterCustomer'

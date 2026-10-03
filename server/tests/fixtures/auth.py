@@ -3,11 +3,11 @@ from typing import Any, Literal
 
 import pytest
 
-from polar.auth.models import Anonymous, AuthSubject, Subject
-from polar.auth.scope import Scope
-from polar.config import settings
-from polar.kit.utils import utc_now
-from polar.models import Customer, Member, Organization, User, UserSession
+from outception.auth.models import Anonymous, AuthSubject, Subject
+from outception.auth.scope import Scope
+from outception.config import settings
+from outception.kit.utils import utc_now
+from outception.models import Customer, Member, Organization, User, UserSession
 
 
 def make_session_stale(auth_subject: AuthSubject[User]) -> None:

@@ -22,7 +22,7 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
         ] = False,
     ) -> None:
         """Reset environment to clean state for testing dev up."""
-        console.print("\n[bold blue]Resetting Polar development environment[/bold blue]\n")
+        console.print("\n[bold blue]Resetting Outception development environment[/bold blue]\n")
 
         if not force:
             console.print("[yellow]This will remove:[/yellow]")

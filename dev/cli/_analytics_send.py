@@ -5,7 +5,7 @@ import urllib.request
 import uuid
 from pathlib import Path
 
-_CONFIG_DIR = Path.home() / ".config" / "polar"
+_CONFIG_DIR = Path.home() / ".config" / "outception"
 _ID_FILE = _CONFIG_DIR / "dev_cli_id"
 _GITHUB_USER_FILE = _CONFIG_DIR / "dev_cli_github_user"
 

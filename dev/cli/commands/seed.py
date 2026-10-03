@@ -16,10 +16,10 @@ from shared import (
 )
 
 
-def _configure_polar_self_integration() -> None:
-    """Query the seeded admin org and configure Polar self-integration env vars."""
+def _configure_outception_self_integration() -> None:
+    """Query the seeded admin org and configure Outception self-integration env vars."""
     result = run_command(
-        ["uv", "run", "python", "-m", "scripts.seeds_load", "polar-self-env"],
+        ["uv", "run", "python", "-m", "scripts.seeds_load", "outception-self-env"],
         cwd=SERVER_DIR,
         capture=True,
     )
@@ -34,7 +34,7 @@ def _configure_polar_self_integration() -> None:
     update_secrets(values)
 
     run_command([str(ROOT_DIR / "dev" / "setup-environment")], capture=True)
-    console.print("[dim]Configured Polar self-integration in .env[/dim]")
+    console.print("[dim]Configured Outception self-integration in .env[/dim]")
 
 
 def _print_command_output(result: object) -> None:
@@ -64,7 +64,7 @@ def _print_seeded_login_info(new_org: str | None = None) -> None:
     login_info = Table(show_header=False, box=None, padding=(0, 2))
     login_info.add_column(style="dim")
     login_info.add_column(style="bold")
-    login_info.add_row("Email", f"{new_org}@polar.sh" if new_org else "admin@polar.sh")
+    login_info.add_row("Email", f"{new_org}@outception.sh" if new_org else "admin@outception.sh")
     login_info.add_row("OTP", "Check the terminal running dev api")
     if not new_org:
         login_info.add_row(
@@ -143,7 +143,7 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
                 raise typer.Exit(1)
             step_status(True, "Seed data loaded")
 
-            _configure_polar_self_integration()
+            _configure_outception_self_integration()
             _print_seeded_login_info()
             return
 
@@ -184,7 +184,7 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
         if result and result.returncode == 0:
             step_status(True, "Seed data loaded")
             if not new_org:
-                _configure_polar_self_integration()
+                _configure_outception_self_integration()
 
             _print_seeded_login_info(new_org)
         else:

@@ -25,7 +25,7 @@ jobs:
         with:
           filters: |
             relevant:
-              - 'server/polar/**'
+              - 'server/outception/**'
               - 'server/emails/src/types/openapi.ts'
               - 'server/emails/package.json'
               - 'server/emails/pnpm-lock.yaml'
@@ -43,8 +43,8 @@ jobs:
       pull-requests: write
 
     env:
-      POLAR_EMAIL_RENDERER_BINARY_PATH: "/tmp/email-renderer"
-      POLAR_PYDANTIC_AI_GATEWAY_API_KEY: "POLAR_PYDANTIC_AI_GATEWAY_API_KEY"
+      OUTCEPTION_EMAIL_RENDERER_BINARY_PATH: "/tmp/email-renderer"
+      OUTCEPTION_PYDANTIC_AI_GATEWAY_API_KEY: "OUTCEPTION_PYDANTIC_AI_GATEWAY_API_KEY"
 
     steps:
       - name: Check out code

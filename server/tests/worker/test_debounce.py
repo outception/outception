@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from fakeredis import FakeAsyncRedis
 
-from polar.worker._debounce import (
+from outception.worker._debounce import (
     DebounceContext,
     check_debounce,
     finalize_debounce,

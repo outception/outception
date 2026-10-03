@@ -1,7 +1,7 @@
 from datetime import date
 from uuid import UUID
 
-from polar.email.deduplication import (
+from outception.email.deduplication import (
     payment_method_expiration_reminder_key,
     subscription_renewal_reminder_key,
     subscription_trial_conversion_reminder_key,

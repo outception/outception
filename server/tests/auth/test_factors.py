@@ -6,23 +6,23 @@ from reauth.factors.backup_codes import (
     InvalidBackupCodeException,
 )
 
-from polar.auth.factors import BackupCodesFactor, get_org_factors
-from polar.auth.oauth2.state import OAuth2StateService
-from polar.config import settings
-from polar.exceptions import ResourceNotFound
-from polar.kit.crypto import get_token_hash_candidates
-from polar.models import (
+from outception.auth.factors import BackupCodesFactor, get_org_factors
+from outception.auth.oauth2.state import OAuth2StateService
+from outception.config import settings
+from outception.exceptions import ResourceNotFound
+from outception.kit.crypto import get_token_hash_candidates
+from outception.models import (
     BackupCodesEnrollment,
     Organization,
     OrganizationSSOConnection,
     User,
 )
-from polar.models.organization_sso_connection import (
+from outception.models.organization_sso_connection import (
     OIDCAuthMethod,
     OIDCConfiguration,
     OrganizationSSOConnectionType,
 )
-from polar.postgres import AsyncSession
+from outception.postgres import AsyncSession
 from tests.fixtures.database import SaveFixture
 
 

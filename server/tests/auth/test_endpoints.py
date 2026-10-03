@@ -9,13 +9,13 @@ from httpx import AsyncClient
 from pytest_mock import MockerFixture
 from reauth.amr import AuthenticationMethodReference
 
-from polar.auth.authentication_session import TOKEN_PREFIX
-from polar.auth.models import AuthSubject
-from polar.config import settings
-from polar.kit.crypto import generate_token_hash_pair
-from polar.kit.utils import utc_now
-from polar.models import AuthenticationSession, Organization, User
-from polar.postgres import AsyncSession
+from outception.auth.authentication_session import TOKEN_PREFIX
+from outception.auth.models import AuthSubject
+from outception.config import settings
+from outception.kit.crypto import generate_token_hash_pair
+from outception.kit.utils import utc_now
+from outception.models import AuthenticationSession, Organization, User
+from outception.postgres import AsyncSession
 from tests.auth.oauth2.test_router import create_sso_domain
 from tests.fixtures.auth import make_session_stale
 from tests.fixtures.base import IsolatedSessionTestClient
@@ -206,8 +206,8 @@ async def request_email_otp(
     *,
     sso_discovery: bool = True,
 ) -> tuple[httpx.Response, MagicMock]:
-    mocker.patch("polar.auth.endpoints.verify_turnstile")
-    enqueue_email_template = mocker.patch("polar.auth.factors.enqueue_email_template")
+    mocker.patch("outception.auth.endpoints.verify_turnstile")
+    enqueue_email_template = mocker.patch("outception.auth.factors.enqueue_email_template")
 
     start = await client.post(
         "/v1/auth/start",

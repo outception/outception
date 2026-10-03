@@ -1,10 +1,10 @@
 import pytest
 from sqlalchemy import select
 
-from polar.auth.oauth2.state import OAuth2StateService
-from polar.kit.utils import utc_now
-from polar.models import OAuth2State
-from polar.postgres import AsyncSession
+from outception.auth.oauth2.state import OAuth2StateService
+from outception.kit.utils import utc_now
+from outception.models import OAuth2State
+from outception.postgres import AsyncSession
 from tests.fixtures.database import SaveFixture
 
 

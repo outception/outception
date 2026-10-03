@@ -1,8 +1,8 @@
 import pytest
 from pydantic import ValidationError
 
-from polar.config import HASH_SEPARATOR, Settings, settings
-from polar.kit.crypto import get_token_hash, get_token_hash_candidates
+from outception.config import HASH_SEPARATOR, Settings, settings
+from outception.kit.crypto import get_token_hash, get_token_hash_candidates
 
 SECRETS = {"k1": "first secret", "k2": "second secret"}
 
@@ -22,13 +22,13 @@ def no_current_secret(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_hash_is_a_bare_digest_without_a_current_secret(
     no_current_secret: None,
 ) -> None:
-    hash = get_token_hash("polar_at_xxx")
+    hash = get_token_hash("outception_at_xxx")
     assert len(hash) == 64
-    assert get_token_hash_candidates("polar_at_xxx") == {None: hash}
+    assert get_token_hash_candidates("outception_at_xxx") == {None: hash}
 
 
 def test_hash_carries_the_current_secret_id(current_secret: None) -> None:
-    hash = get_token_hash("polar_at_xxx")
+    hash = get_token_hash("outception_at_xxx")
     secret_id, _, digest = hash.partition("$")
     assert secret_id == "k2"
     assert len(digest) == 64
@@ -37,9 +37,9 @@ def test_hash_carries_the_current_secret_id(current_secret: None) -> None:
 def test_candidates_cover_every_secret_and_the_legacy_form(
     current_secret: None,
 ) -> None:
-    candidates = get_token_hash_candidates("polar_at_xxx")
+    candidates = get_token_hash_candidates("outception_at_xxx")
     assert candidates.keys() == {"k1", "k2", None}
-    assert candidates["k2"] == get_token_hash("polar_at_xxx")
+    assert candidates["k2"] == get_token_hash("outception_at_xxx")
     assert candidates["k1"].startswith("k1$")
     assert HASH_SEPARATOR not in candidates[None]
 
@@ -49,11 +49,11 @@ def test_a_hash_written_under_a_retired_secret_is_still_a_candidate(
 ) -> None:
     monkeypatch.setattr(settings, "HASH_SECRETS", SECRETS)
     monkeypatch.setattr(settings, "CURRENT_HASH_SECRET_ID", "k1")
-    stored = get_token_hash("polar_at_xxx")
+    stored = get_token_hash("outception_at_xxx")
 
     monkeypatch.setattr(settings, "CURRENT_HASH_SECRET_ID", "k2")
-    assert stored != get_token_hash("polar_at_xxx")
-    assert stored == get_token_hash_candidates("polar_at_xxx")["k1"]
+    assert stored != get_token_hash("outception_at_xxx")
+    assert stored == get_token_hash_candidates("outception_at_xxx")["k1"]
 
 
 @pytest.mark.parametrize(

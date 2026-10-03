@@ -9,10 +9,10 @@ from sqlalchemy import CursorResult, Update, bindparam
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.sql.elements import BindParameter
 
-from polar.config import settings
-from polar.kit.db import postgres as kit_postgres
-from polar.kit.db.postgres import AsyncSession, create_async_sessionmaker
-from polar.postgres import create_async_engine
+from outception.config import settings
+from outception.kit.db import postgres as kit_postgres
+from outception.kit.db.postgres import AsyncSession, create_async_sessionmaker
+from outception.postgres import create_async_engine
 
 
 def drop_all(*args: Any, **kwargs: Any) -> Any:

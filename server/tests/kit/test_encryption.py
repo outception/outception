@@ -1,9 +1,9 @@
 import pytest
 from cryptography.exceptions import InvalidTag
 
-from polar.config import Environment, settings
-from polar.kit import encryption
-from polar.kit.encryption import (
+from outception.config import Environment, settings
+from outception.kit import encryption
+from outception.kit.encryption import (
     EncryptedString,
     EncryptedStringType,
     LocalKeyProvider,
@@ -155,7 +155,7 @@ def test_get_key_provider_requires_kms_key_in_production(
     monkeypatch.setattr(settings, "AWS_KMS_KEY_ID", None)
     encryption.get_key_provider.cache_clear()
     try:
-        with pytest.raises(RuntimeError, match="POLAR_AWS_KMS_KEY_ID"):
+        with pytest.raises(RuntimeError, match="OUTCEPTION_AWS_KMS_KEY_ID"):
             encryption.get_key_provider()
     finally:
         encryption.get_key_provider.cache_clear()

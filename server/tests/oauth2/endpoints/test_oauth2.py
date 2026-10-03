@@ -8,15 +8,15 @@ from httpx import AsyncClient
 from pytest_mock import MockerFixture
 from sqlalchemy import select
 
-from polar.auth.scope import Scope
-from polar.auth.service import USER_SESSION_TOKEN_PREFIX
-from polar.config import settings
-from polar.kit.crypto import generate_token_hash_pair, get_token_hash
-from polar.kit.db.postgres import Session
-from polar.kit.encryption import EncryptedString
-from polar.kit.hash_secrets import HashSecrets
-from polar.kit.utils import utc_now
-from polar.models import (
+from outception.auth.scope import Scope
+from outception.auth.service import USER_SESSION_TOKEN_PREFIX
+from outception.config import settings
+from outception.kit.crypto import generate_token_hash_pair, get_token_hash
+from outception.kit.db.postgres import Session
+from outception.kit.encryption import EncryptedString
+from outception.kit.hash_secrets import HashSecrets
+from outception.kit.utils import utc_now
+from outception.models import (
     OAuth2AuthorizationCode,
     OAuth2Client,
     OAuth2Grant,
@@ -26,10 +26,10 @@ from polar.models import (
     UserOrganization,
     UserSession,
 )
-from polar.models.user_organization import OrganizationRole
-from polar.models.user_session_organization import UserSessionOrganization
-from polar.oauth2.service.oauth2_grant import oauth2_grant as oauth2_grant_service
-from polar.oauth2.sub_type import SubType
+from outception.models.user_organization import OrganizationRole
+from outception.models.user_session_organization import UserSessionOrganization
+from outception.oauth2.service.oauth2_grant import oauth2_grant as oauth2_grant_service
+from outception.oauth2.sub_type import SubType
 from tests.fixtures.auth import AuthSubjectFixture
 from tests.fixtures.database import SaveFixture
 
@@ -38,9 +38,9 @@ from ..conftest import create_oauth2_authorization_code, create_oauth2_token
 
 @pytest_asyncio.fixture
 async def oauth2_client(save_fixture: SaveFixture, user: User) -> OAuth2Client:
-    oauth2_client = OAuth2Client(client_id="polar_ci_123", user=user)
-    await oauth2_client.set_client_secret("polar_cs_123")
-    await oauth2_client.set_registration_access_token("polar_crt_123")
+    oauth2_client = OAuth2Client(client_id="outception_ci_123", user=user)
+    await oauth2_client.set_client_secret("outception_cs_123")
+    await oauth2_client.set_registration_access_token("outception_crt_123")
     oauth2_client.set_client_metadata(
         {
             "client_name": "Test Client",
@@ -58,9 +58,9 @@ async def oauth2_client(save_fixture: SaveFixture, user: User) -> OAuth2Client:
 
 @pytest_asyncio.fixture
 async def public_oauth2_client(save_fixture: SaveFixture, user: User) -> OAuth2Client:
-    oauth2_client = OAuth2Client(client_id="polar_ci_123", user=user)
-    await oauth2_client.set_client_secret("polar_cs_123")
-    await oauth2_client.set_registration_access_token("polar_crt_123")
+    oauth2_client = OAuth2Client(client_id="outception_ci_123", user=user)
+    await oauth2_client.set_client_secret("outception_cs_123")
+    await oauth2_client.set_registration_access_token("outception_crt_123")
     oauth2_client.set_client_metadata(
         {
             "client_name": "Test Client",
@@ -80,9 +80,9 @@ async def public_oauth2_client(save_fixture: SaveFixture, user: User) -> OAuth2C
 async def first_party_oauth2_client(
     save_fixture: SaveFixture, user: User
 ) -> OAuth2Client:
-    oauth2_client = OAuth2Client(client_id="polar_ci_123", first_party=True, user=user)
-    await oauth2_client.set_client_secret("polar_cs_123")
-    await oauth2_client.set_registration_access_token("polar_crt_123")
+    oauth2_client = OAuth2Client(client_id="outception_ci_123", first_party=True, user=user)
+    await oauth2_client.set_client_secret("outception_cs_123")
+    await oauth2_client.set_registration_access_token("outception_crt_123")
     oauth2_client.set_client_metadata(
         {
             "client_name": "Test Client",
@@ -102,9 +102,9 @@ async def first_party_oauth2_client(
 async def web_grant_oauth2_client(
     save_fixture: SaveFixture, user: User
 ) -> OAuth2Client:
-    oauth2_client = OAuth2Client(client_id="polar_ci_123", user=user)
-    await oauth2_client.set_client_secret("polar_cs_123")
-    await oauth2_client.set_registration_access_token("polar_crt_123")
+    oauth2_client = OAuth2Client(client_id="outception_ci_123", user=user)
+    await oauth2_client.set_client_secret("outception_cs_123")
+    await oauth2_client.set_registration_access_token("outception_crt_123")
     oauth2_client.set_client_metadata(
         {
             "client_name": "Test Client",
@@ -300,7 +300,7 @@ class TestOAuth2ConfigureGet:
     ) -> None:
         response = await client.get(
             f"/v1/oauth2/register/{oauth2_client.client_id}",
-            headers={"Authorization": f"Bearer {'polar_crt_123'}"},
+            headers={"Authorization": f"Bearer {'outception_crt_123'}"},
         )
 
         assert response.status_code == 200
@@ -335,7 +335,7 @@ class TestOAuth2ConfigureGet:
         """Test that public clients don't receive client_secret when retrieving config."""
         response = await client.get(
             f"/v1/oauth2/register/{public_oauth2_client.client_id}",
-            headers={"Authorization": f"Bearer {'polar_crt_123'}"},
+            headers={"Authorization": f"Bearer {'outception_crt_123'}"},
         )
 
         assert response.status_code == 200
@@ -360,7 +360,7 @@ class TestOAuth2ConfigurePut:
     ) -> None:
         response = await client.put(
             f"/v1/oauth2/register/{oauth2_client.client_id}",
-            headers={"Authorization": f"Bearer {'polar_crt_123'}"},
+            headers={"Authorization": f"Bearer {'outception_crt_123'}"},
             json={
                 "client_id": oauth2_client.client_id,
                 "client_name": "Test Client Updated",
@@ -405,7 +405,7 @@ class TestOAuth2ConfigureDelete:
     ) -> None:
         response = await client.delete(
             f"/v1/oauth2/register/{oauth2_client.client_id}",
-            headers={"Authorization": f"Bearer {'polar_crt_123'}"},
+            headers={"Authorization": f"Bearer {'outception_crt_123'}"},
         )
 
         assert response.status_code == 204
@@ -426,15 +426,15 @@ class TestOAuth2ConfigureDelete:
         save_fixture: SaveFixture,
         sync_session: Session,
     ) -> None:
-        other_client = OAuth2Client(client_id="polar_ci_other", user_id=user.id)
+        other_client = OAuth2Client(client_id="outception_ci_other", user_id=user.id)
         other_client.set_client_metadata(oauth2_client.client_metadata)
         await save_fixture(other_client)
         tokens = [
             await create_oauth2_token(
                 save_fixture,
                 client=token_client,
-                access_token=f"polar_at_{index}",
-                refresh_token=f"polar_rt_{index}",
+                access_token=f"outception_at_{index}",
+                refresh_token=f"outception_rt_{index}",
                 scopes=["openid"],
                 user=user,
             )
@@ -445,7 +445,7 @@ class TestOAuth2ConfigureDelete:
 
         response = await client.delete(
             f"/v1/oauth2/register/{oauth2_client.client_id}",
-            headers={"Authorization": "Bearer polar_crt_123"},
+            headers={"Authorization": "Bearer outception_crt_123"},
         )
 
         assert response.status_code == 204
@@ -1266,7 +1266,7 @@ class TestOAuth2Token:
             "grant_type": "authorization_code",
             "code": "CODE",
             "client_id": oauth2_client.client_id,
-            "client_secret": "polar_cs_123",
+            "client_secret": "outception_cs_123",
             "redirect_uri": "http://127.0.0.1:8000/docs/oauth2-redirect",
         }
 
@@ -1276,9 +1276,9 @@ class TestOAuth2Token:
         json = response.json()
 
         access_token = json["access_token"]
-        assert access_token.startswith("polar_at_u_")
+        assert access_token.startswith("outception_at_u_")
         refresh_token = json["refresh_token"]
-        assert refresh_token.startswith("polar_rt_u_")
+        assert refresh_token.startswith("outception_rt_u_")
 
     async def test_authorization_code_user_carries_organization_down_scope(
         self,
@@ -1303,7 +1303,7 @@ class TestOAuth2Token:
             "grant_type": "authorization_code",
             "code": "CODE",
             "client_id": oauth2_client.client_id,
-            "client_secret": "polar_cs_123",
+            "client_secret": "outception_cs_123",
             "redirect_uri": "http://127.0.0.1:8000/docs/oauth2-redirect",
         }
 
@@ -1311,7 +1311,7 @@ class TestOAuth2Token:
 
         assert response.status_code == 200
         access_token = response.json()["access_token"]
-        assert access_token.startswith("polar_at_u_")
+        assert access_token.startswith("outception_at_u_")
 
         oauth2_token = (
             sync_session.execute(
@@ -1359,9 +1359,9 @@ class TestOAuth2Token:
         json = response.json()
 
         access_token = json["access_token"]
-        assert access_token.startswith("polar_at_u_")
+        assert access_token.startswith("outception_at_u_")
         refresh_token = json["refresh_token"]
-        assert refresh_token.startswith("polar_rt_u_")
+        assert refresh_token.startswith("outception_rt_u_")
 
     async def test_authorization_code_sub_organization(
         self,
@@ -1383,7 +1383,7 @@ class TestOAuth2Token:
             "grant_type": "authorization_code",
             "code": "CODE",
             "client_id": oauth2_client.client_id,
-            "client_secret": "polar_cs_123",
+            "client_secret": "outception_cs_123",
             "redirect_uri": "http://127.0.0.1:8000/docs/oauth2-redirect",
         }
 
@@ -1393,9 +1393,9 @@ class TestOAuth2Token:
         json = response.json()
 
         access_token = json["access_token"]
-        assert access_token.startswith("polar_at_o_")
+        assert access_token.startswith("outception_at_o_")
         refresh_token = json["refresh_token"]
-        assert refresh_token.startswith("polar_rt_o_")
+        assert refresh_token.startswith("outception_rt_o_")
 
     async def test_authorization_code_id_token_signed_with_published_key(
         self,
@@ -1417,7 +1417,7 @@ class TestOAuth2Token:
             "grant_type": "authorization_code",
             "code": "CODE",
             "client_id": oauth2_client.client_id,
-            "client_secret": "polar_cs_123",
+            "client_secret": "outception_cs_123",
             "redirect_uri": "http://127.0.0.1:8000/docs/oauth2-redirect",
         }
 
@@ -1503,7 +1503,7 @@ class TestOAuth2Token:
             "grant_type": "refresh_token",
             "refresh_token": "REFRESH_TOKEN",
             "client_id": oauth2_client.client_id,
-            "client_secret": "polar_cs_123",
+            "client_secret": "outception_cs_123",
         }
 
         response = await client.post("/v1/oauth2/token", data=data)
@@ -1512,9 +1512,9 @@ class TestOAuth2Token:
         json = response.json()
 
         access_token = json["access_token"]
-        assert access_token.startswith("polar_at_u_")
+        assert access_token.startswith("outception_at_u_")
         refresh_token = json["refresh_token"]
-        assert refresh_token.startswith("polar_rt_u_")
+        assert refresh_token.startswith("outception_rt_u_")
 
     async def test_refresh_token_preserves_organization_down_scope(
         self,
@@ -1539,7 +1539,7 @@ class TestOAuth2Token:
             "grant_type": "refresh_token",
             "refresh_token": "REFRESH_TOKEN",
             "client_id": oauth2_client.client_id,
-            "client_secret": "polar_cs_123",
+            "client_secret": "outception_cs_123",
         }
 
         response = await client.post("/v1/oauth2/token", data=data)
@@ -1580,7 +1580,7 @@ class TestOAuth2Token:
             "grant_type": "refresh_token",
             "refresh_token": "REFRESH_TOKEN",
             "client_id": oauth2_client.client_id,
-            "client_secret": "polar_cs_123",
+            "client_secret": "outception_cs_123",
         }
 
         response = await client.post("/v1/oauth2/token", data=data)
@@ -1589,9 +1589,9 @@ class TestOAuth2Token:
         json = response.json()
 
         access_token = json["access_token"]
-        assert access_token.startswith("polar_at_o_")
+        assert access_token.startswith("outception_at_o_")
         refresh_token = json["refresh_token"]
-        assert refresh_token.startswith("polar_rt_o_")
+        assert refresh_token.startswith("outception_rt_o_")
 
     async def test_refresh_token_migrates_single_member_org_token(
         self,
@@ -1623,14 +1623,14 @@ class TestOAuth2Token:
             "grant_type": "refresh_token",
             "refresh_token": "REFRESH_TOKEN",
             "client_id": oauth2_client.client_id,
-            "client_secret": "polar_cs_123",
+            "client_secret": "outception_cs_123",
         }
 
         response = await client.post("/v1/oauth2/token", data=data)
 
         assert response.status_code == 200
         access_token = response.json()["access_token"]
-        assert access_token.startswith("polar_at_u_")
+        assert access_token.startswith("outception_at_u_")
 
         oauth2_token = (
             sync_session.execute(
@@ -1679,14 +1679,14 @@ class TestOAuth2Token:
             "grant_type": "refresh_token",
             "refresh_token": "REFRESH_TOKEN",
             "client_id": oauth2_client.client_id,
-            "client_secret": "polar_cs_123",
+            "client_secret": "outception_cs_123",
         }
 
         response = await client.post("/v1/oauth2/token", data=data)
 
         assert response.status_code == 200
         access_token = response.json()["access_token"]
-        assert access_token.startswith("polar_at_o_")
+        assert access_token.startswith("outception_at_o_")
 
     async def test_refresh_token_unauthenticated_private_client(
         self,
@@ -1742,9 +1742,9 @@ class TestOAuth2Token:
         json = response.json()
 
         access_token = json["access_token"]
-        assert access_token.startswith("polar_at_u_")
+        assert access_token.startswith("outception_at_u_")
         refresh_token = json["refresh_token"]
-        assert refresh_token.startswith("polar_rt_u_")
+        assert refresh_token.startswith("outception_rt_u_")
 
     @pytest.mark.parametrize(
         "payload",
@@ -1806,7 +1806,7 @@ class TestOAuth2Token:
         data = {
             **payload,
             "client_id": web_grant_oauth2_client.client_id,
-            "client_secret": "polar_cs_123",
+            "client_secret": "outception_cs_123",
         }
 
         response = await client.post("/v1/oauth2/token", data=data)
@@ -1826,11 +1826,11 @@ class TestOAuth2Token:
         in for a session that never touches the dashboard."""
         secrets = {"k1": "retired", "k2": "current"}
         mocker.patch(
-            "polar.kit.crypto.get_hash_secrets",
+            "outception.kit.crypto.get_hash_secrets",
             return_value=HashSecrets(secrets, "k1", "legacy"),
         )
         # The fixture hashed the client secret before the patch.
-        await web_grant_oauth2_client.set_client_secret("polar_cs_123")
+        await web_grant_oauth2_client.set_client_secret("outception_cs_123")
         await save_fixture(web_grant_oauth2_client)
         token, token_hash = generate_token_hash_pair(prefix=USER_SESSION_TOKEN_PREFIX)
         user_session = UserSession(
@@ -1843,14 +1843,14 @@ class TestOAuth2Token:
         await save_fixture(user_session)
 
         mocker.patch(
-            "polar.kit.crypto.get_hash_secrets",
+            "outception.kit.crypto.get_hash_secrets",
             return_value=HashSecrets(secrets, "k2", "legacy"),
         )
         data = {
             "grant_type": "web",
             "session_token": token,
             "client_id": web_grant_oauth2_client.client_id,
-            "client_secret": "polar_cs_123",
+            "client_secret": "outception_cs_123",
         }
 
         response = await client.post("/v1/oauth2/token", data=data)
@@ -1881,7 +1881,7 @@ class TestOAuth2Token:
             "grant_type": "web",
             "session_token": token,
             "client_id": oauth2_client.client_id,
-            "client_secret": "polar_cs_123",
+            "client_secret": "outception_cs_123",
         }
 
         response = await client.post("/v1/oauth2/token", data=data)
@@ -1910,7 +1910,7 @@ class TestOAuth2Token:
             "grant_type": "web",
             "session_token": token,
             "client_id": web_grant_oauth2_client.client_id,
-            "client_secret": "polar_cs_123",
+            "client_secret": "outception_cs_123",
             "sub_type": "organization",
             "sub": str(organization.id),
         }
@@ -1940,7 +1940,7 @@ class TestOAuth2Token:
             "grant_type": "web",
             "session_token": token,
             "client_id": web_grant_oauth2_client.client_id,
-            "client_secret": "polar_cs_123",
+            "client_secret": "outception_cs_123",
         }
 
         response = await client.post("/v1/oauth2/token", data=data)
@@ -1949,7 +1949,7 @@ class TestOAuth2Token:
         json = response.json()
 
         access_token = json["access_token"]
-        assert access_token.startswith("polar_at_u_")
+        assert access_token.startswith("outception_at_u_")
         assert "refresh_token" not in json
 
     async def test_web_grant_sub_organization(
@@ -1976,7 +1976,7 @@ class TestOAuth2Token:
             "grant_type": "web",
             "session_token": token,
             "client_id": web_grant_oauth2_client.client_id,
-            "client_secret": "polar_cs_123",
+            "client_secret": "outception_cs_123",
             "sub_type": "organization",
             "sub": str(organization.id),
         }
@@ -1987,7 +1987,7 @@ class TestOAuth2Token:
         json = response.json()
 
         access_token = json["access_token"]
-        assert access_token.startswith("polar_at_u_")
+        assert access_token.startswith("outception_at_u_")
         assert "refresh_token" not in json
 
         oauth2_token = (
@@ -2032,7 +2032,7 @@ class TestOAuth2Token:
             "grant_type": "web",
             "session_token": token,
             "client_id": web_grant_oauth2_client.client_id,
-            "client_secret": "polar_cs_123",
+            "client_secret": "outception_cs_123",
             "sub_type": "organization",
             "sub": str(organization.id),
         }
@@ -2041,7 +2041,7 @@ class TestOAuth2Token:
 
         assert response.status_code == 200
         access_token = response.json()["access_token"]
-        assert access_token.startswith("polar_at_u_")
+        assert access_token.startswith("outception_at_u_")
 
         oauth2_token = (
             sync_session.execute(
@@ -2080,14 +2080,14 @@ class TestOAuth2Token:
             "grant_type": "web",
             "session_token": token,
             "client_id": web_grant_oauth2_client.client_id,
-            "client_secret": "polar_cs_123",
+            "client_secret": "outception_cs_123",
         }
 
         response = await client.post("/v1/oauth2/token", data=data)
 
         assert response.status_code == 200
         access_token = response.json()["access_token"]
-        assert access_token.startswith("polar_at_u_")
+        assert access_token.startswith("outception_at_u_")
 
         oauth2_token = (
             sync_session.execute(
@@ -2124,7 +2124,7 @@ class TestOAuth2Token:
             "grant_type": "web",
             "session_token": token,
             "client_id": web_grant_oauth2_client.client_id,
-            "client_secret": "polar_cs_123",
+            "client_secret": "outception_cs_123",
         }
 
         response = await client.post("/v1/oauth2/token", data=data)
@@ -2173,7 +2173,7 @@ class TestOAuth2Token:
             "grant_type": "web",
             "session_token": token,
             "client_id": web_grant_oauth2_client.client_id,
-            "client_secret": "polar_cs_123",
+            "client_secret": "outception_cs_123",
             "sub_type": "organization",
             "sub": str(organization.id),
         }
@@ -2182,7 +2182,7 @@ class TestOAuth2Token:
 
         assert response.status_code == 200
         access_token = response.json()["access_token"]
-        assert access_token.startswith("polar_at_u_")
+        assert access_token.startswith("outception_at_u_")
 
         oauth2_token = (
             sync_session.execute(
@@ -2226,7 +2226,7 @@ class TestOAuth2Token:
             "grant_type": "web",
             "session_token": token,
             "client_id": web_grant_oauth2_client.client_id,
-            "client_secret": "polar_cs_123",
+            "client_secret": "outception_cs_123",
             "sub_type": "organization",
             "sub": str(organization.id),
         }
@@ -2262,7 +2262,7 @@ class TestOAuth2Token:
             "grant_type": "web",
             "session_token": token,
             "client_id": web_grant_oauth2_client.client_id,
-            "client_secret": "polar_cs_123",
+            "client_secret": "outception_cs_123",
             "sub_type": "organization",
             "sub": str(organization.id),
         }
@@ -2271,7 +2271,7 @@ class TestOAuth2Token:
 
         assert response.status_code == 200
         access_token = response.json()["access_token"]
-        assert access_token.startswith("polar_at_u_")
+        assert access_token.startswith("outception_at_u_")
 
         oauth2_token = (
             sync_session.execute(
@@ -2315,7 +2315,7 @@ class TestOAuth2Token:
             "grant_type": "web",
             "session_token": token,
             "client_id": web_grant_oauth2_client.client_id,
-            "client_secret": "polar_cs_123",
+            "client_secret": "outception_cs_123",
             "sub_type": "organization",
             "sub": str(organization.id),
         }
@@ -2359,7 +2359,7 @@ class TestOAuth2Token:
             "grant_type": "web",
             "session_token": token,
             "client_id": web_grant_oauth2_client.client_id,
-            "client_secret": "polar_cs_123",
+            "client_secret": "outception_cs_123",
             "sub_type": "organization",
             "sub": str(organization.id),
         }
@@ -2414,7 +2414,7 @@ class TestOAuth2Token:
             "grant_type": "web",
             "session_token": token,
             "client_id": web_grant_oauth2_client.client_id,
-            "client_secret": "polar_cs_123",
+            "client_secret": "outception_cs_123",
             "sub_type": "organization",
             "sub": str(organization.id),
         }
