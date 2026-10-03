@@ -1,0 +1,454 @@
+import uuid
+
+import pytest
+import pytest_asyncio
+from httpx import AsyncClient
+
+from polar.auth.scope import Scope
+from polar.checkout.repository import CheckoutRepository
+from polar.checkout.service import CHECKOUT_CLIENT_SECRET_PREFIX
+from polar.enums import SubscriptionRecurringInterval
+from polar.kit.visibility import Visibility
+from polar.models import (
+    Checkout,
+    CheckoutLink,
+    Discount,
+    Organization,
+    Product,
+    User,
+    UserOrganization,
+)
+from polar.models.organization import OrganizationStatus
+from polar.postgres import AsyncSession
+from tests.fixtures.auth import AuthSubjectFixture
+from tests.fixtures.database import SaveFixture
+from tests.fixtures.random_objects import (
+    create_account,
+    create_benefit,
+    create_checkout_link,
+    create_organization,
+    create_product,
+    set_product_benefits,
+)
+
+
+@pytest_asyncio.fixture
+async def checkout_link(save_fixture: SaveFixture, product: Product) -> CheckoutLink:
+    return await create_checkout_link(
+        save_fixture,
+        products=[product],
+        success_url="https://example.com/success",
+        user_metadata={"key": "value"},
+    )
+
+
+@pytest_asyncio.fixture
+async def checkout_link_organization_second(
+    save_fixture: SaveFixture,
+    product_organization_second: Product,
+) -> CheckoutLink:
+    return await create_checkout_link(
+        save_fixture,
+        products=[product_organization_second],
+        success_url="https://example.com/success",
+    )
+
+
+@pytest.mark.asyncio
+class TestListCheckoutLinks:
+    async def test_anonymous(self, client: AsyncClient) -> None:
+        response = await client.get("/v1/checkout-links/")
+
+        assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+class TestGetCheckoutLink:
+    async def test_anonymous(self, client: AsyncClient) -> None:
+        response = await client.get(f"/v1/checkout-links/{uuid.uuid4()}")
+
+        assert response.status_code == 401
+
+    @pytest.mark.auth
+    async def test_user_cannot_access_other_organization_checkout_link(
+        self,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        checkout_link_organization_second: CheckoutLink,
+    ) -> None:
+        response = await client.get(
+            f"/v1/checkout-links/{checkout_link_organization_second.id}"
+        )
+
+        assert response.status_code == 404
+
+    @pytest.mark.auth
+    async def test_excludes_non_public_benefits(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        user_organization: UserOrganization,
+        organization: Organization,
+        product: Product,
+        checkout_link: CheckoutLink,
+    ) -> None:
+        public_benefit = await create_benefit(
+            save_fixture, organization=organization, description="Public benefit"
+        )
+        private_benefit = await create_benefit(
+            save_fixture, organization=organization, description="Private benefit"
+        )
+        private_benefit.visibility = Visibility.private
+        await save_fixture(private_benefit)
+        await set_product_benefits(
+            save_fixture,
+            product=product,
+            benefits=[public_benefit, private_benefit],
+        )
+
+        response = await client.get(f"/v1/checkout-links/{checkout_link.id}")
+
+        assert response.status_code == 200
+
+        json = response.json()
+        benefit_ids = {benefit["id"] for benefit in json["products"][0]["benefits"]}
+        assert str(public_benefit.id) in benefit_ids
+        assert str(private_benefit.id) not in benefit_ids
+
+
+@pytest.mark.asyncio
+class TestCreateCheckoutLink:
+    async def test_anonymous(self, client: AsyncClient, product: Product) -> None:
+        response = await client.post(
+            "/v1/checkout-links/",
+            json={
+                "payment_processor": "stripe",
+                "products": [str(product.id)],
+            },
+        )
+
+        assert response.status_code == 401
+
+    @pytest.mark.auth(AuthSubjectFixture(scopes=set()))
+    async def test_missing_scope(self, client: AsyncClient, product: Product) -> None:
+        response = await client.post(
+            "/v1/checkout-links/",
+            json={
+                "payment_processor": "stripe",
+                "products": [str(product.id)],
+            },
+        )
+
+        assert response.status_code == 403
+
+    @pytest.mark.auth(AuthSubjectFixture(scopes={Scope.checkout_links_write}))
+    async def test_valid(
+        self, client: AsyncClient, product: Product, user_organization: UserOrganization
+    ) -> None:
+        response = await client.post(
+            "/v1/checkout-links/",
+            json={
+                "payment_processor": "stripe",
+                "products": [str(product.id)],
+            },
+        )
+
+        assert response.status_code == 201
+
+        json = response.json()
+        assert "client_secret" in json
+        assert json["client_secret"] in json["url"]
+        assert "metadata" in json
+
+    @pytest.mark.auth(AuthSubjectFixture(scopes={Scope.checkout_links_write}))
+    async def test_valid_seats(
+        self,
+        client: AsyncClient,
+        product_recurring_seat_based: Product,
+        user_organization: UserOrganization,
+    ) -> None:
+        response = await client.post(
+            "/v1/checkout-links/",
+            json={
+                "payment_processor": "stripe",
+                "products": [str(product_recurring_seat_based.id)],
+                "seats": 5,
+            },
+        )
+
+        assert response.status_code == 201
+        assert response.json()["seats"] == 5
+
+    @pytest.mark.auth(AuthSubjectFixture(scopes={Scope.checkout_links_write}))
+    async def test_seats_on_non_seat_based_product(
+        self,
+        client: AsyncClient,
+        product: Product,
+        user_organization: UserOrganization,
+    ) -> None:
+        response = await client.post(
+            "/v1/checkout-links/",
+            json={
+                "payment_processor": "stripe",
+                "products": [str(product.id)],
+                "seats": 5,
+            },
+        )
+
+        assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+class TestUpdateCheckoutLink:
+    async def test_anonymous(
+        self, client: AsyncClient, checkout_link: CheckoutLink
+    ) -> None:
+        response = await client.patch(
+            f"/v1/checkout-links/{checkout_link.id}",
+            json={
+                "metadata": {"test": "test"},
+            },
+        )
+
+        assert response.status_code == 401
+
+    @pytest.mark.auth(AuthSubjectFixture(scopes=set()))
+    async def test_missing_scope(
+        self, client: AsyncClient, checkout_link: CheckoutLink
+    ) -> None:
+        response = await client.patch(
+            f"/v1/checkout-links/{checkout_link.id}",
+            json={
+                "metadata": {"test": "test"},
+            },
+        )
+
+        assert response.status_code == 403
+
+    @pytest.mark.auth(
+        AuthSubjectFixture(subject="user_second", scopes={Scope.checkout_links_write}),
+        AuthSubjectFixture(
+            subject="organization_second", scopes={Scope.checkout_links_write}
+        ),
+    )
+    async def test_not_writable(
+        self, client: AsyncClient, checkout_link: CheckoutLink
+    ) -> None:
+        response = await client.patch(
+            f"/v1/checkout-links/{checkout_link.id}",
+            json={
+                "metadata": {"test": "test"},
+            },
+        )
+
+        assert response.status_code == 404
+
+    @pytest.mark.auth(
+        AuthSubjectFixture(scopes={Scope.checkout_links_write}),
+        AuthSubjectFixture(subject="organization", scopes={Scope.checkout_links_write}),
+    )
+    async def test_valid(
+        self,
+        client: AsyncClient,
+        checkout_link: CheckoutLink,
+        user_organization: UserOrganization,
+    ) -> None:
+        response = await client.patch(
+            f"/v1/checkout-links/{checkout_link.id}",
+            json={
+                "metadata": {"test": "test"},
+            },
+        )
+
+        assert response.status_code == 200
+
+        json = response.json()
+        assert json["metadata"] == {"test": "test"}
+
+
+@pytest.mark.asyncio
+class TestDeleteCheckoutLink:
+    async def test_anonymous(
+        self, client: AsyncClient, checkout_link: CheckoutLink
+    ) -> None:
+        response = await client.delete(f"/v1/checkout-links/{checkout_link.id}")
+
+        assert response.status_code == 401
+
+    @pytest.mark.auth(AuthSubjectFixture(scopes=set()))
+    async def test_missing_scope(
+        self, client: AsyncClient, checkout_link: CheckoutLink
+    ) -> None:
+        response = await client.delete(f"/v1/checkout-links/{checkout_link.id}")
+
+        assert response.status_code == 403
+
+    @pytest.mark.auth(
+        AuthSubjectFixture(subject="user_second", scopes={Scope.checkout_links_write}),
+        AuthSubjectFixture(
+            subject="organization_second", scopes={Scope.checkout_links_write}
+        ),
+    )
+    async def test_not_writable(
+        self, client: AsyncClient, checkout_link: CheckoutLink
+    ) -> None:
+        response = await client.delete(f"/v1/checkout-links/{checkout_link.id}")
+
+        assert response.status_code == 404
+
+    @pytest.mark.auth(
+        AuthSubjectFixture(scopes={Scope.checkout_links_write}),
+        AuthSubjectFixture(subject="organization", scopes={Scope.checkout_links_write}),
+    )
+    async def test_valid(
+        self,
+        client: AsyncClient,
+        checkout_link: CheckoutLink,
+        user_organization: UserOrganization,
+    ) -> None:
+        response = await client.delete(f"/v1/checkout-links/{checkout_link.id}")
+
+        assert response.status_code == 204
+
+
+@pytest.mark.asyncio
+class TestRedirect:
+    async def test_not_existing(self, client: AsyncClient) -> None:
+        response = await client.get("/v1/checkout-links/not-existing/redirect")
+
+        assert response.status_code == 404
+
+    async def test_blocked_organization(
+        self, save_fixture: SaveFixture, client: AsyncClient, user: User
+    ) -> None:
+        account = await create_account(save_fixture, user)
+        org = await create_organization(
+            save_fixture,
+            account,
+            name_prefix="blockedorg",
+            status=OrganizationStatus.BLOCKED,
+        )
+        product = await create_product(
+            save_fixture,
+            organization=org,
+            recurring_interval=SubscriptionRecurringInterval.month,
+            name="Prohibited product",
+            is_archived=False,
+        )
+        checkout_link = await create_checkout_link(
+            save_fixture,
+            products=[product],
+            success_url="https://example.com/success",
+            user_metadata={"key": "value"},
+        )
+        response = await client.get(
+            f"/v1/checkout-links/{checkout_link.client_secret}/redirect"
+        )
+        assert response.status_code == 404
+
+    async def test_valid(
+        self, client: AsyncClient, checkout_link: CheckoutLink
+    ) -> None:
+        response = await client.get(
+            f"/v1/checkout-links/{checkout_link.client_secret}/redirect"
+        )
+
+        assert response.status_code == 307
+        assert CHECKOUT_CLIENT_SECRET_PREFIX in response.headers["location"]
+
+    async def test_wildcard_embed_origin(
+        self, session: AsyncSession, client: AsyncClient, checkout_link: CheckoutLink
+    ) -> None:
+        response = await client.get(
+            f"/v1/checkout-links/{checkout_link.client_secret}/redirect",
+            params={"embed_origin": "*"},
+        )
+
+        assert response.status_code == 307
+
+        checkout_repository = CheckoutRepository.from_session(session)
+        checkouts = await checkout_repository.get_all(
+            checkout_repository.get_base_statement().order_by(
+                Checkout.created_at.desc()
+            )
+        )
+        assert checkouts[0].embed_origin is None
+
+    async def test_refused_embed_origin(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        organization: Organization,
+        checkout_link: CheckoutLink,
+    ) -> None:
+        organization.embed_hosts = ["example.com"]
+        await save_fixture(organization)
+
+        response = await client.get(
+            f"/v1/checkout-links/{checkout_link.client_secret}/redirect",
+            params={"embed_origin": "https://evil.com"},
+        )
+
+        assert response.status_code == 403
+
+    async def test_allowed_metadata(
+        self, session: AsyncSession, client: AsyncClient, checkout_link: CheckoutLink
+    ) -> None:
+        response = await client.get(
+            f"/v1/checkout-links/{checkout_link.client_secret}/redirect",
+            params={
+                "reference_id": "test_reference_id",
+                "utm_campaign": "test_campaign",
+                "disallowed_key": "test_value",
+            },
+        )
+
+        assert response.status_code == 307
+        assert CHECKOUT_CLIENT_SECRET_PREFIX in response.headers["location"]
+
+        checkout_repository = CheckoutRepository.from_session(session)
+        checkouts = await checkout_repository.get_all(
+            checkout_repository.get_base_statement().order_by(
+                Checkout.created_at.desc()
+            )
+        )
+        checkout = checkouts[0]
+        assert checkout.user_metadata == {
+            "key": "value",
+            "reference_id": "test_reference_id",
+            "utm_campaign": "test_campaign",
+        }
+
+    async def test_discount_code_disallowed(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        client: AsyncClient,
+        product: Product,
+        discount_fixed_once: Discount,
+    ) -> None:
+        checkout_link = await create_checkout_link(
+            save_fixture,
+            products=[product],
+            success_url="https://example.com/success",
+        )
+        checkout_link.allow_discount_codes = False
+        await save_fixture(checkout_link)
+
+        response = await client.get(
+            f"/v1/checkout-links/{checkout_link.client_secret}/redirect",
+            params={"discount_code": discount_fixed_once.code},
+        )
+
+        assert response.status_code == 307
+        assert CHECKOUT_CLIENT_SECRET_PREFIX in response.headers["location"]
+
+        checkout_repository = CheckoutRepository.from_session(session)
+        checkouts = await checkout_repository.get_all(
+            checkout_repository.get_base_statement().order_by(
+                Checkout.created_at.desc()
+            )
+        )
+        checkout = checkouts[0]
+        assert checkout.allow_discount_codes is False
+        assert checkout.discount is None

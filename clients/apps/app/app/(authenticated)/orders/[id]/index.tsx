@@ -1,0 +1,251 @@
+import { CustomField } from '@/components/CustomFields/CustomField'
+import { CustomerRow } from '@/components/Customers/CustomerRow'
+import { Box } from '@/components/Shared/Box'
+import { DetailRow, Details } from '@/components/Shared/Details'
+import { Pill } from '@/components/Shared/Pill'
+import { Text } from '@/components/Shared/Text'
+import { Touchable } from '@/components/Shared/Touchable'
+import { useTheme } from '@/design-system/useTheme'
+import { useCustomFields } from '@/hooks/polar/custom_fields'
+import { useOrder } from '@/hooks/polar/orders'
+import { formatCurrency } from '@polar-sh/currency'
+import * as Clipboard from 'expo-clipboard'
+import { Stack, useLocalSearchParams } from 'expo-router'
+import { RefreshControl, ScrollView } from 'react-native'
+
+const statusColors = {
+  draft: 'gray',
+  pending: 'yellow',
+  paid: 'green',
+  refunded: 'blue',
+  partially_refunded: 'blue',
+  void: 'red',
+} as const
+
+export default function Index() {
+  const { id } = useLocalSearchParams()
+  const theme = useTheme()
+
+  const { data: order, refetch, isRefetching } = useOrder(id as string)
+  const { data: customFields } = useCustomFields(
+    order?.customer.organization_id,
+  )
+
+  if (!order) {
+    return (
+      <Stack.Screen
+        options={{
+          title: 'Order',
+        }}
+      />
+    )
+  }
+
+  return (
+    <ScrollView
+      style={{
+        flex: 1,
+        padding: theme.spacing['spacing-16'],
+        backgroundColor: theme.colors.background,
+      }}
+      contentContainerStyle={{
+        flexDirection: 'column',
+        gap: theme.spacing['spacing-16'],
+        paddingBottom: theme.spacing['spacing-48'],
+      }}
+      refreshControl={
+        <RefreshControl onRefresh={refetch} refreshing={isRefetching} />
+      }
+    >
+      <Stack.Screen
+        options={{
+          title: 'Order',
+        }}
+      />
+
+      <Box flexDirection="row" gap="spacing-12">
+        <Touchable
+          style={{
+            flexDirection: 'column',
+            gap: theme.spacing['spacing-4'],
+            borderRadius: theme.borderRadii['border-radius-12'],
+            padding: theme.spacing['spacing-12'],
+            backgroundColor: theme.colors.card,
+            flex: 1,
+            width: '50%',
+          }}
+          onPress={() => {
+            Clipboard.setStringAsync(order.id)
+          }}
+          activeOpacity={0.6}
+        >
+          <Text variant="subtitle" color="subtext">
+            #
+          </Text>
+          <Text
+            variant="subtitle"
+            style={{
+              fontWeight: '500',
+              textTransform: 'uppercase',
+            }}
+            numberOfLines={1}
+          >
+            {order.id.split('-').pop()?.slice(-6, -1)}
+          </Text>
+        </Touchable>
+        <Box
+          flexDirection="column"
+          gap="spacing-4"
+          borderRadius="border-radius-12"
+          padding="spacing-12"
+          backgroundColor="card"
+          flex={1}
+          width="50%"
+        >
+          <Text color="subtext">Date</Text>
+          <Text variant="bodyMedium">
+            {new Date(order.created_at).toLocaleDateString('en-US', {
+              dateStyle: 'medium',
+            })}
+          </Text>
+        </Box>
+      </Box>
+
+      <CustomerRow customer={order.customer} />
+
+      <Box>
+        <Box
+          padding="spacing-16"
+          borderRadius="border-radius-12"
+          backgroundColor="card"
+        >
+          {order.items.map((item, index, arr) => (
+            <Box
+              key={item.id}
+              borderBottomWidth={index === arr.length - 1 ? 0 : 1}
+              borderColor="border"
+              gap="spacing-4"
+              paddingVertical="spacing-16"
+            >
+              <Text numberOfLines={1}>{item.label}</Text>
+              <Text variant="bodyMedium">
+                {formatCurrency('accounting')(item.amount, order.currency)}
+              </Text>
+            </Box>
+          ))}
+        </Box>
+      </Box>
+
+      <Box>
+        <Details style={{ backgroundColor: theme.colors.card }}>
+          <DetailRow
+            label="Status"
+            value={
+              <Pill
+                color={statusColors[order.status]}
+                textStyle={{ fontSize: 14 }}
+              >
+                {order.status.split('_').join(' ')}
+              </Pill>
+            }
+            valueStyle={{ textTransform: 'capitalize' }}
+          />
+          <DetailRow
+            label="Billing Reason"
+            value={order.billing_reason.split('_').join(' ')}
+            valueStyle={{ textTransform: 'capitalize' }}
+          />
+          <DetailRow
+            label="Subtotal"
+            value={formatCurrency('accounting')(
+              order.subtotal_amount,
+              order.currency,
+            )}
+          />
+          <DetailRow
+            label="Discount"
+            value={`-${formatCurrency('accounting')(order.discount_amount, order.currency)}`}
+          />
+          <DetailRow
+            label="Net"
+            value={formatCurrency('accounting')(
+              order.net_amount,
+              order.currency,
+            )}
+          />
+          <DetailRow
+            label="Tax"
+            value={formatCurrency('accounting')(
+              order.tax_amount,
+              order.currency,
+            )}
+          />
+          <DetailRow
+            labelStyle={{ color: theme.colors.text }}
+            label="Total"
+            value={formatCurrency('accounting')(
+              order.total_amount,
+              order.currency,
+            )}
+          />
+        </Details>
+      </Box>
+
+      <Details style={{ backgroundColor: theme.colors.card }}>
+        <DetailRow
+          label="Address"
+          value={order.customer.billing_address?.line1}
+        />
+        <DetailRow
+          label="Address 2"
+          value={order.customer.billing_address?.line2}
+        />
+        <DetailRow label="City" value={order.customer.billing_address?.city} />
+        <DetailRow
+          label="State"
+          value={order.customer.billing_address?.state}
+        />
+        <DetailRow
+          label="Postal Code"
+          value={order.customer.billing_address?.postal_code}
+        />
+        <DetailRow
+          label="Country"
+          value={order.customer.billing_address?.country}
+        />
+      </Details>
+
+      {customFields && customFields.items.length > 0 ? (
+        <Box>
+          <Text variant="subtitle" marginBottom="spacing-8">
+            Custom Fields
+          </Text>
+          <Box
+            backgroundColor="card"
+            padding="spacing-16"
+            borderRadius="border-radius-12"
+            gap="spacing-16"
+          >
+            {customFields.items.map((field) => (
+              <CustomField
+                key={field.id}
+                field={field}
+                value={order.custom_field_data?.[field.slug]}
+              />
+            ))}
+          </Box>
+        </Box>
+      ) : null}
+
+      {order.metadata && Object.keys(order.metadata).length > 0 ? (
+        <Box>
+          <Details>
+            {Object.entries(order.metadata).map(([key, value]) => (
+              <DetailRow key={key} label={key} value={String(value)} />
+            ))}
+          </Details>
+        </Box>
+      ) : null}
+    </ScrollView>
+  )
+}

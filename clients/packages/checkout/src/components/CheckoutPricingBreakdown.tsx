@@ -1,0 +1,291 @@
+'use client'
+
+import { schemas } from '@polar-sh/client'
+import { formatCurrency } from '@polar-sh/currency'
+import {
+  DEFAULT_LOCALE,
+  useTranslations,
+  type AcceptedLocale,
+} from '@polar-sh/i18n'
+import { formatDate } from '@polar-sh/i18n/formatters/date'
+import { addMonths } from 'date-fns'
+import { useMemo } from 'react'
+import {
+  getFixedPrice,
+  getSeatPrice,
+  getUnitPrice,
+  hasProductCheckout,
+  isLegacyRecurringProductPrice,
+} from '../guards'
+import { getSeatRows } from '../utils/seats'
+import {
+  addBillingInterval,
+  getDiscountDisplay,
+  getDiscountEndDate,
+  isTemporaryDiscount,
+} from '../utils/discount'
+import { getUnitRows } from '../utils/units'
+import { unreachable } from '../utils/unreachable'
+import AmountLabel from './AmountLabel'
+import DetailRow from './DetailRow'
+import MeteredChargesDetails from './MeteredChargesDetails'
+import SeatDetailRow from './SeatDetailRow'
+import UnitDetailRow from './UnitDetailRow'
+
+function formatShortDate(date: Date, locale: AcceptedLocale): string {
+  const isCurrentYear = date.getFullYear() === new Date().getFullYear()
+  return formatDate(date, locale, {
+    month: 'short',
+    day: 'numeric',
+    ...(isCurrentYear ? {} : { year: 'numeric' }),
+  })
+}
+
+export interface CheckoutPricingBreakdownProps {
+  checkout: schemas['CheckoutPublic']
+  locale?: AcceptedLocale
+}
+
+const CheckoutPricingBreakdown = ({
+  checkout,
+  locale = DEFAULT_LOCALE,
+}: CheckoutPricingBreakdownProps) => {
+  const t = useTranslations(locale)
+
+  const hasActiveTrial = Boolean(
+    checkout.active_trial_interval && checkout.active_trial_interval_count,
+  )
+
+  const temporaryDiscount = isTemporaryDiscount(checkout.discount)
+
+  const interval = hasProductCheckout(checkout)
+    ? isLegacyRecurringProductPrice(checkout.product_price)
+      ? checkout.product_price.recurring_interval
+      : checkout.product.recurring_interval
+    : null
+  const intervalCount = hasProductCheckout(checkout)
+    ? checkout.product.recurring_interval_count
+    : null
+
+  const discountEndLabel = useMemo(() => {
+    if (!checkout.discount || checkout.discount.duration === 'forever') {
+      return ''
+    }
+
+    if (!interval) {
+      return ''
+    }
+
+    const baseDate = checkout.trial_end
+      ? new Date(checkout.trial_end)
+      : new Date()
+
+    if (
+      'duration_in_months' in checkout.discount &&
+      typeof checkout.discount.duration_in_months === 'number'
+    ) {
+      const discountEnd = addMonths(
+        baseDate,
+        checkout.discount.duration_in_months,
+      )
+      const nextCycle = addBillingInterval(baseDate, interval, intervalCount)
+      if (discountEnd <= nextCycle) {
+        return ''
+      }
+    }
+
+    const endDate = getDiscountEndDate(
+      baseDate,
+      checkout.discount,
+      interval,
+      intervalCount,
+    )
+
+    return t('checkout.pricing.discount.until', {
+      date: formatShortDate(endDate, locale),
+    })
+  }, [
+    checkout.discount,
+    checkout.trial_end,
+    interval,
+    intervalCount,
+    t,
+    locale,
+  ])
+
+  const totalLabel = useMemo(() => {
+    if (!interval) return t('checkout.pricing.total')
+
+    const count = intervalCount ?? 1
+    switch (interval) {
+      case 'day':
+        return t('checkout.pricing.everyInterval.day', { count })
+      case 'week':
+        return t('checkout.pricing.everyInterval.week', { count })
+      case 'month':
+        return t('checkout.pricing.everyInterval.month', { count })
+      case 'year':
+        return t('checkout.pricing.everyInterval.year', { count })
+      default:
+        unreachable(interval)
+    }
+  }, [interval, intervalCount, t])
+
+  const seatRows = useMemo(() => getSeatRows(checkout), [checkout])
+  const unitRows = useMemo(() => getUnitRows(checkout), [checkout])
+
+  // A product may combine a fixed base fee with per-seat or per-unit pricing.
+  // When both exist, the fixed portion is baked into `checkout.amount` but has
+  // no row of its own — without it the seat/unit rows visibly sum to less than
+  // the subtotal.
+  const fixedPrice = useMemo(() => getFixedPrice(checkout), [checkout])
+  const seatPrice = useMemo(() => getSeatPrice(checkout), [checkout])
+  const unitPrice = useMemo(() => getUnitPrice(checkout), [checkout])
+  const showBasePrice = Boolean(fixedPrice && (seatPrice || unitPrice))
+
+  if (checkout.is_free_product_price) {
+    return null
+  }
+
+  return (
+    <div className="flex flex-col gap-y-2">
+      {checkout.currency ? (
+        <>
+          {showBasePrice && fixedPrice && (
+            <DetailRow
+              title={t('checkout.pricing.basePrice')}
+              className="text-gray-600"
+            >
+              <AmountLabel
+                amount={fixedPrice.price_amount}
+                currency={checkout.currency}
+                interval={interval}
+                intervalCount={intervalCount}
+                mode="standard"
+                locale={locale}
+              />
+            </DetailRow>
+          )}
+          {seatRows?.map((row, i) => (
+            <SeatDetailRow
+              key={i}
+              row={row}
+              currency={checkout.currency!}
+              interval={interval}
+              intervalCount={intervalCount}
+              locale={locale}
+            />
+          ))}
+          {unitRows?.map((row, i) => (
+            <UnitDetailRow
+              key={i}
+              row={row}
+              currency={checkout.currency!}
+              interval={interval}
+              intervalCount={intervalCount}
+              locale={locale}
+              unitPrice={unitPrice}
+            />
+          ))}
+          <DetailRow
+            title={t('checkout.pricing.subtotal')}
+            className="text-gray-600"
+          >
+            <AmountLabel
+              amount={checkout.amount}
+              currency={checkout.currency}
+              interval={interval}
+              intervalCount={intervalCount}
+              mode="standard"
+              locale={locale}
+            />
+          </DetailRow>
+
+          {checkout.discount && (
+            <>
+              <DetailRow
+                title={checkout.discount.name}
+                subtitle={
+                  [
+                    checkout.discount.type === 'percentage'
+                      ? `(${getDiscountDisplay(checkout.discount, locale)})`
+                      : null,
+                    discountEndLabel,
+                  ]
+                    .filter(Boolean)
+                    .join(' ') || undefined
+                }
+                className="text-gray-600"
+              >
+                {formatCurrency('standard', locale)(
+                  -checkout.discount_amount,
+                  checkout.currency,
+                )}
+              </DetailRow>
+              <DetailRow
+                title={t('checkout.pricing.taxableAmount')}
+                className="text-gray-600"
+              >
+                {formatCurrency('standard', locale)(
+                  checkout.net_amount,
+                  checkout.currency,
+                )}
+              </DetailRow>
+            </>
+          )}
+
+          <DetailRow
+            title={
+              checkout.tax_behavior === 'inclusive'
+                ? t('checkout.pricing.inclTax')
+                : t('checkout.pricing.taxes')
+            }
+            className="text-gray-600"
+          >
+            {checkout.tax_amount !== null
+              ? formatCurrency('standard', locale)(
+                  checkout.tax_amount,
+                  checkout.currency,
+                )
+              : '—'}
+          </DetailRow>
+
+          <DetailRow
+            title={
+              temporaryDiscount && interval
+                ? checkout.trial_end
+                  ? t('checkout.pricing.totalAfterTrial')
+                  : t('checkout.pricing.firstPayment')
+                : totalLabel
+            }
+            subtitle={
+              temporaryDiscount && interval && checkout.trial_end
+                ? formatShortDate(new Date(checkout.trial_end), locale)
+                : undefined
+            }
+            emphasis={!hasActiveTrial}
+          >
+            <AmountLabel
+              amount={checkout.total_amount}
+              currency={checkout.currency}
+              interval={temporaryDiscount ? null : interval}
+              intervalCount={intervalCount}
+              mode="standard"
+              locale={locale}
+            />
+          </DetailRow>
+          {hasActiveTrial && (
+            <DetailRow title={t('checkout.pricing.dueToday')} emphasis>
+              {formatCurrency('standard', locale)(0, checkout.currency)}
+            </DetailRow>
+          )}
+          <MeteredChargesDetails checkout={checkout} locale={locale} />
+        </>
+      ) : (
+        <span>{t('checkout.pricing.free')}</span>
+      )}
+    </div>
+  )
+}
+
+export default CheckoutPricingBreakdown

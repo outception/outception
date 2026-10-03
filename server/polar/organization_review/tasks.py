@@ -1,0 +1,458 @@
+import uuid
+from datetime import UTC, datetime
+from typing import Annotated
+
+import structlog
+
+from polar.config import Environment, settings
+from polar.exceptions import PolarTaskError
+from polar.integrations.polar.service import polar_self
+from polar.models.organization import (
+    FIRST_REVIEW_THRESHOLD_CENTS,
+    Organization,
+    OrganizationStatus,
+)
+from polar.models.organization_review import OrganizationReview
+from polar.models.support_case import (
+    SupportCaseAudience,
+    SupportCaseMessageAuthorKind,
+)
+from polar.observability.task_logging import LoggableField
+from polar.organization.repository import (
+    OrganizationRepository,
+)
+from polar.organization.repository import (
+    OrganizationReviewRepository as OrgReviewRepository,
+)
+from polar.organization.service import organization as organization_service
+from polar.postgres import AsyncSession
+from polar.support_case.repository import (
+    SupportCaseMessageRepository,
+    SupportCaseRepository,
+)
+from polar.support_case.service import support_case as support_case_service
+from polar.worker import AsyncSessionMaker, TaskPriority, actor
+
+from .agent import run_organization_review
+from .appeal_case import HUMAN_REVIEW_GREETING, publish_appeal_update
+from .report import build_agent_report
+from .repository import OrganizationReviewRepository
+from .schemas import (
+    ActorType,
+    AgentReviewResult,
+    DecisionType,
+    ReviewContext,
+    ReviewVerdict,
+)
+
+log = structlog.get_logger(__name__)
+
+
+class OrganizationReviewTaskError(PolarTaskError): ...
+
+
+class OrganizationDoesNotExist(OrganizationReviewTaskError):
+    def __init__(self, organization_id: uuid.UUID) -> None:
+        self.organization_id = organization_id
+        message = f"The organization with id {organization_id} does not exist."
+        super().__init__(message)
+
+
+# Mapping from agent verdict to OrganizationReview verdict
+_VERDICT_MAP: dict[ReviewVerdict, OrganizationReview.Verdict] = {
+    ReviewVerdict.APPROVE: OrganizationReview.Verdict.PASS,
+    ReviewVerdict.DENY: OrganizationReview.Verdict.FAIL,
+}
+
+
+def _run_agent_debounce_key(
+    organization_id: uuid.UUID,
+    context: str = ReviewContext.THRESHOLD,
+    auto_approve_eligible: bool = False,
+    plain_thread_id: str | None = None,
+) -> str | None:
+    """Debounce only PRODUCT_CHANGED reviews, per organization.
+
+    A merchant may create or edit many products in quick succession (or in
+    bulk via the API); without debouncing each change would spawn a full
+    agent review. A single per-organization key also collapses a create
+    immediately followed by edits into one review. Other contexts
+    (submission, threshold, manual, appeal) must never be collapsed, so the
+    factory returns ``None`` for them — which disables debouncing for that
+    message.
+    """
+    if context == ReviewContext.PRODUCT_CHANGED:
+        return f"organization_review.product_changed:{organization_id}"
+    return None
+
+
+async def _persist_agent_result(
+    session: AsyncSession,
+    organization: Organization,
+    review_context: ReviewContext,
+    result: AgentReviewResult,
+) -> uuid.UUID:
+    """Log + track usage + persist OrganizationAgentReview. Returns its id."""
+    report = result.report
+    log.info(
+        "organization_review.task.complete",
+        organization_id=str(organization.id),
+        slug=organization.slug,
+        context=review_context.value,
+        verdict=report.verdict.value,
+        overall_risk_score=report.overall_risk_score,
+        summary=report.summary,
+        model_used=result.model_used,
+        duration_seconds=result.duration_seconds,
+        estimated_cost_usd=result.usage.estimated_cost_usd,
+    )
+
+    polar_self.enqueue_track_organization_review_usage(
+        external_customer_id=str(organization.id),
+        review_context=review_context.value,
+        vendor=result.model_provider,
+        model=result.model_used,
+        input_tokens=result.usage.input_tokens,
+        output_tokens=result.usage.output_tokens,
+        cost_usd=result.usage.estimated_cost_usd,
+        usage_id=str(uuid.uuid4()),
+    )
+
+    review_repository = OrganizationReviewRepository.from_session(session)
+    typed_report = build_agent_report(result, review_type=review_context.value)
+    agent_review = await review_repository.save_agent_review(
+        organization_id=organization.id,
+        report=typed_report,
+        reviewed_at=datetime.now(UTC),
+    )
+    return agent_review.id
+
+
+@actor(
+    actor_name="organization_review.run_agent",
+    priority=TaskPriority.LOW,
+    time_limit=180_000,  # 3 min timeout
+    max_retries=4,
+    min_backoff=30_000,
+    debounce_key=_run_agent_debounce_key,
+    debounce_min_threshold=300,
+)
+async def run_review_agent(
+    organization_id: Annotated[uuid.UUID, LoggableField],
+    context: Annotated[str, LoggableField] = ReviewContext.THRESHOLD,
+    auto_approve_eligible: Annotated[bool, LoggableField] = False,
+    plain_thread_id: Annotated[
+        str | None, LoggableField
+    ] = None,  # kept for in-flight job compatibility
+) -> None:
+    """Run the organization review agent as a background task.
+
+    For SUBMISSION context: creates an OrganizationReview record and auto-denies on DENY.
+    For THRESHOLD context: log-only, persists to OrganizationAgentReview table.
+    For PRODUCT_CHANGED context: pulls an active org with enough revenue back
+    into REVIEW on a bad verdict.
+    """
+    if settings.ENV == Environment.sandbox:
+        return
+
+    review_context = ReviewContext(context)
+
+    async with AsyncSessionMaker() as session:
+        repository = OrganizationRepository.from_session(session)
+        organization = await repository.get_by_id(organization_id, include_blocked=True)
+        if organization is None:
+            # The organization may have been deleted between enqueue and
+            # execution (e.g. debounce delay). Nothing to review — skip
+            # gracefully instead of raising and retrying a doomed task.
+            log.info(
+                "organization_review.run_agent.organization_missing",
+                organization_id=str(organization_id),
+                context=review_context.value,
+            )
+            return
+
+        submission_generation = (
+            organization.details_submitted_at,
+            organization.onboarding_resubmission_requested_at,
+        )
+
+        # A product-change review only makes sense for active orgs: it exists
+        # to pull them back into review. Status may have changed between enqueue
+        # and execution (debounce delay), so re-check here before spending an
+        # agent run.
+        if review_context == ReviewContext.PRODUCT_CHANGED:
+            if organization.status != OrganizationStatus.ACTIVE:
+                log.info(
+                    "organization_review.product_changed.skip_non_active",
+                    organization_id=str(organization_id),
+                    slug=organization.slug,
+                    status=organization.status,
+                )
+                return
+
+            # Most product changes come from merchants still experimenting, who
+            # have made close to no money. Reviewing them is noise, so we use
+            # the same revenue bar as the first threshold review.
+            if (organization.total_balance or 0) < FIRST_REVIEW_THRESHOLD_CENTS:
+                log.info(
+                    "organization_review.product_changed.skip_low_balance",
+                    organization_id=str(organization_id),
+                    slug=organization.slug,
+                    total_balance=organization.total_balance,
+                )
+                return
+
+        result = await run_organization_review(
+            session, organization, context=review_context
+        )
+
+        if review_context == ReviewContext.SUBMISSION:
+            await session.refresh(organization, with_for_update=True)
+            current_submission_generation = (
+                organization.details_submitted_at,
+                organization.onboarding_resubmission_requested_at,
+            )
+            if current_submission_generation != submission_generation:
+                log.info(
+                    "organization_review.submission.skip_stale",
+                    organization_id=str(organization_id),
+                    slug=organization.slug,
+                )
+                return
+
+        report = result.report
+        agent_review_id = await _persist_agent_result(
+            session, organization, review_context, result
+        )
+        review_repository = OrganizationReviewRepository.from_session(session)
+
+        # For THRESHOLD context with auto-approve eligibility:
+        # delegate decision to the service layer
+        if review_context == ReviewContext.THRESHOLD and auto_approve_eligible:
+            # If a human manually set this org under review, skip auto-action
+            current_decision = await review_repository.get_current_decision(
+                organization_id
+            )
+            if (
+                current_decision is not None
+                and current_decision.actor_type == ActorType.HUMAN
+                and current_decision.review_context == ReviewContext.MANUAL
+            ):
+                auto_approve_eligible = False
+                log.info(
+                    "organization_review.threshold.manual_review_override",
+                    organization_id=str(organization_id),
+                    slug=organization.slug,
+                    verdict=report.verdict.value,
+                )
+
+        if review_context == ReviewContext.THRESHOLD and auto_approve_eligible:
+            auto_approved = await organization_service.handle_ongoing_review_verdict(
+                session, organization, report.verdict
+            )
+            log.info(
+                "organization_review.threshold.verdict_handled",
+                organization_id=str(organization_id),
+                slug=organization.slug,
+                verdict=report.verdict.value,
+                auto_approved=auto_approved,
+            )
+            if auto_approved:
+                await review_repository.record_agent_decision(
+                    organization_id=organization_id,
+                    agent_review_id=agent_review_id,
+                    decision=DecisionType.APPROVE,
+                    review_context=ReviewContext.THRESHOLD,
+                    verdict=report.verdict,
+                    risk_score=report.overall_risk_score,
+                )
+
+        # For SUBMISSION context: also create OrganizationReview record and act
+        if review_context == ReviewContext.SUBMISSION:
+            mapped_verdict = _VERDICT_MAP[report.verdict]
+
+            org_review_repository = OrgReviewRepository.from_session(session)
+            existing = await org_review_repository.get_by_organization(organization_id)
+
+            # A re-submission is a fresh review: overwrite any existing row
+            # so the canonical verdict reflects the latest agent run.
+            details_snapshot = {
+                "name": organization.name,
+                "website": organization.website,
+                "details": organization.details,
+                "socials": organization.socials,
+            }
+            if existing is not None:
+                existing.verdict = mapped_verdict
+                existing.risk_score = report.overall_risk_score
+                existing.violated_sections = report.violated_sections
+                existing.reason = report.merchant_summary
+                existing.timed_out = result.timed_out
+                existing.organization_details_snapshot = details_snapshot
+                existing.model_used = result.model_used
+                existing.clear_appeal_state()
+                session.add(existing)
+            else:
+                session.add(
+                    OrganizationReview(
+                        organization_id=organization_id,
+                        verdict=mapped_verdict,
+                        risk_score=report.overall_risk_score,
+                        violated_sections=report.violated_sections,
+                        reason=report.merchant_summary,
+                        timed_out=result.timed_out,
+                        organization_details_snapshot=details_snapshot,
+                        model_used=result.model_used,
+                    )
+                )
+
+            # Auto-deny on DENY — human will review the denial
+            if report.verdict == ReviewVerdict.DENY:
+                organization.set_status(OrganizationStatus.DENIED)
+                session.add(organization)
+
+                await review_repository.record_agent_decision(
+                    organization_id=organization_id,
+                    agent_review_id=agent_review_id,
+                    decision=DecisionType.DENY,
+                    review_context=ReviewContext.SUBMISSION,
+                    verdict=report.verdict,
+                    risk_score=report.overall_risk_score,
+                )
+
+                log.info(
+                    "organization_review.submission.denied",
+                    organization_id=str(organization_id),
+                    slug=organization.slug,
+                    verdict=report.verdict.value,
+                )
+            elif report.verdict == ReviewVerdict.APPROVE:
+                await organization_service.maybe_activate(session, organization)
+
+        # For PRODUCT_CHANGED context: a bad verdict pulls the active org back
+        # into REVIEW for a human to look at. A clean APPROVE is a no-op — the
+        # org keeps operating. We never auto-deny here, only escalate.
+        if (
+            review_context == ReviewContext.PRODUCT_CHANGED
+            and report.verdict != ReviewVerdict.APPROVE
+        ):
+            organization.set_status(OrganizationStatus.REVIEW)
+            session.add(organization)
+
+            await review_repository.record_agent_decision(
+                organization_id=organization_id,
+                agent_review_id=agent_review_id,
+                decision=DecisionType.ESCALATE,
+                review_context=ReviewContext.PRODUCT_CHANGED,
+                verdict=report.verdict,
+                risk_score=report.overall_risk_score,
+            )
+
+            log.info(
+                "organization_review.product_changed.escalated_to_review",
+                organization_id=str(organization_id),
+                slug=organization.slug,
+                verdict=report.verdict.value,
+            )
+
+
+@actor(
+    actor_name="organization_review.appeal_submitted",
+    priority=TaskPriority.LOW,
+    time_limit=180_000,
+    max_retries=4,
+    min_backoff=30_000,
+)
+async def review_appeal(organization_id: Annotated[uuid.UUID, LoggableField]) -> None:
+    """Auto-review a submitted appeal with the AI agent.
+
+    The merchant's appeal is decisive: APPROVE activates the org, DENY closes
+    out the appeal with a "contact support" message and no Plain ticket.
+    """
+    if settings.ENV == Environment.sandbox:
+        return
+
+    async with AsyncSessionMaker() as session:
+        repository = OrganizationRepository.from_session(session)
+        organization = await repository.get_by_id(organization_id, include_blocked=True)
+        if organization is None:
+            raise OrganizationDoesNotExist(organization_id)
+
+        org_review_repository = OrgReviewRepository.from_session(session)
+        review = await org_review_repository.get_by_organization(organization_id)
+        if review is None or review.appeal_submitted_at is None:
+            log.warning(
+                "organization_review.appeal.no_pending_appeal",
+                organization_id=str(organization_id),
+                slug=organization.slug,
+            )
+            return
+
+        if review.appeal_decision is not None:
+            log.info(
+                "organization_review.appeal.already_decided",
+                organization_id=str(organization_id),
+                slug=organization.slug,
+                decision=review.appeal_decision,
+            )
+            return
+
+        result = await run_organization_review(
+            session,
+            organization,
+            context=ReviewContext.APPEAL,
+            appeal_reason=review.appeal_reason,
+            original_denial_reason=review.reason,
+        )
+        report = result.report
+        agent_review_id = await _persist_agent_result(
+            session, organization, ReviewContext.APPEAL, result
+        )
+
+        if report.verdict == ReviewVerdict.APPROVE:
+            await organization_service.approve_appeal(session, organization)
+            decision = DecisionType.APPROVE
+        else:
+            await organization_service.deny_appeal(session, organization)
+            decision = DecisionType.DENY
+
+        agent_review_repository = OrganizationReviewRepository.from_session(session)
+        await agent_review_repository.record_agent_decision(
+            organization_id=organization_id,
+            agent_review_id=agent_review_id,
+            decision=decision,
+            review_context=ReviewContext.APPEAL,
+            verdict=report.verdict,
+            risk_score=report.overall_risk_score,
+        )
+
+
+@actor(
+    actor_name="organization_review.post_appeal_greeting",
+    priority=TaskPriority.LOW,
+)
+async def post_appeal_greeting(case_id: Annotated[uuid.UUID, LoggableField]) -> None:
+    """Post the automated greeting to a freshly opened human-review case."""
+    async with AsyncSessionMaker() as session:
+        case = await SupportCaseRepository.from_session(session).get_by_id(case_id)
+        if case is None:
+            return
+
+        message_repository = SupportCaseMessageRepository.from_session(session)
+        if not await message_repository.is_open(case_id):
+            return
+        existing = await message_repository.list_by_case(case_id, visible_to=None)
+        if any(
+            message.author_kind == SupportCaseMessageAuthorKind.platform
+            for message in existing
+        ):
+            return
+
+        await support_case_service.post_message(
+            session,
+            case,
+            author_kind=SupportCaseMessageAuthorKind.platform,
+            body=HUMAN_REVIEW_GREETING,
+            audience=[SupportCaseAudience.merchant],
+        )
+        await publish_appeal_update(case.organization_id)

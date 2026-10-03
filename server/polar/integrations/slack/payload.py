@@ -1,0 +1,39 @@
+from typing import Any, Literal, NotRequired, TypedDict
+
+from polar.config import settings
+
+
+class SlackText(TypedDict):
+    type: Literal["mrkdwn", "plain_text"]
+    text: str
+    emoji: NotRequired[bool]
+    verbatim: NotRequired[bool]
+
+
+class SlackPayload(TypedDict):
+    text: str
+    blocks: NotRequired[list[dict[str, Any]]]
+
+
+def escape_slack_text(text: str) -> str:
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def get_branded_slack_payload(payload: SlackPayload) -> SlackPayload:
+    return {
+        **payload,
+        "blocks": [
+            *payload.get("blocks", []),
+            {
+                "type": "context",
+                "elements": [
+                    {
+                        "type": "image",
+                        "image_url": settings.FAVICON_URL,
+                        "alt_text": "Polar",
+                    },
+                    {"type": "mrkdwn", "text": "Powered by Polar.sh"},
+                ],
+            },
+        ],
+    }

@@ -1,0 +1,224 @@
+'use client'
+
+import { Avatar, Text } from '@polar-sh/orbit'
+import { Box } from '@polar-sh/orbit/Box'
+
+interface Aspect {
+  title: string
+  desc: string
+  href: string
+}
+
+const ASPECTS: Aspect[] = [
+  {
+    title: 'Customer invoiced automatically',
+    desc: 'Usage rolls straight into invoices and charges, with no manual billing runs.',
+    href: '/docs/features/orders',
+  },
+  {
+    title: 'LLM Usage Breakdown',
+    desc: 'Every model call metered token by token, per customer, across all of your providers.',
+    href: '/docs/features/usage-based-billing/ingestion-strategies/llm-strategy',
+  },
+  {
+    title: 'Margins, Profits & Cashflow Metrics',
+    desc: 'Revenue minus cost in real time, per customer and across your whole business.',
+    href: '/docs/features/analytics',
+  },
+  {
+    title: 'Cost Anomalies & Insights',
+    desc: 'Spot runaway spend and unprofitable customers the moment costs spike, not at month end.',
+    href: '/docs/features/cost-insights/introduction',
+  },
+  {
+    title: 'Tax Collection & Remittance',
+    desc: 'Sales tax, VAT, and GST calculated, collected, and filed for you as merchant of record.',
+    href: '/docs/merchant-of-record/introduction',
+  },
+  {
+    title: 'Payment Processing',
+    desc: 'Cards, wallets, and bank debits captured and settled across 100+ markets.',
+    href: '/docs/features/checkout/session',
+  },
+  {
+    title: 'Refunds & Chargebacks',
+    desc: 'Disputes, refunds, and usage reconciliation handled end to end.',
+    href: '/docs/features/refunds',
+  },
+  {
+    title: 'Risk Analysis & Fraud',
+    desc: 'Every transaction screened for fraud before it ever hits your books.',
+    href: '/docs/merchant-of-record/account-reviews',
+  },
+]
+
+const GROUPS = [ASPECTS.slice(0, 4), ASPECTS.slice(4)]
+
+const CheckIcon = ({ active }: { active: boolean }) => (
+  <Box
+    width="1.5rem"
+    height="1.5rem"
+    borderRadius="full"
+    backgroundColor="background-success"
+    color="text-success"
+    alignItems="center"
+    justifyContent="center"
+    flexShrink={0}
+    opacity={active ? 1 : 0.4}
+  >
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={3}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  </Box>
+)
+
+const ArrowDown = () => (
+  <Box justifyContent="center" color="text-tertiary" paddingVertical="m">
+    <svg
+      width="20"
+      height="30"
+      viewBox="0 0 20 30"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.25}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <line x1="10" y1="2" x2="10" y2="26" />
+      <polyline points="3 19 10 26 17 19" />
+    </svg>
+  </Box>
+)
+
+export const Pipeline = () => {
+  return (
+    <Box
+      display="grid"
+      gridTemplateColumns={{ base: '1fr', lg: 'repeat(2, 1fr)' }}
+      gap="2xl"
+    >
+      {/* Flow */}
+      <Box borderStyle="solid" borderColor="border-primary" borderWidth={1}>
+        <Box
+          width="100%"
+          maxWidth={{ base: '100%', lg: '28rem' }}
+          marginHorizontal="auto"
+          flexDirection="column"
+          paddingVertical={{ base: '2xl', md: '4xl' }}
+          paddingHorizontal={{ base: '2xl', md: '4xl' }}
+          rowGap="xl"
+        >
+          {/* Customer */}
+          <Box
+            alignItems="center"
+            columnGap="m"
+            backgroundColor="background-secondary"
+            padding="l"
+          >
+            <Avatar
+              name="John Doe"
+              avatar_url="/assets/team/emil.png"
+              className="h-10 w-10 text-sm"
+            />
+            <Box flexDirection="column">
+              <Text>John Doe</Text>
+              <Text color="muted">Consumed 23,820 tokens</Text>
+            </Box>
+          </Box>
+
+          <ArrowDown />
+
+          {/* Polar */}
+          <Box flexDirection="column" rowGap="s">
+            <Box
+              paddingVertical="m"
+              justifyContent="center"
+              backgroundColor="background-secondary"
+            >
+              <Text variant="body">Polar</Text>
+            </Box>
+            {GROUPS.map((group, groupIndex) => (
+              <Box
+                key={groupIndex}
+                flexDirection="column"
+                backgroundColor="background-secondary"
+                padding="s"
+              >
+                {group.map((aspect) => {
+                  return (
+                    <Box
+                      key={aspect.title}
+                      alignItems="center"
+                      columnGap="l"
+                      paddingVertical="s"
+                      paddingHorizontal="s"
+                      cursor="pointer"
+                    >
+                      <CheckIcon active={true} />
+                      <Text variant="body">{aspect.title}</Text>
+                    </Box>
+                  )
+                })}
+              </Box>
+            ))}
+          </Box>
+
+          <ArrowDown />
+
+          {/* Payout */}
+          <Box
+            alignItems="center"
+            columnGap="l"
+            backgroundColor="background-secondary"
+            padding="xl"
+          >
+            <Box flexDirection="column" rowGap="xs">
+              <Box alignItems="baseline" columnGap="s">
+                <Text>Merchant Payout</Text>
+                <Text color="muted">Acme Inc</Text>
+              </Box>
+              <Box alignItems="baseline" columnGap="s">
+                <Text color="success">$9,311</Text>
+                <Text color="muted">SEB **** 9128</Text>
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+      <Box
+        display={{ base: 'none', lg: 'flex' }}
+        position="relative"
+        alignItems="center"
+        justifyContent="center"
+        overflow="hidden"
+        paddingHorizontal="2xl"
+        backgroundColor="background-secondary"
+      >
+        <Box
+          display="block"
+          position="relative"
+          maxWidth="32rem"
+          padding="3xl"
+          boxShadow="l"
+        >
+          <Text variant="heading-xs" wrap="pretty">
+            Your customer consumes usage.
+            <br />
+            Polar bills, collects and complies.
+            <br />
+            You get paid.
+          </Text>
+        </Box>
+      </Box>
+    </Box>
+  )
+}

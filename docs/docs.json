@@ -1,0 +1,3157 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "maple",
+  "styling": {
+    "latex": false
+  },
+  "appearance": {
+    "default": "system"
+  },
+  "name": "Polar",
+  "description": "Payments & Billing with 6 lines of code. Open Source & Global Merchant of Record.",
+  "colors": {
+    "primary": "#000",
+    "light": "#fff",
+    "dark": "#000"
+  },
+  "background": {
+    "color": {
+      "dark": "#131316"
+    }
+  },
+  "favicon": "./logo/favicon.png",
+  "seo": {
+    "metatags": {
+      "og:site_name": "Polar",
+      "og:image": "https://polar.sh/assets/brand/polar_og.jpg",
+      "og:type": "website",
+      "twitter:card": "summary_large_image",
+      "twitter:site": "@polar_sh"
+    }
+  },
+  "integrations": {
+    "ga4": {
+      "measurementId": "G-MBYW1QZFHE"
+    }
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Docs",
+        "icon": "compass",
+        "groups": [
+          {
+            "group": "Bootup",
+            "pages": ["introduction", "migrate"]
+          },
+          {
+            "group": "Features",
+            "pages": [
+              "features/products",
+              {
+                "group": "Usage Based Billing",
+                "pages": [
+                  "features/usage-based-billing/introduction",
+                  "features/usage-based-billing/event-ingestion",
+                  {
+                    "group": "Ingestion Strategies",
+                    "pages": [
+                      "features/usage-based-billing/ingestion-strategies/ingestion-strategy",
+                      "features/usage-based-billing/ingestion-strategies/llm-strategy",
+                      "features/usage-based-billing/ingestion-strategies/s3-strategy",
+                      "features/usage-based-billing/ingestion-strategies/stream-strategy",
+                      "features/usage-based-billing/ingestion-strategies/delta-time-strategy"
+                    ]
+                  },
+                  "features/usage-based-billing/meters",
+                  "features/usage-based-billing/credits",
+                  "features/usage-based-billing/billing"
+                ]
+              },
+              {
+                "group": "Cost Insights",
+                "tag": "Beta",
+                "pages": [
+                  "features/cost-insights/introduction",
+                  "features/cost-insights/cost-events",
+                  "features/cost-insights/cost-traces"
+                ]
+              },
+              {
+                "group": "Benefits",
+                "pages": [
+                  "features/benefits/introduction",
+                  "features/benefits/credits",
+                  "features/benefits/custom",
+                  "features/benefits/discord-access",
+                  "features/benefits/feature-flags",
+                  "features/benefits/file-downloads",
+                  "features/benefits/github-access",
+                  "features/benefits/license-keys",
+                  "features/benefits/slack-shared-channel"
+                ]
+              },
+              {
+                "group": "Checkout",
+                "pages": [
+                  "features/checkout/links",
+                  "features/checkout/session",
+                  "features/checkout/payment-methods",
+                  "features/checkout/localization",
+                  {
+                    "group": "Embeds",
+                    "pages": [
+                      "features/checkout/embed",
+                      "features/checkout/embed-payment-method"
+                    ]
+                  }
+                ]
+              },
+              "features/seat-based-pricing",
+              "features/unit-based-pricing",
+              "features/custom-fields",
+              "features/discounts",
+              "features/tax-inclusive-pricing",
+              {
+                "group": "Subscriptions",
+                "pages": [
+                  "features/subscriptions/introduction",
+                  "features/subscriptions/manage",
+                  "features/subscriptions/proration",
+                  "features/subscriptions/failed-payments",
+                  "features/subscriptions/trials"
+                ]
+              },
+              "features/orders",
+              "features/refunds",
+              "features/analytics",
+              "features/customer-management",
+              "features/team-management",
+              "features/sso",
+              {
+                "group": "Customer Portal",
+                "pages": [
+                  "features/customer-portal/introduction",
+                  "features/customer-portal/navigate-customers",
+                  "features/customer-portal/settings"
+                ]
+              },
+              {
+                "group": "Finance & Payouts",
+                "pages": [
+                  "features/finance/accounts",
+                  "features/finance/balance",
+                  "features/finance/payouts"
+                ]
+              },
+              {
+                "group": "Integrations",
+                "pages": [
+                  "features/integrations/affonso",
+                  "features/integrations/fernand",
+                  "features/integrations/framer",
+                  "features/integrations/paritydeals",
+                  "features/integrations/raycast",
+                  "features/integrations/zapier"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Integrate",
+            "pages": [
+              "integrate/authentication",
+              "integrate/sandbox",
+              "integrate/customer-state",
+              "integrate/mcp",
+              {
+                "group": "SDKs",
+                "pages": [
+                  "integrate/sdk/introduction",
+                  "integrate/sdk/python",
+                  "integrate/sdk/typescript"
+                ]
+              },
+              {
+                "group": "CLI",
+                "pages": [
+                  "integrate/cli/introduction",
+                  "integrate/cli/authentication",
+                  "integrate/cli/webhooks",
+                  "integrate/cli/reference",
+                  {
+                    "group": "CLI commands",
+                    "pages": [
+                      "integrate/cli/reference/auth",
+                      "integrate/cli/reference/listen",
+                      "integrate/cli/reference/trigger",
+                      "integrate/cli/reference/update"
+                    ]
+                  },
+                  {
+                    "group": "API resources",
+                    "pages": [
+                      "integrate/cli/reference/benefit_grants",
+                      "integrate/cli/reference/benefits",
+                      "integrate/cli/reference/checkout_links",
+                      "integrate/cli/reference/checkouts",
+                      "integrate/cli/reference/custom_fields",
+                      "integrate/cli/reference/customer_meters",
+                      "integrate/cli/reference/customer_seats",
+                      "integrate/cli/reference/customers",
+                      "integrate/cli/reference/discounts",
+                      "integrate/cli/reference/event_types",
+                      "integrate/cli/reference/events",
+                      "integrate/cli/reference/files",
+                      "integrate/cli/reference/license_keys",
+                      "integrate/cli/reference/meters",
+                      "integrate/cli/reference/metrics",
+                      "integrate/cli/reference/orders",
+                      "integrate/cli/reference/organizations",
+                      "integrate/cli/reference/payments",
+                      "integrate/cli/reference/products",
+                      "integrate/cli/reference/refunds",
+                      "integrate/cli/reference/subscriptions",
+                      "integrate/cli/reference/webhooks"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Framework Adapters",
+                "pages": [
+                  "integrate/sdk/adapters/introduction",
+                  "integrate/sdk/adapters/astro",
+                  "integrate/sdk/adapters/better-auth",
+                  "integrate/sdk/adapters/deno",
+                  "integrate/sdk/adapters/elysia",
+                  "integrate/sdk/adapters/express",
+                  "integrate/sdk/adapters/fastify",
+                  "integrate/sdk/adapters/hono",
+                  "integrate/sdk/adapters/laravel",
+                  "integrate/sdk/adapters/nextjs",
+                  "integrate/sdk/adapters/nuxt",
+                  "integrate/sdk/adapters/remix",
+                  "integrate/sdk/adapters/supabase",
+                  "integrate/sdk/adapters/sveltekit",
+                  "integrate/sdk/adapters/tanstack-start"
+                ]
+              },
+              {
+                "group": "Framework Guides",
+                "pages": ["guides/encore", "guides/laravel", "guides/nextjs"]
+              },
+              {
+                "group": "Webhooks",
+                "pages": [
+                  "integrate/webhooks/endpoints",
+                  "integrate/webhooks/delivery",
+                  "integrate/webhooks/events"
+                ]
+              },
+              {
+                "group": "OAuth 2.0",
+                "pages": [
+                  "integrate/oauth2/introduction",
+                  "integrate/oauth2/setup",
+                  "integrate/oauth2/connect"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Merchant of Record (MoR)",
+            "pages": [
+              "merchant-of-record/introduction",
+              "merchant-of-record/fees",
+              "merchant-of-record/supported-countries",
+              "merchant-of-record/acceptable-use/introduction",
+              "merchant-of-record/account-reviews",
+              "migrate-away"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "icon": "rectangle-terminal",
+        "versions": [
+          {
+            "version": "2026-04",
+            "tag": "Deprecated",
+            "openapi": {
+              "source": "openapi/2026-04.openapi.json",
+              "directory": "api-reference/2026-04"
+            },
+            "groups": [
+              {
+                "group": "General",
+                "pages": [
+                  "api-reference/2026-04/introduction",
+                  "api-reference/2026-04/versioning"
+                ]
+              },
+              {
+                "group": "Core API",
+                "pages": [
+                  {
+                    "group": "Checkout",
+                    "pages": [
+                      "POST /v1/checkouts/",
+                      "GET /v1/checkouts/{id}",
+                      "GET /v1/checkouts/",
+                      "PATCH /v1/checkouts/{id}",
+                      "GET /v1/checkouts/client/{client_secret}",
+                      "PATCH /v1/checkouts/client/{client_secret}",
+                      "POST /v1/checkouts/client/{client_secret}/confirm"
+                    ]
+                  },
+                  {
+                    "group": "Checkout Links",
+                    "pages": [
+                      "POST /v1/checkout-links/",
+                      "GET /v1/checkout-links/{id}",
+                      "GET /v1/checkout-links/",
+                      "PATCH /v1/checkout-links/{id}",
+                      "DELETE /v1/checkout-links/{id}"
+                    ]
+                  },
+                  {
+                    "group": "Custom Checkout Fields",
+                    "pages": [
+                      "POST /v1/custom-fields/",
+                      "GET /v1/custom-fields/{id}",
+                      "GET /v1/custom-fields/",
+                      "PATCH /v1/custom-fields/{id}",
+                      "DELETE /v1/custom-fields/{id}"
+                    ]
+                  },
+                  {
+                    "group": "Customers",
+                    "pages": [
+                      "GET /v1/customers/{id}/state",
+                      "GET /v1/customers/external/{external_id}/state",
+                      "GET /v1/customers/",
+                      "POST /v1/customers/",
+                      "GET /v1/customers/{id}",
+                      "PATCH /v1/customers/{id}",
+                      "DELETE /v1/customers/{id}",
+                      "GET /v1/customers/external/{external_id}",
+                      "PATCH /v1/customers/external/{external_id}",
+                      "DELETE /v1/customers/external/{external_id}",
+                      "GET /v1/customers/{id}/payment-methods",
+                      "GET /v1/customers/external/{external_id}/payment-methods"
+                    ]
+                  },
+                  {
+                    "group": "Subscriptions",
+                    "pages": [
+                      "GET /v1/subscriptions/{id}",
+                      "GET /v1/subscriptions/",
+                      "POST /v1/subscriptions/",
+                      "PATCH /v1/subscriptions/{id}",
+                      "DELETE /v1/subscriptions/{id}"
+                    ]
+                  },
+                  {
+                    "group": "Orders",
+                    "pages": [
+                      "GET /v1/orders/{id}",
+                      "PATCH /v1/orders/{id}",
+                      "GET /v1/orders/",
+                      "POST /v1/orders/{id}/invoice",
+                      "GET /v1/orders/{id}/invoice",
+                      "GET /v1/orders/{id}/receipt"
+                    ]
+                  },
+                  {
+                    "group": "Discounts",
+                    "pages": [
+                      "GET /v1/discounts/{id}",
+                      "GET /v1/discounts/",
+                      "POST /v1/discounts/",
+                      "PATCH /v1/discounts/{id}",
+                      "DELETE /v1/discounts/{id}"
+                    ]
+                  },
+                  {
+                    "group": "Refunds",
+                    "pages": [
+                      "POST /v1/refunds/",
+                      "GET /v1/refunds/"
+                    ]
+                  },
+                  {
+                    "group": "Products",
+                    "pages": [
+                      "GET /v1/products/{id}",
+                      "GET /v1/products/",
+                      "POST /v1/products/",
+                      "PATCH /v1/products/{id}",
+                      "DELETE /v1/products/{id}",
+                      "POST /v1/products/{id}/benefits"
+                    ]
+                  },
+                  {
+                    "group": "Events",
+                    "pages": [
+                      "POST /v1/events/ingest",
+                      "GET /v1/events/{id}",
+                      "GET /v1/events/"
+                    ]
+                  },
+                  {
+                    "group": "Meters",
+                    "pages": [
+                      "POST /v1/meters/",
+                      "GET /v1/meters/{id}",
+                      "GET /v1/meters/",
+                      "PATCH /v1/meters/{id}",
+                      "GET /v1/meters/{id}/quantities"
+                    ]
+                  },
+                  {
+                    "group": "Benefits",
+                    "pages": [
+                      "POST /v1/benefits/",
+                      "GET /v1/benefits/{id}",
+                      "GET /v1/benefits/",
+                      "GET /v1/benefits/{id}/grants",
+                      "PATCH /v1/benefits/{id}",
+                      "DELETE /v1/benefits/{id}"
+                    ]
+                  },
+                  {
+                    "group": "Customer Meters",
+                    "pages": [
+                      "GET /v1/customer-meters/{id}",
+                      "GET /v1/customer-meters/"
+                    ]
+                  },
+                  {
+                    "group": "License Keys",
+                    "pages": [
+                      "GET /v1/license-keys/{id}",
+                      "GET /v1/license-keys/",
+                      "PATCH /v1/license-keys/{id}",
+                      "GET /v1/license-keys/{id}/activations/{activation_id}",
+                      "POST /v1/license-keys/validate",
+                      "POST /v1/license-keys/activate",
+                      "POST /v1/license-keys/deactivate"
+                    ]
+                  },
+                  {
+                    "group": "Members",
+                    "pages": [
+                      "GET /v1/customers/{id}/members",
+                      "GET /v1/customers/external/{external_id}/members"
+                    ]
+                  },
+                  {
+                    "group": "Customer Seats",
+                    "pages": [
+                      "POST /v1/customer-seats",
+                      "GET /v1/customer-seats",
+                      "DELETE /v1/customer-seats/{seat_id}",
+                      "POST /v1/customer-seats/{seat_id}/resend",
+                      "GET /v1/customer-seats/claim/{invitation_token}",
+                      "POST /v1/customer-seats/claim"
+                    ]
+                  },
+                  {
+                    "group": "Files",
+                    "pages": [
+                      "POST /v1/files/",
+                      "GET /v1/files/",
+                      "PATCH /v1/files/{id}",
+                      "DELETE /v1/files/{id}",
+                      "POST /v1/files/{id}/uploaded"
+                    ]
+                  },
+                  {
+                    "group": "Organizations",
+                    "pages": [
+                      "GET /v1/organizations/{id}",
+                      "GET /v1/organizations/",
+                      "POST /v1/organizations/",
+                      "PATCH /v1/organizations/{id}"
+                    ]
+                  },
+                  {
+                    "group": "Metrics",
+                    "pages": [
+                      "GET /v1/metrics/",
+                      "GET /v1/metrics/limits"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Customer Portal API",
+                "pages": [
+                  "GET /v1/customer-portal/customers/me",
+                  "PATCH /v1/customer-portal/customers/me",
+                  "GET /v1/customer-portal/organizations/{slug}",
+                  {
+                    "group": "Sessions",
+                    "pages": [
+                      "POST /v1/customer-sessions/"
+                    ]
+                  },
+                  {
+                    "group": "Subscriptions",
+                    "pages": [
+                      "GET /v1/customer-portal/subscriptions/{id}",
+                      "GET /v1/customer-portal/subscriptions/",
+                      "PATCH /v1/customer-portal/subscriptions/{id}",
+                      "DELETE /v1/customer-portal/subscriptions/{id}"
+                    ]
+                  },
+                  {
+                    "group": "Orders",
+                    "pages": [
+                      "GET /v1/customer-portal/orders/{id}",
+                      "PATCH /v1/customer-portal/orders/{id}",
+                      "GET /v1/customer-portal/orders/",
+                      "POST /v1/customer-portal/orders/{id}/invoice",
+                      "GET /v1/customer-portal/orders/{id}/invoice",
+                      "GET /v1/customer-portal/orders/{id}/receipt"
+                    ]
+                  },
+                  {
+                    "group": "License Keys",
+                    "pages": [
+                      "POST /v1/customer-portal/license-keys/validate",
+                      "POST /v1/customer-portal/license-keys/activate",
+                      "POST /v1/customer-portal/license-keys/deactivate",
+                      "GET /v1/customer-portal/license-keys/{id}",
+                      "GET /v1/customer-portal/license-keys/"
+                    ]
+                  },
+                  {
+                    "group": "File Downloads",
+                    "pages": [
+                      "GET /v1/customer-portal/downloadables/"
+                    ]
+                  },
+                  {
+                    "group": "Seats",
+                    "pages": [
+                      "GET /v1/customer-portal/seats",
+                      "POST /v1/customer-portal/seats",
+                      "DELETE /v1/customer-portal/seats/{seat_id}",
+                      "POST /v1/customer-portal/seats/{seat_id}/resend",
+                      "GET /v1/customer-portal/seats/subscriptions"
+                    ]
+                  },
+                  {
+                    "group": "Payment Methods",
+                    "pages": [
+                      "GET /v1/customer-portal/customers/me/payment-methods",
+                      "DELETE /v1/customer-portal/customers/me/payment-methods/{id}"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Webhook Events",
+                "pages": [
+                  {
+                    "group": "Customer Events",
+                    "pages": [
+                      "webhook customer.state_changed",
+                      "webhook customer.created",
+                      "webhook customer.updated",
+                      "webhook customer.deleted"
+                    ]
+                  },
+                  {
+                    "group": "Billing Events",
+                    "pages": [
+                      {
+                        "group": "Checkout",
+                        "pages": [
+                          "webhook checkout.created",
+                          "webhook checkout.updated",
+                          "webhook checkout.expired"
+                        ]
+                      },
+                      {
+                        "group": "Subscriptions",
+                        "pages": [
+                          "webhook subscription.created",
+                          "webhook subscription.active",
+                          "webhook subscription.updated",
+                          "webhook subscription.canceled",
+                          "webhook subscription.uncanceled",
+                          "webhook subscription.cycled",
+                          "webhook subscription.revoked",
+                          "webhook subscription.past_due",
+                          "webhook subscription.paused",
+                          "webhook subscription.resumed",
+                          "webhook subscription.migrated"
+                        ]
+                      },
+                      {
+                        "group": "Orders",
+                        "pages": [
+                          "webhook order.created",
+                          "webhook order.paid",
+                          "webhook order.updated",
+                          "webhook order.refunded"
+                        ]
+                      },
+                      {
+                        "group": "Customer Seats",
+                        "pages": [
+                          "webhook customer_seat.assigned",
+                          "webhook customer_seat.claimed",
+                          "webhook customer_seat.revoked"
+                        ]
+                      },
+                      {
+                        "group": "Refunds",
+                        "pages": [
+                          "webhook refund.created",
+                          "webhook refund.updated"
+                        ]
+                      },
+                      {
+                        "group": "Benefit Grants",
+                        "pages": [
+                          "webhook benefit_grant.created",
+                          "webhook benefit_grant.cycled",
+                          "webhook benefit_grant.updated",
+                          "webhook benefit_grant.revoked"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "group": "Organization Events",
+                    "pages": [
+                      {
+                        "group": "Benefits",
+                        "pages": [
+                          "webhook benefit.created",
+                          "webhook benefit.updated"
+                        ]
+                      },
+                      {
+                        "group": "Products",
+                        "pages": [
+                          "webhook product.created",
+                          "webhook product.updated"
+                        ]
+                      },
+                      {
+                        "group": "Discounts",
+                        "pages": [
+                          "webhook discount.created",
+                          "webhook discount.updated",
+                          "webhook discount.deleted"
+                        ]
+                      },
+                      {
+                        "group": "Organization",
+                        "pages": ["webhook organization.updated"]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Integrations",
+                "pages": [
+                  {
+                    "group": "OpenID Connect",
+                    "pages": [
+                      "GET /v1/oauth2/authorize",
+                      "POST /v1/oauth2/token",
+                      "POST /v1/oauth2/introspect",
+                      "POST /v1/oauth2/revoke",
+                      "GET /v1/oauth2/userinfo"
+                    ]
+                  },
+                  {
+                    "group": "Webhooks",
+                    "pages": [
+                      "POST /v1/webhooks/endpoints",
+                      "GET /v1/webhooks/endpoints/{id}",
+                      "GET /v1/webhooks/endpoints",
+                      "PATCH /v1/webhooks/endpoints/{id}",
+                      "DELETE /v1/webhooks/endpoints/{id}"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "version": "2026-10",
+            "default": true,
+            "tag": "Current",
+            "openapi": {
+              "source": "openapi/2026-10.openapi.json",
+              "directory": "api-reference/2026-10"
+            },
+            "groups": [
+              {
+                "group": "General",
+                "pages": [
+                  "api-reference/2026-10/introduction",
+                  "api-reference/2026-10/versioning"
+                ]
+              },
+              {
+                "group": "Core API",
+                "pages": [
+                  {
+                    "group": "Checkout",
+                    "pages": [
+                      "POST /v1/checkouts/",
+                      "GET /v1/checkouts/{id}",
+                      "GET /v1/checkouts/",
+                      "PATCH /v1/checkouts/{id}",
+                      "GET /v1/checkouts/client/{client_secret}",
+                      "PATCH /v1/checkouts/client/{client_secret}",
+                      "POST /v1/checkouts/client/{client_secret}/confirm"
+                    ]
+                  },
+                  {
+                    "group": "Checkout Links",
+                    "pages": [
+                      "POST /v1/checkout-links/",
+                      "GET /v1/checkout-links/{id}",
+                      "GET /v1/checkout-links/",
+                      "PATCH /v1/checkout-links/{id}",
+                      "DELETE /v1/checkout-links/{id}"
+                    ]
+                  },
+                  {
+                    "group": "Custom Checkout Fields",
+                    "pages": [
+                      "POST /v1/custom-fields/",
+                      "GET /v1/custom-fields/{id}",
+                      "GET /v1/custom-fields/",
+                      "PATCH /v1/custom-fields/{id}",
+                      "DELETE /v1/custom-fields/{id}"
+                    ]
+                  },
+                  {
+                    "group": "Customers",
+                    "pages": [
+                      "GET /v1/customers/{id}/state",
+                      "GET /v1/customers/external/{external_id}/state",
+                      "GET /v1/customers/",
+                      "POST /v1/customers/",
+                      "GET /v1/customers/{id}",
+                      "PATCH /v1/customers/{id}",
+                      "DELETE /v1/customers/{id}",
+                      "GET /v1/customers/external/{external_id}",
+                      "PATCH /v1/customers/external/{external_id}",
+                      "DELETE /v1/customers/external/{external_id}",
+                      "GET /v1/customers/{id}/payment-methods",
+                      "GET /v1/customers/external/{external_id}/payment-methods"
+                    ]
+                  },
+                  {
+                    "group": "Subscriptions",
+                    "pages": [
+                      "GET /v1/subscriptions/{id}",
+                      "GET /v1/subscriptions/",
+                      "POST /v1/subscriptions/",
+                      "PATCH /v1/subscriptions/{id}",
+                      "DELETE /v1/subscriptions/{id}"
+                    ]
+                  },
+                  {
+                    "group": "Orders",
+                    "pages": [
+                      "GET /v1/orders/{id}",
+                      "PATCH /v1/orders/{id}",
+                      "GET /v1/orders/",
+                      "POST /v1/orders/{id}/invoice",
+                      "GET /v1/orders/{id}/invoice",
+                      "GET /v1/orders/{id}/receipt"
+                    ]
+                  },
+                  {
+                    "group": "Discounts",
+                    "pages": [
+                      "GET /v1/discounts/{id}",
+                      "GET /v1/discounts/",
+                      "POST /v1/discounts/",
+                      "PATCH /v1/discounts/{id}",
+                      "DELETE /v1/discounts/{id}"
+                    ]
+                  },
+                  {
+                    "group": "Refunds",
+                    "pages": [
+                      "POST /v1/refunds/",
+                      "GET /v1/refunds/"
+                    ]
+                  },
+                  {
+                    "group": "Products",
+                    "pages": [
+                      "GET /v1/products/{id}",
+                      "GET /v1/products/",
+                      "POST /v1/products/",
+                      "PATCH /v1/products/{id}",
+                      "DELETE /v1/products/{id}",
+                      "POST /v1/products/{id}/benefits"
+                    ]
+                  },
+                  {
+                    "group": "Events",
+                    "pages": [
+                      "POST /v1/events/ingest",
+                      "GET /v1/events/{id}",
+                      "GET /v1/events/"
+                    ]
+                  },
+                  {
+                    "group": "Meters",
+                    "pages": [
+                      "POST /v1/meters/",
+                      "GET /v1/meters/{id}",
+                      "GET /v1/meters/",
+                      "PATCH /v1/meters/{id}",
+                      "GET /v1/meters/{id}/quantities"
+                    ]
+                  },
+                  {
+                    "group": "Benefits",
+                    "pages": [
+                      "POST /v1/benefits/",
+                      "GET /v1/benefits/{id}",
+                      "GET /v1/benefits/",
+                      "GET /v1/benefits/{id}/grants",
+                      "PATCH /v1/benefits/{id}",
+                      "DELETE /v1/benefits/{id}"
+                    ]
+                  },
+                  {
+                    "group": "Customer Meters",
+                    "pages": [
+                      "GET /v1/customer-meters/{id}",
+                      "GET /v1/customer-meters/"
+                    ]
+                  },
+                  {
+                    "group": "License Keys",
+                    "pages": [
+                      "GET /v1/license-keys/{id}",
+                      "GET /v1/license-keys/",
+                      "PATCH /v1/license-keys/{id}",
+                      "GET /v1/license-keys/{id}/activations/{activation_id}",
+                      "POST /v1/license-keys/validate",
+                      "POST /v1/license-keys/activate",
+                      "POST /v1/license-keys/deactivate"
+                    ]
+                  },
+                  {
+                    "group": "Members",
+                    "pages": [
+                      "GET /v1/customers/{id}/members",
+                      "GET /v1/customers/external/{external_id}/members"
+                    ]
+                  },
+                  {
+                    "group": "Customer Seats",
+                    "pages": [
+                      "POST /v1/customer-seats",
+                      "GET /v1/customer-seats",
+                      "DELETE /v1/customer-seats/{seat_id}",
+                      "POST /v1/customer-seats/{seat_id}/resend",
+                      "GET /v1/customer-seats/claim/{invitation_token}",
+                      "POST /v1/customer-seats/claim"
+                    ]
+                  },
+                  {
+                    "group": "Files",
+                    "pages": [
+                      "POST /v1/files/",
+                      "GET /v1/files/",
+                      "PATCH /v1/files/{id}",
+                      "DELETE /v1/files/{id}",
+                      "POST /v1/files/{id}/uploaded"
+                    ]
+                  },
+                  {
+                    "group": "Organizations",
+                    "pages": [
+                      "GET /v1/organizations/{id}",
+                      "GET /v1/organizations/",
+                      "POST /v1/organizations/",
+                      "PATCH /v1/organizations/{id}"
+                    ]
+                  },
+                  {
+                    "group": "Metrics",
+                    "pages": [
+                      "GET /v1/metrics/",
+                      "GET /v1/metrics/limits"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Customer Portal API",
+                "pages": [
+                  "GET /v1/customer-portal/customers/me",
+                  "PATCH /v1/customer-portal/customers/me",
+                  "GET /v1/customer-portal/organizations/{slug}",
+                  {
+                    "group": "Sessions",
+                    "pages": [
+                      "POST /v1/customer-sessions/"
+                    ]
+                  },
+                  {
+                    "group": "Subscriptions",
+                    "pages": [
+                      "GET /v1/customer-portal/subscriptions/{id}",
+                      "GET /v1/customer-portal/subscriptions/",
+                      "PATCH /v1/customer-portal/subscriptions/{id}",
+                      "DELETE /v1/customer-portal/subscriptions/{id}"
+                    ]
+                  },
+                  {
+                    "group": "Orders",
+                    "pages": [
+                      "GET /v1/customer-portal/orders/{id}",
+                      "PATCH /v1/customer-portal/orders/{id}",
+                      "GET /v1/customer-portal/orders/",
+                      "POST /v1/customer-portal/orders/{id}/invoice",
+                      "GET /v1/customer-portal/orders/{id}/invoice",
+                      "GET /v1/customer-portal/orders/{id}/receipt"
+                    ]
+                  },
+                  {
+                    "group": "License Keys",
+                    "pages": [
+                      "POST /v1/customer-portal/license-keys/validate",
+                      "POST /v1/customer-portal/license-keys/activate",
+                      "POST /v1/customer-portal/license-keys/deactivate",
+                      "GET /v1/customer-portal/license-keys/{id}",
+                      "GET /v1/customer-portal/license-keys/"
+                    ]
+                  },
+                  {
+                    "group": "File Downloads",
+                    "pages": [
+                      "GET /v1/customer-portal/downloadables/"
+                    ]
+                  },
+                  {
+                    "group": "Seats",
+                    "pages": [
+                      "GET /v1/customer-portal/seats",
+                      "POST /v1/customer-portal/seats",
+                      "DELETE /v1/customer-portal/seats/{seat_id}",
+                      "POST /v1/customer-portal/seats/{seat_id}/resend",
+                      "GET /v1/customer-portal/seats/subscriptions"
+                    ]
+                  },
+                  {
+                    "group": "Payment Methods",
+                    "pages": [
+                      "GET /v1/customer-portal/customers/me/payment-methods",
+                      "DELETE /v1/customer-portal/customers/me/payment-methods/{id}"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Webhook Events",
+                "pages": [
+                  {
+                    "group": "Customer Events",
+                    "pages": [
+                      "webhook customer.state_changed",
+                      "webhook customer.created",
+                      "webhook customer.updated",
+                      "webhook customer.deleted"
+                    ]
+                  },
+                  {
+                    "group": "Billing Events",
+                    "pages": [
+                      {
+                        "group": "Checkout",
+                        "pages": [
+                          "webhook checkout.created",
+                          "webhook checkout.updated",
+                          "webhook checkout.expired"
+                        ]
+                      },
+                      {
+                        "group": "Subscriptions",
+                        "pages": [
+                          "webhook subscription.created",
+                          "webhook subscription.active",
+                          "webhook subscription.updated",
+                          "webhook subscription.canceled",
+                          "webhook subscription.uncanceled",
+                          "webhook subscription.cycled",
+                          "webhook subscription.revoked",
+                          "webhook subscription.past_due",
+                          "webhook subscription.paused",
+                          "webhook subscription.resumed",
+                          "webhook subscription.migrated"
+                        ]
+                      },
+                      {
+                        "group": "Orders",
+                        "pages": [
+                          "webhook order.created",
+                          "webhook order.paid",
+                          "webhook order.updated",
+                          "webhook order.refunded"
+                        ]
+                      },
+                      {
+                        "group": "Customer Seats",
+                        "pages": [
+                          "webhook customer_seat.assigned",
+                          "webhook customer_seat.claimed",
+                          "webhook customer_seat.revoked"
+                        ]
+                      },
+                      {
+                        "group": "Refunds",
+                        "pages": [
+                          "webhook refund.created",
+                          "webhook refund.updated"
+                        ]
+                      },
+                      {
+                        "group": "Benefit Grants",
+                        "pages": [
+                          "webhook benefit_grant.created",
+                          "webhook benefit_grant.cycled",
+                          "webhook benefit_grant.updated",
+                          "webhook benefit_grant.revoked"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "group": "Organization Events",
+                    "pages": [
+                      {
+                        "group": "Benefits",
+                        "pages": [
+                          "webhook benefit.created",
+                          "webhook benefit.updated"
+                        ]
+                      },
+                      {
+                        "group": "Products",
+                        "pages": [
+                          "webhook product.created",
+                          "webhook product.updated"
+                        ]
+                      },
+                      {
+                        "group": "Discounts",
+                        "pages": [
+                          "webhook discount.created",
+                          "webhook discount.updated",
+                          "webhook discount.deleted"
+                        ]
+                      },
+                      {
+                        "group": "Organization",
+                        "pages": ["webhook organization.updated"]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Integrations",
+                "pages": [
+                  {
+                    "group": "OpenID Connect",
+                    "pages": [
+                      "GET /v1/oauth2/authorize",
+                      "POST /v1/oauth2/token",
+                      "POST /v1/oauth2/introspect",
+                      "POST /v1/oauth2/revoke",
+                      "GET /v1/oauth2/userinfo"
+                    ]
+                  },
+                  {
+                    "group": "Webhooks",
+                    "pages": [
+                      "POST /v1/webhooks/endpoints",
+                      "GET /v1/webhooks/endpoints/{id}",
+                      "GET /v1/webhooks/endpoints",
+                      "PATCH /v1/webhooks/endpoints/{id}",
+                      "DELETE /v1/webhooks/endpoints/{id}"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "version": "2027-01",
+            "tag": "Next",
+            "openapi": {
+              "source": "openapi/2027-01.openapi.json",
+              "directory": "api-reference/2027-01"
+            },
+            "groups": [
+              {
+                "group": "General",
+                "pages": [
+                  "api-reference/2027-01/introduction",
+                  "api-reference/2027-01/versioning"
+                ]
+              },
+              {
+                "group": "Core API",
+                "pages": [
+                  {
+                    "group": "Checkout",
+                    "pages": [
+                      "POST /v1/checkouts/",
+                      "GET /v1/checkouts/{id}",
+                      "GET /v1/checkouts/",
+                      "PATCH /v1/checkouts/{id}",
+                      "GET /v1/checkouts/client/{client_secret}",
+                      "PATCH /v1/checkouts/client/{client_secret}",
+                      "POST /v1/checkouts/client/{client_secret}/confirm"
+                    ]
+                  },
+                  {
+                    "group": "Checkout Links",
+                    "pages": [
+                      "POST /v1/checkout-links/",
+                      "GET /v1/checkout-links/{id}",
+                      "GET /v1/checkout-links/",
+                      "PATCH /v1/checkout-links/{id}",
+                      "DELETE /v1/checkout-links/{id}"
+                    ]
+                  },
+                  {
+                    "group": "Custom Checkout Fields",
+                    "pages": [
+                      "POST /v1/custom-fields/",
+                      "GET /v1/custom-fields/{id}",
+                      "GET /v1/custom-fields/",
+                      "PATCH /v1/custom-fields/{id}",
+                      "DELETE /v1/custom-fields/{id}"
+                    ]
+                  },
+                  {
+                    "group": "Customers",
+                    "pages": [
+                      "GET /v1/customers/{id}/state",
+                      "GET /v1/customers/external/{external_id}/state",
+                      "GET /v1/customers/",
+                      "POST /v1/customers/",
+                      "GET /v1/customers/{id}",
+                      "PATCH /v1/customers/{id}",
+                      "DELETE /v1/customers/{id}",
+                      "GET /v1/customers/external/{external_id}",
+                      "PATCH /v1/customers/external/{external_id}",
+                      "DELETE /v1/customers/external/{external_id}",
+                      "GET /v1/customers/{id}/payment-methods",
+                      "GET /v1/customers/external/{external_id}/payment-methods"
+                    ]
+                  },
+                  {
+                    "group": "Subscriptions",
+                    "pages": [
+                      "GET /v1/subscriptions/{id}",
+                      "GET /v1/subscriptions/",
+                      "POST /v1/subscriptions/",
+                      "PATCH /v1/subscriptions/{id}",
+                      "DELETE /v1/subscriptions/{id}"
+                    ]
+                  },
+                  {
+                    "group": "Orders",
+                    "pages": [
+                      "GET /v1/orders/{id}",
+                      "PATCH /v1/orders/{id}",
+                      "GET /v1/orders/",
+                      "POST /v1/orders/{id}/invoice",
+                      "GET /v1/orders/{id}/invoice",
+                      "GET /v1/orders/{id}/receipt"
+                    ]
+                  },
+                  {
+                    "group": "Discounts",
+                    "pages": [
+                      "GET /v1/discounts/{id}",
+                      "GET /v1/discounts/",
+                      "POST /v1/discounts/",
+                      "PATCH /v1/discounts/{id}",
+                      "DELETE /v1/discounts/{id}"
+                    ]
+                  },
+                  {
+                    "group": "Refunds",
+                    "pages": [
+                      "POST /v1/refunds/",
+                      "GET /v1/refunds/"
+                    ]
+                  },
+                  {
+                    "group": "Products",
+                    "pages": [
+                      "GET /v1/products/{id}",
+                      "GET /v1/products/",
+                      "POST /v1/products/",
+                      "PATCH /v1/products/{id}",
+                      "DELETE /v1/products/{id}",
+                      "POST /v1/products/{id}/benefits"
+                    ]
+                  },
+                  {
+                    "group": "Events",
+                    "pages": [
+                      "POST /v1/events/ingest",
+                      "GET /v1/events/{id}",
+                      "GET /v1/events/"
+                    ]
+                  },
+                  {
+                    "group": "Meters",
+                    "pages": [
+                      "POST /v1/meters/",
+                      "GET /v1/meters/{id}",
+                      "GET /v1/meters/",
+                      "PATCH /v1/meters/{id}",
+                      "GET /v1/meters/{id}/quantities"
+                    ]
+                  },
+                  {
+                    "group": "Benefits",
+                    "pages": [
+                      "POST /v1/benefits/",
+                      "GET /v1/benefits/{id}",
+                      "GET /v1/benefits/",
+                      "GET /v1/benefits/{id}/grants",
+                      "PATCH /v1/benefits/{id}",
+                      "DELETE /v1/benefits/{id}"
+                    ]
+                  },
+                  {
+                    "group": "Customer Meters",
+                    "pages": [
+                      "GET /v1/customer-meters/{id}",
+                      "GET /v1/customer-meters/"
+                    ]
+                  },
+                  {
+                    "group": "License Keys",
+                    "pages": [
+                      "GET /v1/license-keys/{id}",
+                      "GET /v1/license-keys/",
+                      "PATCH /v1/license-keys/{id}",
+                      "GET /v1/license-keys/{id}/activations/{activation_id}",
+                      "POST /v1/license-keys/validate",
+                      "POST /v1/license-keys/activate",
+                      "POST /v1/license-keys/deactivate"
+                    ]
+                  },
+                  {
+                    "group": "Members",
+                    "pages": [
+                      "GET /v1/customers/{id}/members",
+                      "GET /v1/customers/external/{external_id}/members"
+                    ]
+                  },
+                  {
+                    "group": "Customer Seats",
+                    "pages": [
+                      "POST /v1/customer-seats",
+                      "GET /v1/customer-seats",
+                      "DELETE /v1/customer-seats/{seat_id}",
+                      "POST /v1/customer-seats/{seat_id}/resend",
+                      "GET /v1/customer-seats/claim/{invitation_token}",
+                      "POST /v1/customer-seats/claim"
+                    ]
+                  },
+                  {
+                    "group": "Files",
+                    "pages": [
+                      "POST /v1/files/",
+                      "GET /v1/files/",
+                      "PATCH /v1/files/{id}",
+                      "DELETE /v1/files/{id}",
+                      "POST /v1/files/{id}/uploaded"
+                    ]
+                  },
+                  {
+                    "group": "Organizations",
+                    "pages": [
+                      "GET /v1/organizations/{id}",
+                      "GET /v1/organizations/",
+                      "POST /v1/organizations/",
+                      "PATCH /v1/organizations/{id}"
+                    ]
+                  },
+                  {
+                    "group": "Metrics",
+                    "pages": [
+                      "GET /v1/metrics/",
+                      "GET /v1/metrics/limits"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Customer Portal API",
+                "pages": [
+                  "GET /v1/customer-portal/customers/me",
+                  "PATCH /v1/customer-portal/customers/me",
+                  "GET /v1/customer-portal/organizations/{slug}",
+                  {
+                    "group": "Sessions",
+                    "pages": [
+                      "POST /v1/customer-sessions/"
+                    ]
+                  },
+                  {
+                    "group": "Subscriptions",
+                    "pages": [
+                      "GET /v1/customer-portal/subscriptions/{id}",
+                      "GET /v1/customer-portal/subscriptions/",
+                      "PATCH /v1/customer-portal/subscriptions/{id}",
+                      "DELETE /v1/customer-portal/subscriptions/{id}"
+                    ]
+                  },
+                  {
+                    "group": "Orders",
+                    "pages": [
+                      "GET /v1/customer-portal/orders/{id}",
+                      "PATCH /v1/customer-portal/orders/{id}",
+                      "GET /v1/customer-portal/orders/",
+                      "POST /v1/customer-portal/orders/{id}/invoice",
+                      "GET /v1/customer-portal/orders/{id}/invoice",
+                      "GET /v1/customer-portal/orders/{id}/receipt"
+                    ]
+                  },
+                  {
+                    "group": "License Keys",
+                    "pages": [
+                      "POST /v1/customer-portal/license-keys/validate",
+                      "POST /v1/customer-portal/license-keys/activate",
+                      "POST /v1/customer-portal/license-keys/deactivate",
+                      "GET /v1/customer-portal/license-keys/{id}",
+                      "GET /v1/customer-portal/license-keys/"
+                    ]
+                  },
+                  {
+                    "group": "File Downloads",
+                    "pages": [
+                      "GET /v1/customer-portal/downloadables/"
+                    ]
+                  },
+                  {
+                    "group": "Seats",
+                    "pages": [
+                      "GET /v1/customer-portal/seats",
+                      "POST /v1/customer-portal/seats",
+                      "DELETE /v1/customer-portal/seats/{seat_id}",
+                      "POST /v1/customer-portal/seats/{seat_id}/resend",
+                      "GET /v1/customer-portal/seats/subscriptions"
+                    ]
+                  },
+                  {
+                    "group": "Payment Methods",
+                    "pages": [
+                      "GET /v1/customer-portal/customers/me/payment-methods",
+                      "DELETE /v1/customer-portal/customers/me/payment-methods/{id}"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Webhook Events",
+                "pages": [
+                  {
+                    "group": "Customer Events",
+                    "pages": [
+                      "webhook customer.state_changed",
+                      "webhook customer.created",
+                      "webhook customer.updated",
+                      "webhook customer.deleted"
+                    ]
+                  },
+                  {
+                    "group": "Billing Events",
+                    "pages": [
+                      {
+                        "group": "Checkout",
+                        "pages": [
+                          "webhook checkout.created",
+                          "webhook checkout.updated",
+                          "webhook checkout.expired"
+                        ]
+                      },
+                      {
+                        "group": "Subscriptions",
+                        "pages": [
+                          "webhook subscription.created",
+                          "webhook subscription.active",
+                          "webhook subscription.updated",
+                          "webhook subscription.canceled",
+                          "webhook subscription.uncanceled",
+                          "webhook subscription.cycled",
+                          "webhook subscription.revoked",
+                          "webhook subscription.past_due",
+                          "webhook subscription.paused",
+                          "webhook subscription.resumed",
+                          "webhook subscription.migrated"
+                        ]
+                      },
+                      {
+                        "group": "Orders",
+                        "pages": [
+                          "webhook order.created",
+                          "webhook order.paid",
+                          "webhook order.updated",
+                          "webhook order.refunded"
+                        ]
+                      },
+                      {
+                        "group": "Customer Seats",
+                        "pages": [
+                          "webhook customer_seat.assigned",
+                          "webhook customer_seat.claimed",
+                          "webhook customer_seat.revoked"
+                        ]
+                      },
+                      {
+                        "group": "Refunds",
+                        "pages": [
+                          "webhook refund.created",
+                          "webhook refund.updated"
+                        ]
+                      },
+                      {
+                        "group": "Benefit Grants",
+                        "pages": [
+                          "webhook benefit_grant.created",
+                          "webhook benefit_grant.cycled",
+                          "webhook benefit_grant.updated",
+                          "webhook benefit_grant.revoked"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "group": "Organization Events",
+                    "pages": [
+                      {
+                        "group": "Benefits",
+                        "pages": [
+                          "webhook benefit.created",
+                          "webhook benefit.updated"
+                        ]
+                      },
+                      {
+                        "group": "Products",
+                        "pages": [
+                          "webhook product.created",
+                          "webhook product.updated"
+                        ]
+                      },
+                      {
+                        "group": "Discounts",
+                        "pages": [
+                          "webhook discount.created",
+                          "webhook discount.updated",
+                          "webhook discount.deleted"
+                        ]
+                      },
+                      {
+                        "group": "Organization",
+                        "pages": ["webhook organization.updated"]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Integrations",
+                "pages": [
+                  {
+                    "group": "OpenID Connect",
+                    "pages": [
+                      "GET /v1/oauth2/authorize",
+                      "POST /v1/oauth2/token",
+                      "POST /v1/oauth2/introspect",
+                      "POST /v1/oauth2/revoke",
+                      "GET /v1/oauth2/userinfo"
+                    ]
+                  },
+                  {
+                    "group": "Webhooks",
+                    "pages": [
+                      "POST /v1/webhooks/endpoints",
+                      "GET /v1/webhooks/endpoints/{id}",
+                      "GET /v1/webhooks/endpoints",
+                      "PATCH /v1/webhooks/endpoints/{id}",
+                      "DELETE /v1/webhooks/endpoints/{id}"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Changelog",
+        "icon": "signal-stream",
+        "pages": ["changelog/recent", "changelog/api"]
+      },
+      {
+        "tab": "Support",
+        "icon": "square-question",
+        "pages": ["support", "security"]
+      }
+    ]
+  },
+  "logo": {
+    "light": "./logo/light.png",
+    "dark": "./logo/dark.png",
+    "href": "https://polar.sh"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "llms-full.txt",
+        "href": "https://polar.sh/docs/llms-full.txt"
+      },
+      {
+        "label": "Contact support",
+        "href": "https://polar.sh/docs/support"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Dashboard",
+      "href": "https://polar.sh"
+    }
+  },
+  "contextual": {
+    "options": ["copy", "view", "chatgpt", "claude"]
+  },
+  "footer": {
+    "socials": {
+      "x": "https://x.com/polar_sh",
+      "github": "https://github.com/polarsource/polar",
+      "discord": "https://dub.sh/polar-discord"
+    }
+  },
+  "redirects": [
+    {
+      "source": "/api",
+      "destination": "/api-reference"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "/api-reference"
+    },
+    {
+      "source": "/docs/api",
+      "destination": "/api-reference"
+    },
+    {
+      "source": "/docs/api/:path*",
+      "destination": "/api-reference"
+    },
+    {
+      "source": "/api-reference/current",
+      "destination": "/api-reference/2026-04/introduction"
+    },
+    {
+      "source": "/api-reference/next",
+      "destination": "/api-reference/2026-10/introduction"
+    },
+    {
+      "source": "/api-reference/current/:path*",
+      "destination": "/api-reference/2026-04/:path*"
+    },
+    {
+      "source": "/api-reference/next/:path*",
+      "destination": "/api-reference/2026-10/:path*"
+    },
+    {
+      "source": "/api-reference/benefits/create",
+      "destination": "/api-reference/current/benefits/create-benefit"
+    },
+    {
+      "source": "/api-reference/benefits/delete",
+      "destination": "/api-reference/current/benefits/delete-benefit"
+    },
+    {
+      "source": "/api-reference/benefits/get",
+      "destination": "/api-reference/current/benefits/get-benefit"
+    },
+    {
+      "source": "/api-reference/benefits/list",
+      "destination": "/api-reference/current/benefits/list-benefits"
+    },
+    {
+      "source": "/api-reference/benefits/list-grants",
+      "destination": "/api-reference/current/benefits/list-benefit-grants"
+    },
+    {
+      "source": "/api-reference/benefits/update",
+      "destination": "/api-reference/current/benefits/update-benefit"
+    },
+    {
+      "source": "/api-reference/checkout-links/create",
+      "destination": "/api-reference/current/checkout-links/create-checkout-link"
+    },
+    {
+      "source": "/api-reference/checkout-links/delete",
+      "destination": "/api-reference/current/checkout-links/delete-checkout-link"
+    },
+    {
+      "source": "/api-reference/checkout-links/get",
+      "destination": "/api-reference/current/checkout-links/get-checkout-link"
+    },
+    {
+      "source": "/api-reference/checkout-links/list",
+      "destination": "/api-reference/current/checkout-links/list-checkout-links"
+    },
+    {
+      "source": "/api-reference/checkout-links/update",
+      "destination": "/api-reference/current/checkout-links/update-checkout-link"
+    },
+    {
+      "source": "/api-reference/checkouts/confirm-session-from-client",
+      "destination": "/api-reference/current/checkouts/confirm-checkout-session-from-client"
+    },
+    {
+      "source": "/api-reference/checkouts/create-session",
+      "destination": "/api-reference/current/checkouts/create-checkout-session"
+    },
+    {
+      "source": "/api-reference/checkouts/get-session",
+      "destination": "/api-reference/current/checkouts/get-checkout-session"
+    },
+    {
+      "source": "/api-reference/checkouts/get-session-from-client",
+      "destination": "/api-reference/current/checkouts/get-checkout-session-from-client"
+    },
+    {
+      "source": "/api-reference/checkouts/list-sessions",
+      "destination": "/api-reference/current/checkouts/list-checkout-sessions"
+    },
+    {
+      "source": "/api-reference/checkouts/update-session",
+      "destination": "/api-reference/current/checkouts/update-checkout-session"
+    },
+    {
+      "source": "/api-reference/checkouts/update-session-from-client",
+      "destination": "/api-reference/current/checkouts/update-checkout-session-from-client"
+    },
+    {
+      "source": "/api-reference/custom-fields/create",
+      "destination": "/api-reference/current/custom-fields/create-custom-field"
+    },
+    {
+      "source": "/api-reference/custom-fields/delete",
+      "destination": "/api-reference/current/custom-fields/delete-custom-field"
+    },
+    {
+      "source": "/api-reference/custom-fields/get",
+      "destination": "/api-reference/current/custom-fields/get-custom-field"
+    },
+    {
+      "source": "/api-reference/custom-fields/list",
+      "destination": "/api-reference/current/custom-fields/list-custom-fields"
+    },
+    {
+      "source": "/api-reference/custom-fields/update",
+      "destination": "/api-reference/current/custom-fields/update-custom-field"
+    },
+    {
+      "source": "/api-reference/customer-meters/get",
+      "destination": "/api-reference/current/customer_meters/get-customer-meter"
+    },
+    {
+      "source": "/api-reference/customer-meters/list",
+      "destination": "/api-reference/current/customer_meters/list-customer-meters"
+    },
+    {
+      "source": "/api-reference/customer-portal/benefit-grants/get",
+      "destination": "/api-reference/current/customer_portal/get-benefit-grant"
+    },
+    {
+      "source": "/api-reference/customer-portal/benefit-grants/list",
+      "destination": "/api-reference/current/customer_portal/list-benefit-grants"
+    },
+    {
+      "source": "/api-reference/customer-portal/benefit-grants/update",
+      "destination": "/api-reference/current/customer_portal/update-benefit-grant"
+    },
+    {
+      "source": "/api-reference/customer-portal/downloadables/get",
+      "destination": "/api-reference/current/customer_portal/list-downloadables"
+    },
+    {
+      "source": "/api-reference/customer-portal/downloadables/list",
+      "destination": "/api-reference/current/customer_portal/list-downloadables"
+    },
+    {
+      "source": "/api-reference/customer-portal/get-customer",
+      "destination": "/api-reference/current/customer_portal/get-customer"
+    },
+    {
+      "source": "/api-reference/customer-portal/get-organization",
+      "destination": "/api-reference/current/customer_portal/get-organization"
+    },
+    {
+      "source": "/api-reference/customer-portal/license-keys/activate",
+      "destination": "/api-reference/current/customer_portal/activate-license-key"
+    },
+    {
+      "source": "/api-reference/customer-portal/license-keys/deactivate",
+      "destination": "/api-reference/current/customer_portal/deactivate-license-key"
+    },
+    {
+      "source": "/api-reference/customer-portal/license-keys/get",
+      "destination": "/api-reference/current/customer_portal/get-license-key"
+    },
+    {
+      "source": "/api-reference/customer-portal/license-keys/list",
+      "destination": "/api-reference/current/customer_portal/list-license-keys"
+    },
+    {
+      "source": "/api-reference/customer-portal/license-keys/validate",
+      "destination": "/api-reference/current/customer_portal/validate-license-key"
+    },
+    {
+      "source": "/api-reference/customer-portal/orders/get",
+      "destination": "/api-reference/current/customer_portal/get-order"
+    },
+    {
+      "source": "/api-reference/customer-portal/orders/get-invoice",
+      "destination": "/api-reference/current/customer_portal/get-order-invoice"
+    },
+    {
+      "source": "/api-reference/customer-portal/orders/get-receipt",
+      "destination": "/api-reference/current/customer_portal/get-order-receipt"
+    },
+    {
+      "source": "/api-reference/customer-portal/orders/list",
+      "destination": "/api-reference/current/customer_portal/list-orders"
+    },
+    {
+      "source": "/api-reference/customer-portal/orders/patch",
+      "destination": "/api-reference/current/customer_portal/update-order"
+    },
+    {
+      "source": "/api-reference/customer-portal/orders/post-invoice",
+      "destination": "/api-reference/current/customer_portal/generate-order-invoice"
+    },
+    {
+      "source": "/api-reference/customer-portal/payment-methods/delete",
+      "destination": "/api-reference/current/customer_portal/delete-customer-payment-method"
+    },
+    {
+      "source": "/api-reference/customer-portal/payment-methods/list",
+      "destination": "/api-reference/current/customer_portal/list-customer-payment-methods"
+    },
+    {
+      "source": "/api-reference/customer-portal/seats/assign",
+      "destination": "/api-reference/current/customer_portal/assign-seat"
+    },
+    {
+      "source": "/api-reference/customer-portal/seats/list",
+      "destination": "/api-reference/current/customer_portal/list-seats"
+    },
+    {
+      "source": "/api-reference/customer-portal/seats/list-subscriptions",
+      "destination": "/api-reference/current/customer_portal/list-claimed-subscriptions"
+    },
+    {
+      "source": "/api-reference/customer-portal/seats/resend",
+      "destination": "/api-reference/current/customer_portal/resend-invitation"
+    },
+    {
+      "source": "/api-reference/customer-portal/seats/revoke",
+      "destination": "/api-reference/current/customer_portal/revoke-seat"
+    },
+    {
+      "source": "/api-reference/customer-portal/sessions/create",
+      "destination": "/api-reference/current/customer-sessions/create-customer-session"
+    },
+    {
+      "source": "/api-reference/customer-portal/subscriptions/cancel",
+      "destination": "/api-reference/current/customer_portal/cancel-subscription"
+    },
+    {
+      "source": "/api-reference/customer-portal/subscriptions/get",
+      "destination": "/api-reference/current/customer_portal/get-subscription"
+    },
+    {
+      "source": "/api-reference/customer-portal/subscriptions/list",
+      "destination": "/api-reference/current/customer_portal/list-subscriptions"
+    },
+    {
+      "source": "/api-reference/customer-portal/subscriptions/update",
+      "destination": "/api-reference/current/customer_portal/update-subscription"
+    },
+    {
+      "source": "/api-reference/customer-portal/update-customer",
+      "destination": "/api-reference/current/customer_portal/update-customer"
+    },
+    {
+      "source": "/api-reference/customer-seats/assign",
+      "destination": "/api-reference/current/customer-seats/assign-seat"
+    },
+    {
+      "source": "/api-reference/customer-seats/claim",
+      "destination": "/api-reference/current/customer-seats/claim-seat"
+    },
+    {
+      "source": "/api-reference/customer-seats/get-claim-info",
+      "destination": "/api-reference/current/customer-seats/get-claim-info"
+    },
+    {
+      "source": "/api-reference/customer-seats/list",
+      "destination": "/api-reference/current/customer-seats/list-seats"
+    },
+    {
+      "source": "/api-reference/customer-seats/resend",
+      "destination": "/api-reference/current/customer-seats/resend-invitation"
+    },
+    {
+      "source": "/api-reference/customer-seats/revoke",
+      "destination": "/api-reference/current/customer-seats/revoke-seat"
+    },
+    {
+      "source": "/api-reference/customers/create",
+      "destination": "/api-reference/current/customers/create-customer"
+    },
+    {
+      "source": "/api-reference/customers/delete",
+      "destination": "/api-reference/current/customers/delete-customer"
+    },
+    {
+      "source": "/api-reference/customers/delete-external",
+      "destination": "/api-reference/current/customers/delete-customer-by-external-id"
+    },
+    {
+      "source": "/api-reference/customers/get",
+      "destination": "/api-reference/current/customers/get-customer"
+    },
+    {
+      "source": "/api-reference/customers/get-external",
+      "destination": "/api-reference/current/customers/get-customer-by-external-id"
+    },
+    {
+      "source": "/api-reference/customers/list",
+      "destination": "/api-reference/current/customers/list-customers"
+    },
+    {
+      "source": "/api-reference/customers/list-payment-methods",
+      "destination": "/api-reference/current/customers/list-customer-payment-methods"
+    },
+    {
+      "source": "/api-reference/customers/list-payment-methods-external",
+      "destination": "/api-reference/current/customers/list-customer-payment-methods-by-external-id"
+    },
+    {
+      "source": "/api-reference/customers/state",
+      "destination": "/api-reference/current/customers/get-customer-state"
+    },
+    {
+      "source": "/api-reference/customers/state-external",
+      "destination": "/api-reference/current/customers/get-customer-state-by-external-id"
+    },
+    {
+      "source": "/api-reference/customers/update",
+      "destination": "/api-reference/current/customers/update-customer"
+    },
+    {
+      "source": "/api-reference/customers/update-external",
+      "destination": "/api-reference/current/customers/update-customer-by-external-id"
+    },
+    {
+      "source": "/api-reference/discounts/create",
+      "destination": "/api-reference/current/discounts/create-discount"
+    },
+    {
+      "source": "/api-reference/discounts/delete",
+      "destination": "/api-reference/current/discounts/delete-discount"
+    },
+    {
+      "source": "/api-reference/discounts/get",
+      "destination": "/api-reference/current/discounts/get-discount"
+    },
+    {
+      "source": "/api-reference/discounts/list",
+      "destination": "/api-reference/current/discounts/list-discounts"
+    },
+    {
+      "source": "/api-reference/discounts/update",
+      "destination": "/api-reference/current/discounts/update-discount"
+    },
+    {
+      "source": "/api-reference/events/get",
+      "destination": "/api-reference/current/events/get-event"
+    },
+    {
+      "source": "/api-reference/events/ingest",
+      "destination": "/api-reference/current/events/ingest-events"
+    },
+    {
+      "source": "/api-reference/events/list",
+      "destination": "/api-reference/current/events/list-events"
+    },
+    {
+      "source": "/api-reference/files/complete-upload",
+      "destination": "/api-reference/current/files/complete-file-upload"
+    },
+    {
+      "source": "/api-reference/files/create",
+      "destination": "/api-reference/current/files/create-file"
+    },
+    {
+      "source": "/api-reference/files/delete",
+      "destination": "/api-reference/current/files/delete-file"
+    },
+    {
+      "source": "/api-reference/files/list",
+      "destination": "/api-reference/current/files/list-files"
+    },
+    {
+      "source": "/api-reference/files/update",
+      "destination": "/api-reference/current/files/update-file"
+    },
+    {
+      "source": "/api-reference/introduction",
+      "destination": "/api-reference/current/introduction"
+    },
+    {
+      "source": "/api-reference/license-keys/activate",
+      "destination": "/api-reference/current/license_keys/activate-license-key"
+    },
+    {
+      "source": "/api-reference/license-keys/deactivate",
+      "destination": "/api-reference/current/license_keys/deactivate-license-key"
+    },
+    {
+      "source": "/api-reference/license-keys/get",
+      "destination": "/api-reference/current/license_keys/get-license-key"
+    },
+    {
+      "source": "/api-reference/license-keys/get-activation",
+      "destination": "/api-reference/current/license_keys/get-activation"
+    },
+    {
+      "source": "/api-reference/license-keys/list",
+      "destination": "/api-reference/current/license_keys/list-license-keys"
+    },
+    {
+      "source": "/api-reference/license-keys/update",
+      "destination": "/api-reference/current/license_keys/update-license-key"
+    },
+    {
+      "source": "/api-reference/license-keys/validate",
+      "destination": "/api-reference/current/license_keys/validate-license-key"
+    },
+    {
+      "source": "/api-reference/members/create",
+      "destination": "/api-reference/current/customers/create-member"
+    },
+    {
+      "source": "/api-reference/members/delete",
+      "destination": "/api-reference/current/customers/delete-member"
+    },
+    {
+      "source": "/api-reference/members/delete-external",
+      "destination": "/api-reference/current/customers/delete-member-by-external-id"
+    },
+    {
+      "source": "/api-reference/members/get",
+      "destination": "/api-reference/current/customers/get-member"
+    },
+    {
+      "source": "/api-reference/members/get-external",
+      "destination": "/api-reference/current/customers/get-member-by-external-id"
+    },
+    {
+      "source": "/api-reference/members/list",
+      "destination": "/api-reference/current/customers/list-members"
+    },
+    {
+      "source": "/api-reference/members/update",
+      "destination": "/api-reference/current/customers/update-member"
+    },
+    {
+      "source": "/api-reference/members/update-external",
+      "destination": "/api-reference/current/customers/update-member-by-external-id"
+    },
+    {
+      "source": "/api-reference/meters/create",
+      "destination": "/api-reference/current/meters/create-meter"
+    },
+    {
+      "source": "/api-reference/meters/get",
+      "destination": "/api-reference/current/meters/get-meter"
+    },
+    {
+      "source": "/api-reference/meters/get-events",
+      "destination": "/api-reference/current/events/list-events"
+    },
+    {
+      "source": "/api-reference/meters/get-quantities",
+      "destination": "/api-reference/current/meters/get-meter-quantities"
+    },
+    {
+      "source": "/api-reference/meters/list",
+      "destination": "/api-reference/current/meters/list-meters"
+    },
+    {
+      "source": "/api-reference/meters/update",
+      "destination": "/api-reference/current/meters/update-meter"
+    },
+    {
+      "source": "/api-reference/metrics/get",
+      "destination": "/api-reference/current/metrics/get-metrics"
+    },
+    {
+      "source": "/api-reference/metrics/get-limits",
+      "destination": "/api-reference/current/metrics/get-metrics-limits"
+    },
+    {
+      "source": "/api-reference/oauth2/connect/authorize",
+      "destination": "/api-reference/current/oauth2/authorize"
+    },
+    {
+      "source": "/api-reference/oauth2/connect/get-user-info",
+      "destination": "/api-reference/current/oauth2/get-user-info"
+    },
+    {
+      "source": "/api-reference/oauth2/connect/introspect-token",
+      "destination": "/api-reference/current/oauth2/introspect-token"
+    },
+    {
+      "source": "/api-reference/oauth2/connect/request-token",
+      "destination": "/api-reference/current/oauth2/request-token"
+    },
+    {
+      "source": "/api-reference/oauth2/connect/revoke-token",
+      "destination": "/api-reference/current/oauth2/revoke-token"
+    },
+    {
+      "source": "/api-reference/orders/get",
+      "destination": "/api-reference/current/orders/get-order"
+    },
+    {
+      "source": "/api-reference/orders/get-invoice",
+      "destination": "/api-reference/current/orders/get-order-invoice"
+    },
+    {
+      "source": "/api-reference/orders/get-receipt",
+      "destination": "/api-reference/current/orders/get-order-receipt"
+    },
+    {
+      "source": "/api-reference/orders/list",
+      "destination": "/api-reference/current/orders/list-orders"
+    },
+    {
+      "source": "/api-reference/orders/patch",
+      "destination": "/api-reference/current/orders/update-order"
+    },
+    {
+      "source": "/api-reference/orders/post-invoice",
+      "destination": "/api-reference/current/orders/generate-order-invoice"
+    },
+    {
+      "source": "/api-reference/organizations/create",
+      "destination": "/api-reference/current/organizations/create-organization"
+    },
+    {
+      "source": "/api-reference/organizations/get",
+      "destination": "/api-reference/current/organizations/get-organization"
+    },
+    {
+      "source": "/api-reference/organizations/list",
+      "destination": "/api-reference/current/organizations/list-organizations"
+    },
+    {
+      "source": "/api-reference/organizations/update",
+      "destination": "/api-reference/current/organizations/update-organization"
+    },
+    {
+      "source": "/api-reference/products/create",
+      "destination": "/api-reference/current/products/create-product"
+    },
+    {
+      "source": "/api-reference/products/get",
+      "destination": "/api-reference/current/products/get-product"
+    },
+    {
+      "source": "/api-reference/products/list",
+      "destination": "/api-reference/current/products/list-products"
+    },
+    {
+      "source": "/api-reference/products/update",
+      "destination": "/api-reference/current/products/update-product"
+    },
+    {
+      "source": "/api-reference/products/update-benefits",
+      "destination": "/api-reference/current/products/update-product-benefits"
+    },
+    {
+      "source": "/api-reference/refunds/create",
+      "destination": "/api-reference/current/refunds/create-refund"
+    },
+    {
+      "source": "/api-reference/refunds/list",
+      "destination": "/api-reference/current/refunds/list-refunds"
+    },
+    {
+      "source": "/api-reference/subscriptions/create",
+      "destination": "/api-reference/current/subscriptions/create-subscription"
+    },
+    {
+      "source": "/api-reference/subscriptions/export",
+      "destination": "/api-reference/current/subscriptions/export-subscriptions"
+    },
+    {
+      "source": "/api-reference/subscriptions/get",
+      "destination": "/api-reference/current/subscriptions/get-subscription"
+    },
+    {
+      "source": "/api-reference/subscriptions/list",
+      "destination": "/api-reference/current/subscriptions/list-subscriptions"
+    },
+    {
+      "source": "/api-reference/subscriptions/revoke",
+      "destination": "/api-reference/current/subscriptions/revoke-subscription"
+    },
+    {
+      "source": "/api-reference/subscriptions/update",
+      "destination": "/api-reference/current/subscriptions/update-subscription"
+    },
+    {
+      "source": "/api-reference/webhooks/benefit.created",
+      "destination": "/api-reference/current/benefit_created"
+    },
+    {
+      "source": "/api-reference/webhooks/benefit.updated",
+      "destination": "/api-reference/current/benefit_updated"
+    },
+    {
+      "source": "/api-reference/webhooks/benefit_grant.created",
+      "destination": "/api-reference/current/benefit_grant_created"
+    },
+    {
+      "source": "/api-reference/webhooks/benefit_grant.cycled",
+      "destination": "/api-reference/current/benefit_grant_cycled"
+    },
+    {
+      "source": "/api-reference/webhooks/benefit_grant.revoked",
+      "destination": "/api-reference/current/benefit_grant_revoked"
+    },
+    {
+      "source": "/api-reference/webhooks/benefit_grant.updated",
+      "destination": "/api-reference/current/benefit_grant_updated"
+    },
+    {
+      "source": "/api-reference/webhooks/checkout.created",
+      "destination": "/api-reference/current/checkout_created"
+    },
+    {
+      "source": "/api-reference/webhooks/checkout.expired",
+      "destination": "/api-reference/current/checkout_expired"
+    },
+    {
+      "source": "/api-reference/webhooks/checkout.updated",
+      "destination": "/api-reference/current/checkout_updated"
+    },
+    {
+      "source": "/api-reference/webhooks/customer.created",
+      "destination": "/api-reference/current/customer_created"
+    },
+    {
+      "source": "/api-reference/webhooks/customer.deleted",
+      "destination": "/api-reference/current/customer_deleted"
+    },
+    {
+      "source": "/api-reference/webhooks/customer.state_changed",
+      "destination": "/api-reference/current/customer_state_changed"
+    },
+    {
+      "source": "/api-reference/webhooks/customer.updated",
+      "destination": "/api-reference/current/customer_updated"
+    },
+    {
+      "source": "/api-reference/webhooks/customer_seat.assigned",
+      "destination": "/api-reference/current/customer_seat_assigned"
+    },
+    {
+      "source": "/api-reference/webhooks/customer_seat.claimed",
+      "destination": "/api-reference/current/customer_seat_claimed"
+    },
+    {
+      "source": "/api-reference/webhooks/customer_seat.revoked",
+      "destination": "/api-reference/current/customer_seat_revoked"
+    },
+    {
+      "source": "/api-reference/webhooks/endpoints/create",
+      "destination": "/api-reference/current/webhooks/create-webhook-endpoint"
+    },
+    {
+      "source": "/api-reference/webhooks/endpoints/delete",
+      "destination": "/api-reference/current/webhooks/delete-webhook-endpoint"
+    },
+    {
+      "source": "/api-reference/webhooks/endpoints/get",
+      "destination": "/api-reference/current/webhooks/get-webhook-endpoint"
+    },
+    {
+      "source": "/api-reference/webhooks/endpoints/list",
+      "destination": "/api-reference/current/webhooks/list-webhook-endpoints"
+    },
+    {
+      "source": "/api-reference/webhooks/endpoints/update",
+      "destination": "/api-reference/current/webhooks/update-webhook-endpoint"
+    },
+    {
+      "source": "/api-reference/webhooks/member.created",
+      "destination": "/api-reference/current/member_created"
+    },
+    {
+      "source": "/api-reference/webhooks/member.deleted",
+      "destination": "/api-reference/current/member_deleted"
+    },
+    {
+      "source": "/api-reference/webhooks/member.updated",
+      "destination": "/api-reference/current/member_updated"
+    },
+    {
+      "source": "/api-reference/webhooks/order.created",
+      "destination": "/api-reference/current/order_created"
+    },
+    {
+      "source": "/api-reference/webhooks/order.paid",
+      "destination": "/api-reference/current/order_paid"
+    },
+    {
+      "source": "/api-reference/webhooks/order.refunded",
+      "destination": "/api-reference/current/order_refunded"
+    },
+    {
+      "source": "/api-reference/webhooks/order.updated",
+      "destination": "/api-reference/current/order_updated"
+    },
+    {
+      "source": "/api-reference/webhooks/organization.updated",
+      "destination": "/api-reference/current/organization_updated"
+    },
+    {
+      "source": "/api-reference/webhooks/product.created",
+      "destination": "/api-reference/current/product_created"
+    },
+    {
+      "source": "/api-reference/webhooks/product.updated",
+      "destination": "/api-reference/current/product_updated"
+    },
+    {
+      "source": "/api-reference/webhooks/refund.created",
+      "destination": "/api-reference/current/refund_created"
+    },
+    {
+      "source": "/api-reference/webhooks/refund.updated",
+      "destination": "/api-reference/current/refund_updated"
+    },
+    {
+      "source": "/api-reference/webhooks/subscription.active",
+      "destination": "/api-reference/current/subscription_active"
+    },
+    {
+      "source": "/api-reference/webhooks/subscription.canceled",
+      "destination": "/api-reference/current/subscription_canceled"
+    },
+    {
+      "source": "/api-reference/webhooks/subscription.created",
+      "destination": "/api-reference/current/subscription_created"
+    },
+    {
+      "source": "/api-reference/webhooks/subscription.past_due",
+      "destination": "/api-reference/current/subscription_past_due"
+    },
+    {
+      "source": "/api-reference/webhooks/subscription.revoked",
+      "destination": "/api-reference/current/subscription_revoked"
+    },
+    {
+      "source": "/api-reference/webhooks/subscription.uncanceled",
+      "destination": "/api-reference/current/subscription_uncanceled"
+    },
+    {
+      "source": "/api-reference/webhooks/subscription.updated",
+      "destination": "/api-reference/current/subscription_updated"
+    },
+    {
+      "source": "/api-reference/webhooks/subscription.migrated",
+      "destination": "/api-reference/current/subscription_migrated"
+    },
+    {
+      "source": "/api-reference/benefits/:path*",
+      "destination": "/api-reference/current"
+    },
+    {
+      "source": "/api-reference/checkout-links/:path*",
+      "destination": "/api-reference/current"
+    },
+    {
+      "source": "/api-reference/checkouts/:path*",
+      "destination": "/api-reference/current"
+    },
+    {
+      "source": "/api-reference/custom-fields/:path*",
+      "destination": "/api-reference/current"
+    },
+    {
+      "source": "/api-reference/customer-meters/:path*",
+      "destination": "/api-reference/current"
+    },
+    {
+      "source": "/api-reference/customer-portal/:path*",
+      "destination": "/api-reference/current"
+    },
+    {
+      "source": "/api-reference/customer-seats/:path*",
+      "destination": "/api-reference/current"
+    },
+    {
+      "source": "/api-reference/customers/:path*",
+      "destination": "/api-reference/current"
+    },
+    {
+      "source": "/api-reference/discounts/:path*",
+      "destination": "/api-reference/current"
+    },
+    {
+      "source": "/api-reference/events/:path*",
+      "destination": "/api-reference/current"
+    },
+    {
+      "source": "/api-reference/files/:path*",
+      "destination": "/api-reference/current"
+    },
+    {
+      "source": "/api-reference/license-keys/:path*",
+      "destination": "/api-reference/current"
+    },
+    {
+      "source": "/api-reference/members/:path*",
+      "destination": "/api-reference/current"
+    },
+    {
+      "source": "/api-reference/meters/:path*",
+      "destination": "/api-reference/current"
+    },
+    {
+      "source": "/api-reference/metrics/:path*",
+      "destination": "/api-reference/current"
+    },
+    {
+      "source": "/api-reference/oauth2/:path*",
+      "destination": "/api-reference/current"
+    },
+    {
+      "source": "/api-reference/orders/:path*",
+      "destination": "/api-reference/current"
+    },
+    {
+      "source": "/api-reference/organizations/:path*",
+      "destination": "/api-reference/current"
+    },
+    {
+      "source": "/api-reference/products/:path*",
+      "destination": "/api-reference/current"
+    },
+    {
+      "source": "/api-reference/refunds/:path*",
+      "destination": "/api-reference/current"
+    },
+    {
+      "source": "/api-reference/subscriptions/:path*",
+      "destination": "/api-reference/current"
+    },
+    {
+      "source": "/api-reference/webhooks/:path*",
+      "destination": "/api-reference/current"
+    },
+    {
+      "source": "/developers/sandbox",
+      "destination": "/integrate/sandbox"
+    },
+    {
+      "source": "/developers/:path*",
+      "destination": "/integrate/authentication"
+    },
+    {
+      "source": "/docs/developers/sandbox",
+      "destination": "/integrate/sandbox"
+    },
+    {
+      "source": "/docs/developers/:path*",
+      "destination": "/integrate/authentication"
+    },
+    {
+      "source": "/docs/support",
+      "destination": "/support"
+    },
+    {
+      "source": "/documentation/welcome-to-polar",
+      "destination": "/introduction"
+    },
+    {
+      "source": "/documentation/tools/polar-migrate",
+      "destination": "/migrate"
+    },
+    {
+      "source": "/documentation/tools/polar-init",
+      "destination": "/introduction#quickstart-from-cli"
+    },
+    {
+      "source": "/documentation/basics/getting-started",
+      "destination": "/introduction"
+    },
+    {
+      "source": "/documentation/basics/create-product",
+      "destination": "/features/products"
+    },
+    {
+      "source": "/documentation/basics/create-checkout-link",
+      "destination": "/features/checkout/links"
+    },
+    {
+      "source": "/documentation/basics/withdraw-money",
+      "destination": "/features/finance/payouts"
+    },
+    {
+      "source": "/documentation/features/products",
+      "destination": "/features/products"
+    },
+    {
+      "source": "/documentation/support",
+      "destination": "/support"
+    },
+    {
+      "source": "/documentation/features/benefits",
+      "destination": "/features/benefits/introduction"
+    },
+    {
+      "source": "/documentation/features/benefits/license-keys",
+      "destination": "/features/benefits/license-keys"
+    },
+    {
+      "source": "/documentation/features/benefits/discord-server-roles",
+      "destination": "/features/benefits/discord-access"
+    },
+    {
+      "source": "/documentation/features/benefits/github-repository-access",
+      "destination": "/features/benefits/github-access"
+    },
+    {
+      "source": "/documentation/features/benefits/file-downloads",
+      "destination": "/features/benefits/file-downloads"
+    },
+    {
+      "source": "/documentation/features/benefits/custom-benefit",
+      "destination": "/features/benefits/custom"
+    },
+    {
+      "source": "/documentation/features/checkouts/checkout-links",
+      "destination": "/features/checkout/links"
+    },
+    {
+      "source": "/documentation/tools/checkout-link",
+      "destination": "/features/checkout/links#checkout-links-cli"
+    },
+    {
+      "source": "/documentation/features/checkouts/checkout-embed",
+      "destination": "/features/checkout/embed"
+    },
+    {
+      "source": "/documentation/features/checkouts/checkout-sessions",
+      "destination": "/features/checkout/session"
+    },
+    {
+      "source": "/documentation/features/products/discounts",
+      "destination": "/features/discounts"
+    },
+    {
+      "source": "/documentation/features/orders-subscriptions",
+      "destination": "/features/orders"
+    },
+    {
+      "source": "/documentation/features/refunds",
+      "destination": "/features/refunds"
+    },
+    {
+      "source": "/documentation/features/analytics",
+      "destination": "/features/analytics"
+    },
+    {
+      "source": "/documentation/features/customer-management",
+      "destination": "/features/customer-management"
+    },
+    {
+      "source": "/documentation/features/customer-portal",
+      "destination": "/features/customer-portal/introduction"
+    },
+    {
+      "source": "/guides/disable-subscription-changes-in-customer-portal",
+      "destination": "/features/customer-portal/settings"
+    },
+    {
+      "source": "/guides/subscription-upgrades",
+      "destination": "/features/subscriptions/manage"
+    },
+    {
+      "source": "/guides/subscription-downgrades",
+      "destination": "/features/subscriptions/manage"
+    },
+    {
+      "source": "/guides/proration-for-subscription-changes",
+      "destination": "/features/subscriptions/proration"
+    },
+    {
+      "source": "/features/trials",
+      "destination": "/features/subscriptions/trials"
+    },
+    {
+      "source": "/docs/features/trials",
+      "destination": "/features/subscriptions/trials"
+    },
+    {
+      "source": "/docs/guides/subscription-upgrades",
+      "destination": "/features/subscriptions/manage"
+    },
+    {
+      "source": "/docs/guides/subscription-downgrades",
+      "destination": "/features/subscriptions/manage"
+    },
+    {
+      "source": "/docs/guides/proration-for-subscription-changes",
+      "destination": "/features/subscriptions/proration"
+    },
+    {
+      "source": "/features/customer-portal",
+      "destination": "/features/customer-portal/introduction"
+    },
+    {
+      "source": "/features/customer-portal/faq",
+      "destination": "/features/customer-portal/introduction#faq"
+    },
+    {
+      "source": "/docs/features/customer-portal",
+      "destination": "/features/customer-portal/introduction"
+    },
+    {
+      "source": "/documentation/features/finance/accounts",
+      "destination": "/features/finance/accounts"
+    },
+    {
+      "source": "/documentation/features/finance/balance",
+      "destination": "/features/finance/balance"
+    },
+    {
+      "source": "/documentation/features/finance/payouts",
+      "destination": "/features/finance/payouts"
+    },
+    {
+      "source": "/documentation/integrations/polar-for-raycast",
+      "destination": "/features/integrations/raycast"
+    },
+    {
+      "source": "/documentation/integrations/polar-for-framer",
+      "destination": "/features/integrations/framer"
+    },
+    {
+      "source": "/documentation/integrations/polar-for-zapier",
+      "destination": "/features/integrations/zapier"
+    },
+    {
+      "source": "/documentation/features/products/purchasing-power-parity",
+      "destination": "/features/integrations/paritydeals"
+    },
+    {
+      "source": "/documentation/integration-guides/webhooks",
+      "destination": "/integrate/webhooks/intro"
+    },
+    {
+      "source": "/documentation/features/sandbox",
+      "destination": "/integrate/sandbox"
+    },
+    {
+      "source": "/documentation/integration-guides/authenticating-with-polar",
+      "destination": "/integrate/authentication"
+    },
+    {
+      "source": "/documentation/integration-guides/nextjs",
+      "destination": "/guides/nextjs"
+    },
+    {
+      "source": "/documentation/integration-guides/laravel",
+      "destination": "/guides/laravel"
+    },
+    {
+      "source": "/documentation/sdks/typescript-sdk",
+      "destination": "/integrate/sdk/typescript"
+    },
+    {
+      "source": "/documentation/sdks/python-sdk",
+      "destination": "/integrate/sdk/python"
+    },
+    {
+      "source": "/documentation/adapters/polar-shnextjs",
+      "destination": "/integrate/sdk/adapters/nextjs"
+    },
+    {
+      "source": "/documentation/adapters/polar-shastro",
+      "destination": "/integrate/sdk/adapters/astro"
+    },
+    {
+      "source": "/documentation/adapters/polar-shremix",
+      "destination": "/integrate/sdk/adapters/remix"
+    },
+    {
+      "source": "/documentation/adapters/polar-shsveltekit",
+      "destination": "/integrate/sdk/adapters/sveltekit"
+    },
+    {
+      "source": "/documentation/adapters/polar-shdeno",
+      "destination": "/integrate/sdk/adapters/deno"
+    },
+    {
+      "source": "/documentation/adapters/polar-shelysia",
+      "destination": "/integrate/sdk/adapters/elysia"
+    },
+    {
+      "source": "/documentation/adapters/polar-shexpress",
+      "destination": "/integrate/sdk/adapters/express"
+    },
+    {
+      "source": "/documentation/adapters/polar-shfastify",
+      "destination": "/integrate/sdk/adapters/fastify"
+    },
+    {
+      "source": "/documentation/adapters/polar-shhono",
+      "destination": "/integrate/sdk/adapters/hono"
+    },
+    {
+      "source": "/documentation/polar-as-merchant-of-record/tax",
+      "destination": "/merchant-of-record/introduction"
+    },
+    {
+      "source": "/documentation/polar-as-merchant-of-record/fees",
+      "destination": "/merchant-of-record/fees"
+    },
+    {
+      "source": "/documentation/polar-as-merchant-of-record/supported-countries",
+      "destination": "/merchant-of-record/supported-countries"
+    },
+    {
+      "source": "/documentation/polar-as-merchant-of-record/acceptable-products-use",
+      "destination": "/merchant-of-record/acceptable-use/introduction"
+    },
+    {
+      "source": "/merchant-of-record/acceptable-use",
+      "destination": "https://polar.sh/legal/acceptable-use-policy"
+    },
+    {
+      "source": "/documentation/polar-as-merchant-of-record/account-reviews",
+      "destination": "/merchant-of-record/account-reviews"
+    },
+    {
+      "source": "/developers/webhooks",
+      "destination": "/integrate/webhooks/endpoints"
+    },
+    {
+      "source": "/docs/developers/webhooks",
+      "destination": "/integrate/webhooks/endpoints"
+    },
+    {
+      "source": "/finance/accounts",
+      "destination": "/features/finance/accounts"
+    },
+    {
+      "source": "/docs/finance/accounts",
+      "destination": "/features/finance/accounts"
+    },
+    {
+      "source": "/finance/balance",
+      "destination": "/features/finance/balance"
+    },
+    {
+      "source": "/docs/finance/balance",
+      "destination": "/features/finance/balance"
+    },
+    {
+      "source": "/merchant-of-record/tax",
+      "destination": "/merchant-of-record/introduction"
+    },
+    {
+      "source": "/docs/merchant-of-record/tax",
+      "destination": "/merchant-of-record/introduction"
+    },
+    {
+      "source": "/fees",
+      "destination": "/merchant-of-record/fees"
+    },
+    {
+      "source": "/docs/fees",
+      "destination": "/merchant-of-record/fees"
+    },
+    {
+      "source": "/developers/sdk",
+      "destination": "/integrate/sdk/typescript"
+    },
+    {
+      "source": "/docs/developers/sdk",
+      "destination": "/integrate/sdk/typescript"
+    },
+    {
+      "source": "/products",
+      "destination": "/features/products"
+    },
+    {
+      "source": "/docs/products",
+      "destination": "/features/products"
+    },
+    {
+      "source": "/subscriptions",
+      "destination": "/features/subscriptions/introduction"
+    },
+    {
+      "source": "/docs/subscriptions",
+      "destination": "/features/subscriptions/introduction"
+    },
+    {
+      "source": "/onboarding",
+      "destination": "/introduction#quickstart"
+    },
+    {
+      "source": "/docs/onboarding",
+      "destination": "/introduction#quickstart"
+    },
+    {
+      "source": "/benefits",
+      "destination": "/features/benefits/introduction"
+    },
+    {
+      "source": "/benefits/discord",
+      "destination": "/features/benefits/discord-access"
+    },
+    {
+      "source": "/benefits/license-keys",
+      "destination": "/features/benefits/license-keys"
+    },
+    {
+      "source": "/benefits/github-repositories",
+      "destination": "/features/benefits/github-access"
+    },
+    {
+      "source": "/benefits/file-downloads",
+      "destination": "/features/benefits/file-downloads"
+    },
+    {
+      "source": "/benefits/custom",
+      "destination": "/features/benefits/custom"
+    },
+    {
+      "source": "/docs/benefits",
+      "destination": "/features/benefits/introduction"
+    },
+    {
+      "source": "/docs/benefits/discord",
+      "destination": "/features/benefits/discord-access"
+    },
+    {
+      "source": "/docs/benefits/license-keys",
+      "destination": "/features/benefits/license-keys"
+    },
+    {
+      "source": "/docs/benefits/github-repositories",
+      "destination": "/features/benefits/github-access"
+    },
+    {
+      "source": "/docs/benefits/file-downloads",
+      "destination": "/features/benefits/file-downloads"
+    },
+    {
+      "source": "/docs/benefits/custom",
+      "destination": "/features/benefits/custom"
+    },
+    {
+      "source": "/docs/features/customers",
+      "destination": "/features/customer-management"
+    },
+    {
+      "source": "/features/integrations/evendeals",
+      "destination": "https://www.evendeals.com/integrations/polar"
+    },
+    {
+      "source": "/features/integrations/refgrow",
+      "destination": "https://refgrow.com/polar-affiliate-software"
+    },
+    {
+      "source": "/api-reference/2026-04/checkoutcreated",
+      "destination": "/api-reference/2026-04/checkout_created"
+    },
+    {
+      "source": "/api-reference/2026-04/checkoutupdated",
+      "destination": "/api-reference/2026-04/checkout_updated"
+    },
+    {
+      "source": "/api-reference/2026-04/checkoutexpired",
+      "destination": "/api-reference/2026-04/checkout_expired"
+    },
+    {
+      "source": "/api-reference/2026-04/customercreated",
+      "destination": "/api-reference/2026-04/customer_created"
+    },
+    {
+      "source": "/api-reference/2026-04/customerupdated",
+      "destination": "/api-reference/2026-04/customer_updated"
+    },
+    {
+      "source": "/api-reference/2026-04/customerdeleted",
+      "destination": "/api-reference/2026-04/customer_deleted"
+    },
+    {
+      "source": "/api-reference/2026-04/customerstate_changed",
+      "destination": "/api-reference/2026-04/customer_state_changed"
+    },
+    {
+      "source": "/api-reference/2026-04/customer_seatassigned",
+      "destination": "/api-reference/2026-04/customer_seat_assigned"
+    },
+    {
+      "source": "/api-reference/2026-04/customer_seatclaimed",
+      "destination": "/api-reference/2026-04/customer_seat_claimed"
+    },
+    {
+      "source": "/api-reference/2026-04/customer_seatrevoked",
+      "destination": "/api-reference/2026-04/customer_seat_revoked"
+    },
+    {
+      "source": "/api-reference/2026-04/membercreated",
+      "destination": "/api-reference/2026-04/member_created"
+    },
+    {
+      "source": "/api-reference/2026-04/memberupdated",
+      "destination": "/api-reference/2026-04/member_updated"
+    },
+    {
+      "source": "/api-reference/2026-04/memberdeleted",
+      "destination": "/api-reference/2026-04/member_deleted"
+    },
+    {
+      "source": "/api-reference/2026-04/ordercreated",
+      "destination": "/api-reference/2026-04/order_created"
+    },
+    {
+      "source": "/api-reference/2026-04/orderupdated",
+      "destination": "/api-reference/2026-04/order_updated"
+    },
+    {
+      "source": "/api-reference/2026-04/orderpaid",
+      "destination": "/api-reference/2026-04/order_paid"
+    },
+    {
+      "source": "/api-reference/2026-04/orderrefunded",
+      "destination": "/api-reference/2026-04/order_refunded"
+    },
+    {
+      "source": "/api-reference/2026-04/subscriptioncreated",
+      "destination": "/api-reference/2026-04/subscription_created"
+    },
+    {
+      "source": "/api-reference/2026-04/subscriptionupdated",
+      "destination": "/api-reference/2026-04/subscription_updated"
+    },
+    {
+      "source": "/api-reference/2026-04/subscriptionactive",
+      "destination": "/api-reference/2026-04/subscription_active"
+    },
+    {
+      "source": "/api-reference/2026-04/subscriptioncanceled",
+      "destination": "/api-reference/2026-04/subscription_canceled"
+    },
+    {
+      "source": "/api-reference/2026-04/subscriptionuncanceled",
+      "destination": "/api-reference/2026-04/subscription_uncanceled"
+    },
+    {
+      "source": "/api-reference/2026-04/subscriptioncycled",
+      "destination": "/api-reference/2026-04/subscription_cycled"
+    },
+    {
+      "source": "/api-reference/2026-04/subscriptionrevoked",
+      "destination": "/api-reference/2026-04/subscription_revoked"
+    },
+    {
+      "source": "/api-reference/2026-04/subscriptionpast_due",
+      "destination": "/api-reference/2026-04/subscription_past_due"
+    },
+    {
+      "source": "/api-reference/2026-04/subscriptionpaused",
+      "destination": "/api-reference/2026-04/subscription_paused"
+    },
+    {
+      "source": "/api-reference/2026-04/subscriptionresumed",
+      "destination": "/api-reference/2026-04/subscription_resumed"
+    },
+    {
+      "source": "/api-reference/2026-04/subscriptionmigrated",
+      "destination": "/api-reference/2026-04/subscription_migrated"
+    },
+    {
+      "source": "/api-reference/2026-04/refundcreated",
+      "destination": "/api-reference/2026-04/refund_created"
+    },
+    {
+      "source": "/api-reference/2026-04/refundupdated",
+      "destination": "/api-reference/2026-04/refund_updated"
+    },
+    {
+      "source": "/api-reference/2026-04/productcreated",
+      "destination": "/api-reference/2026-04/product_created"
+    },
+    {
+      "source": "/api-reference/2026-04/productupdated",
+      "destination": "/api-reference/2026-04/product_updated"
+    },
+    {
+      "source": "/api-reference/2026-04/discountcreated",
+      "destination": "/api-reference/2026-04/discount_created"
+    },
+    {
+      "source": "/api-reference/2026-04/discountupdated",
+      "destination": "/api-reference/2026-04/discount_updated"
+    },
+    {
+      "source": "/api-reference/2026-04/discountdeleted",
+      "destination": "/api-reference/2026-04/discount_deleted"
+    },
+    {
+      "source": "/api-reference/2026-04/benefitcreated",
+      "destination": "/api-reference/2026-04/benefit_created"
+    },
+    {
+      "source": "/api-reference/2026-04/benefitupdated",
+      "destination": "/api-reference/2026-04/benefit_updated"
+    },
+    {
+      "source": "/api-reference/2026-04/benefit_grantcreated",
+      "destination": "/api-reference/2026-04/benefit_grant_created"
+    },
+    {
+      "source": "/api-reference/2026-04/benefit_grantcycled",
+      "destination": "/api-reference/2026-04/benefit_grant_cycled"
+    },
+    {
+      "source": "/api-reference/2026-04/benefit_grantupdated",
+      "destination": "/api-reference/2026-04/benefit_grant_updated"
+    },
+    {
+      "source": "/api-reference/2026-04/benefit_grantrevoked",
+      "destination": "/api-reference/2026-04/benefit_grant_revoked"
+    },
+    {
+      "source": "/api-reference/2026-04/organizationupdated",
+      "destination": "/api-reference/2026-04/organization_updated"
+    },
+    {
+      "source": "/api-reference/2026-10/checkoutcreated",
+      "destination": "/api-reference/2026-10/checkout_created"
+    },
+    {
+      "source": "/api-reference/2026-10/checkoutupdated",
+      "destination": "/api-reference/2026-10/checkout_updated"
+    },
+    {
+      "source": "/api-reference/2026-10/checkoutexpired",
+      "destination": "/api-reference/2026-10/checkout_expired"
+    },
+    {
+      "source": "/api-reference/2026-10/customercreated",
+      "destination": "/api-reference/2026-10/customer_created"
+    },
+    {
+      "source": "/api-reference/2026-10/customerupdated",
+      "destination": "/api-reference/2026-10/customer_updated"
+    },
+    {
+      "source": "/api-reference/2026-10/customerdeleted",
+      "destination": "/api-reference/2026-10/customer_deleted"
+    },
+    {
+      "source": "/api-reference/2026-10/customerstate_changed",
+      "destination": "/api-reference/2026-10/customer_state_changed"
+    },
+    {
+      "source": "/api-reference/2026-10/customer_seatassigned",
+      "destination": "/api-reference/2026-10/customer_seat_assigned"
+    },
+    {
+      "source": "/api-reference/2026-10/customer_seatclaimed",
+      "destination": "/api-reference/2026-10/customer_seat_claimed"
+    },
+    {
+      "source": "/api-reference/2026-10/customer_seatrevoked",
+      "destination": "/api-reference/2026-10/customer_seat_revoked"
+    },
+    {
+      "source": "/api-reference/2026-10/membercreated",
+      "destination": "/api-reference/2026-10/member_created"
+    },
+    {
+      "source": "/api-reference/2026-10/memberupdated",
+      "destination": "/api-reference/2026-10/member_updated"
+    },
+    {
+      "source": "/api-reference/2026-10/memberdeleted",
+      "destination": "/api-reference/2026-10/member_deleted"
+    },
+    {
+      "source": "/api-reference/2026-10/ordercreated",
+      "destination": "/api-reference/2026-10/order_created"
+    },
+    {
+      "source": "/api-reference/2026-10/orderupdated",
+      "destination": "/api-reference/2026-10/order_updated"
+    },
+    {
+      "source": "/api-reference/2026-10/orderpaid",
+      "destination": "/api-reference/2026-10/order_paid"
+    },
+    {
+      "source": "/api-reference/2026-10/orderrefunded",
+      "destination": "/api-reference/2026-10/order_refunded"
+    },
+    {
+      "source": "/api-reference/2026-10/subscriptioncreated",
+      "destination": "/api-reference/2026-10/subscription_created"
+    },
+    {
+      "source": "/api-reference/2026-10/subscriptionupdated",
+      "destination": "/api-reference/2026-10/subscription_updated"
+    },
+    {
+      "source": "/api-reference/2026-10/subscriptionactive",
+      "destination": "/api-reference/2026-10/subscription_active"
+    },
+    {
+      "source": "/api-reference/2026-10/subscriptioncanceled",
+      "destination": "/api-reference/2026-10/subscription_canceled"
+    },
+    {
+      "source": "/api-reference/2026-10/subscriptionuncanceled",
+      "destination": "/api-reference/2026-10/subscription_uncanceled"
+    },
+    {
+      "source": "/api-reference/2026-10/subscriptioncycled",
+      "destination": "/api-reference/2026-10/subscription_cycled"
+    },
+    {
+      "source": "/api-reference/2026-10/subscriptionrevoked",
+      "destination": "/api-reference/2026-10/subscription_revoked"
+    },
+    {
+      "source": "/api-reference/2026-10/subscriptionpast_due",
+      "destination": "/api-reference/2026-10/subscription_past_due"
+    },
+    {
+      "source": "/api-reference/2026-10/subscriptionpaused",
+      "destination": "/api-reference/2026-10/subscription_paused"
+    },
+    {
+      "source": "/api-reference/2026-10/subscriptionresumed",
+      "destination": "/api-reference/2026-10/subscription_resumed"
+    },
+    {
+      "source": "/api-reference/2026-10/subscriptionmigrated",
+      "destination": "/api-reference/2026-10/subscription_migrated"
+    },
+    {
+      "source": "/api-reference/2026-10/refundcreated",
+      "destination": "/api-reference/2026-10/refund_created"
+    },
+    {
+      "source": "/api-reference/2026-10/refundupdated",
+      "destination": "/api-reference/2026-10/refund_updated"
+    },
+    {
+      "source": "/api-reference/2026-10/productcreated",
+      "destination": "/api-reference/2026-10/product_created"
+    },
+    {
+      "source": "/api-reference/2026-10/productupdated",
+      "destination": "/api-reference/2026-10/product_updated"
+    },
+    {
+      "source": "/api-reference/2026-10/discountcreated",
+      "destination": "/api-reference/2026-10/discount_created"
+    },
+    {
+      "source": "/api-reference/2026-10/discountupdated",
+      "destination": "/api-reference/2026-10/discount_updated"
+    },
+    {
+      "source": "/api-reference/2026-10/discountdeleted",
+      "destination": "/api-reference/2026-10/discount_deleted"
+    },
+    {
+      "source": "/api-reference/2026-10/benefitcreated",
+      "destination": "/api-reference/2026-10/benefit_created"
+    },
+    {
+      "source": "/api-reference/2026-10/benefitupdated",
+      "destination": "/api-reference/2026-10/benefit_updated"
+    },
+    {
+      "source": "/api-reference/2026-10/benefit_grantcreated",
+      "destination": "/api-reference/2026-10/benefit_grant_created"
+    },
+    {
+      "source": "/api-reference/2026-10/benefit_grantcycled",
+      "destination": "/api-reference/2026-10/benefit_grant_cycled"
+    },
+    {
+      "source": "/api-reference/2026-10/benefit_grantupdated",
+      "destination": "/api-reference/2026-10/benefit_grant_updated"
+    },
+    {
+      "source": "/api-reference/2026-10/benefit_grantrevoked",
+      "destination": "/api-reference/2026-10/benefit_grant_revoked"
+    },
+    {
+      "source": "/api-reference/2026-10/organizationupdated",
+      "destination": "/api-reference/2026-10/organization_updated"
+    },
+    {
+      "source": "/integrate/webhooks/locally",
+      "destination": "/integrate/cli/webhooks"
+    }
+  ]
+}

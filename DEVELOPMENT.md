@@ -1,0 +1,560 @@
+# Development
+
+Polar's stack consists of the following elements:
+
+- A backend written in Python, exposing a REST API and workers
+- A frontend written in JavaScript
+- A PostgreSQL database
+- A Redis database
+- An S3-compatible storage
+
+```mermaid
+flowchart TD
+    subgraph "Backend"
+        API["Rest API"]
+        POSTGRESQL["PostgreSQL"]
+        REDIS["Redis"]
+        S3["S3 Storage"]
+        WORKER["Worker"]
+    end
+    subgraph "Frontend"
+        WEB["Web client"]
+    end
+    STRIPE_WH["Stripe Webhooks"]
+    USERS["Users"]
+
+    WEB --> API
+    API --> POSTGRESQL
+    API --> REDIS
+    REDIS <--> WORKER
+    WORKER --> POSTGRESQL
+    API --> S3
+    WEB --> S3
+
+    STRIPE_WH -.-> API
+    USERS -.-> API
+    USERS -.-> WEB
+```
+
+## Quick start with `dev`
+
+We have an internal tool in place called `dev` for an easy setup:
+
+```sh
+./dev/cli/install              # One-time setup to add the 'dev' alias (restart your terminal after)
+dev up                         # Sets up the entire environment
+dev seed --new-org <org-name>  # Optional, seeds a new organization with basic data
+```
+
+The `dev up` command will:
+
+- Install missing prerequisites (Homebrew, Docker, uv, pnpm, Node.js)
+- Generate environment files and starts infrastructure (PostgreSQL, Redis, MinIO)
+- Install Python and JS dependencies, builds packages
+- Walk you through GitHub App and Stripe setup interactively
+- Run database migrations and builds email templates and backoffice
+
+After `dev up` completes, start the services you need:
+
+```sh
+dev api              # Start backend API server (http://127.0.0.1:8000)
+dev worker           # Start background job worker
+dev web              # Start frontend Next.js dev server (http://127.0.0.1:3000)
+dev stripe           # Start Stripe webhook listener
+```
+
+Running `dev up` after pulling new code is also recommended to make sure dependencies and DB migrations are up-to-date.
+
+## Setup environment variables
+
+For the Polar stack to run properly, it needs quite a bunch of settings defined as environment variables. To ease things, we provide a script to bootstrap them. It requires [uv](https://docs.astral.sh/uv/getting-started/installation/) to be installed on your system.
+
+```sh
+./dev/setup-environment
+```
+
+Once done, the script will automatically create `server/.env` and `clients/apps/web/.env.local` files with the necessary environment variables.
+
+**Optional: setup GitHub App**
+
+If you want to work with GitHub login, you'll need to have a [GitHub App](https://docs.github.com/en/apps/creating-github-apps/about-creating-github-apps/about-creating-github-apps) for your development environment. Our script is able to help in this task by passing the following parameters:
+
+```sh
+./dev/setup-environment --setup-github-app --backend-external-url https://mydomain.ngrok.dev
+```
+
+Note that you'll need a valid external URL that'll route to your development server. For this task, we recommend to use [ngrok](https://ngrok.com/).
+
+Your browser will open a new page and you'll be prompted to **create a GitHub App**. You can just proceed, all the necessary configuration is already done automatically. The script will then add the necessary values to the environment files.
+
+**Shared secrets (multi-worktree development)**
+
+If you work with multiple Git worktrees, secrets (GitHub, Stripe) are automatically shared via `~/.config/polar/secrets.env`:
+
+1. Run `./dev/setup-environment` in your first worktree
+2. If you set up a GitHub App with `--setup-github-app`, credentials are saved automatically to the central file
+3. For Stripe, edit `~/.config/polar/secrets.env` and add your keys (see template at `dev/secrets.env.template`)
+4. Run `./dev/setup-environment` in each additional worktree - secrets are merged automatically
+
+You can override the secrets file location with `POLAR_SECRETS_FILE` environment variable.
+
+**Optional: setup Stripe**
+
+> [!NOTE]
+> Some functions, such as product creation, may not work as expected due to missing Stripe environment variables.
+
+If you want to work with payments and subscriptions, you need a Stripe **sandbox**.
+
+> [!IMPORTANT]
+> Every local environment runs against a sandbox you own. Never point it at a live account, and
+> never at a shared team account — `dev` refuses both. A sandbox is free, is yours alone, and has
+> no live mode at all, so nothing you do locally can touch real money or team data. That missing
+> live mode is also how `dev` tells a sandbox apart from a real account.
+
+The whole setup is one command:
+
+```sh
+dev stripe
+```
+
+It installs the Stripe CLI if it's missing, opens the sandbox dashboard, links the CLI to the
+sandbox you pick (under the `polar-sandbox` profile), writes the keys into the central secrets
+file, regenerates the env files, and starts webhook forwarding. `dev up` runs the same flow.
+
+Later runs just start the listener:
+
+```sh
+dev stripe --listen                    # default instance (api on port 8000)
+dev stripe --listen --port <api-port>  # other instances, see `dev docker ports`
+dev stripe --relink                    # switch to a different sandbox
+```
+
+Stripe CLI keys expire after 90 days. When that happens `dev stripe` notices and walks you
+through linking again.
+
+> [!IMPORTANT]
+> Put all Stripe values in the central secrets file `~/.config/polar/secrets.env`, **not** in `server/.env`.
+> Whenever `setup-environment` regenerates `server/.env` (a fresh clone or worktree, `dev up --clean`,
+> `dev stripe`, or a manual run), it rebuilds the file from the central secrets and those values win — so
+> edits made directly to `server/.env` are overwritten.
+
+**Stripe Tax** must be active in the sandbox, or checkout fails when it tries to price an order.
+`dev stripe` checks this and tells you if it isn't. Once active, orders are taxed at 0 until you
+add a tax registration — see
+[Testing taxes locally](https://handbook.polar.sh/engineering/oncall/developer-faq) in the handbook.
+
+<details>
+<summary>Manual setup, and receiving webhooks on a public URL</summary>
+
+`dev stripe` forwards webhooks through the Stripe CLI listener, which is enough for almost
+everything. Use dashboard endpoints instead only when you need Stripe to reach a public URL
+(for example an ngrok tunnel shared with someone else).
+
+1. **Create a sandbox** at [https://dashboard.stripe.com/sandboxes](https://dashboard.stripe.com/sandboxes)
+
+2. **Copy the sandbox API keys** from its API keys page and add them to `~/.config/polar/secrets.env`:
+
+    ```
+    POLAR_STRIPE_SECRET_KEY=sk_test_...
+    POLAR_STRIPE_PUBLISHABLE_KEY=pk_test_...
+    ```
+
+3. **Create webhook endpoints** to handle Stripe events:
+    - Go to Webhooks in your sandbox
+    - Click "Add destination"
+    - Select "Your account"
+    - Set API version to the latest (not the preview)
+    - Set enabled events to only the events listed in `DIRECT_IMPLEMENTED_WEBHOOKS` (see `polar/integrations/stripe/endpoints.py`)
+    - Click continue, Select Webhook endpoint
+    - Set the endpoint URL to: `https://your-domain.ngrok-free.app/v1/integrations/stripe/webhook`
+    - Copy the webhook signing secret and add it to your `~/.config/polar/secrets.env` file:
+        ```
+        POLAR_STRIPE_WEBHOOK_SECRET=whsec_...
+        ```
+    - Restart the same operation with:
+        - events listed in `CONNECT_IMPLEMENTED_WEBHOOKS` (see `polar/integrations/stripe/endpoints.py`)
+        - Set the endpoint URL to: `https://your-domain.ngrok-free.app/v1/integrations/stripe/webhook-connect`
+        - Copy the webhook signing secret and add it to your `~/.config/polar/secrets.env` file:
+            ```
+            POLAR_STRIPE_CONNECT_WEBHOOK_SECRET=whsec_...
+            ```
+
+These two secrets differ from each other, and `dev stripe` leaves them alone when it sees that —
+it writes the CLI listener secret only when the two entries are identical (including both empty),
+and leaves them untouched whenever they differ.
+
+</details>
+
+**Optional: setup SSO (local mock OIDC)**
+
+If you want to work on or test enterprise SSO login, you can point it at a local mock OIDC identity provider instead of a real one. The default seed (`dev seed`) already creates an **enabled** SSO connection on the `admin-org` organization that targets this mock server, so no manual configuration is needed.
+
+1. **Start the mock OIDC server** with Docker. It exposes an issuer at `http://localhost:8080/default` — the issuer the seed points at:
+
+    ```sh
+    docker run -p 8080:8080 ghcr.io/navikt/mock-oauth2-server:2.1.0
+    ```
+
+    The seeded connection uses `client_secret` authentication (`client_id=polar`, `client_secret=polar-secret`). The mock server accepts any client, so there's nothing to register.
+
+2. **Start the SSO login** by opening [http://127.0.0.1:3000/auth/sso/admin-org](http://127.0.0.1:3000/auth/sso/admin-org). You'll be redirected to the mock IdP's login page.
+
+3. **Assert an identity.** The callback requires a *verified* email and will provision the user and organization membership on the fly, so in the mock login form submit these claims (the seeded admin is a member of `admin-org`):
+
+    ```json
+    {"email": "admin@polar.sh", "email_verified": true}
+    ```
+
+    You'll be redirected back to Polar, where the org-scoped session completes.
+
+### Setup backend
+
+Setting up the backend consists of basically three things:
+
+**1. Start the development containers**
+
+This will start PostgreSQL, Redis and Minio (S3 storage) containers. You'll need to have [Docker](https://docs.docker.com/get-started/) installed.
+
+```sh
+cd server
+```
+
+```sh
+docker compose up -d
+```
+
+**2. Install Python dependencies**
+
+We use [uv](https://docs.astral.sh/uv/) to manage our Python dependencies. Make sure it's installed on your system.
+
+```sh
+uv sync
+```
+
+### Setup frontend
+
+**1. Install JavaScript dependencies**
+
+We use [pnpm](https://pnpm.io/installation) to manage our JavaScript dependencies. Make sure it's installed on your system.
+
+```sh
+cd clients
+```
+
+```sh
+pnpm install
+```
+
+## Start environment
+
+> [!TIP]
+> Use several terminal tabs to run things in parallel.
+
+### Start backend
+
+The backend consists of an API server and a worker. You can run them like this:
+
+```sh
+cd server
+```
+
+**1. Build email binary**
+
+```sh
+uv run task emails
+```
+
+> [!NOTE]
+> If you're in local development, you should build the email renderer binary, as it's required for first time.
+
+**2. Apply the database migrations**
+
+```sh
+uv run task db_migrate
+```
+
+> [!NOTE]
+> You don't necessarily need to run it each time you start the server, but it's a good idea to regularly do it nonetheless.
+
+**3. Start server and workers**
+
+```sh
+uv run task api
+```
+
+```sh
+uv run task worker
+```
+
+By default, the API server will be available at [http://127.0.0.1:8000](http://127.0.0.1:8000).
+
+> [!TIP]
+> The processes will restart automatically if you make changes to the code.
+
+### Start frontend
+
+The frontend mainly consists of a web client server, plus other projects useful for testing or examples. You can run them like this:
+
+```sh
+cd clients
+```
+
+```sh
+pnpm dev
+```
+
+By default, the web client will be available at [http://127.0.0.1:3000](http://127.0.0.1:3000).
+
+> [!TIP]
+> The processes will restart automatically if you make changes to the code.
+
+## Running the tests
+
+The test suites don't need the API, worker or web processes running — only the Docker services
+and the setup from the sections above.
+
+### Backend
+
+From `server/`:
+
+```sh
+uv run task test_fast    # parallel, no coverage
+uv run task lint         # ruff, auto-fixing
+uv run task lint_types   # mypy
+```
+
+Or a single path: `POLAR_ENV=testing uv run python -m pytest tests/<module>`.
+
+`uv run task test` adds coverage and runs serially, so prefer `test_fast` locally. CI does
+neither — it shards `pytest ... -n auto --no-cov` across four jobs. Tests read the committed
+`server/.env.testing` (forced by `tests/conftest.py`), not `server/.env`, and each xdist worker
+gets its own `polar_test_<worker_id>` database. Export `POLAR_TEST_DATABASE_TEMPLATE=polar_test` — with
+`polar_test` created and migrated — to have workers clone that database instead of replaying
+every migration; refresh it with `POLAR_ENV=testing uv run task db_migrate` whenever you add a
+migration.
+
+Redis, Stripe credentials and a GitHub App are not required: tests substitute a fake Redis and
+construct Stripe objects locally. Tinybird tests skip themselves if Tinybird isn't running.
+PostgreSQL is required, and the file/order/receipt tests need MinIO with its buckets created.
+
+### Frontend
+
+From `clients/`:
+
+```sh
+pnpm lint
+pnpm typecheck
+pnpm test --filter web   # scope with --filter; unscoped runs all 19 packages
+```
+
+Unit tests need neither the backend nor `.env.local`. `packages/cli` tests require
+[bun](https://bun.sh).
+
+## Docker-Based Development (Alternative)
+
+For a fully containerized development environment with hot-reloading, you can use the Docker-based setup. This is useful for:
+
+- Running multiple isolated instances for testing
+- Consistent environments across different machines
+- AI agents that need isolated development environments
+
+### Quick Start
+
+```sh
+dev docker up
+```
+
+This single command will:
+
+1. Build the necessary Docker images
+2. Start PostgreSQL, Redis, and MinIO
+3. Install Python and Node.js dependencies
+4. Run database migrations
+5. Start the API server, worker, and web frontend with hot-reloading
+
+### Access Points
+
+| Service      | URL                   |
+| ------------ | --------------------- |
+| Web Frontend | http://localhost:3000 |
+| API Server   | http://localhost:8000 |
+
+Run `dev docker ports` to see instance-specific ports and URLs.
+
+### Common Commands
+
+```sh
+# Start in background (detached mode)
+dev docker up -d
+
+# View logs
+dev docker logs
+
+# View logs for specific service
+dev docker logs api
+
+# Stop all services
+dev docker down
+
+# Rebuild images
+dev docker build
+
+# Open shell in container
+dev docker shell api
+
+# Include monitoring (Prometheus + Grafana)
+dev docker up --monitoring
+```
+
+### Running Multiple Instances
+
+For parallel development or testing, you can run multiple isolated instances:
+
+```sh
+# Instance 0 (default): API on 8000, Web on 3000
+dev docker up -d
+
+# Instance 1: API on 8101, Web on 3101
+dev docker up -i 1 -d
+
+# Instance 2: API on 8102, Web on 3102
+dev docker up -i 2 -d
+```
+
+Each instance has its own:
+
+- Docker containers and networks
+- PostgreSQL database (`polar_dev_<N>`)
+- Redis database index (`<N>`)
+- MinIO buckets (`polar-s3-<N>`)
+
+### Port Mapping
+
+Only API and Web have host ports. PostgreSQL, Redis, and MinIO run in a shared
+project with no host ports — reach them via `dev docker exec <service>`.
+
+| Service | Instance 0 | Instance 1 | Instance 2 |
+| ------- | ---------- | ---------- | ---------- |
+| API     | 8000       | 8101       | 8102       |
+| Web     | 3000       | 3101       | 3102       |
+
+Run `dev docker ports` to see resolved ports for the current worktree.
+
+### Hot-Reloading
+
+The Docker setup supports hot-reloading:
+
+- **Backend (API)**: Uses uvicorn with `--reload` flag
+- **Backend (Worker)**: Uses dramatiq with `--watch` flag
+- **Frontend (Web)**: Uses Next.js with Turbopack
+
+Code changes on your host machine are immediately reflected in the running containers.
+
+### Configuration
+
+The Docker environment uses `dev/docker/.env.docker` for configuration. To customize:
+
+```sh
+# Copy template (done automatically on first run)
+cp dev/docker/.env.docker.template dev/docker/.env.docker
+
+# Edit as needed
+vim dev/docker/.env.docker
+```
+
+> [!NOTE]
+> The Docker-based setup is additive. The traditional host-based development workflow (`docker compose up -d` + `uv run task api`) continues to work as before.
+
+## Visual Regression Testing
+
+Use `dev snap` to capture before/after screenshots and detect visual changes across branches:
+
+```sh
+dev snap                            # Interactive: pick branch and URLs
+dev snap --branch my-feature        # Test a specific branch
+dev snap --url /dashboard/settings  # Test specific URL(s)
+dev snap --detect                   # Auto-detect URLs from git diff
+dev snap --viewport desktop,mobile  # Test multiple viewports
+```
+
+The tool:
+1. Screenshots each URL on your feature branch
+2. Checks out the base branch and screenshots again
+3. Generates a visual diff report with pixel-level comparison
+
+Results are saved to `screenshots/runs/<timestamp>/result/` with an HTML report for side-by-side comparison.
+
+### Snapping the customer portal
+
+`dev snap` logs into the dashboard, but the customer portal authenticates with a
+`?customer_session_token=` query parameter instead. `dev portal-urls` mints a session over
+the seeded data so a portal run needs no interaction:
+
+```sh
+dev portal-urls                     # Print every portal URL with a fresh token
+dev portal-urls --snap              # Print them as a ready-to-run `dev snap` command
+dev portal-urls --org my-org        # Pick a customer from another seeded org
+```
+
+The session lasts 24 hours by default (`--ttl-hours`), because `dev snap` captures both
+branches against one set of URLs and the token has to outlive the whole run.
+
+## Login using email
+
+To log in for the first time, follow these steps:
+
+1. Navigate to the login page.
+2. Enter your email address in the provided field.
+3. Click the "Login" button.
+4. To use the seeded admin, use **admin@polar.sh** ([seeds_load.py](server/scripts/seeds_load.py)).
+5. Check the terminal where the API is running (`uv run task api`) to get the OTP code.
+6. Enter the OTP code in the login form.
+
+## Testing Apple Pay / Google Pay
+
+Apple Pay and Google Pay require HTTPS to work. To test these payment methods locally, you'll need to use [ngrok](https://ngrok.com/) to expose your local development server.
+
+1. **Start ngrok** to create an HTTPS tunnel to your frontend:
+
+    ```sh
+    ngrok http 3000
+    ```
+
+    Copy the ngrok URL (e.g., `https://abc123.ngrok-free.app`).
+
+2. **Update `clients/apps/web/next.config.mjs`** to allow ngrok connections and proxy API requests:
+
+    Add `https://*.ngrok-free.dev` to the `connect-src` CSP directive:
+
+    ```diff
+    -    connect-src 'self' ${process.env.NEXT_PUBLIC_API_URL} ... https://prod-uk-services-attachm-attachmentsuploadbucket2-1l2e4906o2asm.s3.eu-west-2.amazonaws.com;
+    +    connect-src 'self' ${process.env.NEXT_PUBLIC_API_URL} ... https://prod-uk-services-attachm-attachmentsuploadbucket2-1l2e4906o2asm.s3.eu-west-2.amazonaws.com https://*.ngrok-free.dev;
+    ```
+
+    Add an API proxy rewrite in the `rewrites` function:
+
+    ```javascript
+    // Proxy API requests to backend (useful for ngrok testing)
+    {
+      source: '/api-proxy/:path*',
+      destination: 'http://127.0.0.1:8000/:path*',
+    },
+    ```
+
+3. **Update `clients/apps/web/.env.local`** to use the ngrok proxy:
+
+    ```
+    NEXT_PUBLIC_API_URL="https://your-ngrok-url.ngrok-free.app/api-proxy"
+    ```
+
+4. **Update `server/.env`** to allow CORS from ngrok and set the frontend URL:
+
+    ```
+    POLAR_CORS_ORIGINS='["http://localhost:3000", "http://127.0.0.1:3000", "https://github.com", "https://your-ngrok-url.ngrok-free.app"]'
+    POLAR_FRONTEND_BASE_URL="https://your-ngrok-url.ngrok-free.app"
+    ```
+
+5. **Access your app** via the ngrok HTTPS URL (e.g., `https://abc123.ngrok-free.app`) in Safari (for Apple Pay) or Chrome (for Google Pay).
+
+> [!WARNING]
+> Remember to revert these changes before committing. They are for local development only.

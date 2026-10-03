@@ -1,0 +1,850 @@
+from decimal import Decimal
+from typing import Any
+
+import pytest
+from pydantic import TypeAdapter, ValidationError
+
+from polar.enums import SubscriptionRecurringInterval
+from polar.kit.currency import PresentmentCurrency
+from polar.models.product_price import ProductPriceAmountType
+from polar.product.meter_interval import meter_interval_divides_billing_interval
+from polar.product.schemas import (
+    ProductCreate,
+    ProductCreateOneTime,
+    ProductCreateRecurring,
+    ProductPriceCustomCreate,
+    ProductPriceFixedCreate,
+    ProductPriceMeteredTiersCreate,
+    ProductPriceMeteredUnitCreate,
+    ProductPriceSeatTiers,
+    ProductPriceUnitBasedCreate,
+)
+from polar.product.tiers import BIGINT_MAX, TiersInput, TierType
+from tests.fixtures.random_objects import METER_ID
+
+# PostgreSQL int4 range limit
+INT_MAX_VALUE = 2_147_483_647
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        pytest.param("", id="empty string"),
+        pytest.param("   ", id="whitespace only"),
+        pytest.param("AA", id="below min length"),
+        pytest.param("A" * 256, id="exceeds max length"),
+    ],
+)
+def test_invalid_product_name(name: str) -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        ProductCreateRecurring(
+            name=name,
+            recurring_interval=SubscriptionRecurringInterval.month,
+            prices=[
+                ProductPriceFixedCreate(
+                    amount_type=ProductPriceAmountType.fixed,
+                    price_amount=1000,
+                    price_currency=PresentmentCurrency.usd,
+                )
+            ],
+        )
+
+    errors = exc_info.value.errors()
+    assert len(errors) == 1
+    assert errors[0]["type"] in ("too_short", "too_long")
+    assert errors[0]["loc"] == ("name",)
+
+
+@pytest.mark.parametrize(
+    ("price_currency", "price_amount"),
+    [
+        (PresentmentCurrency.usd, 49),
+        (PresentmentCurrency.inr, 5000),
+    ],
+)
+def test_product_price_fixed_minimum_amount(
+    price_currency: PresentmentCurrency, price_amount: int
+) -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        ProductPriceFixedCreate(
+            amount_type=ProductPriceAmountType.fixed,
+            price_amount=price_amount,
+            price_currency=price_currency,
+        )
+
+    errors = exc_info.value.errors()
+    assert len(errors) == 1
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"trial_interval_count": 1},
+        {"trial_interval": SubscriptionRecurringInterval.month},
+    ],
+)
+def test_incomplete_trial_configuration(payload: dict[str, Any]) -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        ProductCreateRecurring(
+            name="Product",
+            recurring_interval=SubscriptionRecurringInterval.month,
+            prices=[
+                ProductPriceFixedCreate(
+                    amount_type=ProductPriceAmountType.fixed,
+                    price_amount=1000,
+                    price_currency=PresentmentCurrency.usd,
+                )
+            ],
+            **payload,
+        )
+
+    errors = exc_info.value.errors()
+    assert len(errors) == 1
+    assert errors[0]["type"] == "missing"
+    assert (
+        errors[0]["msg"]
+        == "Both trial_interval and trial_interval_count must be set together."
+    )
+
+
+class TestProductPriceMeteredTiersCreate:
+    def test_valid(self) -> None:
+        schema = ProductPriceMeteredTiersCreate(
+            amount_type=ProductPriceAmountType.metered_tiers,
+            price_currency=PresentmentCurrency.usd,
+            meter_id=METER_ID,
+            tiers=TiersInput.model_validate(
+                {
+                    "type": TierType.graduated,
+                    "tiers": [
+                        {"bound": 1000, "unit_amount": "0.5"},
+                        {"bound": None, "unit_amount": "0.25"},
+                    ],
+                }
+            ),
+        )
+        assert len(schema.tiers.tiers) == 2
+
+    def test_bounded_last_tier_rejected(self) -> None:
+        # Usage has no ceiling, so the top tier has to stay open.
+        with pytest.raises(ValidationError, match="must be unbounded"):
+            ProductPriceMeteredTiersCreate(
+                amount_type=ProductPriceAmountType.metered_tiers,
+                price_currency=PresentmentCurrency.usd,
+                meter_id=METER_ID,
+                tiers=TiersInput.model_validate(
+                    {
+                        "type": TierType.volume,
+                        "tiers": [{"bound": 1000, "unit_amount": "0.5"}],
+                    }
+                ),
+            )
+
+
+class TestProductPriceMeteredUnitCreate:
+    """Test ProductPriceMeteredUnitCreate schema validation."""
+
+    def test_valid_cap_amount_none(self) -> None:
+        """Test that cap_amount can be None."""
+        schema = ProductPriceMeteredUnitCreate(
+            amount_type=ProductPriceAmountType.metered_unit,
+            price_currency=PresentmentCurrency.usd,
+            unit_amount=Decimal("1.0"),
+            meter_id=METER_ID,
+            cap_amount=None,
+        )
+        assert schema.cap_amount is None
+
+    def test_valid_cap_amount_zero(self) -> None:
+        """Test that cap_amount can be 0."""
+        schema = ProductPriceMeteredUnitCreate(
+            amount_type=ProductPriceAmountType.metered_unit,
+            price_currency=PresentmentCurrency.usd,
+            unit_amount=Decimal("1.0"),
+            meter_id=METER_ID,
+            cap_amount=0,
+        )
+        assert schema.cap_amount == 0
+
+    def test_valid_cap_amount_positive(self) -> None:
+        """Test that cap_amount can be a positive integer."""
+        schema = ProductPriceMeteredUnitCreate(
+            amount_type=ProductPriceAmountType.metered_unit,
+            price_currency=PresentmentCurrency.usd,
+            unit_amount=Decimal("1.0"),
+            meter_id=METER_ID,
+            cap_amount=100_000,
+        )
+        assert schema.cap_amount == 100_000
+
+    def test_valid_cap_amount_max_value(self) -> None:
+        """Test that cap_amount can be the maximum allowed value."""
+        schema = ProductPriceMeteredUnitCreate(
+            amount_type=ProductPriceAmountType.metered_unit,
+            price_currency=PresentmentCurrency.usd,
+            unit_amount=Decimal("1.0"),
+            meter_id=METER_ID,
+            cap_amount=INT_MAX_VALUE,
+        )
+        assert schema.cap_amount == INT_MAX_VALUE
+
+    def test_invalid_cap_amount_negative(self) -> None:
+        """Test that cap_amount cannot be negative."""
+        with pytest.raises(ValidationError) as exc_info:
+            ProductPriceMeteredUnitCreate(
+                amount_type=ProductPriceAmountType.metered_unit,
+                price_currency=PresentmentCurrency.usd,
+                unit_amount=Decimal("1.0"),
+                meter_id=METER_ID,
+                cap_amount=-1,
+            )
+
+        errors = exc_info.value.errors()
+        assert len(errors) == 1
+        assert errors[0]["type"] == "greater_than_equal"
+        assert errors[0]["loc"] == ("cap_amount",)
+
+    def test_invalid_cap_amount_exceeds_max(self) -> None:
+        """Test that cap_amount cannot exceed INT_MAX_VALUE."""
+        with pytest.raises(ValidationError) as exc_info:
+            ProductPriceMeteredUnitCreate(
+                amount_type=ProductPriceAmountType.metered_unit,
+                price_currency=PresentmentCurrency.usd,
+                unit_amount=Decimal("1.0"),
+                meter_id=METER_ID,
+                cap_amount=INT_MAX_VALUE + 1,
+            )
+
+        errors = exc_info.value.errors()
+        assert len(errors) == 1
+        assert errors[0]["type"] == "less_than_equal"
+        assert errors[0]["loc"] == ("cap_amount",)
+
+    def test_invalid_cap_amount_way_too_large(self) -> None:
+        """Test that cap_amount cannot be extremely large values like in the bug report."""
+        with pytest.raises(ValidationError) as exc_info:
+            ProductPriceMeteredUnitCreate(
+                amount_type=ProductPriceAmountType.metered_unit,
+                price_currency=PresentmentCurrency.usd,
+                unit_amount=Decimal("1.0"),
+                meter_id=METER_ID,
+                cap_amount=100_000_000_000,  # The value from the bug report
+            )
+
+        errors = exc_info.value.errors()
+        assert len(errors) == 1
+        assert errors[0]["type"] == "less_than_equal"
+        assert errors[0]["loc"] == ("cap_amount",)
+
+
+class TestProductPriceFixedCurrencyMinimums:
+    """Test currency-specific minimum price validation on ProductPriceFixedCreate."""
+
+    @pytest.mark.parametrize(
+        ("currency", "amount", "expected_min"),
+        [
+            pytest.param(PresentmentCurrency.usd, 49, "$0.50", id="usd-below-min"),
+            pytest.param(PresentmentCurrency.inr, 5999, "₹60.00", id="inr-below-min"),
+            pytest.param(PresentmentCurrency.gbp, 39, "£0.40", id="gbp-below-min"),
+            pytest.param(
+                PresentmentCurrency.huf, 17499, "Ft17,500.00", id="huf-below-min"
+            ),
+            pytest.param(PresentmentCurrency.mxn, 899, "MX$9.00", id="mxn-below-min"),
+        ],
+    )
+    def test_below_minimum_shows_currency_specific_error(
+        self, currency: PresentmentCurrency, amount: int, expected_min: str
+    ) -> None:
+        with pytest.raises(ValidationError) as exc_info:
+            ProductPriceFixedCreate(
+                amount_type=ProductPriceAmountType.fixed,
+                price_amount=amount,
+                price_currency=currency,
+            )
+
+        errors = exc_info.value.errors()
+        assert len(errors) == 1
+        assert errors[0]["loc"] == ("price_amount",)
+        assert errors[0]["type"] == "minimum_price"
+        assert "Amount must be at least" in errors[0]["msg"]
+
+    @pytest.mark.parametrize(
+        ("currency", "amount"),
+        [
+            pytest.param(PresentmentCurrency.usd, 50, id="usd-at-min"),
+            pytest.param(PresentmentCurrency.inr, 6000, id="inr-at-min"),
+            pytest.param(PresentmentCurrency.gbp, 40, id="gbp-at-min"),
+            pytest.param(PresentmentCurrency.mxn, 900, id="mxn-at-min"),
+            pytest.param(PresentmentCurrency.usd, 1000, id="usd-above-min"),
+            pytest.param(PresentmentCurrency.inr, 10000, id="inr-above-min"),
+        ],
+    )
+    def test_at_or_above_minimum_succeeds(
+        self, currency: PresentmentCurrency, amount: int
+    ) -> None:
+        price = ProductPriceFixedCreate(
+            amount_type=ProductPriceAmountType.fixed,
+            price_amount=amount,
+            price_currency=currency,
+        )
+        assert price.price_amount == amount
+
+    @pytest.mark.parametrize(
+        "currency",
+        [
+            PresentmentCurrency.usd,
+            PresentmentCurrency.inr,
+            PresentmentCurrency.gbp,
+        ],
+    )
+    def test_zero_amount_is_accepted_as_free(
+        self, currency: PresentmentCurrency
+    ) -> None:
+        """A fixed price of 0 is the free-pricing representation and must be allowed,
+        even though it is below the currency minimum."""
+        price = ProductPriceFixedCreate(
+            amount_type=ProductPriceAmountType.fixed,
+            price_amount=0,
+            price_currency=currency,
+        )
+        assert price.price_amount == 0
+
+    def test_error_loc_includes_price_amount(self) -> None:
+        """Ensure the error loc targets price_amount so frontend can show inline error."""
+        with pytest.raises(ValidationError) as exc_info:
+            ProductPriceFixedCreate(
+                amount_type=ProductPriceAmountType.fixed,
+                price_amount=400,
+                price_currency=PresentmentCurrency.inr,
+            )
+
+        errors = exc_info.value.errors()
+        assert len(errors) == 1
+        # field_validator puts the field name in the loc
+        assert errors[0]["loc"] == ("price_amount",)
+
+    def test_error_type_is_custom(self) -> None:
+        """Ensure the error type is PydanticCustomError, not ValueError."""
+        with pytest.raises(ValidationError) as exc_info:
+            ProductPriceFixedCreate(
+                amount_type=ProductPriceAmountType.fixed,
+                price_amount=30,
+                price_currency=PresentmentCurrency.usd,
+            )
+
+        errors = exc_info.value.errors()
+        assert len(errors) == 1
+        # PydanticCustomError produces clean messages without "Value error, " prefix
+        assert errors[0]["type"] == "minimum_price"
+        assert not errors[0]["msg"].startswith("Value error")
+
+
+class TestProductPriceCustomCurrency:
+    """Test currency-specific validation on ProductPriceCustomCreate (PWYW)."""
+
+    def test_inr_maximum_amount_above_old_usd_ceiling(self) -> None:
+        """Regression: INR maximum_amount above the old hardcoded $10K ceiling
+        (1_000_000 paise = ₹10,000) must be accepted."""
+        price = ProductPriceCustomCreate(
+            amount_type=ProductPriceAmountType.custom,
+            price_currency=PresentmentCurrency.inr,
+            minimum_amount=6000,
+            preset_amount=50000,
+            maximum_amount=5_000_000,
+        )
+        assert price.maximum_amount == 5_000_000
+
+    def test_maximum_amount_below_currency_minimum_rejected(self) -> None:
+        with pytest.raises(ValidationError) as exc_info:
+            ProductPriceCustomCreate(
+                amount_type=ProductPriceAmountType.custom,
+                price_currency=PresentmentCurrency.inr,
+                maximum_amount=400,
+            )
+
+        errors = exc_info.value.errors()
+        assert len(errors) == 1
+        assert errors[0]["loc"] == ("maximum_amount",)
+        assert errors[0]["type"] == "minimum_price"
+
+
+class TestProductCreateDiscriminator:
+    """Test that ProductCreate discriminated union only validates the correct variant."""
+
+    product_create_adapter: TypeAdapter[ProductCreate] = TypeAdapter(ProductCreate)
+
+    def test_one_time_product_with_invalid_price_only_shows_price_error(
+        self,
+    ) -> None:
+        """Key regression test: one-time product must NOT show recurring_interval errors."""
+        with pytest.raises(ValidationError) as exc_info:
+            self.product_create_adapter.validate_python(
+                {
+                    "name": "Test Product",
+                    "recurring_interval": None,
+                    "prices": [
+                        {
+                            "amount_type": "fixed",
+                            "price_amount": 30,
+                            "price_currency": "usd",
+                        }
+                    ],
+                }
+            )
+
+        errors = exc_info.value.errors()
+        # Should only have price-related errors, NOT recurring_interval errors
+        error_locs = [e["loc"] for e in errors]
+        for loc in error_locs:
+            assert "recurring_interval" not in loc, (
+                f"One-time product should not have recurring_interval errors, got: {loc}"
+            )
+
+    def test_one_time_product_valid(self) -> None:
+        result = self.product_create_adapter.validate_python(
+            {
+                "name": "Test Product",
+                "recurring_interval": None,
+                "prices": [
+                    {
+                        "amount_type": "fixed",
+                        "price_amount": 1000,
+                        "price_currency": "usd",
+                    }
+                ],
+            }
+        )
+        assert isinstance(result, ProductCreateOneTime)
+        assert result.recurring_interval is None
+
+    def test_one_time_product_without_recurring_interval_field(self) -> None:
+        """When recurring_interval is omitted entirely, should default to one-time."""
+        result = self.product_create_adapter.validate_python(
+            {
+                "name": "Test Product",
+                "prices": [
+                    {
+                        "amount_type": "fixed",
+                        "price_amount": 1000,
+                        "price_currency": "usd",
+                    }
+                ],
+            }
+        )
+        assert isinstance(result, ProductCreateOneTime)
+
+    def test_recurring_product_valid(self) -> None:
+        result = self.product_create_adapter.validate_python(
+            {
+                "name": "Test Product",
+                "recurring_interval": "month",
+                "prices": [
+                    {
+                        "amount_type": "fixed",
+                        "price_amount": 1000,
+                        "price_currency": "usd",
+                    }
+                ],
+            }
+        )
+        assert isinstance(result, ProductCreateRecurring)
+        assert result.recurring_interval == SubscriptionRecurringInterval.month
+
+    def test_recurring_product_with_invalid_price(self) -> None:
+        with pytest.raises(ValidationError) as exc_info:
+            self.product_create_adapter.validate_python(
+                {
+                    "name": "Test Product",
+                    "recurring_interval": "month",
+                    "prices": [
+                        {
+                            "amount_type": "fixed",
+                            "price_amount": 30,
+                            "price_currency": "usd",
+                        }
+                    ],
+                }
+            )
+
+        errors = exc_info.value.errors()
+        # Should have price error but not a "wrong variant" error
+        error_types = [e["type"] for e in errors]
+        assert "minimum_price" in error_types
+
+    def test_one_time_inr_below_minimum(self) -> None:
+        """The original bug: INR below 60 on a one-time product."""
+        with pytest.raises(ValidationError) as exc_info:
+            self.product_create_adapter.validate_python(
+                {
+                    "name": "Test INR Product",
+                    "recurring_interval": None,
+                    "prices": [
+                        {
+                            "amount_type": "fixed",
+                            "price_amount": 1000,
+                            "price_currency": "usd",
+                        },
+                        {
+                            "amount_type": "fixed",
+                            "price_amount": 400,
+                            "price_currency": "inr",
+                        },
+                    ],
+                }
+            )
+
+        errors = exc_info.value.errors()
+        # Only the INR price should error
+        assert len(errors) == 1
+        assert errors[0]["type"] == "minimum_price"
+        assert "₹60.00" in errors[0]["msg"]
+        # No recurring_interval error
+        for e in errors:
+            assert "recurring_interval" not in str(e["loc"])
+
+
+@pytest.mark.parametrize(
+    ("meter_interval", "meter_count", "billing_interval", "billing_count", "expected"),
+    [
+        # Headline case: monthly meter interval on yearly billing
+        (
+            SubscriptionRecurringInterval.month,
+            1,
+            SubscriptionRecurringInterval.year,
+            1,
+            True,
+        ),
+        # Quarterly / semi-annual meter interval on yearly billing
+        (
+            SubscriptionRecurringInterval.month,
+            3,
+            SubscriptionRecurringInterval.year,
+            1,
+            True,
+        ),
+        (
+            SubscriptionRecurringInterval.month,
+            6,
+            SubscriptionRecurringInterval.year,
+            1,
+            True,
+        ),
+        # Doesn't divide evenly
+        (
+            SubscriptionRecurringInterval.month,
+            5,
+            SubscriptionRecurringInterval.year,
+            1,
+            False,
+        ),
+        # Equal to billing interval behaves as today (valid no-op)
+        (
+            SubscriptionRecurringInterval.month,
+            1,
+            SubscriptionRecurringInterval.month,
+            1,
+            True,
+        ),
+        # Monthly meter interval on every-other-month billing
+        (
+            SubscriptionRecurringInterval.month,
+            1,
+            SubscriptionRecurringInterval.month,
+            2,
+            True,
+        ),
+        # Day/week family
+        (
+            SubscriptionRecurringInterval.day,
+            1,
+            SubscriptionRecurringInterval.week,
+            1,
+            True,
+        ),
+        (
+            SubscriptionRecurringInterval.day,
+            2,
+            SubscriptionRecurringInterval.week,
+            1,
+            False,
+        ),
+        (
+            SubscriptionRecurringInterval.week,
+            1,
+            SubscriptionRecurringInterval.week,
+            2,
+            True,
+        ),
+        # Daily is the only day cadence valid on month/year billing
+        (
+            SubscriptionRecurringInterval.day,
+            1,
+            SubscriptionRecurringInterval.month,
+            1,
+            True,
+        ),
+        (
+            SubscriptionRecurringInterval.day,
+            2,
+            SubscriptionRecurringInterval.month,
+            1,
+            False,
+        ),
+        (
+            SubscriptionRecurringInterval.day,
+            1,
+            SubscriptionRecurringInterval.year,
+            1,
+            True,
+        ),
+        # Cross-family drift / impossible combinations
+        (
+            SubscriptionRecurringInterval.week,
+            1,
+            SubscriptionRecurringInterval.month,
+            1,
+            False,
+        ),
+        (
+            SubscriptionRecurringInterval.week,
+            2,
+            SubscriptionRecurringInterval.year,
+            1,
+            False,
+        ),
+        (
+            SubscriptionRecurringInterval.year,
+            1,
+            SubscriptionRecurringInterval.month,
+            1,
+            False,
+        ),
+        (
+            SubscriptionRecurringInterval.month,
+            1,
+            SubscriptionRecurringInterval.week,
+            1,
+            False,
+        ),
+    ],
+)
+def test_meter_interval_divides_billing_interval(
+    meter_interval: SubscriptionRecurringInterval,
+    meter_count: int,
+    billing_interval: SubscriptionRecurringInterval,
+    billing_count: int,
+    expected: bool,
+) -> None:
+    assert (
+        meter_interval_divides_billing_interval(
+            meter_interval, meter_count, billing_interval, billing_count
+        )
+        is expected
+    )
+
+
+def _recurring_product(**kwargs: Any) -> ProductCreateRecurring:
+    return ProductCreateRecurring(
+        name="Usage product",
+        prices=[
+            ProductPriceFixedCreate(
+                amount_type=ProductPriceAmountType.fixed,
+                price_amount=1000,
+                price_currency=PresentmentCurrency.usd,
+            )
+        ],
+        **kwargs,
+    )
+
+
+class TestProductCreateMeterInterval:
+    def test_unset_nulls_count(self) -> None:
+        product = _recurring_product(
+            recurring_interval=SubscriptionRecurringInterval.year,
+        )
+        assert product.meter_interval is None
+        assert product.meter_interval_count is None
+
+    def test_unset_interval_ignores_provided_count(self) -> None:
+        product = _recurring_product(
+            recurring_interval=SubscriptionRecurringInterval.year,
+            meter_interval_count=3,
+        )
+        assert product.meter_interval is None
+        assert product.meter_interval_count is None
+
+    def test_valid_defaults_count_to_one(self) -> None:
+        product = _recurring_product(
+            recurring_interval=SubscriptionRecurringInterval.year,
+            meter_interval=SubscriptionRecurringInterval.month,
+        )
+        assert product.meter_interval == SubscriptionRecurringInterval.month
+        assert product.meter_interval_count == 1
+
+    def test_valid_with_count(self) -> None:
+        product = _recurring_product(
+            recurring_interval=SubscriptionRecurringInterval.year,
+            meter_interval=SubscriptionRecurringInterval.month,
+            meter_interval_count=3,
+        )
+        assert product.meter_interval_count == 3
+
+    def test_invalid_does_not_divide(self) -> None:
+        with pytest.raises(ValidationError) as exc_info:
+            _recurring_product(
+                recurring_interval=SubscriptionRecurringInterval.year,
+                meter_interval=SubscriptionRecurringInterval.month,
+                meter_interval_count=5,
+            )
+        assert "evenly divide" in str(exc_info.value)
+
+    def test_invalid_coarser_than_billing(self) -> None:
+        with pytest.raises(ValidationError):
+            _recurring_product(
+                recurring_interval=SubscriptionRecurringInterval.month,
+                meter_interval=SubscriptionRecurringInterval.year,
+            )
+
+
+def _unit_based_payload(
+    tiers: list[dict[str, Any]],
+    tier_type: str = "volume",
+    minimum_units: int | None = None,
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "amount_type": ProductPriceAmountType.unit_based,
+        "price_currency": PresentmentCurrency.usd,
+        "tiers": {"type": tier_type, "tiers": tiers},
+    }
+    if minimum_units is not None:
+        payload["minimum_units"] = minimum_units
+    return payload
+
+
+class TestProductPriceUnitBasedCreate:
+    def test_valid_tiered(self) -> None:
+        schema = ProductPriceUnitBasedCreate.model_validate(
+            {
+                **_unit_based_payload(
+                    [
+                        {"bound": 10, "unit_amount": 1000},
+                        {"bound": None, "unit_amount": 800},
+                    ],
+                    tier_type="graduated",
+                    minimum_units=5,
+                ),
+                "unit_label": {"en": {"=1": "device", "other": "devices"}},
+            }
+        )
+        assert schema.tiers.type == TierType.graduated
+        assert schema.minimum_units == 5
+        assert schema.unit_label == {"en": {"=1": "device", "other": "devices"}}
+
+    def test_unit_label_optional(self) -> None:
+        schema = ProductPriceUnitBasedCreate.model_validate(
+            _unit_based_payload([{"bound": None, "unit_amount": 1000}])
+        )
+        assert schema.unit_label is None
+
+    def test_unit_label_requires_other(self) -> None:
+        with pytest.raises(ValidationError):
+            ProductPriceUnitBasedCreate.model_validate(
+                {
+                    **_unit_based_payload([{"bound": None, "unit_amount": 1000}]),
+                    "unit_label": {"en": {"=1": "device"}},
+                }
+            )
+
+    def test_unit_label_empty_rejected(self) -> None:
+        with pytest.raises(ValidationError):
+            ProductPriceUnitBasedCreate.model_validate(
+                {
+                    **_unit_based_payload([{"bound": None, "unit_amount": 1000}]),
+                    "unit_label": {},
+                }
+            )
+
+    def test_fractional_rate_rejected(self) -> None:
+        with pytest.raises(ValidationError, match="smallest currency unit"):
+            ProductPriceUnitBasedCreate.model_validate(
+                _unit_based_payload([{"bound": None, "unit_amount": "10.5"}])
+            )
+
+    def test_zero_rate_allowed(self) -> None:
+        schema = ProductPriceUnitBasedCreate.model_validate(
+            _unit_based_payload([{"bound": None, "unit_amount": 0}])
+        )
+        assert schema.tiers is not None
+
+    def test_minimum_units_above_last_tier_rejected(self) -> None:
+        with pytest.raises(ValidationError, match="minimum_units"):
+            ProductPriceUnitBasedCreate.model_validate(
+                _unit_based_payload(
+                    [{"bound": 10, "unit_amount": 500}], minimum_units=11
+                )
+            )
+
+
+class TestProductPriceSeatTiers:
+    def test_unbounded_not_last_keeps_seat_wording(self) -> None:
+        with pytest.raises(ValidationError, match="unlimited max_seats"):
+            ProductPriceSeatTiers.model_validate(
+                {
+                    "seat_tier_type": "volume",
+                    "tiers": [
+                        {"min_seats": 1, "max_seats": None, "price_per_seat": 500},
+                        {"min_seats": 11, "max_seats": 20, "price_per_seat": 300},
+                    ],
+                }
+            )
+
+    def test_earlier_gap_wins_over_later_unbounded(self) -> None:
+        with pytest.raises(ValidationError, match="Gap or overlap"):
+            ProductPriceSeatTiers.model_validate(
+                {
+                    "seat_tier_type": "volume",
+                    "tiers": [
+                        {"min_seats": 1, "max_seats": 10, "price_per_seat": 500},
+                        {"min_seats": 20, "max_seats": None, "price_per_seat": 300},
+                        {"min_seats": 21, "max_seats": 30, "price_per_seat": 200},
+                    ],
+                }
+            )
+
+    def test_duplicate_bound_keeps_seat_wording(self) -> None:
+        with pytest.raises(ValidationError, match="max_seats values must be unique"):
+            ProductPriceSeatTiers.model_validate(
+                {
+                    "seat_tier_type": "volume",
+                    "tiers": [
+                        {"min_seats": 1, "max_seats": 10, "price_per_seat": 500},
+                        {"min_seats": 11, "max_seats": 10, "price_per_seat": 300},
+                    ],
+                }
+            )
+
+    def test_rate_at_bigint_max_allowed(self) -> None:
+        seat_tiers = ProductPriceSeatTiers.model_validate(
+            {
+                "seat_tier_type": "volume",
+                "tiers": [
+                    {"min_seats": 1, "max_seats": None, "price_per_seat": BIGINT_MAX},
+                ],
+            }
+        )
+        assert seat_tiers.tiers[0].price_per_seat == BIGINT_MAX
+
+    def test_rate_above_bigint_max_rejected(self) -> None:
+        with pytest.raises(ValidationError, match="less than or equal to"):
+            ProductPriceSeatTiers.model_validate(
+                {
+                    "seat_tier_type": "volume",
+                    "tiers": [
+                        {
+                            "min_seats": 1,
+                            "max_seats": None,
+                            "price_per_seat": BIGINT_MAX + 1,
+                        },
+                    ],
+                }
+            )

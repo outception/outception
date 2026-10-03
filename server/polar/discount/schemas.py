@@ -1,0 +1,503 @@
+import inspect
+from datetime import datetime
+from typing import Annotated, Any, Literal, Self
+
+from annotated_types import Ge, Le
+from pydantic import (
+    UUID4,
+    AfterValidator,
+    Discriminator,
+    Field,
+    Tag,
+    TypeAdapter,
+    model_validator,
+)
+
+from polar.kit.currency import PresentmentCurrency
+from polar.kit.metadata import (
+    MetadataInputMixin,
+    MetadataOutputMixin,
+)
+from polar.kit.schemas import (
+    ClassName,
+    EmptyStrToNone,
+    IDSchema,
+    Int32,
+    MergeJSONSchema,
+    Schema,
+    SetSchemaReference,
+    TimestampedSchema,
+)
+from polar.models.discount import DiscountDuration, DiscountType
+from polar.organization.schemas import OrganizationID
+from polar.product.schemas import ProductBase
+
+DiscountID = Annotated[
+    UUID4,
+    MergeJSONSchema({"description": "The discount ID."}),
+]
+
+Name = Annotated[
+    str,
+    Field(
+        description=(
+            "Name of the discount. "
+            "Will be displayed to the customer when the discount is applied."
+        ),
+        min_length=1,
+    ),
+]
+
+
+def _code_validator(value: str | None) -> str | None:
+    if value is None:
+        return None
+    if not value.isalnum():
+        raise ValueError("Code must contain only alphanumeric characters.")
+    if not 3 <= len(value) <= 256:
+        raise ValueError("Code must be between 3 and 256 characters long.")
+    return value
+
+
+Code = Annotated[
+    EmptyStrToNone,
+    AfterValidator(_code_validator),
+    Field(
+        description=(
+            "Code customers can use to apply the discount during checkout. "
+            "Must be between 3 and 256 characters long and "
+            "contain only alphanumeric characters."
+            "If not provided, the discount can only be applied via the API."
+        ),
+    ),
+]
+
+
+def _starts_at_ends_at_validator(
+    starts_at: datetime | None, ends_at: datetime | None
+) -> None:
+    if starts_at is not None and ends_at is not None and starts_at >= ends_at:
+        raise ValueError("starts_at must be before ends_at")
+
+
+StartsAt = Annotated[
+    datetime | None,
+    Field(
+        description="Optional timestamp after which the discount is redeemable.",
+    ),
+]
+EndsAt = Annotated[
+    datetime | None,
+    Field(
+        description=(
+            "Optional timestamp after which the discount is no longer redeemable."
+        ),
+    ),
+]
+MaxRedemptions = Annotated[
+    Int32 | None,
+    Field(
+        description="Optional maximum number of times the discount can be redeemed.",
+    ),
+    Ge(1),
+]
+MaxRedemptionsPerCustomer = Annotated[
+    Int32 | None,
+    Field(
+        description=(
+            "Optional maximum number of times the discount can be redeemed "
+            "by a single customer."
+        ),
+    ),
+    Ge(1),
+]
+DurationInMonths = Annotated[
+    Int32,
+    Field(
+        description=inspect.cleandoc("""
+        Number of months the discount should be applied.
+
+        For this to work on yearly pricing, you should multiply this by 12.
+        For example, to apply the discount for 2 years, set this to 24.
+        """)
+    ),
+    Ge(1),
+    Le(999),
+]
+Amount = Annotated[
+    int,
+    Field(
+        description="Fixed amount to discount from the invoice total.",
+        ge=0,
+        le=999999999999,
+    ),
+]
+Currency = Annotated[
+    PresentmentCurrency, Field(description="The currency of the fixed amount discount.")
+]
+Amounts = Annotated[
+    dict[PresentmentCurrency, Amount],
+    Field(
+        min_length=1,
+        description=(
+            "Map of currency to fixed amount to discount from the total. "
+            "This allows specifying different discount amounts for different currencies."
+        ),
+    ),
+]
+BasisPoints = Annotated[
+    Int32,
+    Field(
+        description=(
+            inspect.cleandoc("""
+            Discount percentage in basis points.
+
+            A basis point is 1/100th of a percent.
+            For example, to create a 25.5% discount, set this to 2550.
+            """)
+        ),
+        ge=1,
+        le=10000,
+    ),
+]
+ProductsList = Annotated[
+    list[UUID4],
+    Field(description="List of product IDs the discount can be applied to."),
+]
+
+
+class DiscountCreateBase(MetadataInputMixin, Schema):
+    name: Name
+    code: Code = None
+
+    starts_at: StartsAt = None
+    ends_at: EndsAt = None
+    max_redemptions: MaxRedemptions = None
+    max_redemptions_per_customer: MaxRedemptionsPerCustomer = None
+
+    products: ProductsList | None = None
+
+    organization_id: OrganizationID | None = Field(
+        default=None,
+        description=(
+            "The ID of the organization owning the discount. "
+            "**Required unless you use an organization token.**"
+        ),
+    )
+
+    @model_validator(mode="after")
+    def validate_starts_at_ends_at(self) -> Self:
+        _starts_at_ends_at_validator(self.starts_at, self.ends_at)
+        return self
+
+
+Duration = Annotated[
+    DiscountDuration,
+    Field(
+        description=(
+            "For subscriptions, determines if the discount should be applied "
+            "once on the first invoice, forever, or for a certain number of "
+            "months determined by `duration_in_months`."
+        ),
+    ),
+]
+DurationInMonthsOptional = Annotated[
+    Int32 | None,
+    Field(
+        default=None,
+        description=inspect.cleandoc("""
+        Number of months the discount should be applied.
+
+        Required when `duration` is `repeating`. Must be omitted otherwise.
+
+        For this to work on yearly pricing, you should multiply this by 12.
+        For example, to apply the discount for 2 years, set this to 24.
+        """),
+        ge=1,
+        le=999,
+    ),
+]
+
+
+def _validate_duration_in_months(
+    duration: DiscountDuration, duration_in_months: int | None
+) -> None:
+    if duration == DiscountDuration.repeating and duration_in_months is None:
+        raise ValueError(
+            "`duration_in_months` is required when `duration` is `repeating`."
+        )
+    if duration != DiscountDuration.repeating and duration_in_months is not None:
+        raise ValueError(
+            "`duration_in_months` must be omitted when `duration` is not `repeating`."
+        )
+
+
+class DiscountFixedCreate(DiscountCreateBase):
+    """Schema to create a fixed amount discount."""
+
+    type: Literal[DiscountType.fixed] = DiscountType.fixed
+    duration: Duration
+    duration_in_months: DurationInMonthsOptional = None
+    amount: Amount | None = Field(
+        default=None,
+        deprecated="Use `amounts` instead to specify fixed discount amounts for different currencies.",
+    )
+    currency: Currency | None = Field(
+        default=PresentmentCurrency.usd,
+        deprecated="Use `amounts` instead to specify fixed discount amounts for different currencies.",
+    )
+    amounts: Amounts | None = None
+
+    @model_validator(mode="after")
+    def validate_either_amount_or_amounts(self) -> Self:
+        if self.amount is not None and self.amounts is not None:
+            raise ValueError("Cannot specify both `amount` and `amounts`.")
+        if self.amount is None and self.amounts is None:
+            raise ValueError("Must specify either `amount` or `amounts`.")
+        return self
+
+    @model_validator(mode="after")
+    def validate_duration_in_months(self) -> Self:
+        _validate_duration_in_months(self.duration, self.duration_in_months)
+        return self
+
+
+class DiscountPercentageCreate(DiscountCreateBase):
+    """Schema to create a percentage discount."""
+
+    type: Literal[DiscountType.percentage] = DiscountType.percentage
+    duration: Duration
+    duration_in_months: DurationInMonthsOptional = None
+    basis_points: BasisPoints
+
+    @model_validator(mode="after")
+    def validate_duration_in_months(self) -> Self:
+        _validate_duration_in_months(self.duration, self.duration_in_months)
+        return self
+
+
+class DiscountUpdate(MetadataInputMixin, Schema):
+    """
+    Schema to update a discount.
+    """
+
+    name: Name | None = None
+    code: Code = None
+
+    starts_at: StartsAt = None
+    ends_at: EndsAt = None
+    max_redemptions: MaxRedemptions = None
+    max_redemptions_per_customer: MaxRedemptionsPerCustomer = None
+
+    duration: DiscountDuration | None = None
+    duration_in_months: DurationInMonths | None = None
+
+    type: DiscountType | None = None
+    amount: Amount | None = Field(
+        default=None,
+        deprecated="Use `amounts` instead to specify fixed discount amounts for different currencies.",
+    )
+    currency: Currency | None = Field(
+        default=None,
+        deprecated="Use `amounts` instead to specify fixed discount amounts for different currencies.",
+    )
+    amounts: Amounts | None = None
+    basis_points: BasisPoints | None = None
+
+    products: ProductsList | None = None
+
+    @model_validator(mode="after")
+    def validate_starts_at_ends_at(self) -> Self:
+        _starts_at_ends_at_validator(self.starts_at, self.ends_at)
+        return self
+
+    @model_validator(mode="after")
+    def validate_either_amount_or_amounts(self) -> Self:
+        if self.amount is not None and self.amounts is not None:
+            raise ValueError("Cannot specify both `amount` and `amounts`.")
+        return self
+
+
+class DiscountProduct(ProductBase, MetadataOutputMixin):
+    """A product that a discount can be applied to."""
+
+
+class DiscountBase(MetadataOutputMixin, IDSchema, TimestampedSchema):
+    name: str = Field(
+        description=(
+            "Name of the discount. "
+            "Will be displayed to the customer when the discount is applied."
+        )
+    )
+    type: DiscountType
+    duration: DiscountDuration
+    code: str | None = Field(
+        description="Code customers can use to apply the discount during checkout."
+    )
+
+    starts_at: datetime | None = Field(
+        description="Timestamp after which the discount is redeemable."
+    )
+    ends_at: datetime | None = Field(
+        description="Timestamp after which the discount is no longer redeemable."
+    )
+    max_redemptions: int | None = Field(
+        description="Maximum number of times the discount can be redeemed."
+    )
+    max_redemptions_per_customer: int | None = Field(
+        description=(
+            "Maximum number of times the discount can be redeemed by a single customer."
+        )
+    )
+
+    redemptions_count: int = Field(
+        description="Number of times the discount has been redeemed."
+    )
+
+    organization_id: OrganizationID
+
+
+class DiscountOnceForeverDurationBase(Schema):
+    duration: Literal[DiscountDuration.once, DiscountDuration.forever] = Field(
+        description=(
+            "For subscriptions, determines if the discount should be applied "
+            "once on the first invoice or forever."
+        )
+    )
+
+
+class DiscountRepeatDurationBase(Schema):
+    duration: Literal[DiscountDuration.repeating] = Field(
+        description=(
+            "For subscriptions, the discount should be applied on every invoice "
+            "for a certain number of months, determined by `duration_in_months`."
+        )
+    )
+    duration_in_months: int
+
+
+class DiscountFixedBase(Schema):
+    type: Literal[DiscountType.fixed] = DiscountType.fixed
+    amount: int = Field(
+        examples=[1000],
+        deprecated="Use `amounts` instead to specify fixed discount amounts for different currencies.",
+    )
+    currency: str = Field(
+        examples=["usd"],
+        deprecated="Use `amounts` instead to specify fixed discount amounts for different currencies.",
+    )
+    amounts: dict[str, int] = Field(
+        examples=[{"usd": 1000, "eur": 900}],
+        description=("Map of currency to fixed amount to discount from the total."),
+    )
+
+
+class DiscountPercentageBase(Schema):
+    type: Literal[DiscountType.percentage] = DiscountType.percentage
+    basis_points: int = Field(
+        examples=[1000],
+        description=(
+            "Discount percentage in basis points. "
+            "A basis point is 1/100th of a percent. "
+            "For example, 1000 basis points equals a 10% discount."
+        ),
+    )
+
+
+class DiscountFixedOnceForeverDurationBase(
+    DiscountBase, DiscountFixedBase, DiscountOnceForeverDurationBase
+): ...
+
+
+class DiscountFixedRepeatDurationBase(
+    DiscountBase, DiscountFixedBase, DiscountRepeatDurationBase
+): ...
+
+
+class DiscountPercentageOnceForeverDurationBase(
+    DiscountBase, DiscountPercentageBase, DiscountOnceForeverDurationBase
+): ...
+
+
+class DiscountPercentageRepeatDurationBase(
+    DiscountBase, DiscountPercentageBase, DiscountRepeatDurationBase
+): ...
+
+
+class DiscountFullBase(DiscountBase):
+    products: list[DiscountProduct]
+
+
+class DiscountFixedOnceForeverDuration(
+    DiscountFullBase, DiscountFixedBase, DiscountOnceForeverDurationBase
+):
+    """Schema for a fixed amount discount that is applied once or forever."""
+
+
+class DiscountFixedRepeatDuration(
+    DiscountFullBase, DiscountFixedBase, DiscountRepeatDurationBase
+):
+    """
+    Schema for a fixed amount discount that is applied on every invoice
+    for a certain number of months.
+    """
+
+
+class DiscountPercentageOnceForeverDuration(
+    DiscountFullBase, DiscountPercentageBase, DiscountOnceForeverDurationBase
+):
+    """Schema for a percentage discount that is applied once or forever."""
+
+
+class DiscountPercentageRepeatDuration(
+    DiscountFullBase, DiscountPercentageBase, DiscountRepeatDurationBase
+):
+    """
+    Schema for a percentage discount that is applied on every invoice
+    for a certain number of months.
+    """
+
+
+def get_discriminator_value(v: Any) -> str | None:
+    if isinstance(v, dict):
+        type = v.get("type")
+        duration = v.get("duration")
+    else:
+        type = getattr(v, "type", None)
+        duration = getattr(v, "duration", None)
+
+    if type is None or duration is None:
+        return None
+
+    duration_tag = (
+        "once_forever"
+        if duration in {DiscountDuration.once, DiscountDuration.forever}
+        else "repeat"
+    )
+    return f"{type}.{duration_tag}"
+
+
+DiscountCreate = Annotated[
+    DiscountFixedCreate | DiscountPercentageCreate,
+    Discriminator("type"),
+]
+DiscountMinimal = Annotated[
+    Annotated[DiscountFixedOnceForeverDurationBase, Tag("fixed.once_forever")]
+    | Annotated[DiscountFixedRepeatDurationBase, Tag("fixed.repeat")]
+    | Annotated[
+        DiscountPercentageOnceForeverDurationBase, Tag("percentage.once_forever")
+    ]
+    | Annotated[DiscountPercentageRepeatDurationBase, Tag("percentage.repeat")],
+    Discriminator(get_discriminator_value),
+]
+Discount = Annotated[
+    Annotated[DiscountFixedOnceForeverDuration, Tag("fixed.once_forever")]
+    | Annotated[DiscountFixedRepeatDuration, Tag("fixed.repeat")]
+    | Annotated[DiscountPercentageOnceForeverDuration, Tag("percentage.once_forever")]
+    | Annotated[DiscountPercentageRepeatDuration, Tag("percentage.repeat")],
+    Discriminator(get_discriminator_value),
+    SetSchemaReference("Discount"),
+    MergeJSONSchema({"title": "Discount"}),
+    ClassName("Discount"),
+]
+DiscountAdapter: TypeAdapter[Discount] = TypeAdapter(Discount)

@@ -1,0 +1,187 @@
+from datetime import datetime
+from typing import TYPE_CHECKING
+from uuid import UUID
+
+from sqlalchemy import TIMESTAMP, ForeignKey, Index, Uuid
+from sqlalchemy.orm import Mapped, declared_attr, mapped_column, relationship
+from sqlalchemy.sql.sqltypes import Integer
+
+from polar.enums import SubscriptionProrationBehavior
+from polar.kit.db.models import RecordModel
+from polar.kit.extensions.sqlalchemy.types import StringEnum
+from polar.kit.utils import utc_now
+from polar.product.guard import is_recurring_product
+from polar.product.price_set import PriceSet
+
+from .subscription_product_price import SubscriptionProductPrice
+
+if TYPE_CHECKING:
+    from polar.models import Discount, Product, Subscription
+
+
+class SubscriptionUpdate(RecordModel):
+    """
+    Represent a pending subscription update.
+
+    Can be used when:
+
+    - A subscription is updated to a new product or when seats are added or removed,
+    but we are waiting for a successful payment to be made before applying the update.
+    - A subscription update is scheduled for a future date, for example to apply a new product at the end of the current billing cycle.
+    """
+
+    __tablename__ = "subscription_updates"
+    __table_args__ = (
+        Index(
+            "ix_subscription_updates_subscription_id_pending",
+            "subscription_id",
+            unique=True,
+            postgresql_where="applied_at IS NULL AND deleted_at IS NULL",
+        ),
+    )
+
+    proration_behavior: Mapped[SubscriptionProrationBehavior] = mapped_column(
+        StringEnum(SubscriptionProrationBehavior), nullable=False
+    )
+    """Proration behavior for the subscription update."""
+
+    applies_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False
+    )
+    """Date and time at which the subscription update is applied. Anchor for proration calculations."""
+
+    applied_at: Mapped[datetime | None] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=True, default=None
+    )
+    """Date and time at which the subscription update was applied, or None if not applied yet."""
+
+    subscription_id: Mapped[UUID] = mapped_column(
+        Uuid,
+        ForeignKey("subscriptions.id", ondelete="cascade"),
+        nullable=False,
+        index=True,
+    )
+    """ID of the `Subscription` concerned by this update."""
+
+    @declared_attr
+    def subscription(cls) -> Mapped["Subscription"]:
+        return relationship("Subscription", lazy="raise")
+
+    product_id: Mapped[UUID | None] = mapped_column(
+        Uuid, ForeignKey("products.id", ondelete="cascade"), nullable=True, index=True
+    )
+    """ID of the new `Product` to apply to the subscription."""
+
+    @declared_attr
+    def product(cls) -> Mapped["Product | None"]:
+        return relationship("Product", lazy="raise")
+
+    new_cycle_start: Mapped[datetime | None] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=True
+    )
+    """New cycle start to apply to the subscription."""
+
+    new_cycle_end: Mapped[datetime | None] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=True
+    )
+    """New cycle end to apply to the subscription."""
+
+    seats: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    """Number of seats to apply to the subscription."""
+
+    units: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    """Number of units to apply to the subscription."""
+
+    discount_unset: Mapped[bool] = mapped_column(nullable=False, default=False)
+    """
+    Whether to unset the subscription's discount when applying the update.
+    If true, any existing discount on the subscription will be removed when applying the update.
+    """
+
+    discount_id: Mapped[UUID | None] = mapped_column(
+        Uuid, ForeignKey("discounts.id", ondelete="set null"), nullable=True
+    )
+    """ID of the `Discount` to apply to the subscription."""
+
+    @declared_attr
+    def discount(cls) -> Mapped["Discount | None"]:
+        return relationship("Discount", lazy="raise")
+
+    def is_interval_changed(self) -> bool:
+        """Return True if the subscription update includes a change of billing interval."""
+        if self.product is None:
+            return False
+        return (
+            self.product.recurring_interval
+            != self.subscription.product.recurring_interval
+            or self.product.recurring_interval_count
+            != self.subscription.product.recurring_interval_count
+        )
+
+    def apply_update(self) -> Subscription:
+        """Apply the subscription update to the subscription and return the updated subscription."""
+        subscription = self.subscription
+
+        if self.product is not None:
+            assert is_recurring_product(self.product)
+            # Resolve new product prices before updating the subscription to
+            # avoid inconsistent states if PriceSet.from_product raises, e.g.
+            # NoPricesForCurrencies.
+            subscription_product_prices = [
+                SubscriptionProductPrice.from_price(
+                    price, seats=subscription.seats, units=subscription.units
+                )
+                for price in PriceSet.from_product(self.product, subscription.currency)
+            ]
+            subscription.product = self.product
+            subscription.subscription_product_prices = subscription_product_prices
+            subscription.recurring_interval = self.product.recurring_interval
+            subscription.recurring_interval_count = (
+                self.product.recurring_interval_count
+            )
+            subscription.meter_interval = self.product.meter_interval
+            subscription.meter_interval_count = self.product.meter_interval_count
+
+        if self.new_cycle_start is not None:
+            subscription.current_period_start = self.new_cycle_start
+            subscription.anchor_day = self.new_cycle_start.day
+
+        if self.new_cycle_end is not None:
+            subscription.current_period_end = self.new_cycle_end
+
+        if self.seats is not None:
+            subscription.seats = self.seats
+            subscription.subscription_product_prices = [
+                SubscriptionProductPrice.from_price(spp.product_price, seats=self.seats)
+                for spp in subscription.subscription_product_prices
+            ]
+
+        if self.units is not None:
+            subscription.units = self.units
+            subscription.subscription_product_prices = [
+                SubscriptionProductPrice.from_price(spp.product_price, units=self.units)
+                for spp in subscription.subscription_product_prices
+            ]
+
+        if self.discount_unset:
+            subscription.discount = None
+        elif self.discount is not None:
+            subscription.discount = self.discount
+
+        # A product change is a reset: re-anchor the meter clock to the (possibly
+        # new) billing period so the two-clock scheduler wakes on the new cadence.
+        if self.product is not None:
+            subscription.initialize_meter_period(subscription.current_period_start)
+
+        self.applied_at = utc_now()
+
+        return subscription
+
+    @property
+    def after_update_discount(self) -> Discount | None:
+        """Return the discount that would be applied to the subscription after applying the update."""
+        if self.discount_unset:
+            return None
+        if self.discount is not None:
+            return self.discount
+        return self.subscription.discount

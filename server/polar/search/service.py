@@ -1,0 +1,292 @@
+import uuid
+from typing import Any
+
+from sqlalchemy import (
+    ColumnElement,
+    Integer,
+    Select,
+    String,
+    func,
+    literal,
+    or_,
+    select,
+    union_all,
+)
+
+from polar.auth.models import AuthSubject, User
+from polar.auth.scope import Scope
+from polar.authz.repository import select_accessible_org_ids
+from polar.kit.db.postgres import AsyncReadSession
+from polar.models import (
+    Customer,
+    Order,
+    Organization,
+    Product,
+    Subscription,
+)
+
+from .schemas import (
+    SearchResult,
+    SearchResultTypeAdapter,
+)
+
+
+class SearchService:
+    def _try_parse_uuid(self, query: str) -> uuid.UUID | None:
+        try:
+            return uuid.UUID(query.strip())
+        except ValueError, AttributeError:
+            return None
+
+    def _has_products_scope(self, auth_subject: AuthSubject[User]) -> bool:
+        return bool(auth_subject.scopes & {Scope.products_read, Scope.products_write})
+
+    def _has_customers_scope(self, auth_subject: AuthSubject[User]) -> bool:
+        return bool(auth_subject.scopes & {Scope.customers_read, Scope.customers_write})
+
+    def _has_orders_scope(self, auth_subject: AuthSubject[User]) -> bool:
+        return bool(auth_subject.scopes & {Scope.orders_read, Scope.orders_write})
+
+    def _has_subscriptions_scope(self, auth_subject: AuthSubject[User]) -> bool:
+        return bool(
+            auth_subject.scopes & {Scope.subscriptions_read, Scope.subscriptions_write}
+        )
+
+    async def search(
+        self,
+        session: AsyncReadSession,
+        auth_subject: AuthSubject[User],
+        *,
+        organization_id: uuid.UUID,
+        query: str,
+        limit: int = 20,
+    ) -> list[SearchResult]:
+        query_uuid = self._try_parse_uuid(query)
+
+        ts_query_simple = func.websearch_to_tsquery("simple", query)
+        ts_query_english = func.websearch_to_tsquery("english", query)
+
+        organization_subquery = select(Organization.id).where(
+            Organization.id == organization_id,
+            Organization.id.in_(select_accessible_org_ids(auth_subject)),
+        )
+
+        subqueries: list[Select[Any]] = []
+        if self._has_products_scope(auth_subject):
+            products_subquery = self._build_products_subquery(
+                organization_subquery, query_uuid, ts_query_english
+            )
+            subqueries.append(products_subquery)
+
+        if self._has_customers_scope(auth_subject):
+            customers_subquery = self._build_customers_subquery(
+                organization_subquery, query_uuid, ts_query_simple, query
+            )
+            subqueries.append(customers_subquery)
+
+        if self._has_orders_scope(auth_subject):
+            orders_subquery = self._build_orders_subquery(
+                organization_subquery,
+                query_uuid,
+                ts_query_simple,
+                ts_query_english,
+                query,
+            )
+            subqueries.append(orders_subquery)
+
+        if self._has_subscriptions_scope(auth_subject):
+            subscriptions_subquery = self._build_subscriptions_subquery(
+                organization_subquery,
+                query_uuid,
+                ts_query_simple,
+                ts_query_english,
+                query,
+            )
+            subqueries.append(subscriptions_subquery)
+
+        if not subqueries:
+            return []
+
+        union_query = union_all(*subqueries).subquery()
+
+        final_query = (
+            select(union_query).order_by(union_query.c.rank.desc()).limit(limit)
+        )
+
+        result = await session.execute(final_query)
+        return [SearchResultTypeAdapter.validate_python(row) for row in result.all()]
+
+    def _build_products_subquery(
+        self,
+        organization_subquery: Select[tuple[uuid.UUID]],
+        query_uuid: uuid.UUID | None,
+        ts_query_english: ColumnElement[Any],
+    ) -> Select[Any]:
+        rank_expr = func.ts_rank(Product.search_vector, ts_query_english)
+
+        stmt = select(
+            Product.id,
+            literal("product").label("type"),
+            rank_expr.label("rank"),
+            Product.name.label("name"),
+            Product.description.label("description"),
+            literal(None).cast(String).label("email"),
+            literal(None).cast(String).label("customer_name"),
+            literal(None).cast(String).label("customer_email"),
+            literal(None).cast(String).label("product_name"),
+            literal(None).cast(Integer).label("amount"),
+            literal(None).cast(String).label("currency"),
+            literal(None).cast(String).label("status"),
+        ).where(
+            Product.organization_id.in_(organization_subquery),
+            ~Product.is_deleted,
+        )
+
+        if query_uuid:
+            stmt = stmt.where(Product.id == query_uuid)
+        else:
+            stmt = stmt.where(Product.search_vector.op("@@")(ts_query_english))
+
+        return stmt
+
+    def _build_customers_subquery(
+        self,
+        organization_subquery: Select[tuple[uuid.UUID]],
+        query_uuid: uuid.UUID | None,
+        ts_query_simple: ColumnElement[Any],
+        query: str,
+    ) -> Select[Any]:
+        rank_expr = func.ts_rank(Customer.search_vector, ts_query_simple)
+
+        stmt = select(
+            Customer.id,
+            literal("customer").label("type"),
+            rank_expr.label("rank"),
+            Customer.name.label("name"),
+            literal(None).cast(String).label("description"),
+            Customer.email.label("email"),
+            literal(None).cast(String).label("customer_name"),
+            literal(None).cast(String).label("customer_email"),
+            literal(None).cast(String).label("product_name"),
+            literal(None).cast(Integer).label("amount"),
+            literal(None).cast(String).label("currency"),
+            literal(None).cast(String).label("status"),
+        ).where(
+            Customer.organization_id.in_(organization_subquery),
+            ~Customer.is_deleted,
+        )
+
+        if query_uuid:
+            stmt = stmt.where(Customer.id == query_uuid)
+        else:
+            stmt = stmt.where(
+                or_(
+                    Customer.search_vector.op("@@")(ts_query_simple),
+                    Customer.email.icontains(query, autoescape=True),
+                )
+            )
+
+        return stmt
+
+    def _build_orders_subquery(
+        self,
+        organization_subquery: Select[tuple[uuid.UUID]],
+        query_uuid: uuid.UUID | None,
+        ts_query_simple: ColumnElement[Any],
+        ts_query_english: ColumnElement[Any],
+        query: str,
+    ) -> Select[Any]:
+        rank_expr = func.greatest(
+            func.ts_rank(Order.search_vector, ts_query_simple),
+            func.ts_rank(Customer.search_vector, ts_query_simple),
+            func.ts_rank(Product.search_vector, ts_query_english),
+        )
+
+        stmt = (
+            select(
+                Order.id,
+                literal("order").label("type"),
+                rank_expr.label("rank"),
+                literal(None).cast(String).label("name"),
+                literal(None).cast(String).label("description"),
+                literal(None).cast(String).label("email"),
+                Customer.name.label("customer_name"),
+                Customer.email.label("customer_email"),
+                Product.name.label("product_name"),
+                Order.total_amount.label("amount"),
+                Order.currency.label("currency"),
+                literal(None).cast(String).label("status"),
+            )
+            .join(Customer, Order.customer_id == Customer.id)
+            .join(Product, Order.product_id == Product.id)
+            .where(
+                Order.organization_id.in_(organization_subquery),
+                ~Order.is_deleted,
+            )
+        )
+
+        if query_uuid:
+            stmt = stmt.where(Order.id == query_uuid)
+        else:
+            stmt = stmt.where(
+                or_(
+                    Order.search_vector.op("@@")(ts_query_simple),
+                    Customer.search_vector.op("@@")(ts_query_simple),
+                    Product.search_vector.op("@@")(ts_query_english),
+                    Customer.email.icontains(query, autoescape=True),
+                )
+            )
+
+        return stmt
+
+    def _build_subscriptions_subquery(
+        self,
+        organization_subquery: Select[tuple[uuid.UUID]],
+        query_uuid: uuid.UUID | None,
+        ts_query_simple: ColumnElement[Any],
+        ts_query_english: ColumnElement[Any],
+        query: str,
+    ) -> Select[Any]:
+        rank_expr = func.greatest(
+            func.ts_rank(Customer.search_vector, ts_query_simple),
+            func.ts_rank(Product.search_vector, ts_query_english),
+        )
+
+        stmt = (
+            select(
+                Subscription.id,
+                literal("subscription").label("type"),
+                rank_expr.label("rank"),
+                literal(None).cast(String).label("name"),
+                literal(None).cast(String).label("description"),
+                literal(None).cast(String).label("email"),
+                Customer.name.label("customer_name"),
+                Customer.email.label("customer_email"),
+                Product.name.label("product_name"),
+                Subscription.amount.label("amount"),
+                Subscription.currency.label("currency"),
+                Subscription.status.label("status"),
+            )
+            .join(Customer, Subscription.customer_id == Customer.id)
+            .join(Product, Subscription.product_id == Product.id)
+            .where(
+                Subscription.organization_id.in_(organization_subquery),
+                ~Subscription.is_deleted,
+            )
+        )
+
+        if query_uuid:
+            stmt = stmt.where(Subscription.id == query_uuid)
+        else:
+            stmt = stmt.where(
+                or_(
+                    Customer.search_vector.op("@@")(ts_query_simple),
+                    Product.search_vector.op("@@")(ts_query_english),
+                    Customer.email.icontains(query, autoescape=True),
+                )
+            )
+
+        return stmt
+
+
+search = SearchService()

@@ -1,0 +1,93 @@
+'use client'
+
+import { useInfiniteEvents } from '@/hooks/queries/events'
+import { schemas } from '@polar-sh/client'
+import { Button } from '@polar-sh/orbit'
+import { Box } from '@polar-sh/orbit/Box'
+import { parseAsArrayOf, parseAsString, useQueryState } from 'nuqs'
+import { Events } from '../../Events/Events'
+import EventSelect from '../../Events/EventSelect'
+import MeterSelector from '../../Meter/MeterSelector'
+import { EmptyState } from '../../Shared/EmptyState'
+import ShortTextOutlined from '@mui/icons-material/ShortTextOutlined'
+import { useCustomerMetricsParams } from './useCustomerMetricsParams'
+
+export const CustomerEventsView = ({
+  customer,
+  organization,
+}: {
+  customer: schemas['Customer']
+  organization: schemas['Organization']
+}) => {
+  const { dateRange } = useCustomerMetricsParams(customer)
+  const [meterId, setMeterId] = useQueryState('meterId', parseAsString)
+  const [eventNames, setEventNames] = useQueryState(
+    'eventName',
+    parseAsArrayOf(parseAsString).withDefault([]),
+  )
+
+  const {
+    data: events,
+    isFetching,
+    fetchNextPage,
+    hasNextPage,
+  } = useInfiniteEvents(customer.organization_id, {
+    limit: 50,
+    customer_id: customer.id,
+    ...(meterId ? { meter_id: meterId } : {}),
+    ...(eventNames.length ? { name: eventNames } : {}),
+    ...(dateRange?.startDate
+      ? { start_timestamp: dateRange.startDate.toISOString() }
+      : {}),
+    ...(dateRange?.endDate
+      ? { end_timestamp: dateRange?.endDate.toISOString() }
+      : {}),
+  })
+
+  return (
+    <Box flexDirection="column" rowGap="2xl">
+      <Box
+        flexDirection={{ base: 'column', md: 'row' }}
+        rowGap="l"
+        columnGap="xl"
+      >
+        <EventSelect
+          className="w-auto min-w-64"
+          organizationId={customer.organization_id}
+          value={eventNames}
+          onChange={(names) => setEventNames(names.length ? names : null)}
+        />
+        <MeterSelector
+          className="min-w-64"
+          organizationId={customer.organization_id}
+          value={meterId}
+          onChange={setMeterId}
+          placeholder="All Meters"
+        />
+      </Box>
+      {events?.pages.flatMap((page) => page.items).length === 0 ? (
+        <EmptyState
+          icon={<ShortTextOutlined fontSize="medium" />}
+          title="No events found"
+          description="There are no events matching the current filters"
+        />
+      ) : (
+        <Events
+          events={events?.pages.flatMap((page) => page.items) ?? []}
+          organization={organization}
+        />
+      )}
+      {hasNextPage && (
+        <Button
+          className="self-start"
+          variant="secondary"
+          onClick={() => fetchNextPage()}
+          loading={isFetching}
+          disabled={!hasNextPage}
+        >
+          Load More
+        </Button>
+      )}
+    </Box>
+  )
+}

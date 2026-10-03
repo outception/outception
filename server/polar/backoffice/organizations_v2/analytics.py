@@ -1,0 +1,288 @@
+"""Analytics service for organization account review functionality."""
+
+from pydantic import UUID4
+from sqlalchemy import func, select
+
+from polar.models import (
+    Benefit,
+    CheckoutLink,
+    Dispute,
+    Organization,
+    OrganizationAccessToken,
+    Payment,
+    Product,
+    ProductBenefit,
+    Refund,
+    Transaction,
+    WebhookEndpoint,
+)
+from polar.models.dispute import DisputeStatus
+from polar.models.organization import PayoutAccountNotReady
+from polar.models.payment import PaymentStatus
+from polar.models.refund import RefundStatus
+from polar.models.transaction import TransactionType
+from polar.payment.repository import PaymentRepository
+from polar.postgres import AsyncSession
+
+
+class PaymentAnalyticsService:
+    """Service for computing payment statistics and analytics."""
+
+    def __init__(self, session: AsyncSession):
+        self.session = session
+        self.payment_repo = PaymentRepository.from_session(session)
+
+    async def get_succeeded_payments_stats(
+        self, organization_id: UUID4
+    ) -> tuple[int, int]:
+        """Get succeeded payments count and total amount in USD cents."""
+        statement = self.payment_repo.get_base_statement().where(
+            Payment.organization_id == organization_id,
+            Payment.status == PaymentStatus.succeeded,
+        )
+
+        # Get count and total amount in USD via Transaction (avoids mixing currencies)
+        stats_result = await self.session.execute(
+            statement.outerjoin(
+                Transaction,
+                onclause=(Transaction.charge_id == Payment.processor_id)
+                & (Transaction.type == TransactionType.payment),
+            ).with_only_columns(
+                func.count(Payment.id), func.coalesce(func.sum(Transaction.amount), 0)
+            )
+        )
+        count, total_amount = stats_result.first() or (0, 0)
+
+        return count, total_amount
+
+    async def get_risk_scores(self, organization_id: UUID4) -> list[float]:
+        """Get risk scores from all payment attempts (succeeded and failed)."""
+        result = await self.session.execute(
+            self.payment_repo.get_base_statement()
+            .where(
+                Payment.organization_id == organization_id,
+                Payment.status.in_([PaymentStatus.succeeded, PaymentStatus.failed]),
+                Payment.risk_score.isnot(None),
+            )
+            .with_only_columns(Payment.risk_score)
+        )
+        return [row[0] for row in result if row[0] is not None]
+
+    async def get_refund_stats(self, organization_id: UUID4) -> tuple[int, int]:
+        """Get count of orders with refunds and total refund amount in USD cents."""
+        result = await self.session.execute(
+            select(
+                func.count(func.distinct(Refund.order_id)),
+                func.coalesce(-func.sum(Transaction.amount), 0),
+            )
+            .outerjoin(
+                Transaction,
+                onclause=(Transaction.refund_id == Refund.id)
+                & (Transaction.type == TransactionType.refund),
+            )
+            .where(
+                Refund.organization_id == organization_id,
+                Refund.status == RefundStatus.succeeded,
+            )
+        )
+        result_row = result.first()
+        if result_row:
+            return (result_row[0], result_row[1])
+        return (0, 0)
+
+    async def get_failed_payments_count(self, organization_id: UUID4) -> int:
+        """Get count of failed payments for auth rate calculation."""
+        result = await self.session.execute(
+            self.payment_repo.get_base_statement()
+            .where(
+                Payment.organization_id == organization_id,
+                Payment.status == PaymentStatus.failed,
+            )
+            .with_only_columns(func.count(Payment.id))
+        )
+        return result.scalar() or 0
+
+    async def get_dispute_stats(
+        self, organization_id: UUID4
+    ) -> tuple[int, int, int, int]:
+        """Get dispute and chargeback stats for organization.
+
+        Returns (dispute_count, dispute_amount, chargeback_count, chargeback_amount).
+        Amounts are in USD cents via related Transaction records.
+        Disputes = all non-prevented/non-early_warning disputes.
+        Chargebacks = disputes with status 'lost'.
+        """
+        # All actual disputes (excludes prevented and early_warning)
+        actual_dispute_statuses = [
+            DisputeStatus.needs_response,
+            DisputeStatus.under_review,
+            DisputeStatus.lost,
+            DisputeStatus.won,
+        ]
+        result = await self.session.execute(
+            select(
+                func.count(Dispute.id),
+                func.coalesce(-func.sum(Transaction.amount), 0),
+            )
+            .join(Payment, Dispute.payment_id == Payment.id)
+            .outerjoin(
+                Transaction,
+                onclause=(Transaction.dispute_id == Dispute.id)
+                & (Transaction.type == TransactionType.dispute),
+            )
+            .where(
+                Payment.organization_id == organization_id,
+                Dispute.status.in_(actual_dispute_statuses),
+            )
+        )
+        row = result.first()
+        dispute_count = row[0] if row else 0
+        dispute_amount = row[1] if row else 0
+
+        # Lost disputes = chargebacks
+        cb_result = await self.session.execute(
+            select(
+                func.count(Dispute.id),
+                func.coalesce(-func.sum(Transaction.amount), 0),
+            )
+            .join(Payment, Dispute.payment_id == Payment.id)
+            .outerjoin(
+                Transaction,
+                onclause=(Transaction.dispute_id == Dispute.id)
+                & (Transaction.type == TransactionType.dispute),
+            )
+            .where(
+                Payment.organization_id == organization_id,
+                Dispute.status == DisputeStatus.lost,
+            )
+        )
+        cb_row = cb_result.first()
+        chargeback_count = cb_row[0] if cb_row else 0
+        chargeback_amount = cb_row[1] if cb_row else 0
+
+        return dispute_count, dispute_amount, chargeback_count, chargeback_amount
+
+    @staticmethod
+    def calculate_risk_percentiles(risk_scores: list[float]) -> tuple[float, float]:
+        """Calculate P50 and P90 risk percentiles."""
+        if not risk_scores:
+            return 0.0, 0.0
+
+        # Create a copy to avoid mutating the original list
+        sorted_scores: list[float] = sorted(risk_scores)
+        n = len(sorted_scores)
+
+        # Calculate P50 (median)
+        if n % 2 == 0:
+            p50_risk = (sorted_scores[n // 2 - 1] + sorted_scores[n // 2]) / 2
+        else:
+            p50_risk = sorted_scores[n // 2]
+
+        # Calculate P90
+        p90_index = int(0.9 * n)
+        if p90_index >= n:
+            p90_index = n - 1
+        p90_risk = sorted_scores[p90_index]
+
+        return p50_risk, p90_risk
+
+
+class OrganizationSetupAnalyticsService:
+    """Service for computing organization setup statistics and analytics."""
+
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def get_checkout_links_count(self, organization_id: UUID4) -> int:
+        """Get count of checkout links for organization."""
+        result = await self.session.execute(
+            select(func.count(CheckoutLink.id)).where(
+                CheckoutLink.organization_id == organization_id,
+                ~CheckoutLink.is_deleted,
+            )
+        )
+        return result.scalar() or 0
+
+    async def get_webhooks_count(self, organization_id: UUID4) -> int:
+        """Get count of webhook endpoints for organization."""
+        result = await self.session.execute(
+            select(func.count(WebhookEndpoint.id)).where(
+                WebhookEndpoint.organization_id == organization_id,
+                ~WebhookEndpoint.is_deleted,
+            )
+        )
+        return result.scalar() or 0
+
+    async def get_organization_tokens_count(self, organization_id: UUID4) -> int:
+        """Get count of organization access tokens."""
+        result = await self.session.execute(
+            select(func.count(OrganizationAccessToken.id)).where(
+                OrganizationAccessToken.organization_id == organization_id,
+                ~OrganizationAccessToken.is_deleted,
+            )
+        )
+        return result.scalar() or 0
+
+    async def get_products_count(self, organization_id: UUID4) -> int:
+        """Get count of products for organization."""
+        result = await self.session.execute(
+            select(func.count(Product.id)).where(
+                Product.organization_id == organization_id,
+                ~Product.is_archived,
+                ~Product.is_deleted,
+            )
+        )
+        return result.scalar() or 0
+
+    async def get_benefits_count(self, organization_id: UUID4) -> int:
+        """Get count of benefits for organization."""
+        result = await self.session.execute(
+            select(func.count(Benefit.id)).where(
+                Benefit.organization_id == organization_id,
+                ~Benefit.is_deleted,
+            )
+        )
+        return result.scalar() or 0
+
+    async def get_enabled_benefits_count(self, organization_id: UUID4) -> int:
+        """Get count of benefits that are attached to at least one product."""
+        result = await self.session.execute(
+            select(func.count(func.distinct(Benefit.id)))
+            .join(ProductBenefit, Benefit.id == ProductBenefit.benefit_id)
+            .where(
+                Benefit.organization_id == organization_id,
+                ~Benefit.is_deleted,
+            )
+        )
+        return result.scalar() or 0
+
+    async def check_payout_account_enabled(self, organization: Organization) -> bool:
+        """Check if payouts are enabled."""
+        try:
+            organization.get_ready_payout_account()
+            return True
+        except PayoutAccountNotReady:
+            return False
+
+    @staticmethod
+    def calculate_setup_score(
+        checkout_links_count: int,
+        webhooks_count: int,
+        org_tokens_count: int,
+        products_count: int,
+        benefits_count: int,
+        user_verified: bool,
+        payouts_enabled: bool,
+    ) -> int:
+        """Calculate setup score based on various metrics."""
+        return sum(
+            [
+                1 if checkout_links_count > 0 else 0,
+                1 if webhooks_count > 0 else 0,
+                1 if org_tokens_count > 0 else 0,
+                1 if products_count > 0 else 0,
+                1 if benefits_count > 0 else 0,
+                1 if user_verified else 0,
+                1 if payouts_enabled else 0,
+            ]
+        )

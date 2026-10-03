@@ -1,0 +1,298 @@
+from collections.abc import Sequence
+from datetime import datetime
+from uuid import UUID
+
+from sqlalchemy import ColumnElement, Select, func, select, text
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.orm import joinedload
+
+from polar.auth.models import AuthSubject, Organization, User, is_organization, is_user
+from polar.auth.permission import OrganizationPermission
+from polar.authz.repository import select_accessible_org_ids
+from polar.kit.repository import (
+    RepositorySortingMixin,
+    SortingClause,
+)
+from polar.kit.repository.base import (
+    RepositoryBase,
+    RepositorySoftDeletionIDMixin,
+    RepositorySoftDeletionMixin,
+)
+from polar.models.support_case import (
+    DisputeSupportCase,
+    ReviewAppealSupportCase,
+    SupportCase,
+    SupportCaseAttachment,
+    SupportCaseAudience,
+    SupportCaseMessage,
+    SupportCaseMessageAuthorKind,
+    SupportCaseMessageType,
+    SupportCaseParticipant,
+    SupportCaseParticipantKind,
+)
+
+from .sorting import SupportCaseSortProperty
+
+# Message types whose latest occurrence determines the open/closed state.
+_LIFECYCLE_TYPES = (
+    SupportCaseMessageType.opened,
+    SupportCaseMessageType.closed,
+)
+
+
+class SupportCaseRepository(
+    RepositorySortingMixin[SupportCase, SupportCaseSortProperty],
+    RepositorySoftDeletionIDMixin[SupportCase, UUID],
+    RepositorySoftDeletionMixin[SupportCase],
+    RepositoryBase[SupportCase],
+):
+    model = SupportCase
+
+    def get_sorting_clause(self, property: SupportCaseSortProperty) -> SortingClause:
+        match property:
+            case SupportCaseSortProperty.created_at:
+                return SupportCase.created_at
+
+    def get_readable_statement(
+        self, auth_subject: AuthSubject[User | Organization]
+    ) -> Select[tuple[SupportCase]]:
+        """Cases the subject may read: those owned by an organization they manage.
+
+        Merchant-facing parity with the appeal gating — only org admins
+        (``organization:manage``), not every member, may reach a case.
+        """
+        statement = self.get_base_statement()
+        if is_user(auth_subject):
+            statement = statement.where(
+                SupportCase.organization_id.in_(
+                    select_accessible_org_ids(
+                        auth_subject,
+                        permission=OrganizationPermission.organization_manage,
+                    )
+                )
+            )
+        elif is_organization(auth_subject):
+            statement = statement.where(
+                SupportCase.organization_id == auth_subject.subject.id
+            )
+        return statement
+
+
+class SupportCaseMessageRepository(
+    RepositorySoftDeletionIDMixin[SupportCaseMessage, UUID],
+    RepositorySoftDeletionMixin[SupportCaseMessage],
+    RepositoryBase[SupportCaseMessage],
+):
+    model = SupportCaseMessage
+
+    async def list_by_case(
+        self, case_id: UUID, *, visible_to: SupportCaseAudience | None = None
+    ) -> Sequence[SupportCaseMessage]:
+        """A case's messages in chronological order (oldest first).
+
+        ``visible_to`` filters by audience for a non-platform reader (merchant
+        or customer). Pass ``None`` for the platform, which sees everything —
+        including internal notes (``audience == []``).
+        """
+        statement = (
+            self.get_base_statement()
+            .where(SupportCaseMessage.case_id == case_id)
+            .order_by(SupportCaseMessage.created_at.asc())
+        )
+        if visible_to is not None:
+            statement = statement.where(
+                SupportCaseMessage.audience.contains([visible_to])
+            )
+        return await self.get_all(statement)
+
+    async def has_merchant_message(self, case_id: UUID) -> bool:
+        statement = (
+            self.get_base_statement()
+            .where(
+                SupportCaseMessage.case_id == case_id,
+                SupportCaseMessage.author_kind == SupportCaseMessageAuthorKind.merchant,
+            )
+            .limit(1)
+        )
+        return await self.get_one_or_none(statement) is not None
+
+    async def has_message_type(
+        self, case_id: UUID, type: SupportCaseMessageType
+    ) -> bool:
+        statement = (
+            self.get_base_statement()
+            .where(
+                SupportCaseMessage.case_id == case_id,
+                SupportCaseMessage.type == type,
+            )
+            .limit(1)
+        )
+        return await self.get_one_or_none(statement) is not None
+
+    async def get_latest_lifecycle_event(
+        self, case_id: UUID
+    ) -> SupportCaseMessage | None:
+        statement = (
+            self.get_base_statement()
+            .where(
+                SupportCaseMessage.case_id == case_id,
+                SupportCaseMessage.type.in_(_LIFECYCLE_TYPES),
+            )
+            .order_by(SupportCaseMessage.created_at.desc())
+            .limit(1)
+        )
+        return await self.get_one_or_none(statement)
+
+    async def is_open(self, case_id: UUID) -> bool:
+        latest = await self.get_latest_lifecycle_event(case_id)
+        assert latest is not None  # always created with an `opened` event
+        return latest.type != SupportCaseMessageType.closed
+
+    @staticmethod
+    def is_open_expression() -> ColumnElement[bool]:
+        """SQL form of ``is_open()``, correlated to the enclosing case row.
+        State is the type of the latest lifecycle event
+        Lets a list query derive open/closed in one pass instead of
+        an N+1 of per-case ``is_open()`` calls.
+        """
+        latest_type = (
+            select(SupportCaseMessage.type)
+            .where(
+                SupportCaseMessage.case_id == SupportCase.id,
+                SupportCaseMessage.type.in_(_LIFECYCLE_TYPES),
+            )
+            .order_by(SupportCaseMessage.created_at.desc())
+            .limit(1)
+            .scalar_subquery()
+        )
+        return latest_type != SupportCaseMessageType.closed
+
+    @staticmethod
+    def awaiting_platform_expression() -> ColumnElement[bool]:
+        """True when the latest externally-visible message wasn't sent by
+        platform staff — i.e. a participant spoke last and the platform owes a
+        reply. Defined by exclusion (not ``platform``) so it stays correct for
+        any participant kind. Internal notes, lifecycle events (empty audience)
+        and automated ``system`` messages are ignored, so they don't clear it.
+        """
+        latest_author = (
+            select(SupportCaseMessage.author_kind)
+            .where(
+                SupportCaseMessage.case_id == SupportCase.id,
+                func.cardinality(SupportCaseMessage.audience) > 0,
+                SupportCaseMessage.author_kind != SupportCaseMessageAuthorKind.system,
+            )
+            .order_by(SupportCaseMessage.created_at.desc())
+            .limit(1)
+            .scalar_subquery()
+        )
+        return latest_author != SupportCaseMessageAuthorKind.platform
+
+
+class SupportCaseParticipantRepository(
+    RepositorySoftDeletionIDMixin[SupportCaseParticipant, UUID],
+    RepositorySoftDeletionMixin[SupportCaseParticipant],
+    RepositoryBase[SupportCaseParticipant],
+):
+    model = SupportCaseParticipant
+
+    async def upsert_platform_read(
+        self, case_id: UUID, user_id: UUID, *, read_at: datetime
+    ) -> SupportCaseParticipant:
+        """Atomically stamp a staff member's read state for a case.
+
+        Inserts the platform participant or, if one already exists, bumps its
+        ``last_read_at``. A single ``INSERT ... ON CONFLICT DO UPDATE`` so that
+        concurrent first reads (two tabs, a double-click) can't race the partial
+        unique ``(case_id, platform_user_id)`` index into an error.
+        """
+        statement = (
+            pg_insert(SupportCaseParticipant)
+            .values(
+                case_id=case_id,
+                kind=SupportCaseParticipantKind.platform,
+                platform_user_id=user_id,
+                last_read_at=read_at,
+            )
+            .on_conflict_do_update(
+                index_elements=["case_id", "platform_user_id"],
+                index_where=text("platform_user_id IS NOT NULL AND deleted_at IS NULL"),
+                set_={"last_read_at": read_at},
+            )
+            .returning(SupportCaseParticipant)
+            .execution_options(populate_existing=True)
+        )
+        result = await self.session.execute(statement)
+        return result.scalars().one()
+
+
+class SupportCaseAttachmentRepository(
+    RepositorySoftDeletionIDMixin[SupportCaseAttachment, UUID],
+    RepositorySoftDeletionMixin[SupportCaseAttachment],
+    RepositoryBase[SupportCaseAttachment],
+):
+    model = SupportCaseAttachment
+
+    async def list_by_case(
+        self, case_id: UUID, *, visible_to: SupportCaseAudience | None = None
+    ) -> Sequence[SupportCaseAttachment]:
+        """A case's attachments (oldest first) with their file eager-loaded.
+
+        ``visible_to`` filters by audience for a non-platform reader; ``None``
+        is the platform, which sees everything (mirrors the message repository).
+        """
+        statement = (
+            self.get_base_statement()
+            .where(SupportCaseAttachment.case_id == case_id)
+            .options(joinedload(SupportCaseAttachment.file))
+            .order_by(SupportCaseAttachment.created_at.asc())
+        )
+        if visible_to is not None:
+            statement = statement.where(
+                SupportCaseAttachment.audience.contains([visible_to])
+            )
+        return await self.get_all(statement)
+
+    async def get_by_id_for_case(
+        self, attachment_id: UUID, case_id: UUID
+    ) -> SupportCaseAttachment | None:
+        """An attachment scoped to its case, with its file eager-loaded."""
+        statement = (
+            self.get_base_statement()
+            .where(
+                SupportCaseAttachment.id == attachment_id,
+                SupportCaseAttachment.case_id == case_id,
+            )
+            .options(joinedload(SupportCaseAttachment.file))
+        )
+        return await self.get_one_or_none(statement)
+
+
+class ReviewAppealSupportCaseRepository(
+    RepositorySoftDeletionIDMixin[ReviewAppealSupportCase, UUID],
+    RepositorySoftDeletionMixin[ReviewAppealSupportCase],
+    RepositoryBase[ReviewAppealSupportCase],
+):
+    model = ReviewAppealSupportCase
+
+    async def get_by_organization_review(
+        self, organization_review_id: UUID
+    ) -> ReviewAppealSupportCase | None:
+        statement = self.get_base_statement().where(
+            ReviewAppealSupportCase.organization_review_id == organization_review_id
+        )
+        return await self.get_one_or_none(statement)
+
+
+class DisputeSupportCaseRepository(
+    RepositorySoftDeletionIDMixin[DisputeSupportCase, UUID],
+    RepositorySoftDeletionMixin[DisputeSupportCase],
+    RepositoryBase[DisputeSupportCase],
+):
+    model = DisputeSupportCase
+
+    async def get_by_dispute(self, dispute_id: UUID) -> DisputeSupportCase | None:
+        statement = self.get_base_statement().where(
+            DisputeSupportCase.dispute_id == dispute_id
+        )
+        return await self.get_one_or_none(statement)

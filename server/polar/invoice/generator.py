@@ -1,0 +1,864 @@
+import re
+import textwrap
+from collections.abc import Iterator
+from contextlib import contextmanager
+from datetime import date, datetime
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, ClassVar, Self
+
+import arabic_reshaper
+import pycountry
+from babel.dates import format_date as _format_date
+from babel.numbers import format_decimal as _format_decimal
+from babel.numbers import format_percent as _format_percent
+from bidi.algorithm import get_display
+from fpdf import FPDF
+from fpdf.enums import (
+    Align,
+    CellBordersLayout,
+    TableBordersLayout,
+    TextEmphasis,
+    XPos,
+    YPos,
+)
+from fpdf.fonts import FontFace
+from fpdf.table import Table
+from pydantic import BaseModel
+
+from polar.config import Environment, settings
+from polar.invoice.seller import get_polar_additional_info
+from polar.kit.address import Address
+from polar.kit.currency import format_currency
+from polar.kit.utils import utc_now
+from polar.tax.calculation.base import TaxabilityReason, TaxBreakdownItem
+
+if TYPE_CHECKING:
+    from polar.models import Order
+
+
+def format_number(n: int) -> str:
+    return _format_decimal(n, locale="en_US")
+
+
+def format_percent(rate: float) -> str:
+    return _format_percent(
+        rate,
+        locale="en_US",
+        decimal_quantization=False,  # Don't truncate very small rates
+    )
+
+
+def format_date(date: date | datetime) -> str:
+    return _format_date(date, format="long", locale="en_US")
+
+
+def escape_markdown(text: str) -> str:
+    return re.sub(r"(\*\*|__|--|~~)", r"\\\1", text)
+
+
+class InvoiceItem(BaseModel):
+    description: str
+    quantity: int
+    unit_amount: int
+    amount: int
+
+
+class InvoiceHeadingItem(BaseModel):
+    label: str
+    value: str | datetime
+
+    @property
+    def display_value(self) -> str:
+        if isinstance(self.value, datetime):
+            return format_date(self.value)
+        return self.value
+
+
+class InvoiceTotalsItem(BaseModel):
+    label: str
+    amount: int
+    currency: str
+    emphasized: bool = False
+
+
+class Invoice(BaseModel):
+    number: str
+    date: datetime
+    seller_name: str
+    organization_name: str | None = None
+    seller_address: Address
+    seller_additional_info: str | None = None
+    customer_name: str
+    customer_address: Address | None = None
+    customer_additional_info: str | None = None
+    customer_locale: str | None = None
+    subtotal_amount: int
+    applied_balance_amount: int | None = None
+    discount_amount: int
+    tax_amount: int
+    tax_breakdown: list[TaxBreakdownItem] = []
+    net_amount: int
+    currency: str
+    items: list[InvoiceItem]
+    notes: str | None = None
+    statement_descriptor: str | None = None
+    extra_heading_items: list[InvoiceHeadingItem] | None = None
+    extra_totals_items: list[InvoiceTotalsItem] | None = None
+
+    @property
+    def heading_items(self) -> list[InvoiceHeadingItem]:
+        return [
+            InvoiceHeadingItem(label="Invoice number", value=self.number),
+            InvoiceHeadingItem(label="Date of issue", value=self.date),
+            *(self.extra_heading_items or []),
+        ]
+
+    @property
+    def tax_items(self) -> list[InvoiceTotalsItem]:
+        items: list[InvoiceTotalsItem] = []
+        for item in self.tax_breakdown:
+            if item["taxability_reason"] != TaxabilityReason.standard_rated:
+                continue
+
+            label = item["display_name"]
+
+            if item["country"] is not None:
+                country = pycountry.countries.get(alpha_2=item["country"])
+                if country is not None:
+                    parts = [country.name]
+
+                    if item["state"] is not None:
+                        state: Any | None = pycountry.subdivisions.get(
+                            code=f"{item['country']}-{item['state']}"
+                        )
+                        if state is not None:
+                            parts = [state.name] + parts
+
+                    if item["subdivision"] is not None:
+                        parts = [item["subdivision"]] + parts
+
+                    label += f" — {', '.join(parts)}"
+
+            if item["rate"] is not None:
+                label += f" ({format_percent(item['rate'])})"
+
+            items.append(
+                InvoiceTotalsItem(
+                    label=label,
+                    amount=item["amount"],
+                    currency=self.currency,
+                )
+            )
+
+        if len(items) > 1:
+            items.append(
+                InvoiceTotalsItem(
+                    label="Total tax",
+                    amount=self.tax_amount,
+                    currency=self.currency,
+                )
+            )
+
+        return items
+
+    @property
+    def reverse_charge_notice(self) -> str | None:
+        tax_names = sorted(
+            {
+                item["display_name"]
+                for item in self.tax_breakdown
+                if item["taxability_reason"] == TaxabilityReason.reverse_charge
+            }
+        )
+        if not tax_names:
+            return None
+        return (
+            f"Reverse charge: {' / '.join(tax_names)} "
+            "to be accounted for by the recipient."
+        )
+
+    @property
+    def totals_items(self) -> list[InvoiceTotalsItem]:
+        items: list[InvoiceTotalsItem] = [
+            InvoiceTotalsItem(
+                label="Subtotal",
+                amount=self.subtotal_amount,
+                currency=self.currency,
+            )
+        ]
+
+        if self.discount_amount > 0:
+            items.append(
+                InvoiceTotalsItem(
+                    label="Discount",
+                    amount=-self.discount_amount,
+                    currency=self.currency,
+                )
+            )
+
+        tax_items = self.tax_items
+        if len(tax_items) > 0:
+            items.append(
+                InvoiceTotalsItem(
+                    label="Total excluding tax",
+                    amount=self.net_amount,
+                    currency=self.currency,
+                )
+            )
+            items.extend(tax_items)
+
+        total = self.net_amount + self.tax_amount
+        items.append(
+            InvoiceTotalsItem(
+                label="Total",
+                amount=total,
+                currency=self.currency,
+                emphasized=True,
+            )
+        )
+
+        if self.applied_balance_amount:
+            items.append(
+                InvoiceTotalsItem(
+                    label="Applied balance",
+                    amount=self.applied_balance_amount,
+                    currency=self.currency,
+                )
+            )
+            items.append(
+                InvoiceTotalsItem(
+                    label="To be paid",
+                    amount=total + self.applied_balance_amount,
+                    currency=self.currency,
+                    emphasized=True,
+                )
+            )
+
+        items.extend(self.extra_totals_items or [])
+        return items
+
+    @classmethod
+    def from_order(cls, order: "Order") -> Self:
+        assert order.billing_name is not None
+        assert order.billing_address is not None
+        assert order.invoice_number is not None
+
+        return cls(
+            number=order.invoice_number,
+            date=order.created_at,
+            seller_name=settings.INVOICES_NAME,
+            organization_name=order.organization.name,
+            statement_descriptor=f"POLAR*{order.statement_descriptor_suffix}",
+            seller_address=settings.INVOICES_ADDRESS,
+            seller_additional_info=get_polar_additional_info(order.billing_address),
+            customer_name=order.billing_name,
+            customer_additional_info=escape_markdown(order.tax_id[0])
+            if order.tax_id
+            else None,
+            customer_address=order.billing_address,
+            customer_locale=order.customer.locale,
+            subtotal_amount=order.subtotal_amount,
+            applied_balance_amount=order.applied_balance_amount,
+            discount_amount=order.discount_amount,
+            tax_amount=order.tax_amount,
+            tax_breakdown=order.tax_breakdown or [],
+            net_amount=order.net_amount,
+            currency=order.currency,
+            items=[
+                InvoiceItem(
+                    description=item.label,
+                    quantity=1,
+                    unit_amount=item.amount,
+                    amount=item.amount,
+                )
+                for item in order.items
+            ],
+        )
+
+
+class InvoiceGenerator(FPDF):
+    """Class to generate an invoice PDF using fpdf2."""
+
+    logo: ClassVar[Path] = Path(__file__).parent / "invoice-logo.svg"
+    """Path to the logo image for the invoice."""
+
+    font_name: ClassVar[str] = "ppneuemontreal"
+    """Default font family name."""
+
+    latin_font_name: ClassVar[str] = "notosans"
+    """Font family name for Latin, Greek and Cyrillic glyphs missing from the default font."""
+
+    hebrew_font_name: ClassVar[str] = "notosanshebrew"
+    """Font family name for Hebrew fallback glyphs."""
+
+    arabic_font_name: ClassVar[str] = "notosansarabic"
+    """Font family name for Arabic fallback glyphs."""
+
+    cjk_font_name_prefix: ClassVar[str] = "notosans"
+    """Prefix used to derive the fpdf font family name for each CJK script."""
+
+    cjk_scripts: ClassVar[tuple[str, ...]] = ("tc", "sc", "jp", "kr")
+    """CJK script families we ship per-script TTFs for."""
+
+    font_files: ClassVar[dict[str, tuple[Path, Path]]] = {
+        font_name: (
+            Path(__file__).parent / "fonts/PPNeueMontreal-Regular.ttf",
+            Path(__file__).parent / "fonts/PPNeueMontreal-Medium.ttf",
+        ),
+        latin_font_name: (
+            Path(__file__).parent / "fonts/NotoSans-Regular.ttf",
+            Path(__file__).parent / "fonts/NotoSans-Medium.ttf",
+        ),
+        hebrew_font_name: (
+            Path(__file__).parent / "fonts/NotoSansHebrew-Regular.ttf",
+            Path(__file__).parent / "fonts/NotoSansHebrew-Bold.ttf",
+        ),
+        arabic_font_name: (
+            Path(__file__).parent / "fonts/NotoSansArabic-Regular.ttf",
+            Path(__file__).parent / "fonts/NotoSansArabic-Bold.ttf",
+        ),
+        # Per-script TTFs, not the unified TTC: PDF.js can't decode the CFF subsets fpdf2 emits.
+        f"{cjk_font_name_prefix}tc": (
+            Path(__file__).parent / "fonts/NotoSansTC-Regular.ttf",
+            Path(__file__).parent / "fonts/NotoSansTC-Bold.ttf",
+        ),
+        f"{cjk_font_name_prefix}sc": (
+            Path(__file__).parent / "fonts/NotoSansSC-Regular.ttf",
+            Path(__file__).parent / "fonts/NotoSansSC-Bold.ttf",
+        ),
+        f"{cjk_font_name_prefix}jp": (
+            Path(__file__).parent / "fonts/NotoSansJP-Regular.ttf",
+            Path(__file__).parent / "fonts/NotoSansJP-Bold.ttf",
+        ),
+        f"{cjk_font_name_prefix}kr": (
+            Path(__file__).parent / "fonts/NotoSansKR-Regular.ttf",
+            Path(__file__).parent / "fonts/NotoSansKR-Bold.ttf",
+        ),
+    }
+    """Font files (regular, bold) keyed by fpdf family name."""
+
+    cjk_script_country_map: ClassVar[dict[str, str]] = {
+        "JP": "jp",
+        "KR": "kr",
+        "CN": "sc",
+        "SG": "sc",
+        "MY": "sc",
+        "TW": "tc",
+        "MO": "tc",
+        "HK": "tc",
+    }
+    """Map ISO 3166-1 alpha-2 country to the preferred CJK script family."""
+
+    cjk_default_script: ClassVar[str] = "sc"
+    """Default CJK script family when the customer's country is not mapped."""
+
+    cjk_code_point_ranges: ClassVar[tuple[tuple[int, int], ...]] = (
+        (0x1100, 0x11FF),  # Hangul Jamo
+        (0x2E80, 0x2FFF),  # CJK radicals, Kangxi radicals, description characters
+        (0x3000, 0x9FFF),  # CJK punctuation, kana, Bopomofo, Hangul Jamo, ideographs
+        (0xA960, 0xA97F),  # Hangul Jamo Extended-A
+        (0xAC00, 0xD7FF),  # Hangul syllables, Hangul Jamo Extended-B
+        (0xF900, 0xFAFF),  # CJK compatibility ideographs
+        (0xFE10, 0xFE1F),  # Vertical forms
+        (0xFE30, 0xFE4F),  # CJK compatibility forms
+        (0xFF00, 0xFFEF),  # Halfwidth and fullwidth forms
+        (0x20000, 0x3FFFF),  # CJK ideographs extensions and compatibility supplement
+    )
+    """Code points the CJK fallback fonts are loaded for.
+
+    Anything else missing from the bundled fonts, like symbols and emoji, renders
+    blank rather than loading CJK fonts (tens of MB each) to search for a glyph."""
+
+    base_font_size: ClassVar[int] = 10
+    """Base font size in points."""
+
+    footer_font_size: ClassVar[int] = 8
+    """Font size for the footer in points."""
+
+    title_font_size: ClassVar[int] = 20
+    """Font size for the document title in points."""
+
+    table_header_font_size: ClassVar[int] = 8
+    """Font size for table headers in points."""
+
+    primary_text_color: ClassVar[tuple[int, int, int]] = (17, 17, 17)
+    """Color for primary text in RGB format."""
+
+    muted_text_color: ClassVar[tuple[int, int, int]] = (115, 115, 115)
+    """Color for labels and secondary text in RGB format."""
+
+    table_borders_color: ClassVar[tuple[int, int, int]] = (229, 229, 229)
+    """Color for table borders in RGB format."""
+
+    table_headings_style: ClassVar[FontFace] = FontFace(
+        size_pt=table_header_font_size, color=muted_text_color
+    )
+    """Style for table header rows."""
+
+    line_height_percentage: ClassVar[float] = 1.5
+    """Line height as a percentage of the font size."""
+
+    elements_y_margin: ClassVar[int] = 10
+    """Vertical margin between elements."""
+
+    items_table_row_height: ClassVar[int] = 7
+    """Height of each row in the items table in points."""
+
+    totals_table_row_height: ClassVar[int] = 6
+    """Height of each row in the totals table in points."""
+
+    @classmethod
+    def cjk_font_name_for_script(cls, script: str) -> str:
+        return f"{cls.cjk_font_name_prefix}{script}"
+
+    @classmethod
+    def has_cjk_fallback_fonts(cls) -> bool:
+        return all(
+            p.exists()
+            for s in cls.cjk_scripts
+            for p in cls.font_files[cls.cjk_font_name_for_script(s)]
+        )
+
+    @classmethod
+    def is_cjk(cls, char: str) -> bool:
+        code_point = ord(char)
+        return any(
+            start <= code_point <= end for start, end in cls.cjk_code_point_ranges
+        )
+
+    @classmethod
+    def resolve_cjk_script(cls, country: str | None) -> str:
+        if country is None:
+            return cls.cjk_default_script
+        return cls.cjk_script_country_map.get(country, cls.cjk_default_script)
+
+    @classmethod
+    def cjk_script_from_locale(cls, locale: str | None) -> str | None:
+        if not locale:
+            return None
+        parts = locale.replace("_", "-").lower().split("-")
+        language = parts[0]
+        if language == "ja":
+            return "jp"
+        if language == "ko":
+            return "kr"
+        if language == "zh":
+            for tag in parts[1:]:
+                if tag in {"hant", "tw", "hk", "mo"}:
+                    return "tc"
+            return "sc"
+        return None
+
+    def __init__(
+        self,
+        data: Invoice,
+        heading_title: str = "Invoice",
+        add_sandbox_warning: bool = settings.ENV == Environment.sandbox,
+    ) -> None:
+        super().__init__()
+
+        self.loaded_font_families: set[str] = set()
+        for family in (
+            self.font_name,
+            self.latin_font_name,
+            self.hebrew_font_name,
+            self.arabic_font_name,
+        ):
+            regular, bold = self.font_files[family]
+            if not (regular.exists() and bold.exists()):
+                continue
+            self.add_font(family, fname=regular)
+            self.add_font(family, fname=bold, style="B")
+            self.loaded_font_families.add(family)
+
+        # fpdf markdown preloads styles "I"/"BI"; no italic ships, so alias upright
+        regular, bold = self.font_files[self.font_name]
+        self.add_font(self.font_name, fname=regular, style="I")
+        self.add_font(self.font_name, fname=bold, style="BI")
+
+        customer_script = self.cjk_script_from_locale(
+            data.customer_locale
+        ) or self.resolve_cjk_script(
+            data.customer_address.country if data.customer_address else None
+        )
+
+        self.fallback_font_families = [
+            family
+            for family in (
+                self.latin_font_name,
+                self.hebrew_font_name,
+                self.arabic_font_name,
+            )
+            if family in self.loaded_font_families
+        ]
+        self.remaining_cjk_font_families = iter(
+            [
+                self.cjk_font_name_for_script(script)
+                for script in (
+                    customer_script,
+                    *(s for s in self.cjk_scripts if s != customer_script),
+                )
+            ]
+        )
+        self.set_fallback_fonts(self.fallback_font_families, exact_match=False)
+        self.set_font(self.font_name, size=self.base_font_size)
+        self.set_text_color(*self.primary_text_color)
+
+        self.data = data
+        self.heading_title = heading_title
+        self.add_sandbox_warning = add_sandbox_warning
+
+    def get_fallback_font(self, char: str, style: str = "") -> str | None:
+        if font := super().get_fallback_font(char, style):
+            return font
+
+        if not self.is_cjk(char):
+            return None
+
+        for family in self.remaining_cjk_font_families:
+            regular, bold = self.font_files[family]
+            if not (regular.exists() and bold.exists()):
+                continue
+            self.add_font(family, fname=regular)
+            self.add_font(family, fname=bold, style="B")
+            self.loaded_font_families.add(family)
+            self.fallback_font_families.append(family)
+            self.set_fallback_fonts(self.fallback_font_families, exact_match=False)
+            if font := super().get_fallback_font(char, style):
+                return font
+
+        return None
+
+    def set_font(
+        self,
+        family: str | None = None,
+        style: str | TextEmphasis = "",
+        size: float = 0,
+    ) -> None:
+        # fpdf2's set_font short-circuits when family/style/size match the
+        # currently tracked values. But `current_font` can drift to a
+        # fallback font during fragment rendering (fpdf.py sets
+        # `current_font = frag.font` per fragment), so the next set_font call
+        # for the same family is a no-op and `current_font` stays stale —
+        # causing subsequent ASCII cells to render with the CJK font's
+        # cmap. Re-resolve `current_font` from the canonical font_family +
+        # font_style after delegating, so it always matches the logical
+        # font selection. When correcting such a drift, also clear
+        # `current_font_is_set_on_page` so fpdf re-emits the font-selection
+        # operator on the next cell; otherwise the corrected font never
+        # reaches the page and the text still renders with the stale cmap.
+        super().set_font(family, style, size)
+        fontkey = self.font_family + self.font_style
+        if fontkey in self.fonts and self.current_font is not self.fonts[fontkey]:
+            self.current_font = self.fonts[fontkey]
+            self.current_font_is_set_on_page = False
+
+    def _shape_text(self, text: str) -> str:
+        lines = text.split("\n")
+        shaped = []
+        for line in lines:
+            shaped.append(self._shape_line(line))
+        return "\n".join(shaped)
+
+    def _shape_line(self, line: str) -> str:
+        # arabic_reshaper + python-bidi only handle characters the Unicode
+        # bidi algorithm resolves to L/R/EN/AN. Customer-supplied text can
+        # contain code points it rejects (e.g. mathematical alphanumeric
+        # symbols, regional-indicator flag emoji), which makes get_display
+        # raise. Fall back to the unshaped line so a single unusual field can
+        # never crash invoice rendering.
+        try:
+            reshaped = arabic_reshaper.reshape(line)
+            return get_display(reshaped)
+        except Exception:
+            return line
+
+    def cell_height(self, font_size: float | None = None) -> float:
+        font_size = font_size or self.base_font_size
+        return font_size * 0.35 * self.line_height_percentage
+
+    def header(self) -> None:
+        if self.add_sandbox_warning:
+            self.set_xy(0, 0)
+            self.set_fill_color(239, 177, 0)
+            self.cell(
+                self.w,
+                10,
+                "SANDBOX ENVIRONMENT: This invoice is for testing purposes only. No actual payment has been processed.",
+                align=Align.C,
+                fill=True,
+            )
+            self.ln(10)
+
+    def footer(self) -> None:
+        # Footers are drawn by _render_footers, once the page count is known:
+        # fpdf2's {nb} alias is laid out at its own width, which breaks right
+        # alignment of "Page X of Y" with proportional figures.
+        pass
+
+    def _render_footers(self) -> None:
+        pages = self.page
+        self.in_footer = True
+        for page in range(1, pages + 1):
+            self.page = page
+            self.current_font_is_set_on_page = False
+            self._render_page_footer(page, pages)
+        self.in_footer = False
+        self.current_font_is_set_on_page = False
+
+    def _render_page_footer(self, page: int, pages: int) -> None:
+        self.set_y(-self.b_margin)
+        self.set_font(style="", size=self.footer_font_size)
+        self.set_text_color(*self.muted_text_color)
+        self.cell(self.epw / 2, 10, f"{self.data.number}", align=Align.L)
+        self.cell(self.epw / 2, 10, f"Page {page} of {pages}", align=Align.R)
+        self.set_text_color(*self.primary_text_color)
+
+    @contextmanager
+    def inset_table(
+        self, width: float | None = None, align: Align = Align.L, **kwargs: Any
+    ) -> Iterator[Table]:
+        """Table whose rules and text line up with body text, which fpdf2 draws
+        one cell margin inside the page margins."""
+        c_margin = self.c_margin
+        width = width or self.epw - 2 * c_margin
+        if align == Align.R:
+            self.set_x(self.w - self.r_margin - c_margin - width)
+        else:
+            self.set_x(self.l_margin + c_margin)
+        self.c_margin = 0
+        try:
+            with self.table(width=width, align=Align.L, **kwargs) as table:
+                yield table
+        finally:
+            self.c_margin = c_margin
+
+    def _render_label(self, text: str, **kwargs: Any) -> None:
+        self.set_font(style="")
+        self.set_text_color(*self.muted_text_color)
+        self.cell(h=self.cell_height(), text=self._shape_text(text), **kwargs)
+        self.set_text_color(*self.primary_text_color)
+
+    def generate(self) -> None:
+        self.set_metadata()
+        self.add_page()
+        self._render_body()
+        self._render_footers()
+
+    def _render_body(self) -> None:
+        self._render_title()
+        self._render_heading_items()
+        self._render_addresses()
+        self._render_items_table()
+        self._render_totals_table()
+        self._render_reverse_charge_notice()
+        self._render_statement_descriptor()
+        self._render_notes()
+
+    def _render_title(self) -> None:
+        self.set_font(style="B", size=self.title_font_size)
+        self.cell(
+            text=self._shape_text(self.heading_title),
+            new_x=XPos.LMARGIN,
+            new_y=YPos.NEXT,
+        )
+        logo_width = 12
+        self.image(
+            str(self.logo),
+            x=self.w - self.r_margin - self.c_margin - logo_width,
+            y=self.t_margin,
+            w=logo_width,
+        )
+        self.set_y(self.get_y() + self.elements_y_margin)
+
+    def _render_heading_items(self) -> None:
+        label_width = 30
+        self.set_font(size=self.base_font_size)
+        for heading_item in self.data.heading_items:
+            self._render_label(heading_item.label, w=label_width, align=Align.L)
+            self.cell(
+                h=self.cell_height(),
+                text=self._shape_text(heading_item.display_value),
+                new_x=XPos.LMARGIN,
+                new_y=YPos.NEXT,
+            )
+
+    def _render_addresses(self) -> None:
+        self.set_y(self.get_y() + self.elements_y_margin)
+        y_start = self.get_y()
+
+        seller_end_y = self._render_seller_block()
+
+        self.set_xy(110, y_start)
+        customer_end_y = self._render_customer_block()
+
+        self.set_y(max(seller_end_y, customer_end_y) + self.elements_y_margin)
+
+    def _render_seller_block(self) -> float:
+        self._render_label("From", new_x=XPos.LEFT, new_y=YPos.NEXT)
+        seller_name = f"**{escape_markdown(self.data.seller_name)}**"
+        if self.data.organization_name is not None:
+            seller_name = (
+                f"**{escape_markdown(self.data.organization_name)}** via {seller_name}"
+            )
+        self.multi_cell(
+            80,
+            self.cell_height(),
+            text=self._shape_text(seller_name),
+            markdown=True,
+            new_x=XPos.LMARGIN,
+            new_y=YPos.NEXT,
+        )
+        self.set_font(style="")
+        self.multi_cell(
+            80,
+            self.cell_height(),
+            text=self._shape_text(self.data.seller_address.to_text()),
+            new_x=XPos.LEFT,
+            new_y=YPos.NEXT,
+        )
+        if self.data.seller_additional_info:
+            self.set_font(style="")
+            self.multi_cell(
+                80,
+                self.cell_height(),
+                text=self._shape_text(self.data.seller_additional_info),
+                markdown=True,
+            )
+        return self.get_y()
+
+    def _render_customer_block(self) -> float:
+        self._render_label("Bill to", new_x=XPos.LEFT, new_y=YPos.NEXT)
+        self.set_font(style="B")
+        self.multi_cell(
+            80,
+            self.cell_height(),
+            text=self._shape_text(self.data.customer_name),
+            new_x=XPos.LEFT,
+            new_y=YPos.NEXT,
+        )
+        self.set_font(style="")
+        if self.data.customer_address is not None:
+            self.multi_cell(
+                80,
+                self.cell_height(),
+                self._shape_text(self.data.customer_address.to_text()),
+                new_x=XPos.LEFT,
+                new_y=YPos.NEXT,
+            )
+        if self.data.customer_additional_info:
+            self.set_font(style="")
+            self.multi_cell(
+                80,
+                self.cell_height(),
+                text=self._shape_text(self.data.customer_additional_info),
+                markdown=True,
+            )
+        return self.get_y()
+
+    def _render_items_table(self) -> None:
+        self.set_draw_color(*self.table_borders_color)
+        with self.inset_table(
+            col_widths=(90, 30, 30, 30),
+            text_align=(Align.L, Align.R, Align.R, Align.R),
+            headings_style=self.table_headings_style,
+            line_height=self.items_table_row_height,
+            borders_layout=TableBordersLayout.HORIZONTAL_LINES,
+        ) as table:
+            header = table.row()
+            header.cell("Description")
+            header.cell("Quantity")
+            header.cell("Unit Price")
+            header.cell("Amount")
+
+            for item in self.data.items:
+                row = table.row()
+                row.cell(
+                    self._shape_text(
+                        textwrap.shorten(item.description, width=90, placeholder="…")
+                    )
+                )
+                row.cell(format_number(item.quantity))
+                row.cell(format_currency(item.unit_amount, self.data.currency))
+                row.cell(format_currency(item.amount, self.data.currency))
+
+    def _render_totals_table(self) -> None:
+        self.set_y(self.get_y() + self.elements_y_margin / 2)
+        self.set_draw_color(*self.table_borders_color)
+        label_style = FontFace(color=self.muted_text_color)
+        emphasized_style = FontFace(emphasis="BOLD", color=self.primary_text_color)
+        with self.inset_table(
+            width=(self.epw - 2 * self.c_margin) / 2,
+            align=Align.R,
+            col_widths=(2, 1),
+            text_align=(Align.L, Align.R),
+            first_row_as_headings=False,
+            line_height=self.totals_table_row_height,
+            borders_layout=TableBordersLayout.NONE,
+        ) as totals_table:
+            for total_item in self.data.totals_items:
+                border = (
+                    CellBordersLayout.TOP
+                    if total_item.emphasized
+                    else CellBordersLayout.NONE
+                )
+                row = totals_table.row(
+                    min_height=self.totals_table_row_height
+                    + (2 if total_item.emphasized else 0)
+                )
+                row.cell(
+                    self._shape_text(total_item.label),
+                    style=emphasized_style if total_item.emphasized else label_style,
+                    border=border,
+                )
+                row.cell(
+                    format_currency(total_item.amount, total_item.currency),
+                    style=emphasized_style if total_item.emphasized else None,
+                    border=border,
+                )
+
+    def _render_reverse_charge_notice(self) -> None:
+        notice = self.data.reverse_charge_notice
+        if notice is None:
+            return
+        self.set_font(style="B")
+        self.set_xy(self.l_margin, self.get_y() + self.elements_y_margin)
+        self.multi_cell(w=0, h=self.cell_height(), text=notice, align=Align.R)
+        self.set_font(style="")
+
+    def _render_statement_descriptor(self) -> None:
+        if self.data.statement_descriptor is None:
+            return
+        prefix = "This payment will appear on your statement as "
+        descriptor = self._shape_text(self.data.statement_descriptor)
+        self.set_xy(self.l_margin, self.get_y() + self.elements_y_margin)
+        self.set_font(style="")
+        self.set_text_color(*self.muted_text_color)
+        self.write(h=self.cell_height(), text=prefix)
+        self.set_text_color(*self.primary_text_color)
+        self.write(h=self.cell_height(), text=descriptor)
+        self.set_text_color(*self.muted_text_color)
+        self.write(h=self.cell_height(), text=".")
+        self.set_text_color(*self.primary_text_color)
+        self.ln(self.cell_height())
+
+    def _render_notes(self) -> None:
+        self.set_font(style="")
+        if self.data.notes:
+            self.set_xy(self.l_margin, self.get_y() + self.elements_y_margin)
+            self.multi_cell(
+                w=0,
+                h=self.cell_height(),
+                text=self._shape_text(self.data.notes),
+                markdown=True,
+            )
+
+    def set_metadata(self) -> None:
+        """Set metadata for the PDF document."""
+        self.set_title(f"Invoice {self.data.number}")
+        self.set_creator("Polar")
+        self.set_author(settings.INVOICES_NAME)
+        self.set_creation_date(utc_now())
+
+
+__all__ = ["Invoice", "InvoiceGenerator", "InvoiceItem"]

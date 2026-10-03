@@ -1,0 +1,85 @@
+import { useAccountCredits, useOrganizationAccount } from '@/hooks/queries'
+import { OrganizationContext } from '@/providers/maintainerOrganization'
+import { formatCurrency } from '@polar-sh/currency'
+import { List, ListItem } from '@polar-sh/orbit'
+import { useContext } from 'react'
+import { InlineModal, InlineModalHeader } from '@polar-sh/orbit'
+import { EmptyState } from '../Shared/EmptyState'
+import TollOutlined from '@mui/icons-material/TollOutlined'
+
+export const FeeCreditGrantsModal = ({
+  isShown,
+  hide,
+}: {
+  isShown: boolean
+  hide: () => void
+}) => {
+  const { organization } = useContext(OrganizationContext)
+  const { data: account } = useOrganizationAccount(organization.id)
+
+  const hasCredits = account?.credit_balance && account.credit_balance > 0
+
+  const { data: credits } = useAccountCredits(
+    hasCredits ? account?.id : undefined,
+  )
+
+  if (!account) {
+    return null
+  }
+
+  return (
+    <InlineModal
+      isShown={isShown}
+      hide={hide}
+      modalContent={
+        <div className="flex flex-col">
+          <InlineModalHeader className="pb-2" hide={hide}>
+            <h1 className="text-2xl">Fee Credit Grants</h1>
+          </InlineModalHeader>
+          <div className="flex flex-col gap-8 px-8 pb-10">
+            <p className="dark:text-polar-500 text-gray-500">
+              Fee Credits are usually granted for promotional, paid campaigns,
+              or other purposes.
+            </p>
+            {credits?.length && credits.length > 0 ? (
+              <List className="flex flex-col" size="small">
+                {credits
+                  ?.sort(
+                    (a, b) =>
+                      new Date(b.granted_at).getTime() -
+                      new Date(a.granted_at).getTime(),
+                  )
+                  .map((credit) => (
+                    <ListItem key={credit.id} className="p-4" size="small">
+                      <div className="flex flex-row items-baseline gap-4">
+                        <h2>{credit.title}</h2>
+                        <span className="dark:text-polar-500 text-gray-500">
+                          {new Date(credit.granted_at).toLocaleDateString(
+                            'en-US',
+                            {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                            },
+                          )}
+                        </span>
+                      </div>
+                      <span>
+                        {formatCurrency('accounting')(credit.amount, 'usd')}
+                      </span>
+                    </ListItem>
+                  ))}
+              </List>
+            ) : (
+              <EmptyState
+                title="No credits granted"
+                icon={<TollOutlined />}
+                description="You have not been awarded any fee credits yet"
+              />
+            )}
+          </div>
+        </div>
+      }
+    />
+  )
+}

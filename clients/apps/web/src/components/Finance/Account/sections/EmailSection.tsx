@@ -1,0 +1,105 @@
+'use client'
+
+import { toast } from '@/components/Toast/use-toast'
+import { usePostHog } from '@/hooks/posthog'
+import { useOrganization, useUpdateOrganization } from '@/hooks/queries'
+import { extractApiErrorMessage, setValidationErrors } from '@/utils/api/errors'
+import { isValidationError, schemas } from '@polar-sh/client'
+import { Box } from '@polar-sh/orbit/Box'
+import { Button } from '@polar-sh/orbit'
+import { Input } from '@polar-sh/orbit'
+import { Form, FormField, FormMessage } from '@polar-sh/ui/components/ui/form'
+import { useForm } from 'react-hook-form'
+import { PathCardBanner } from './PathCardBanner'
+import { SectionLayout } from './SectionLayout'
+
+interface Props {
+  organization: schemas['Organization']
+  step: schemas['OrganizationReviewCheck']
+  reasonItems: string[]
+}
+
+interface FormValues {
+  email: string
+}
+
+export const EmailSection = ({
+  organization: initialOrg,
+  step,
+  reasonItems,
+}: Props) => {
+  const { data: organization = initialOrg } = useOrganization(
+    initialOrg.id,
+    true,
+    initialOrg,
+    'always',
+  )
+  const updateOrganization = useUpdateOrganization()
+  const posthog = usePostHog()
+  const form = useForm<FormValues>({
+    values: { email: organization.email ?? '' },
+  })
+  const { control, handleSubmit, setError, formState, reset } = form
+
+  const tone = step.status === 'failed' ? 'danger' : 'warning'
+
+  const onSubmit = async ({ email }: FormValues) => {
+    posthog.capture('dashboard:organizations:account_review_section:submit', {
+      organization_id: organization.id,
+      section: 'email',
+    })
+    const { data, error } = await updateOrganization.mutateAsync({
+      id: organization.id,
+      body: { email },
+    })
+
+    if (error) {
+      if (isValidationError(error.detail)) {
+        setValidationErrors(error.detail, setError)
+      } else {
+        toast({
+          title: 'Failed to update email',
+          description: extractApiErrorMessage(error, 'Please try again.'),
+        })
+      }
+      return
+    }
+
+    reset({ email: data.email ?? '' })
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <SectionLayout
+          description="Where can customers reach you when something goes wrong?"
+          footerEnd={
+            <Button
+              type="submit"
+              size="sm"
+              loading={updateOrganization.isPending}
+              disabled={!formState.isDirty || updateOrganization.isPending}
+            >
+              Save
+            </Button>
+          }
+        >
+          <FormField
+            control={control}
+            name="email"
+            rules={{ required: 'Support email is required' }}
+            render={({ field }) => (
+              <Box display="block">
+                <Input type="email" {...field} placeholder="support@acme.com" />
+                <FormMessage />
+              </Box>
+            )}
+          />
+          {reasonItems.map((reason) => (
+            <PathCardBanner key={reason} tone={tone} title={reason} />
+          ))}
+        </SectionLayout>
+      </form>
+    </Form>
+  )
+}

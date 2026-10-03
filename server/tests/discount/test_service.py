@@ -1,0 +1,1535 @@
+from datetime import timedelta
+from typing import Any, Literal
+from unittest.mock import AsyncMock
+
+import pytest
+from pytest_mock import MockerFixture
+from sqlalchemy.exc import DBAPIError, IntegrityError
+
+from polar.auth.models import AuthSubject, User
+from polar.checkout.schemas import CheckoutUpdatePublic
+from polar.checkout.service import checkout as checkout_service
+from polar.discount.repository import DiscountRepository
+from polar.discount.schemas import (
+    DiscountFixedCreate,
+    DiscountUpdate,
+)
+from polar.discount.service import DiscountNotRedeemableError
+from polar.discount.service import discount as discount_service
+from polar.exceptions import PolarRequestValidationError
+from polar.kit.currency import PresentmentCurrency
+from polar.kit.utils import utc_now
+from polar.models import (
+    Discount,
+    Organization,
+    Product,
+    UserOrganization,
+)
+from polar.models.discount import (
+    DiscountDuration,
+    DiscountFixed,
+    DiscountPercentage,
+    DiscountType,
+)
+from polar.models.order import OrderStatus
+from polar.models.payment import PaymentStatus
+from polar.models.refund import RefundReason
+from polar.models.webhook_endpoint import WebhookEventType
+from polar.postgres import AsyncSession
+from tests.fixtures.database import SaveFixture
+from tests.fixtures.random_objects import (
+    create_checkout,
+    create_customer,
+    create_discount,
+    create_discount_redemption,
+    create_order,
+    create_payment,
+    create_refund,
+    create_subscription,
+)
+
+
+@pytest.fixture
+def webhook_service_send_mock(mocker: MockerFixture) -> AsyncMock:
+    return mocker.patch("polar.discount.service.webhook_service.send")
+
+
+@pytest.mark.asyncio
+class TestCreate:
+    @pytest.mark.auth
+    async def test_long_name(
+        self,
+        auth_subject: AuthSubject[User],
+        session: AsyncSession,
+        organization: Organization,
+        user_organization: UserOrganization,
+        product: Product,
+    ) -> None:
+        discount = await discount_service.create(
+            session,
+            DiscountFixedCreate(
+                duration=DiscountDuration.once,
+                type=DiscountType.fixed,
+                amount=1000,
+                currency=PresentmentCurrency.usd,
+                name="A" * 256,
+                code=None,
+                starts_at=None,
+                ends_at=None,
+                max_redemptions=None,
+                products=[product.id],
+                organization_id=organization.id,
+            ),
+            auth_subject,
+        )
+
+        assert discount.name == "A" * 256
+
+    @pytest.mark.auth
+    async def test_webhook(
+        self,
+        auth_subject: AuthSubject[User],
+        session: AsyncSession,
+        organization: Organization,
+        user_organization: UserOrganization,
+        webhook_service_send_mock: AsyncMock,
+    ) -> None:
+        discount = await discount_service.create(
+            session,
+            DiscountFixedCreate(
+                duration=DiscountDuration.once,
+                type=DiscountType.fixed,
+                amount=1000,
+                currency=PresentmentCurrency.usd,
+                name="Discount",
+                code=None,
+                starts_at=None,
+                ends_at=None,
+                max_redemptions=None,
+                products=None,
+                organization_id=organization.id,
+            ),
+            auth_subject,
+        )
+
+        webhook_service_send_mock.assert_called_once_with(
+            session, organization, WebhookEventType.discount_created, discount
+        )
+
+    @pytest.mark.auth
+    async def test_concurrent_duplicate_code(
+        self,
+        mocker: MockerFixture,
+        auth_subject: AuthSubject[User],
+        session: AsyncSession,
+        save_fixture: SaveFixture,
+        organization: Organization,
+        user_organization: UserOrganization,
+    ) -> None:
+        existing_discount = await create_discount(
+            save_fixture,
+            type=DiscountType.fixed,
+            amounts={"usd": 1000},
+            duration=DiscountDuration.once,
+            organization=organization,
+            code="RACE",
+        )
+        mocker.patch.object(
+            DiscountRepository,
+            "get_by_code_and_organization_for_update",
+            side_effect=[None, existing_discount],
+        )
+
+        with pytest.raises(PolarRequestValidationError):
+            await discount_service.create(
+                session,
+                DiscountFixedCreate(
+                    duration=DiscountDuration.once,
+                    type=DiscountType.fixed,
+                    amount=1000,
+                    currency=PresentmentCurrency.usd,
+                    name="Discount",
+                    code="RACE",
+                    starts_at=None,
+                    ends_at=None,
+                    max_redemptions=None,
+                    products=None,
+                    organization_id=organization.id,
+                ),
+                auth_subject,
+            )
+
+    @pytest.mark.auth
+    async def test_unrelated_integrity_error(
+        self,
+        mocker: MockerFixture,
+        auth_subject: AuthSubject[User],
+        session: AsyncSession,
+        organization: Organization,
+        user_organization: UserOrganization,
+    ) -> None:
+        mocker.patch.object(
+            DiscountRepository,
+            "create",
+            side_effect=IntegrityError("INSERT", None, Exception("violation")),
+        )
+
+        with pytest.raises(IntegrityError):
+            await discount_service.create(
+                session,
+                DiscountFixedCreate(
+                    duration=DiscountDuration.once,
+                    type=DiscountType.fixed,
+                    amount=1000,
+                    currency=PresentmentCurrency.usd,
+                    name="Discount",
+                    code="NEW",
+                    starts_at=None,
+                    ends_at=None,
+                    max_redemptions=None,
+                    products=None,
+                    organization_id=organization.id,
+                ),
+                auth_subject,
+            )
+
+
+@pytest.mark.asyncio
+class TestUpdate:
+    @pytest.mark.auth
+    async def test_duration_change(
+        self,
+        auth_subject: AuthSubject[User],
+        user_organization: UserOrganization,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+    ) -> None:
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.percentage,
+            basis_points=1000,
+            duration=DiscountDuration.repeating,
+            duration_in_months=1,
+            organization=organization,
+        )
+
+        with pytest.raises(PolarRequestValidationError):
+            await discount_service.update(
+                session,
+                discount,
+                discount_update=DiscountUpdate(duration=DiscountDuration.once),
+                auth_subject=auth_subject,
+            )
+
+    @pytest.mark.auth
+    async def test_type_change(
+        self,
+        auth_subject: AuthSubject[User],
+        user_organization: UserOrganization,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+    ) -> None:
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.percentage,
+            basis_points=1000,
+            duration=DiscountDuration.repeating,
+            duration_in_months=1,
+            organization=organization,
+        )
+
+        with pytest.raises(PolarRequestValidationError):
+            await discount_service.update(
+                session,
+                discount,
+                discount_update=DiscountUpdate(type=DiscountType.fixed),
+                auth_subject=auth_subject,
+            )
+
+    @pytest.mark.parametrize(
+        ("field", "value"),
+        [
+            ("amount", 1000),
+            ("amounts", {"usd": 1000}),
+            ("basis_points", 1000),
+        ],
+    )
+    @pytest.mark.auth
+    async def test_update_forbidden_field_with_redemptions(
+        self,
+        auth_subject: AuthSubject[User],
+        user_organization: UserOrganization,
+        field: Literal["amount", "amounts", "basis_points"],
+        value: Any,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+        product: Product,
+    ) -> None:
+        discount: Discount
+        if field in {"amount", "amounts"}:
+            discount = await create_discount(
+                save_fixture,
+                type=DiscountType.fixed,
+                amounts={"usd": 5000},
+                duration=DiscountDuration.once,
+                organization=organization,
+            )
+        else:
+            discount = await create_discount(
+                save_fixture,
+                type=DiscountType.percentage,
+                basis_points=5000,
+                duration=DiscountDuration.once,
+                organization=organization,
+            )
+        checkout = await create_checkout(save_fixture, products=[product])
+        await create_discount_redemption(
+            save_fixture, discount=discount, checkout=checkout
+        )
+        await session.refresh(discount, ["organization", "redemptions_count"])
+
+        with pytest.raises(PolarRequestValidationError):
+            await discount_service.update(
+                session,
+                discount,
+                discount_update=DiscountUpdate.model_validate(
+                    {
+                        field: value,
+                        # Make sure passing "currency"
+                        # doesn't cause AttributeError on percentage discounts
+                        "currency": "usd",
+                    }
+                ),
+                auth_subject=auth_subject,
+            )
+
+    @pytest.mark.parametrize("type", [DiscountType.fixed, DiscountType.percentage])
+    @pytest.mark.auth
+    async def test_update_duration_in_months_with_redemptions(
+        self,
+        auth_subject: AuthSubject[User],
+        user_organization: UserOrganization,
+        type: DiscountType,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+        product: Product,
+    ) -> None:
+        discount: Discount
+        if type == DiscountType.fixed:
+            discount = await create_discount(
+                save_fixture,
+                type=DiscountType.fixed,
+                amounts={"usd": 5000},
+                duration=DiscountDuration.repeating,
+                duration_in_months=3,
+                organization=organization,
+            )
+        else:
+            discount = await create_discount(
+                save_fixture,
+                type=DiscountType.percentage,
+                basis_points=5000,
+                duration=DiscountDuration.repeating,
+                duration_in_months=3,
+                organization=organization,
+            )
+        checkout = await create_checkout(save_fixture, products=[product])
+        await create_discount_redemption(
+            save_fixture, discount=discount, checkout=checkout
+        )
+        await session.refresh(discount, ["organization", "redemptions_count"])
+
+        with pytest.raises(PolarRequestValidationError) as exc_info:
+            await discount_service.update(
+                session,
+                discount,
+                discount_update=DiscountUpdate(duration_in_months=1),
+                auth_subject=auth_subject,
+            )
+
+        assert exc_info.value.errors()[0]["loc"] == (
+            "body",
+            "duration_in_months",
+        )
+
+    @pytest.mark.parametrize(
+        "field",
+        [
+            "amounts",
+            "basis_points",
+        ],
+    )
+    @pytest.mark.auth
+    async def test_update_forbidden_field_null_with_redemptions(
+        self,
+        auth_subject: AuthSubject[User],
+        user_organization: UserOrganization,
+        field: Literal["amounts", "basis_points"],
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+        product: Product,
+    ) -> None:
+        discount: Discount
+        if field == "amounts":
+            discount = await create_discount(
+                save_fixture,
+                type=DiscountType.fixed,
+                amounts={"usd": 5000},
+                duration=DiscountDuration.once,
+                organization=organization,
+            )
+        else:
+            discount = await create_discount(
+                save_fixture,
+                type=DiscountType.percentage,
+                basis_points=5000,
+                duration=DiscountDuration.once,
+                organization=organization,
+            )
+        checkout = await create_checkout(save_fixture, products=[product])
+        await create_discount_redemption(
+            save_fixture, discount=discount, checkout=checkout
+        )
+        await session.refresh(discount, ["organization", "redemptions_count"])
+
+        with pytest.raises(PolarRequestValidationError):
+            await discount_service.update(
+                session,
+                discount,
+                discount_update=DiscountUpdate.model_validate({field: None}),
+                auth_subject=auth_subject,
+            )
+
+    @pytest.mark.parametrize(
+        ("type", "payload"),
+        [
+            (
+                DiscountType.percentage,
+                DiscountUpdate(
+                    basis_points=2000,
+                    # Make sure passing "currency" doesn't cause AttributeError
+                    # on percentage discounts
+                    currency=PresentmentCurrency.usd,
+                ),
+            ),
+            (
+                DiscountType.fixed,
+                DiscountUpdate(
+                    amount=2000,
+                    currency=PresentmentCurrency.usd,
+                    # Make sure passing "basis_points" doesn't cause AttributeError
+                    # on percentage discounts
+                    basis_points=2000,
+                ),
+            ),
+        ],
+    )
+    @pytest.mark.auth
+    async def test_update_sensitive_fields(
+        self,
+        auth_subject: AuthSubject[User],
+        user_organization: UserOrganization,
+        type: DiscountType,
+        payload: DiscountUpdate,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+    ) -> None:
+        discount: Discount
+        if type == DiscountType.percentage:
+            discount = await create_discount(
+                save_fixture,
+                type=DiscountType.percentage,
+                basis_points=1000,
+                duration=DiscountDuration.once,
+                organization=organization,
+            )
+        else:
+            discount = await create_discount(
+                save_fixture,
+                type=DiscountType.fixed,
+                amounts={"usd": 1000},
+                duration=DiscountDuration.once,
+                organization=organization,
+            )
+
+        updated_ends_at = utc_now() + timedelta(days=2)
+        payload.ends_at = updated_ends_at
+        updated_discount = await discount_service.update(
+            session,
+            discount,
+            discount_update=payload,
+            auth_subject=auth_subject,
+        )
+
+        if isinstance(updated_discount, DiscountPercentage):
+            assert updated_discount.basis_points == 2000
+        elif isinstance(updated_discount, DiscountFixed):
+            assert updated_discount.amounts == {"usd": 2000}
+
+        assert updated_discount.ends_at == updated_ends_at
+
+    @pytest.mark.auth
+    async def test_update_name(
+        self,
+        auth_subject: AuthSubject[User],
+        user_organization: UserOrganization,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+    ) -> None:
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.percentage,
+            basis_points=1000,
+            duration=DiscountDuration.once,
+            organization=organization,
+        )
+
+        updated_discount = await discount_service.update(
+            session,
+            discount,
+            discount_update=DiscountUpdate(name="Updated Name"),
+            auth_subject=auth_subject,
+        )
+
+        assert updated_discount.name == "Updated Name"
+
+    @pytest.mark.auth
+    async def test_update_products(
+        self,
+        auth_subject: AuthSubject[User],
+        user_organization: UserOrganization,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+        product: Product,
+        product_one_time: Product,
+    ) -> None:
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.percentage,
+            basis_points=1000,
+            duration=DiscountDuration.once,
+            organization=organization,
+            products=[product],
+        )
+
+        updated_discount = await discount_service.update(
+            session,
+            discount,
+            discount_update=DiscountUpdate(products=[product_one_time.id]),
+            auth_subject=auth_subject,
+        )
+
+        assert updated_discount.products == [product_one_time]
+
+    @pytest.mark.auth
+    async def test_update_products_reset(
+        self,
+        auth_subject: AuthSubject[User],
+        user_organization: UserOrganization,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+        product: Product,
+    ) -> None:
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.percentage,
+            basis_points=1000,
+            duration=DiscountDuration.once,
+            organization=organization,
+            products=[product],
+        )
+
+        updated_discount = await discount_service.update(
+            session,
+            discount,
+            discount_update=DiscountUpdate(products=[]),
+            auth_subject=auth_subject,
+        )
+
+        assert updated_discount.products == []
+
+    @pytest.mark.auth
+    async def test_update_discount_past_dates(
+        self,
+        auth_subject: AuthSubject[User],
+        user_organization: UserOrganization,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+    ) -> None:
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.percentage,
+            basis_points=1000,
+            duration=DiscountDuration.once,
+            organization=organization,
+            starts_at=utc_now() - timedelta(days=7),
+            ends_at=utc_now() - timedelta(days=1),
+        )
+
+        updated_discount = await discount_service.update(
+            session,
+            discount,
+            discount_update=DiscountUpdate(
+                name="Updated Name",
+                starts_at=discount.starts_at,
+                ends_at=discount.ends_at,
+            ),
+            auth_subject=auth_subject,
+        )
+
+        assert updated_discount.name == "Updated Name"
+        assert updated_discount.starts_at == discount.starts_at
+        assert updated_discount.ends_at == discount.ends_at
+
+    @pytest.mark.auth
+    async def test_update_code_already_exists(
+        self,
+        auth_subject: AuthSubject[User],
+        user_organization: UserOrganization,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+    ) -> None:
+        existing_discount = await create_discount(
+            save_fixture,
+            type=DiscountType.percentage,
+            basis_points=1000,
+            duration=DiscountDuration.once,
+            organization=organization,
+            code="EXISTING",
+        )
+        discount_to_update = await create_discount(
+            save_fixture,
+            type=DiscountType.percentage,
+            basis_points=2000,
+            duration=DiscountDuration.once,
+            organization=organization,
+            code="OTHER",
+        )
+
+        with pytest.raises(PolarRequestValidationError) as exc_info:
+            await discount_service.update(
+                session,
+                discount_to_update,
+                discount_update=DiscountUpdate(code="EXISTING"),
+                auth_subject=auth_subject,
+            )
+
+        assert exc_info.value.errors()[0]["loc"] == ("body", "code")
+        assert "already exists" in exc_info.value.errors()[0]["msg"]
+
+    @pytest.mark.auth
+    async def test_update_code_same_discount(
+        self,
+        auth_subject: AuthSubject[User],
+        user_organization: UserOrganization,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+    ) -> None:
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.percentage,
+            basis_points=1000,
+            duration=DiscountDuration.once,
+            organization=organization,
+            code="MYCODE",
+        )
+
+        updated_discount = await discount_service.update(
+            session,
+            discount,
+            discount_update=DiscountUpdate(code="mycode"),
+            auth_subject=auth_subject,
+        )
+
+        assert updated_discount.code == "mycode"
+
+    @pytest.mark.auth
+    async def test_webhook(
+        self,
+        auth_subject: AuthSubject[User],
+        user_organization: UserOrganization,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+        webhook_service_send_mock: AsyncMock,
+    ) -> None:
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.percentage,
+            basis_points=1000,
+            duration=DiscountDuration.once,
+            organization=organization,
+        )
+
+        updated_discount = await discount_service.update(
+            session,
+            discount,
+            discount_update=DiscountUpdate(name="Updated"),
+            auth_subject=auth_subject,
+        )
+
+        webhook_service_send_mock.assert_called_once_with(
+            session, organization, WebhookEventType.discount_updated, updated_discount
+        )
+
+
+@pytest.mark.asyncio
+class TestDelete:
+    @pytest.mark.auth
+    async def test_webhook(
+        self,
+        auth_subject: AuthSubject[User],
+        user_organization: UserOrganization,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+        webhook_service_send_mock: AsyncMock,
+    ) -> None:
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.percentage,
+            basis_points=1000,
+            duration=DiscountDuration.once,
+            organization=organization,
+        )
+
+        deleted_discount = await discount_service.delete(
+            session, discount, auth_subject
+        )
+
+        assert deleted_discount.deleted_at is not None
+        webhook_service_send_mock.assert_called_once_with(
+            session, organization, WebhookEventType.discount_deleted, deleted_discount
+        )
+
+
+@pytest.mark.asyncio
+class TestIsRedeemableDiscount:
+    async def test_not_started(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+    ) -> None:
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.percentage,
+            basis_points=1000,
+            duration=DiscountDuration.repeating,
+            duration_in_months=1,
+            organization=organization,
+            starts_at=utc_now() + timedelta(days=1),
+        )
+
+        assert (
+            await discount_service.is_redeemable_discount(session, discount)
+        ) is False
+
+    async def test_ended(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+    ) -> None:
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.percentage,
+            basis_points=1000,
+            duration=DiscountDuration.repeating,
+            duration_in_months=1,
+            organization=organization,
+            ends_at=utc_now() - timedelta(days=1),
+        )
+
+        assert (
+            await discount_service.is_redeemable_discount(session, discount)
+        ) is False
+
+    async def test_max_redemptions_reached(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+        product: Product,
+    ) -> None:
+        max_redemptions = 10
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.percentage,
+            basis_points=1000,
+            duration=DiscountDuration.repeating,
+            duration_in_months=1,
+            organization=organization,
+            max_redemptions=max_redemptions,
+        )
+        for _ in range(max_redemptions):
+            checkout = await create_checkout(save_fixture, products=[product])
+            await create_discount_redemption(
+                save_fixture, discount=discount, checkout=checkout
+            )
+
+        assert (
+            await discount_service.is_redeemable_discount(session, discount)
+        ) is False
+
+    async def test_redeemable(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+        product: Product,
+    ) -> None:
+        max_redemptions = 10
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.percentage,
+            basis_points=1000,
+            duration=DiscountDuration.repeating,
+            duration_in_months=1,
+            organization=organization,
+            starts_at=utc_now() - timedelta(days=1),
+            ends_at=utc_now() + timedelta(days=1),
+            max_redemptions=max_redemptions,
+        )
+        for _ in range(5):
+            checkout = await create_checkout(save_fixture, products=[product])
+            await create_discount_redemption(
+                save_fixture, discount=discount, checkout=checkout
+            )
+
+        assert (
+            await discount_service.is_redeemable_discount(session, discount)
+        ) is True
+
+
+@pytest.mark.asyncio
+class TestCodeCaseInsensitivity:
+    async def test_code_case_insensitive(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+        product: Product,
+    ) -> None:
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.percentage,
+            basis_points=1000,
+            duration=DiscountDuration.repeating,
+            duration_in_months=1,
+            organization=organization,
+            max_redemptions=3,
+            code="FooBar",
+        )
+
+        discount_exact = await discount_service.get_by_code_and_organization(
+            session,
+            code="FooBar",
+            organization=organization,
+        )
+        assert discount_exact
+        assert discount_exact.code == "FooBar"
+
+        discount_lower = await discount_service.get_by_code_and_organization(
+            session,
+            code="foobar",
+            organization=organization,
+        )
+        assert discount_lower
+        assert discount_lower.code == "FooBar"
+
+        discount_upper = await discount_service.get_by_code_and_organization(
+            session,
+            code="FOOBAR",
+            organization=organization,
+        )
+        assert discount_upper
+        assert discount_upper.code == "FooBar"
+
+        checkout_product = await create_checkout(save_fixture, products=[product])
+        await checkout_service.update(
+            session,
+            checkout_product,
+            CheckoutUpdatePublic(
+                discount_code="FoObAr",
+            ),
+        )
+        assert checkout_product.discount_id == discount.id
+
+
+@pytest.mark.asyncio
+class TestIsRepetitionExpired:
+    async def test_once_first_cycle(
+        self,
+        save_fixture: SaveFixture,
+        organization: Organization,
+    ) -> None:
+        """Test that 'once' discount applies only to its first billing cycle."""
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.percentage,
+            basis_points=10_000,
+            duration=DiscountDuration.once,
+            organization=organization,
+        )
+
+        now = utc_now()
+        next_month = now + timedelta(days=30)
+        # 'once' discount should apply when discount_applied_at equals current_period_start
+        # (this is the first cycle where the discount is used)
+        assert discount.is_repetition_expired(now, now) is False
+        # 'once' discount should expire for subsequent cycles
+        assert discount.is_repetition_expired(now, next_month) is True
+
+    async def test_forever_never_expires(
+        self,
+        save_fixture: SaveFixture,
+        organization: Organization,
+    ) -> None:
+        """Test that 'forever' discount never expires."""
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.percentage,
+            basis_points=5_000,
+            duration=DiscountDuration.forever,
+            organization=organization,
+        )
+
+        now = utc_now()
+        future = now + timedelta(days=365)
+        # Forever discounts never expire, regardless of when applied or current period
+        assert discount.is_repetition_expired(now, future) is False
+
+    async def test_repeating_expires_after_duration(
+        self,
+        save_fixture: SaveFixture,
+        organization: Organization,
+    ) -> None:
+        """Test that 'repeating' discount expires after specified months."""
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.percentage,
+            basis_points=5_000,
+            duration=DiscountDuration.repeating,
+            duration_in_months=3,
+            organization=organization,
+        )
+
+        now = utc_now()
+        within_duration = now + timedelta(days=30)  # ~1 month
+        after_duration = now + timedelta(days=120)  # ~4 months
+
+        # Should not expire within duration (from when discount was first applied)
+        assert discount.is_repetition_expired(now, within_duration) is False
+        # Should expire after duration
+        assert discount.is_repetition_expired(now, after_duration) is True
+
+
+@pytest.mark.asyncio
+class TestCheckPerCustomerLimitReached:
+    async def test_no_limit_set(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+        product: Product,
+    ) -> None:
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.fixed,
+            amounts={"usd": 1000},
+            duration=DiscountDuration.once,
+            organization=organization,
+            max_redemptions_per_customer=None,
+        )
+        customer = await create_customer(
+            save_fixture, organization=organization, email="customer@example.com"
+        )
+        checkout = await create_checkout(
+            save_fixture, products=[product], customer=customer
+        )
+
+        assert (
+            await discount_service.check_per_customer_limit_reached(
+                session, discount, checkout=checkout, customer=customer
+            )
+            is False
+        )
+
+    async def test_under_limit(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+        product: Product,
+    ) -> None:
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.fixed,
+            amounts={"usd": 1000},
+            duration=DiscountDuration.once,
+            organization=organization,
+            max_redemptions_per_customer=2,
+        )
+        customer = await create_customer(
+            save_fixture, organization=organization, email="customer@example.com"
+        )
+        prior_checkout = await create_checkout(
+            save_fixture, products=[product], customer=customer
+        )
+        await create_discount_redemption(
+            save_fixture, discount=discount, checkout=prior_checkout
+        )
+        current_checkout = await create_checkout(
+            save_fixture, products=[product], customer=customer
+        )
+
+        assert (
+            await discount_service.check_per_customer_limit_reached(
+                session, discount, checkout=current_checkout, customer=customer
+            )
+            is False
+        )
+
+    async def test_limit_reached_by_customer_id(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+        product: Product,
+    ) -> None:
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.fixed,
+            amounts={"usd": 1000},
+            duration=DiscountDuration.once,
+            organization=organization,
+            max_redemptions_per_customer=1,
+        )
+        customer = await create_customer(
+            save_fixture, organization=organization, email="customer@example.com"
+        )
+        prior_checkout = await create_checkout(
+            save_fixture, products=[product], customer=customer
+        )
+        await create_discount_redemption(
+            save_fixture, discount=discount, checkout=prior_checkout
+        )
+        current_checkout = await create_checkout(
+            save_fixture, products=[product], customer=customer
+        )
+
+        assert (
+            await discount_service.check_per_customer_limit_reached(
+                session, discount, checkout=current_checkout, customer=customer
+            )
+            is True
+        )
+
+    async def test_limit_reached_by_email_alias(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+        product: Product,
+    ) -> None:
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.fixed,
+            amounts={"usd": 1000},
+            duration=DiscountDuration.once,
+            organization=organization,
+            max_redemptions_per_customer=1,
+        )
+        # A *different* customer previously redeemed, but with the same base email.
+        prior_customer = await create_customer(
+            save_fixture, organization=organization, email="someone-else@example.com"
+        )
+        prior_checkout = await create_checkout(
+            save_fixture, products=[product], customer=prior_customer
+        )
+        prior_checkout.customer_email = "customer@example.com"
+        await save_fixture(prior_checkout)
+        await create_discount_redemption(
+            save_fixture, discount=discount, checkout=prior_checkout
+        )
+
+        # Current customer uses a `+alias` variant of the same email.
+        current_customer = await create_customer(
+            save_fixture,
+            organization=organization,
+            email="customer+alias@example.com",
+        )
+        current_checkout = await create_checkout(
+            save_fixture, products=[product], customer=current_customer
+        )
+
+        assert (
+            await discount_service.check_per_customer_limit_reached(
+                session,
+                discount,
+                checkout=current_checkout,
+                customer=current_customer,
+            )
+            is True
+        )
+
+    async def test_limit_reached_by_fingerprint(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+        product: Product,
+    ) -> None:
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.fixed,
+            amounts={"usd": 1000},
+            duration=DiscountDuration.once,
+            organization=organization,
+            max_redemptions_per_customer=1,
+        )
+        # Different customer and email, but the same card fingerprint.
+        prior_customer = await create_customer(
+            save_fixture, organization=organization, email="other@example.com"
+        )
+        prior_checkout = await create_checkout(
+            save_fixture, products=[product], customer=prior_customer
+        )
+        prior_checkout.customer_email = "other@example.com"
+        await save_fixture(prior_checkout)
+        await create_payment(
+            save_fixture,
+            organization,
+            checkout=prior_checkout,
+            method_metadata={"fingerprint": "FINGERPRINT"},
+        )
+        await create_discount_redemption(
+            save_fixture, discount=discount, checkout=prior_checkout
+        )
+
+        current_customer = await create_customer(
+            save_fixture, organization=organization, email="customer@example.com"
+        )
+        current_checkout = await create_checkout(
+            save_fixture, products=[product], customer=current_customer
+        )
+
+        assert (
+            await discount_service.check_per_customer_limit_reached(
+                session,
+                discount,
+                checkout=current_checkout,
+                customer=current_customer,
+                payment_method_fingerprint="FINGERPRINT",
+            )
+            is True
+        )
+
+    async def test_declined_card_fingerprint_does_not_count(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+        product: Product,
+    ) -> None:
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.fixed,
+            amounts={"usd": 1000},
+            duration=DiscountDuration.once,
+            organization=organization,
+            max_redemptions_per_customer=1,
+        )
+        prior_customer = await create_customer(
+            save_fixture, organization=organization, email="other@example.com"
+        )
+        prior_checkout = await create_checkout(
+            save_fixture, products=[product], customer=prior_customer
+        )
+        prior_checkout.customer_email = "other@example.com"
+        await save_fixture(prior_checkout)
+        # Declined once, then retried with another card.
+        await create_payment(
+            save_fixture,
+            organization,
+            status=PaymentStatus.failed,
+            checkout=prior_checkout,
+            method_metadata={"fingerprint": "DECLINED_CARD"},
+        )
+        await create_payment(
+            save_fixture,
+            organization,
+            checkout=prior_checkout,
+            method_metadata={"fingerprint": "SETTLED_CARD"},
+        )
+        await create_discount_redemption(
+            save_fixture, discount=discount, checkout=prior_checkout
+        )
+
+        current_customer = await create_customer(
+            save_fixture, organization=organization, email="customer@example.com"
+        )
+        current_checkout = await create_checkout(
+            save_fixture, products=[product], customer=current_customer
+        )
+
+        assert (
+            await discount_service.check_per_customer_limit_reached(
+                session,
+                discount,
+                checkout=current_checkout,
+                customer=current_customer,
+                payment_method_fingerprint="DECLINED_CARD",
+            )
+            is False
+        )
+
+    async def test_limit_reached_by_subscription_redemption(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+        product: Product,
+    ) -> None:
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.fixed,
+            amounts={"usd": 1000},
+            duration=DiscountDuration.once,
+            organization=organization,
+            max_redemptions_per_customer=1,
+        )
+        customer = await create_customer(
+            save_fixture, organization=organization, email="customer@example.com"
+        )
+        # Applying a discount to an existing subscription redeems it without a checkout.
+        subscription = await create_subscription(
+            save_fixture, product=product, customer=customer
+        )
+        await create_discount_redemption(
+            save_fixture, discount=discount, subscription=subscription
+        )
+        current_checkout = await create_checkout(
+            save_fixture, products=[product], customer=customer
+        )
+
+        assert (
+            await discount_service.check_per_customer_limit_reached(
+                session, discount, checkout=current_checkout, customer=customer
+            )
+            is True
+        )
+
+    async def test_refunded_order_frees_the_slot(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+        product: Product,
+    ) -> None:
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.fixed,
+            amounts={"usd": 1000},
+            duration=DiscountDuration.once,
+            organization=organization,
+            max_redemptions_per_customer=1,
+        )
+        customer = await create_customer(
+            save_fixture, organization=organization, email="customer@example.com"
+        )
+        prior_checkout = await create_checkout(
+            save_fixture, products=[product], customer=customer
+        )
+        await create_discount_redemption(
+            save_fixture, discount=discount, checkout=prior_checkout
+        )
+        await create_order(
+            save_fixture,
+            customer=customer,
+            product=product,
+            checkout=prior_checkout,
+            status=OrderStatus.refunded,
+        )
+        current_checkout = await create_checkout(
+            save_fixture, products=[product], customer=customer
+        )
+
+        assert (
+            await discount_service.check_per_customer_limit_reached(
+                session, discount, checkout=current_checkout, customer=customer
+            )
+            is False
+        )
+
+    async def test_chargeback_prevention_refund_keeps_the_slot(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+        product: Product,
+    ) -> None:
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.fixed,
+            amounts={"usd": 1000},
+            duration=DiscountDuration.once,
+            organization=organization,
+            max_redemptions_per_customer=1,
+        )
+        customer = await create_customer(
+            save_fixture, organization=organization, email="customer@example.com"
+        )
+        prior_checkout = await create_checkout(
+            save_fixture, products=[product], customer=customer
+        )
+        await create_discount_redemption(
+            save_fixture, discount=discount, checkout=prior_checkout
+        )
+        order = await create_order(
+            save_fixture,
+            customer=customer,
+            product=product,
+            checkout=prior_checkout,
+            status=OrderStatus.refunded,
+        )
+        payment = await create_payment(save_fixture, organization, order=order)
+        await create_refund(
+            save_fixture,
+            order,
+            payment,
+            reason=RefundReason.dispute_prevention,
+        )
+        current_checkout = await create_checkout(
+            save_fixture, products=[product], customer=customer
+        )
+
+        assert (
+            await discount_service.check_per_customer_limit_reached(
+                session, discount, checkout=current_checkout, customer=customer
+            )
+            is True
+        )
+
+    async def test_partially_refunded_order_keeps_the_slot(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+        product: Product,
+    ) -> None:
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.fixed,
+            amounts={"usd": 1000},
+            duration=DiscountDuration.once,
+            organization=organization,
+            max_redemptions_per_customer=1,
+        )
+        customer = await create_customer(
+            save_fixture, organization=organization, email="customer@example.com"
+        )
+        prior_checkout = await create_checkout(
+            save_fixture, products=[product], customer=customer
+        )
+        await create_discount_redemption(
+            save_fixture, discount=discount, checkout=prior_checkout
+        )
+        await create_order(
+            save_fixture,
+            customer=customer,
+            product=product,
+            checkout=prior_checkout,
+            status=OrderStatus.partially_refunded,
+        )
+        current_checkout = await create_checkout(
+            save_fixture, products=[product], customer=customer
+        )
+
+        assert (
+            await discount_service.check_per_customer_limit_reached(
+                session, discount, checkout=current_checkout, customer=customer
+            )
+            is True
+        )
+
+    async def test_subscription_keeps_the_slot_while_a_cycle_is_paid(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+        product: Product,
+    ) -> None:
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.fixed,
+            amounts={"usd": 1000},
+            duration=DiscountDuration.once,
+            organization=organization,
+            max_redemptions_per_customer=1,
+        )
+        customer = await create_customer(
+            save_fixture, organization=organization, email="customer@example.com"
+        )
+        subscription = await create_subscription(
+            save_fixture, product=product, customer=customer
+        )
+        await create_discount_redemption(
+            save_fixture, discount=discount, subscription=subscription
+        )
+        await create_order(
+            save_fixture,
+            customer=customer,
+            product=product,
+            subscription=subscription,
+            status=OrderStatus.refunded,
+        )
+        await create_order(
+            save_fixture,
+            customer=customer,
+            product=product,
+            subscription=subscription,
+            status=OrderStatus.paid,
+        )
+        current_checkout = await create_checkout(
+            save_fixture, products=[product], customer=customer
+        )
+
+        assert (
+            await discount_service.check_per_customer_limit_reached(
+                session, discount, checkout=current_checkout, customer=customer
+            )
+            is True
+        )
+
+    async def test_excludes_current_checkout(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+        product: Product,
+    ) -> None:
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.fixed,
+            amounts={"usd": 1000},
+            duration=DiscountDuration.once,
+            organization=organization,
+            max_redemptions_per_customer=1,
+        )
+        customer = await create_customer(
+            save_fixture, organization=organization, email="customer@example.com"
+        )
+        current_checkout = await create_checkout(
+            save_fixture, products=[product], customer=customer
+        )
+        # The only redemption belongs to the in-progress checkout, so it must not count.
+        await create_discount_redemption(
+            save_fixture, discount=discount, checkout=current_checkout
+        )
+
+        assert (
+            await discount_service.check_per_customer_limit_reached(
+                session, discount, checkout=current_checkout, customer=customer
+            )
+            is False
+        )
+
+    async def test_invalid_checkout_email_is_ignored(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+        product: Product,
+    ) -> None:
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.fixed,
+            amounts={"usd": 1000},
+            duration=DiscountDuration.once,
+            organization=organization,
+            max_redemptions_per_customer=1,
+        )
+        current_checkout = await create_checkout(save_fixture, products=[product])
+        current_checkout.customer_email = "not-an-email"
+        await save_fixture(current_checkout)
+
+        assert (
+            await discount_service.check_per_customer_limit_reached(
+                session, discount, checkout=current_checkout
+            )
+            is False
+        )
+
+
+@pytest.mark.asyncio
+class TestRedeemDiscount:
+    @pytest.fixture
+    def contended_lock(self, mocker: MockerFixture) -> None:
+        mocker.patch.object(
+            DiscountRepository,
+            "get_by_id",
+            side_effect=DBAPIError(
+                "SELECT", {}, Exception("could not obtain lock on row")
+            ),
+        )
+
+    @pytest.mark.parametrize(
+        "max_redemptions_per_customer",
+        [
+            pytest.param(None, id="uncapped"),
+            pytest.param(1, id="per_customer"),
+        ],
+    )
+    async def test_discount_without_global_cap_ignores_contention(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+        contended_lock: None,
+        max_redemptions_per_customer: int | None,
+    ) -> None:
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.percentage,
+            basis_points=1000,
+            duration=DiscountDuration.once,
+            organization=organization,
+            max_redemptions_per_customer=max_redemptions_per_customer,
+        )
+
+        async with discount_service.redeem_discount(session, discount) as redemption:
+            assert redemption.discount == discount
+
+    async def test_capped_discount_rejects_contention(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        organization: Organization,
+        contended_lock: None,
+    ) -> None:
+        discount = await create_discount(
+            save_fixture,
+            type=DiscountType.percentage,
+            basis_points=1000,
+            duration=DiscountDuration.once,
+            organization=organization,
+            max_redemptions=10,
+        )
+
+        with pytest.raises(DiscountNotRedeemableError):
+            async with discount_service.redeem_discount(session, discount):
+                pass

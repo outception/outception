@@ -1,0 +1,309 @@
+import uuid
+from collections.abc import Sequence
+from datetime import datetime
+from enum import StrEnum
+from typing import Any, cast
+
+from sqlalchemy import Select, UnaryExpression, asc, desc, func, or_, select
+from sqlalchemy.exc import NoResultFound
+from sqlalchemy.orm import joinedload, subqueryload
+
+from polar.auth.models import AuthSubject
+from polar.auth.permission import OrganizationPermission
+from polar.authz.repository import select_accessible_org_ids
+from polar.kit.pagination import PaginationParams, paginate
+from polar.kit.sorting import Sorting
+from polar.models import (
+    Account,
+    Order,
+    Product,
+    Transaction,
+    User,
+)
+from polar.models.organization import Organization
+from polar.models.transaction import PlatformFeeType, TransactionType
+from polar.postgres import AsyncReadSession, AsyncSession
+
+from ..schemas import (
+    TransactionsBalance,
+    TransactionsHeldBalance,
+    TransactionsSummary,
+)
+from .base import BaseTransactionService
+
+
+class TransactionSortProperty(StrEnum):
+    created_at = "created_at"
+    amount = "amount"
+
+
+class TransactionService(BaseTransactionService):
+    async def search(
+        self,
+        session: AsyncReadSession,
+        auth_subject: AuthSubject[User],
+        *,
+        type: TransactionType | None = None,
+        account_id: uuid.UUID | None = None,
+        payment_customer_id: uuid.UUID | None = None,
+        exclude_platform_fees: bool = False,
+        pagination: PaginationParams,
+        sorting: Sequence[Sorting[TransactionSortProperty]] = (
+            (TransactionSortProperty.created_at, True),
+        ),
+    ) -> tuple[Sequence[Transaction], int]:
+        statement = self._get_readable_transactions_statement(auth_subject)
+
+        statement = statement.options(
+            # Incurred transactions
+            subqueryload(Transaction.account_incurred_transactions),
+            # Pledge
+            subqueryload(Transaction.pledge),
+            # IssueReward
+            subqueryload(Transaction.issue_reward),
+            # Order
+            subqueryload(Transaction.order).options(
+                joinedload(Order.product).options(joinedload(Product.organization)),
+            ),
+            # Payment Transaction
+            subqueryload(Transaction.payment_transaction),
+        )
+
+        if type is not None:
+            statement = statement.where(Transaction.type == type)
+        if account_id is not None:
+            statement = statement.where(Transaction.account_id == account_id)
+        if payment_customer_id is not None:
+            statement = statement.where(
+                Transaction.payment_customer_id == payment_customer_id
+            )
+        if exclude_platform_fees:
+            statement = statement.where(Transaction.platform_fee_type.is_(None))
+
+        order_by_clauses: list[UnaryExpression[Any]] = []
+        for criterion, is_desc in sorting:
+            clause_function = desc if is_desc else asc
+            if criterion == TransactionSortProperty.created_at:
+                order_by_clauses.append(clause_function(Transaction.created_at))
+            elif criterion == TransactionSortProperty.amount:
+                order_by_clauses.append(clause_function(Transaction.amount))
+        statement = statement.order_by(*order_by_clauses)
+
+        results, count = await paginate(session, statement, pagination=pagination)
+
+        return results, count
+
+    async def get_summary(
+        self, session: AsyncReadSession, account: Account
+    ) -> TransactionsSummary:
+        statement = (
+            select(
+                # Total balance (all transactions)
+                cast(type[int], func.coalesce(func.sum(Transaction.amount), 0)),
+                cast(type[int], func.coalesce(func.sum(Transaction.account_amount), 0)),
+                # Payout balance
+                cast(
+                    type[int],
+                    func.coalesce(
+                        func.sum(Transaction.amount).filter(
+                            Transaction.type == TransactionType.payout
+                        ),
+                        0,
+                    ),
+                ),
+                cast(
+                    type[int],
+                    func.coalesce(
+                        func.sum(Transaction.account_amount).filter(
+                            Transaction.type == TransactionType.payout
+                        ),
+                        0,
+                    ),
+                ),
+                # Available balance (payouts + aged non-payouts)
+                cast(
+                    type[int],
+                    func.coalesce(
+                        func.sum(Transaction.amount).filter(
+                            or_(
+                                Transaction.type.in_(
+                                    (
+                                        TransactionType.payout,
+                                        TransactionType.payout_reversal,
+                                    )
+                                ),
+                                Transaction.platform_fee_type.in_(
+                                    PlatformFeeType.payout_fee_types()
+                                ),
+                                Transaction.created_at
+                                + Account.payout_transaction_delay
+                                <= func.now(),
+                            )
+                        ),
+                        0,
+                    ),
+                ),
+                cast(
+                    type[int],
+                    func.coalesce(
+                        func.sum(Transaction.account_amount).filter(
+                            or_(
+                                Transaction.type.in_(
+                                    (
+                                        TransactionType.payout,
+                                        TransactionType.payout_reversal,
+                                    )
+                                ),
+                                Transaction.platform_fee_type.in_(
+                                    PlatformFeeType.payout_fee_types()
+                                ),
+                                Transaction.created_at
+                                + Account.payout_transaction_delay
+                                <= func.now(),
+                            )
+                        ),
+                        0,
+                    ),
+                ),
+            )
+            .join(Account, Account.id == Transaction.account_id)
+            .where(Transaction.account_id == account.id)
+        )
+
+        result = await session.execute(statement)
+
+        currency = "usd"  # FIXME: Main Polar currency
+        account_currency = account.currency
+        assert account_currency is not None
+
+        try:
+            (
+                amount,
+                account_amount,
+                payout_amount,
+                account_payout_amount,
+                available_amount,
+                available_account_amount,
+            ) = result.one()._tuple()
+        except NoResultFound:
+            amount = 0
+            account_amount = 0
+            payout_amount = 0
+            account_payout_amount = 0
+            available_amount = 0
+            available_account_amount = 0
+
+        released_at = Transaction.created_at + Account.payout_transaction_delay
+        release_day = func.date_trunc("day", released_at)
+        held_statement = (
+            select(
+                cast(type[datetime], func.max(released_at)),
+                cast(type[int], func.sum(Transaction.amount)),
+                cast(type[int], func.sum(Transaction.account_amount)),
+            )
+            .join(Account, Account.id == Transaction.account_id)
+            .where(
+                Transaction.account_id == account.id,
+                Transaction.type.not_in(
+                    (TransactionType.payout, TransactionType.payout_reversal)
+                ),
+                or_(
+                    Transaction.platform_fee_type.is_(None),
+                    Transaction.platform_fee_type.not_in(
+                        PlatformFeeType.payout_fee_types()
+                    ),
+                ),
+                released_at > func.now(),
+            )
+            .group_by(release_day)
+            .order_by(release_day)
+        )
+
+        held_result = await session.execute(held_statement)
+        held_releases = held_result.tuples().all()
+
+        held_amount = sum(amount for _, amount, _ in held_releases)
+        held_account_amount = sum(
+            account_amount for _, _, account_amount in held_releases
+        )
+        fully_available_at = held_releases[-1][0] if held_releases else None
+        next_release_at, next_release_amount, next_release_account_amount = next(
+            (release for release in held_releases if release[1] > 0),
+            (None, 0, 0),
+        )
+
+        return TransactionsSummary(
+            balance=TransactionsBalance(
+                currency=currency,
+                amount=amount,
+                account_currency=account_currency,
+                account_amount=account_amount,
+            ),
+            available_balance=TransactionsBalance(
+                currency=currency,
+                amount=available_amount,
+                account_currency=account_currency,
+                account_amount=available_account_amount,
+            ),
+            held_balance=TransactionsHeldBalance(
+                currency=currency,
+                amount=held_amount,
+                account_currency=account_currency,
+                account_amount=held_account_amount,
+                next_release_at=next_release_at,
+                next_release_amount=next_release_amount,
+                next_release_account_amount=next_release_account_amount,
+                fully_available_at=fully_available_at,
+            ),
+            payout=TransactionsBalance(
+                currency=currency,
+                amount=payout_amount,
+                account_currency=account_currency,
+                account_amount=account_payout_amount,
+            ),
+        )
+
+    async def get_transactions_sum(
+        self,
+        session: AsyncSession,
+        account_id: uuid.UUID | None,
+        *,
+        type: TransactionType | None = None,
+    ) -> int:
+        statement = select(func.coalesce(func.sum(Transaction.amount), 0)).where(
+            Transaction.account_id == account_id
+        )
+
+        if type is not None:
+            statement = statement.where(Transaction.type == type)
+
+        result = await session.execute(statement)
+        return int(result.scalar_one())
+
+    def _get_readable_transactions_statement(
+        self, auth_subject: AuthSubject[User]
+    ) -> Select[Any]:
+        readable_org_ids = select_accessible_org_ids(
+            auth_subject, permission=OrganizationPermission.finance_read
+        )
+        statement = (
+            select(Transaction)
+            .join(Transaction.account, isouter=True)
+            .join(
+                Organization,
+                onclause=Organization.account_id == Account.id,
+                isouter=True,
+            )
+            .join(User, onclause=User.account_id == Account.id, isouter=True)
+            .where(
+                or_(
+                    User.id == auth_subject.subject.id,
+                    Organization.id.in_(readable_org_ids),
+                )
+            )
+        )
+
+        return statement
+
+
+transaction = TransactionService(Transaction)

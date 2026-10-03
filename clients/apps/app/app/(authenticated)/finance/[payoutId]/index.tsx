@@ -1,0 +1,67 @@
+import { DetailRow, Details } from '@/components/Shared/Details'
+import { useTheme } from '@/design-system/useTheme'
+import { usePayout } from '@/hooks/polar/finance'
+import { formatCurrency } from '@polar-sh/currency'
+import { Stack, useLocalSearchParams } from 'expo-router'
+import { SafeAreaView } from 'react-native'
+
+export default function Index() {
+  const { payoutId } = useLocalSearchParams<{ payoutId: string }>()
+  const theme = useTheme()
+  const { data: payout } = usePayout(payoutId)
+
+  return (
+    <>
+      <Stack.Screen options={{ title: 'Payout' }} />
+      <SafeAreaView
+        style={{
+          flex: 1,
+          flexDirection: 'column',
+          gap: theme.spacing['spacing-16'],
+          justifyContent: 'space-between',
+          margin: theme.spacing['spacing-16'],
+        }}
+      >
+        <Details>
+          <DetailRow
+            label="Created"
+            value={
+              payout?.created_at
+                ? new Date(payout?.created_at).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })
+                : undefined
+            }
+            valueStyle={{ textTransform: 'capitalize' }}
+          />
+          <DetailRow
+            label="Status"
+            value={payout?.status.split('_').join(' ')}
+            valueStyle={{ textTransform: 'capitalize' }}
+          />
+          <DetailRow
+            label="Processor"
+            value={payout?.processor}
+            valueStyle={{ textTransform: 'capitalize' }}
+          />
+          <DetailRow
+            label="Gross"
+            value={formatCurrency('accounting')(
+              payout?.gross_amount ?? 0,
+              payout?.currency ?? 'usd',
+            )}
+          />
+          <DetailRow
+            label="Fees"
+            value={formatCurrency('accounting')(
+              payout?.fees_amount ?? 0,
+              payout?.currency ?? 'usd',
+            )}
+          />
+        </Details>
+      </SafeAreaView>
+    </>
+  )
+}

@@ -1,0 +1,450 @@
+import {
+  useCreateCheckoutLink,
+  useDiscount,
+  useDiscounts,
+  useSelectedProducts,
+  useUpdateCheckoutLink,
+} from '@/hooks/queries'
+import {
+  normalizeValidationErrors,
+  setValidationErrors,
+} from '@/utils/api/errors'
+import { getDiscountDisplay } from '@/utils/discount'
+import { MetadataForm } from '@/components/Metadata/MetadataForm'
+import {
+  MetadataFormValues,
+  entriesToMetadata,
+  metadataToEntries,
+} from '@/components/Metadata/utils'
+import { isValidationError, schemas } from '@polar-sh/client'
+import { Button } from '@polar-sh/orbit'
+import { Combobox } from '@polar-sh/ui/components/atoms/Combobox'
+import { Input } from '@polar-sh/orbit'
+import { Switch } from '@polar-sh/orbit'
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@polar-sh/ui/components/ui/form'
+import { XIcon } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { SubmitHandler, useForm } from 'react-hook-form'
+import ProductSelect from '../Products/ProductSelect'
+import { toast } from '../Toast/use-toast'
+import { TrialConfigurationForm } from '../TrialConfiguration/TrialConfigurationForm'
+import { CheckoutLinkSeatsField } from './CheckoutLinkSeatsField'
+
+type CheckoutLinkCreateForm = Omit<
+  schemas['CheckoutLinkCreateProducts'],
+  'payment_processor' | 'metadata'
+> &
+  MetadataFormValues
+
+export interface CheckoutLinkFormProps {
+  organization: schemas['Organization']
+  checkoutLink?: schemas['CheckoutLink']
+  productIds?: string[]
+  onClose: (checkoutLink: schemas['CheckoutLink']) => void
+}
+
+export const CheckoutLinkForm = ({
+  organization,
+  checkoutLink,
+  onClose,
+  productIds,
+}: CheckoutLinkFormProps) => {
+  const router = useRouter()
+  const [discountQuery, setDiscountQuery] = useState('')
+
+  const { data: discounts, isLoading: isLoadingDiscounts } = useDiscounts(
+    organization.id,
+    {
+      query: discountQuery || undefined,
+      limit: 10,
+      sorting: ['name'],
+    },
+  )
+
+  // Since discounts is paginated & dynamically loaded above,
+  // we need to fetch the selected discount separately to ensure we have its data
+  const { data: selectedDiscount } = useDiscount(
+    organization.id,
+    checkoutLink?.discount_id,
+  )
+
+  const defaultValues = useMemo<CheckoutLinkCreateForm>(() => {
+    if (checkoutLink) {
+      return {
+        ...checkoutLink,
+        label: checkoutLink.label ?? null,
+        metadata: metadataToEntries(checkoutLink.metadata),
+        products: checkoutLink.products.map(({ id }) => id),
+        allow_discount_codes: checkoutLink.allow_discount_codes ?? true,
+        require_billing_address: checkoutLink.require_billing_address ?? false,
+        success_url: checkoutLink.success_url ?? '',
+        return_url: checkoutLink.return_url ?? '',
+        discount_id: checkoutLink.discount_id ?? '',
+        seats: checkoutLink.seats ?? null,
+      }
+    }
+
+    return {
+      label: null,
+      metadata: [],
+      products: productIds ?? [],
+      allow_discount_codes: true,
+      require_billing_address: false,
+      success_url: '',
+      return_url: '',
+      discount_id: '',
+      seats: null,
+    }
+  }, [checkoutLink, productIds])
+
+  const form = useForm<CheckoutLinkCreateForm>({
+    defaultValues,
+  })
+
+  const { control, handleSubmit, setError, reset, watch } = form
+  // Watch for selected product IDs to determine if we should show trial configuration
+  // oxlint-disable-next-line react-hooks/incompatible-library
+  const selectedProductIds = watch('products') || []
+  const { data: selectedProducts } = useSelectedProducts(selectedProductIds)
+
+  // Check if any selected products are recurring (subscription products)
+  const hasRecurringProducts = useMemo(() => {
+    return selectedProducts?.some((product) => product.is_recurring) ?? false
+  }, [selectedProducts])
+
+  useEffect(() => {
+    if (!checkoutLink) return
+    reset(defaultValues)
+  }, [checkoutLink, reset, defaultValues])
+
+  const { mutateAsync: createCheckoutLink, isPending: isCreatePending } =
+    useCreateCheckoutLink()
+  const { mutateAsync: updateCheckoutLink, isPending: isUpdatePending } =
+    useUpdateCheckoutLink()
+
+  const handleValidationError = useCallback(
+    (data: CheckoutLinkCreateForm, errors: schemas['ValidationError'][]) => {
+      const discriminators = [
+        'CheckoutLinkCreateProducts',
+        'RequestValidationError',
+      ]
+
+      const normalizedErrors = normalizeValidationErrors(errors)
+      const filteredErrors = checkoutLink
+        ? normalizedErrors
+        : normalizedErrors.filter((error) =>
+            discriminators.includes(error.loc[1] as string),
+          )
+      setValidationErrors(filteredErrors, setError, 1, discriminators)
+      filteredErrors.forEach((error) => {
+        let loc = error.loc.slice(1)
+        if (loc.length > 0 && discriminators.includes(loc[0] as string)) {
+          loc = loc.slice(1)
+        }
+        if (loc[0] === 'metadata') {
+          const metadataKey = loc[1]
+          const metadataIndex = data.metadata.findIndex(
+            ({ key }) => key === metadataKey,
+          )
+          if (metadataIndex > -1) {
+            const field = loc[2] === '[key]' ? 'key' : 'value'
+            setError(`metadata.${metadataIndex}.${field}`, {
+              message: error.msg,
+            })
+          }
+        }
+      })
+    },
+    [checkoutLink, setError],
+  )
+
+  const onSubmit: SubmitHandler<CheckoutLinkCreateForm> = useCallback(
+    async (data) => {
+      const body: schemas['CheckoutLinkCreateProducts'] = {
+        payment_processor: 'stripe',
+        ...data,
+        discount_id: data.discount_id || null,
+        success_url: data.success_url || null,
+        return_url: data.return_url || null,
+        metadata: entriesToMetadata(data.metadata),
+      }
+
+      let newCheckoutLink: schemas['CheckoutLink']
+
+      if (checkoutLink) {
+        const { data: updatedCheckoutLink, error } = await updateCheckoutLink({
+          id: checkoutLink.id,
+          body,
+        })
+        if (error) {
+          if (isValidationError(error.detail)) {
+            handleValidationError(data, error.detail)
+          } else {
+            setError('root', { message: error.detail })
+          }
+          return
+        }
+        newCheckoutLink = updatedCheckoutLink
+        toast({
+          title: 'Checkout Link Updated',
+          description: `${
+            newCheckoutLink.label ? newCheckoutLink.label : 'Unlabeled'
+          } Checkout Link was updated successfully`,
+        })
+        router.refresh()
+      } else {
+        const { data: createdCheckoutLink, error } =
+          await createCheckoutLink(body)
+        if (error) {
+          if (isValidationError(error.detail)) {
+            handleValidationError(data, error.detail)
+          } else {
+            setError('root', { message: error.detail })
+          }
+          return
+        }
+        newCheckoutLink = createdCheckoutLink
+        toast({
+          title: 'Checkout Link Created',
+          description: `${
+            newCheckoutLink.label ? newCheckoutLink.label : 'Unlabeled'
+          } Checkout Link was created successfully`,
+        })
+      }
+
+      onClose(newCheckoutLink)
+    },
+    [
+      onClose,
+      checkoutLink,
+      createCheckoutLink,
+      updateCheckoutLink,
+      router,
+      setError,
+      handleValidationError,
+    ],
+  )
+
+  return (
+    <Form {...form}>
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-y-6">
+        <FormField
+          control={control}
+          name="label"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Label</FormLabel>
+              <FormControl>
+                <Input placeholder="" {...field} value={field.value || ''} />
+              </FormControl>
+              <FormDescription className="text-xs">
+                Helpful if you have multiple links - internal &amp; optional.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={control}
+          name="products"
+          rules={{
+            validate: (value) =>
+              value.length < 1 ? 'At least one product is required' : true,
+          }}
+          render={({ field }) => {
+            return (
+              <FormItem>
+                <FormLabel>Products</FormLabel>
+                <FormControl>
+                  <ProductSelect
+                    organization={organization}
+                    value={field.value || []}
+                    onChange={field.onChange}
+                    emptyLabel="Select one or more products"
+                  />
+                </FormControl>
+                <FormMessage />
+                <FormDescription>
+                  The customer will be able to switch between these products at
+                  checkout.
+                </FormDescription>
+              </FormItem>
+            )
+          }}
+        />
+        <FormField
+          control={control}
+          name="success_url"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Success URL</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="https://example.com/success?checkout_id={CHECKOUT_ID}"
+                  {...field}
+                  value={field.value || ''}
+                />
+              </FormControl>
+              <FormDescription className="text-xs">
+                Include{' '}
+                <code>
+                  {'{'}CHECKOUT_ID{'}'}
+                </code>{' '}
+                to receive the Checkout ID on success.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={control}
+          name="return_url"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Return URL</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="https://example.com/return"
+                  {...field}
+                  value={field.value || ''}
+                />
+              </FormControl>
+              <FormDescription className="text-xs">
+                When set, a back button will be shown in the checkout to return
+                to this URL.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={control}
+          name="discount_id"
+          render={({ field }) => {
+            const selectedItem =
+              selectedDiscount?.id === field.value
+                ? selectedDiscount
+                : discounts?.items.find((d) => d.id === field.value)
+
+            return (
+              <FormItem>
+                <FormLabel>Preset discount</FormLabel>
+                <div className="flex flex-row items-center gap-2">
+                  <Combobox
+                    items={discounts?.items || []}
+                    value={field.value || null}
+                    selectedItem={selectedItem || null}
+                    onChange={(value) => field.onChange(value || '')}
+                    onQueryChange={setDiscountQuery}
+                    getItemValue={(discount) => discount.id}
+                    getItemLabel={(discount) => discount.name}
+                    renderItem={(discount) => (
+                      <>
+                        {discount.name} ({getDiscountDisplay(discount)})
+                      </>
+                    )}
+                    isLoading={isLoadingDiscounts}
+                    placeholder="Select a discount"
+                    searchPlaceholder="Search discounts…"
+                    emptyLabel="No discounts found"
+                    className="flex-1"
+                  />
+                  {field.value && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      type="button"
+                      onClick={() => field.onChange(null)}
+                    >
+                      <XIcon className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <FormMessage />
+              </FormItem>
+            )
+          }}
+        />
+
+        <FormField
+          control={control}
+          name="allow_discount_codes"
+          render={({ field }) => {
+            return (
+              <FormItem>
+                <div className="flex flex-row items-center justify-between space-y-0 space-x-2">
+                  <FormLabel>Allow discount codes</FormLabel>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </div>
+                <FormMessage />
+                <FormDescription>
+                  {field.value
+                    ? 'Customers will be able to apply discount codes at checkout.'
+                    : "Customers won't be able to apply discount codes at checkout."}
+                </FormDescription>
+              </FormItem>
+            )
+          }}
+        />
+        <FormField
+          control={control}
+          name="require_billing_address"
+          render={({ field }) => {
+            return (
+              <FormItem>
+                <div className="flex flex-row items-center justify-between space-y-0 space-x-2">
+                  <FormLabel>Require billing address</FormLabel>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </div>
+                <FormMessage />
+                <FormDescription>
+                  {field.value
+                    ? 'Customers will need to provide their full billing address at checkout.'
+                    : 'Customers will just need to provide their country at checkout.'}
+                </FormDescription>
+              </FormItem>
+            )
+          }}
+        />
+
+        <CheckoutLinkSeatsField selectedProducts={selectedProducts} />
+
+        {hasRecurringProducts && (
+          <TrialConfigurationForm bottomText="This will override the trial configuration set on products." />
+        )}
+
+        <MetadataForm label="Metadata" />
+
+        <div className="flex flex-row gap-x-4">
+          <Button
+            className="self-start"
+            type="submit"
+            loading={isCreatePending || isUpdatePending}
+          >
+            {checkoutLink ? 'Save Link' : 'Create Link'}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  )
+}

@@ -1,0 +1,249 @@
+from collections.abc import Awaitable, Callable
+from decimal import Decimal
+from unittest.mock import MagicMock
+
+import pytest
+import pytest_asyncio
+from pytest_mock.plugin import MockerFixture
+
+from polar.auth.models import AuthSubject
+from polar.enums import SubscriptionRecurringInterval
+from polar.exceptions import PolarRequestValidationError
+from polar.integrations.tinybird.client import TinybirdClient
+from polar.meter.service import meter as meter_service
+from polar.models import Benefit, Customer, Meter, Organization, Product, Subscription
+from polar.models.benefit import BenefitType
+from polar.postgres import AsyncSession
+from polar.product.tiers import Tiers, TierType
+from tests.fixtures.database import SaveFixture
+from tests.fixtures.random_objects import (
+    create_active_subscription,
+    create_customer,
+    create_event,
+    create_product,
+    create_product_price_metered_tiers,
+)
+
+
+@pytest.fixture
+def enqueue_job_mock(mocker: MockerFixture) -> MagicMock:
+    return mocker.patch("polar.meter.service.enqueue_job")
+
+
+@pytest_asyncio.fixture
+async def product_metered_unit(
+    save_fixture: SaveFixture, meter: Meter, organization: Organization
+) -> Product:
+    return await create_product(
+        save_fixture,
+        organization=organization,
+        recurring_interval=SubscriptionRecurringInterval.month,
+        prices=[(meter, Decimal(100), None, "usd")],
+    )
+
+
+@pytest_asyncio.fixture
+async def metered_subscription(
+    save_fixture: SaveFixture, customer: Customer, product_metered_unit: Product
+) -> Subscription:
+    return await create_active_subscription(
+        save_fixture, customer=customer, product=product_metered_unit
+    )
+
+
+@pytest.mark.asyncio
+class TestMeterArchive:
+    async def test_archive_success(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        meter: Meter,
+        organization: Organization,
+        auth_subject: AuthSubject[Organization],
+    ) -> None:
+        # Archive meter with no attachments
+        result = await meter_service.archive(session, meter)
+
+        assert result.archived_at is not None
+        assert meter.archived_at is not None
+
+    async def test_archive_with_active_product_price(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        meter: Meter,
+        product_metered_unit: Product,
+        organization: Organization,
+        auth_subject: AuthSubject[Organization],
+    ) -> None:
+        # Try to archive meter that's attached to an active product
+        with pytest.raises(PolarRequestValidationError) as exc:
+            await meter_service.archive(session, meter)
+        assert (
+            "Cannot archive meter that is still attached to active products"
+            in exc.value.errors()[0]["msg"]
+        )
+
+    async def test_archive_with_active_tiered_product_price(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        meter: Meter,
+        organization: Organization,
+    ) -> None:
+        product = await create_product(
+            save_fixture,
+            organization=organization,
+            recurring_interval=SubscriptionRecurringInterval.month,
+            prices=[],
+        )
+        await create_product_price_metered_tiers(
+            save_fixture,
+            product=product,
+            meter=meter,
+            tiers=Tiers.model_validate(
+                {
+                    "type": TierType.volume,
+                    "tiers": [{"bound": None, "unit_amount": "100"}],
+                }
+            ),
+        )
+
+        with pytest.raises(PolarRequestValidationError) as exc:
+            await meter_service.archive(session, meter)
+        assert (
+            "Cannot archive meter that is still attached to active products"
+            in exc.value.errors()[0]["msg"]
+        )
+
+    async def test_archive_with_archived_product_price(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        meter: Meter,
+        product_metered_unit: Product,
+        organization: Organization,
+        auth_subject: AuthSubject[Organization],
+    ) -> None:
+        # Archive the product price first
+        price = product_metered_unit.prices[0]
+        price.is_archived = True
+        await save_fixture(price)
+
+        # Now archiving the meter should succeed
+        result = await meter_service.archive(session, meter)
+
+        assert result.archived_at is not None
+
+    async def test_archive_with_active_benefit(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        meter: Meter,
+        organization: Organization,
+        auth_subject: AuthSubject[Organization],
+    ) -> None:
+        # Create a benefit that references the meter
+        benefit = Benefit(
+            type=BenefitType.meter_credit,
+            properties={"meter_id": str(meter.id), "units": 100, "rollover": True},
+            organization=organization,
+            description="Test meter credit benefit",
+        )
+        await save_fixture(benefit)
+
+        # Try to archive meter that's referenced by an active benefit
+        with pytest.raises(PolarRequestValidationError) as exc:
+            await meter_service.archive(session, meter)
+        assert (
+            "Cannot archive meter that is still referenced by active benefits"
+            in exc.value.errors()[0]["msg"]
+        )
+
+    async def test_unarchive_success(
+        self,
+        save_fixture: SaveFixture,
+        tinybird_client: TinybirdClient,
+        session: AsyncSession,
+        meter: Meter,
+        organization: Organization,
+        auth_subject: AuthSubject[Organization],
+    ) -> None:
+        # First archive the meter
+        await meter_service.archive(session, meter)
+        assert meter.archived_at is not None
+
+        # Then unarchive it
+        result = await meter_service.unarchive(session, meter)
+
+        assert result.archived_at is None
+        assert meter.archived_at is None
+
+    async def test_unarchive_queues_customer_meter_updates(
+        self,
+        save_fixture: SaveFixture,
+        buffered_save_fixture: SaveFixture,
+        flush_tinybird_events: Callable[[], Awaitable[None]],
+        enqueue_job_mock: MagicMock,
+        session: AsyncSession,
+        meter: Meter,
+        customer: Customer,
+        organization: Organization,
+        auth_subject: AuthSubject[Organization],
+    ) -> None:
+        deleted_customer = await create_customer(
+            save_fixture, organization=organization
+        )
+        deleted_customer.set_deleted_at()
+        await save_fixture(deleted_customer)
+
+        # Create an event that matches the meter for this customer
+        # (default name="TEST_EVENT" matches the default meter filter)
+        await create_event(
+            buffered_save_fixture,
+            organization=organization,
+            customer=customer,
+        )
+
+        # Create an event for the deleted customer that matches the meter - should be ignored
+        await create_event(
+            buffered_save_fixture,
+            organization=organization,
+            customer=deleted_customer,
+        )
+
+        await flush_tinybird_events()
+
+        # First archive the meter
+        await meter_service.archive(session, meter)
+        assert meter.archived_at is not None
+
+        # Unarchive the meter - should queue customer meter updates
+        await meter_service.unarchive(session, meter)
+
+        # Job is enqueued
+        enqueue_job_mock.assert_called_once_with(
+            "customer_meter.update_customer", customer.id
+        )
+
+    async def test_unarchive_does_not_touch_unrelated_customers(
+        self,
+        enqueue_job_mock: MagicMock,
+        save_fixture: SaveFixture,
+        tinybird_client: TinybirdClient,
+        session: AsyncSession,
+        meter: Meter,
+        customer: Customer,
+        organization: Organization,
+        auth_subject: AuthSubject[Organization],
+    ) -> None:
+        # Don't create any events for this customer
+        # First archive the meter
+        await meter_service.archive(session, meter)
+        assert meter.archived_at is not None
+
+        # Unarchive the meter - should NOT touch customers without matching events
+        await meter_service.unarchive(session, meter)
+
+        # Job is not enqueued
+        enqueue_job_mock.assert_not_called()

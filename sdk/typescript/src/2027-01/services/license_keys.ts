@@ -1,0 +1,403 @@
+import type { ClientBase, RequestOptions } from "../../base";
+import type {
+  LicenseKeyActivate,
+  LicenseKeyActivationCreated,
+  LicenseKeyActivationRead,
+  LicenseKeyDeactivate,
+  LicenseKeyRead,
+  LicenseKeyStatus,
+  LicenseKeyUpdate,
+  LicenseKeyValidate,
+  LicenseKeyWithActivations,
+  ListResourceLicenseKeyRead,
+  RotatedLicenseKey,
+  ValidatedLicenseKey,
+} from "../models";
+
+import {
+  BadRequest,
+  HTTPValidationError,
+  NotPermitted,
+  ResourceNotFound,
+  RotateNotPermitted,
+  Unauthorized,
+} from "../errors";
+
+export const listLicenseKeys = (client: ClientBase) => {
+  /**
+   * Get license keys connected to the given organization & filters.
+   *
+   * **Scopes**: `license_keys:read` `license_keys:write`
+   *
+   * @param query - Query parameters
+   * @param requestOptions - Request options
+   * @returns {ListResourceLicenseKeyRead}
+   * @throws {PolarNetworkError} When a network error occurs
+   * @throws {PolarRateLimitError} When the rate limit is exceeded
+   * @throws {PolarServerError} When the server returns a 5xx error
+   * @throws {Unauthorized} Not authorized to manage license key.
+   * @throws {ResourceNotFound} License key not found.
+   * @throws {HTTPValidationError} Validation Error
+   */
+  return async (
+    query?: {
+      organization_id?: string | string[] | null;
+      benefit_id?: string | string[] | null;
+      status?: LicenseKeyStatus | LicenseKeyStatus[] | null;
+      page?: number;
+      limit?: number;
+    },
+    requestOptions?: RequestOptions,
+  ): Promise<ListResourceLicenseKeyRead> => {
+    const pathParams = {};
+    const queryParams = {
+      organization_id: query?.organization_id,
+      benefit_id: query?.benefit_id,
+      status: query?.status,
+      page: query?.page ?? 1,
+      limit: query?.limit ?? 10,
+    };
+    const request = client.buildRequest(
+      "GET",
+      "/v1/license-keys/",
+      pathParams,
+      queryParams,
+      undefined,
+    );
+    const response = await client.sendRequest(request, requestOptions);
+    return client.parseResponse<ListResourceLicenseKeyRead>(response, "json", {
+      401: Unauthorized,
+      404: ResourceNotFound,
+      422: HTTPValidationError,
+    });
+  };
+};
+/**
+ * Get license keys connected to the given organization & filters.
+ *
+ * **Scopes**: `license_keys:read` `license_keys:write`
+ *
+ * @param query - Query parameters
+ * @param requestOptions - Request options
+ * @returns {AsyncGenerator<LicenseKeyRead>} A generator that yields items of type LicenseKeyRead.
+ * @throws {PolarNetworkError} When a network error occurs
+ * @throws {PolarRateLimitError} When the rate limit is exceeded
+ * @throws {PolarServerError} When the server returns a 5xx error
+ * @throws {Unauthorized} Not authorized to manage license key.
+ * @throws {ResourceNotFound} License key not found.
+ * @throws {HTTPValidationError} Validation Error
+ */
+export const iterListLicenseKeys = (client: ClientBase) => {
+  return async function* (
+    query?: {
+      organization_id?: string | string[] | null;
+      benefit_id?: string | string[] | null;
+      status?: LicenseKeyStatus | LicenseKeyStatus[] | null;
+      page?: number;
+      limit?: number;
+    },
+    requestOptions?: RequestOptions,
+  ): AsyncGenerator<LicenseKeyRead> {
+    let page: number;
+    page = query?.page ?? 1;
+    let limit: number | undefined;
+    limit = query?.limit;
+
+    while (true) {
+      const response = await listLicenseKeys(client)({ ...query, page, limit }, requestOptions);
+      for (const item of response.items) {
+        yield item;
+      }
+      if (page >= response.pagination.max_page) {
+        break;
+      }
+      page++;
+    }
+  };
+};
+export const getLicenseKeys = (client: ClientBase) => {
+  /**
+   * Get a license key.
+   *
+   * **Scopes**: `license_keys:read` `license_keys:write`
+   *
+   * @param id
+   * @param requestOptions - Request options
+   * @returns {LicenseKeyWithActivations}
+   * @throws {PolarNetworkError} When a network error occurs
+   * @throws {PolarRateLimitError} When the rate limit is exceeded
+   * @throws {PolarServerError} When the server returns a 5xx error
+   * @throws {Unauthorized} Not authorized to manage license key.
+   * @throws {ResourceNotFound} License key not found.
+   * @throws {HTTPValidationError} Validation Error
+   */
+  return async (
+    id: string,
+    requestOptions?: RequestOptions,
+  ): Promise<LicenseKeyWithActivations> => {
+    const pathParams = {
+      id: id,
+    };
+    const queryParams = {};
+    const request = client.buildRequest(
+      "GET",
+      "/v1/license-keys/{id}",
+      pathParams,
+      queryParams,
+      undefined,
+    );
+    const response = await client.sendRequest(request, requestOptions);
+    return client.parseResponse<LicenseKeyWithActivations>(response, "json", {
+      401: Unauthorized,
+      404: ResourceNotFound,
+      422: HTTPValidationError,
+    });
+  };
+};
+export const updateLicenseKeys = (client: ClientBase) => {
+  /**
+   * Update a license key.
+   *
+   * **Scopes**: `license_keys:write`
+   *
+   * @param id
+   * @param body - Request body
+   * @param requestOptions - Request options
+   * @returns {LicenseKeyRead}
+   * @throws {PolarNetworkError} When a network error occurs
+   * @throws {PolarRateLimitError} When the rate limit is exceeded
+   * @throws {PolarServerError} When the server returns a 5xx error
+   * @throws {Unauthorized} Not authorized to manage license key.
+   * @throws {ResourceNotFound} License key not found.
+   * @throws {HTTPValidationError} Validation Error
+   */
+  return async (
+    id: string,
+    body: LicenseKeyUpdate,
+    requestOptions?: RequestOptions,
+  ): Promise<LicenseKeyRead> => {
+    const pathParams = {
+      id: id,
+    };
+    const queryParams = {};
+    const request = client.buildRequest(
+      "PATCH",
+      "/v1/license-keys/{id}",
+      pathParams,
+      queryParams,
+      body,
+    );
+    const response = await client.sendRequest(request, requestOptions);
+    return client.parseResponse<LicenseKeyRead>(response, "json", {
+      401: Unauthorized,
+      404: ResourceNotFound,
+      422: HTTPValidationError,
+    });
+  };
+};
+export const rotateLicenseKeys = (client: ClientBase) => {
+  /**
+   * Rotate a license key.
+   *
+   * Generates a new key string for the same license key record. The previous
+   * key string immediately stops validating. Status, usage, limits, expiry,
+   * and activations are preserved.
+   *
+   * **Scopes**: `license_keys:write`
+   *
+   * @param id
+   * @param requestOptions - Request options
+   * @returns {RotatedLicenseKey}
+   * @throws {PolarNetworkError} When a network error occurs
+   * @throws {PolarRateLimitError} When the rate limit is exceeded
+   * @throws {PolarServerError} When the server returns a 5xx error
+   * @throws {RotateNotPermitted} License key cannot be rotated in its current status. Allowed statuses: disabled, granted.
+   * @throws {Unauthorized} Not authorized to manage license key.
+   * @throws {ResourceNotFound} License key not found.
+   * @throws {HTTPValidationError} Validation Error
+   */
+  return async (id: string, requestOptions?: RequestOptions): Promise<RotatedLicenseKey> => {
+    const pathParams = {
+      id: id,
+    };
+    const queryParams = {};
+    const request = client.buildRequest(
+      "POST",
+      "/v1/license-keys/{id}/rotate",
+      pathParams,
+      queryParams,
+      undefined,
+    );
+    const response = await client.sendRequest(request, requestOptions);
+    return client.parseResponse<RotatedLicenseKey>(response, "json", {
+      400: RotateNotPermitted,
+      401: Unauthorized,
+      404: ResourceNotFound,
+      422: HTTPValidationError,
+    });
+  };
+};
+export const getActivationLicenseKeys = (client: ClientBase) => {
+  /**
+   * Get a license key activation.
+   *
+   * **Scopes**: `license_keys:read` `license_keys:write`
+   *
+   * @param id
+   * @param activation_id
+   * @param requestOptions - Request options
+   * @returns {LicenseKeyActivationRead}
+   * @throws {PolarNetworkError} When a network error occurs
+   * @throws {PolarRateLimitError} When the rate limit is exceeded
+   * @throws {PolarServerError} When the server returns a 5xx error
+   * @throws {Unauthorized} Not authorized to manage license key.
+   * @throws {ResourceNotFound} License key or activation not found, or activation does not belong to the license key.
+   * @throws {HTTPValidationError} Validation Error
+   */
+  return async (
+    id: string,
+    activation_id: string,
+    requestOptions?: RequestOptions,
+  ): Promise<LicenseKeyActivationRead> => {
+    const pathParams = {
+      id: id,
+      activation_id: activation_id,
+    };
+    const queryParams = {};
+    const request = client.buildRequest(
+      "GET",
+      "/v1/license-keys/{id}/activations/{activation_id}",
+      pathParams,
+      queryParams,
+      undefined,
+    );
+    const response = await client.sendRequest(request, requestOptions);
+    return client.parseResponse<LicenseKeyActivationRead>(response, "json", {
+      401: Unauthorized,
+      404: ResourceNotFound,
+      422: HTTPValidationError,
+    });
+  };
+};
+export const validateLicenseKeys = (client: ClientBase) => {
+  /**
+   * Validate a license key.
+   *
+   * **Scopes**: `license_keys:write`
+   *
+   * @param body - Request body
+   * @param requestOptions - Request options
+   * @returns {ValidatedLicenseKey}
+   * @throws {PolarNetworkError} When a network error occurs
+   * @throws {PolarRateLimitError} When the rate limit is exceeded
+   * @throws {PolarServerError} When the server returns a 5xx error
+   * @throws {BadRequest} The requested usage increment exceeds the license key's remaining usage allowance.
+   * @throws {ResourceNotFound} License key not found, revoked, disabled, or expired, or the supplied activation is missing or does not match, or the conditions, benefit, or customer do not match.
+   * @throws {HTTPValidationError} Validation Error
+   */
+  return async (
+    body: LicenseKeyValidate,
+    requestOptions?: RequestOptions,
+  ): Promise<ValidatedLicenseKey> => {
+    const pathParams = {};
+    const queryParams = {};
+    const request = client.buildRequest(
+      "POST",
+      "/v1/license-keys/validate",
+      pathParams,
+      queryParams,
+      body,
+    );
+    const response = await client.sendRequest(request, requestOptions);
+    return client.parseResponse<ValidatedLicenseKey>(response, "json", {
+      400: BadRequest,
+      404: ResourceNotFound,
+      422: HTTPValidationError,
+    });
+  };
+};
+export const activateLicenseKeys = (client: ClientBase) => {
+  /**
+   * Activate a license key instance.
+   *
+   * **Scopes**: `license_keys:write`
+   *
+   * @param body - Request body
+   * @param requestOptions - Request options
+   * @returns {LicenseKeyActivationCreated}
+   * @throws {PolarNetworkError} When a network error occurs
+   * @throws {PolarRateLimitError} When the rate limit is exceeded
+   * @throws {PolarServerError} When the server returns a 5xx error
+   * @throws {NotPermitted} License key is revoked, disabled, or expired, does not support activations, or has reached its activation limit. Use /validate for licenses without activations.
+   * @throws {ResourceNotFound} License key not found.
+   * @throws {HTTPValidationError} Validation Error
+   */
+  return async (
+    body: LicenseKeyActivate,
+    requestOptions?: RequestOptions,
+  ): Promise<LicenseKeyActivationCreated> => {
+    const pathParams = {};
+    const queryParams = {};
+    const request = client.buildRequest(
+      "POST",
+      "/v1/license-keys/activate",
+      pathParams,
+      queryParams,
+      body,
+    );
+    const response = await client.sendRequest(request, requestOptions);
+    return client.parseResponse<LicenseKeyActivationCreated>(response, "json", {
+      403: NotPermitted,
+      404: ResourceNotFound,
+      422: HTTPValidationError,
+    });
+  };
+};
+export const deactivateLicenseKeys = (client: ClientBase) => {
+  /**
+   * Deactivate a license key instance.
+   *
+   * **Scopes**: `license_keys:write`
+   *
+   * @param body - Request body
+   * @param requestOptions - Request options
+   * @returns {void}
+   * @throws {PolarNetworkError} When a network error occurs
+   * @throws {PolarRateLimitError} When the rate limit is exceeded
+   * @throws {PolarServerError} When the server returns a 5xx error
+   * @throws {ResourceNotFound} License key or activation not found, or activation does not belong to the license key.
+   * @throws {HTTPValidationError} Validation Error
+   */
+  return async (body: LicenseKeyDeactivate, requestOptions?: RequestOptions): Promise<void> => {
+    const pathParams = {};
+    const queryParams = {};
+    const request = client.buildRequest(
+      "POST",
+      "/v1/license-keys/deactivate",
+      pathParams,
+      queryParams,
+      body,
+    );
+    const response = await client.sendRequest(request, requestOptions);
+    return client.parseResponse<void>(response, "none", {
+      404: ResourceNotFound,
+      422: HTTPValidationError,
+    });
+  };
+};
+
+export function createLicenseKeysService(client: ClientBase) {
+  return {
+    list: listLicenseKeys(client),
+    get: getLicenseKeys(client),
+    update: updateLicenseKeys(client),
+    rotate: rotateLicenseKeys(client),
+    getActivation: getActivationLicenseKeys(client),
+    validate: validateLicenseKeys(client),
+    activate: activateLicenseKeys(client),
+    deactivate: deactivateLicenseKeys(client),
+    iterList: iterListLicenseKeys(client),
+  };
+}
+
+export type LicenseKeys = ReturnType<typeof createLicenseKeysService>;

@@ -1,0 +1,104 @@
+'use client'
+
+import { useUpdateOrganization } from '@/hooks/queries'
+import { useAutoSave } from '@/hooks/useAutoSave'
+import { extractApiErrorMessage, setValidationErrors } from '@/utils/api/errors'
+import { isValidationError, schemas } from '@polar-sh/client'
+import { Switch } from '@polar-sh/orbit'
+import { Form, FormField } from '@polar-sh/ui/components/ui/form'
+import { useForm } from 'react-hook-form'
+import { toast } from '../Toast/use-toast'
+import { SettingsGroup, SettingsGroupItem } from './SettingsGroup'
+
+export default function FeatureSettings({
+  organization,
+  readOnly,
+}: {
+  organization: schemas['Organization']
+  readOnly: boolean
+}) {
+  const form = useForm<schemas['OrganizationFeatureSettings']>({
+    defaultValues: organization.feature_settings || {},
+  })
+  const { control, setError } = form
+
+  const updateOrganization = useUpdateOrganization()
+  const onSave = async (
+    featureSettings: schemas['OrganizationFeatureSettings'],
+  ) => {
+    const { data, error } = await updateOrganization.mutateAsync({
+      id: organization.id,
+      body: {
+        feature_settings: featureSettings,
+      },
+    })
+
+    if (error) {
+      if (isValidationError(error.detail)) {
+        setValidationErrors(error.detail, setError)
+      } else {
+        setError('root', { message: error.detail })
+      }
+
+      toast({
+        title: 'Feature Settings Update Failed',
+        description: `Error updating feature settings: ${extractApiErrorMessage(error)}`,
+      })
+
+      return
+    }
+
+    return data.feature_settings ?? undefined
+  }
+
+  useAutoSave({
+    form,
+    onSave,
+    delay: 1000,
+  })
+
+  return (
+    <Form {...form}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+        }}
+      >
+        <SettingsGroup>
+          <SettingsGroupItem
+            layout="inline"
+            title="Localized Checkout"
+            description={
+              <>
+                Show{' '}
+                <a
+                  href="https://polar.sh/docs/features/checkout/localization"
+                  target="_blank"
+                  className="underline"
+                  rel="noreferrer noopener"
+                >
+                  translated checkouts
+                </a>{' '}
+                to your customers.
+              </>
+            }
+          >
+            <FormField
+              control={control}
+              name="checkout_localization_enabled"
+              render={({ field }) => {
+                return (
+                  <Switch
+                    checked={field.value}
+                    disabled={readOnly}
+                    onCheckedChange={(enabled) => field.onChange(enabled)}
+                  />
+                )
+              }}
+            />
+          </SettingsGroupItem>
+        </SettingsGroup>
+      </form>
+    </Form>
+  )
+}

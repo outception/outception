@@ -1,0 +1,584 @@
+import { useAuth } from '@/hooks'
+import { useUpdateOrganization } from '@/hooks/queries'
+import { useAutoSave } from '@/hooks/useAutoSave'
+import { useURLValidation } from '@/hooks/useURLValidation'
+import { setValidationErrors } from '@/utils/api/errors'
+import { containsBlockedWord } from '@/utils/blocked-words'
+import AddOutlined from '@mui/icons-material/AddOutlined'
+import AddPhotoAlternateOutlined from '@mui/icons-material/AddPhotoAlternateOutlined'
+import CloseOutlined from '@mui/icons-material/CloseOutlined'
+import Facebook from '@mui/icons-material/Facebook'
+import GitHub from '@mui/icons-material/GitHub'
+import Instagram from '@mui/icons-material/Instagram'
+import LinkedIn from '@mui/icons-material/LinkedIn'
+import Public from '@mui/icons-material/Public'
+import X from '@mui/icons-material/X'
+import YouTube from '@mui/icons-material/YouTube'
+import { enums, isValidationError, schemas } from '@polar-sh/client'
+import { Avatar } from '@polar-sh/orbit'
+import { Button } from '@polar-sh/orbit'
+import CopyToClipboardInput from '@polar-sh/ui/components/atoms/CopyToClipboardInput'
+import CountryPicker from '@polar-sh/ui/components/atoms/CountryPicker'
+import { Input } from '@polar-sh/orbit'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormMessage,
+} from '@polar-sh/ui/components/ui/form'
+import { AlertTriangle, CheckCircle, Loader2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import React, { useCallback } from 'react'
+import { FileRejection } from 'react-dropzone'
+import { useForm, useFormContext, useWatch } from 'react-hook-form'
+import { twMerge } from 'tailwind-merge'
+import { FileObject, useFileUpload } from '../FileUpload'
+import { toast } from '../Toast/use-toast'
+import { SettingsGroup, SettingsGroupItem } from './SettingsGroup'
+
+interface OrganizationDetailsFormProps {
+  organization: schemas['Organization']
+  readOnly: boolean
+}
+
+const SOCIAL_PLATFORM_DOMAINS: Record<string, string> = {
+  'x.com': 'x',
+  'twitter.com': 'x',
+  'instagram.com': 'instagram',
+  'facebook.com': 'facebook',
+  'fb.com': 'facebook',
+  'youtube.com': 'youtube',
+  'youtu.be': 'youtube',
+  'linkedin.com': 'linkedin',
+  'github.com': 'github',
+  'threads.net': 'threads',
+  'tiktok.com': 'tiktok',
+  'discord.gg': 'discord',
+  'discord.com': 'discord',
+}
+
+interface OrganizationSocialLinksProps {
+  readOnly: boolean
+}
+
+const OrganizationSocialLinks = ({
+  readOnly,
+}: OrganizationSocialLinksProps) => {
+  const { control } = useFormContext<schemas['OrganizationUpdate']>()
+
+  const getIcon = (platform: string, className: string) => {
+    switch (platform) {
+      case 'x':
+        return <X className={className} />
+      case 'instagram':
+        return <Instagram className={className} />
+      case 'facebook':
+        return <Facebook className={className} />
+      case 'github':
+        return <GitHub className={className} />
+      case 'youtube':
+        return <YouTube className={className} />
+      case 'linkedin':
+        return <LinkedIn className={className} />
+      default:
+        return <Public className={className} />
+    }
+  }
+
+  const handleChange = (
+    index: number,
+    value: string,
+    socials: schemas['OrganizationSocialLink'][],
+    updateField: (value: schemas['OrganizationSocialLink'][]) => void,
+  ) => {
+    if (value.startsWith('http://')) {
+      value = value.replace('http://', 'https://')
+    }
+    const hasProtocol = value.startsWith('https://')
+    const isTypingProtocol =
+      'https://'.startsWith(value) || 'http://'.startsWith(value)
+    if (!hasProtocol && !isTypingProtocol) {
+      value = 'https://' + value
+    }
+
+    // Infer the platform from the URL
+    let newPlatform: schemas['OrganizationSocialPlatforms'] = 'other'
+    try {
+      const url = new URL(value)
+      let hostname = url.hostname
+      if (hostname.startsWith('www.')) {
+        hostname = hostname.slice(4)
+      }
+      newPlatform = (SOCIAL_PLATFORM_DOMAINS[hostname] ??
+        'other') as schemas['OrganizationSocialPlatforms']
+      // oxlint-disable-next-line no-empty
+    } catch {}
+
+    // Update the socials array
+    const updatedSocials = [...socials]
+    updatedSocials[index] = { platform: newPlatform, url: value }
+    updateField(updatedSocials)
+  }
+
+  return (
+    <FormField
+      control={control}
+      name="socials"
+      render={({ field }) => {
+        const socials = field.value || []
+
+        return (
+          <div className="space-y-3">
+            {socials.map((social, index) => (
+              <div key={index} className="flex items-center gap-3">
+                <div className="flex w-5 justify-center">
+                  {getIcon(social.platform, 'text-gray-400 h-4 w-4')}
+                </div>
+                <Input
+                  type="url"
+                  value={social.url || ''}
+                  onChange={(e) =>
+                    handleChange(index, e.target.value, socials, field.onChange)
+                  }
+                  placeholder="https://"
+                  className="flex-1"
+                  disabled={readOnly}
+                />
+                <span
+                  className={twMerge(
+                    'inline-flex',
+                    readOnly && 'cursor-not-allowed',
+                  )}
+                >
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    disabled={readOnly}
+                    onClick={() => {
+                      field.onChange(socials.filter((_, i) => i !== index))
+                    }}
+                    className="dark:text-polar-400 text-gray-400 hover:text-gray-600"
+                  >
+                    <CloseOutlined fontSize="small" />
+                  </Button>
+                </span>
+              </div>
+            ))}
+            <span
+              className={twMerge(
+                'inline-block',
+                readOnly && 'cursor-not-allowed',
+              )}
+            >
+              <Button
+                type="button"
+                disabled={readOnly}
+                size="sm"
+                variant="secondary"
+                onClick={() => {
+                  field.onChange([...socials, { platform: 'other', url: '' }])
+                }}
+              >
+                <AddOutlined fontSize="small" className="mr-1" />
+                Add Social
+              </Button>
+            </span>
+          </div>
+        )
+      }}
+    />
+  )
+}
+
+const OrganizationDetailsForm: React.FC<OrganizationDetailsFormProps> = ({
+  organization,
+  readOnly,
+}) => {
+  const { control, setError, setValue } =
+    useFormContext<schemas['OrganizationUpdate']>()
+  const { name, avatar_url: avatarURL } = useWatch({ control })
+
+  const { status: urlStatus, validateURL } = useURLValidation({
+    organizationId: organization.id,
+  })
+
+  const onFilesUpdated = useCallback(
+    (files: FileObject<schemas['OrganizationAvatarFileRead']>[]) => {
+      if (files.length === 0) {
+        return
+      }
+      const lastFile = files[files.length - 1]
+      setValue('avatar_url', lastFile.public_url, { shouldDirty: true })
+    },
+    [setValue],
+  )
+  const onFilesRejected = useCallback(
+    (rejections: FileRejection[]) => {
+      rejections.forEach((rejection) => {
+        setError('avatar_url', { message: rejection.errors[0].message })
+      })
+    },
+    [setError],
+  )
+  const { getRootProps, getInputProps, isDragActive } = useFileUpload({
+    organization: organization,
+    service: 'organization_avatar',
+    accept: {
+      'image/jpeg': [],
+      'image/png': [],
+      'image/gif': [],
+      'image/webp': [],
+      'image/svg+xml': [],
+    },
+    maxSize: 1 * 1024 * 1024,
+    onFilesUpdated,
+    onFilesRejected,
+    initialFiles: [],
+    disabled: readOnly,
+  })
+
+  return (
+    <div className="space-y-8">
+      {/* Basic Info - Always Visible */}
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-[auto_1fr] sm:gap-x-5">
+          <div>
+            <label className="mb-2 block text-sm font-medium">Logo</label>
+            <FormField
+              control={control}
+              name="avatar_url"
+              render={() => (
+                <div>
+                  <div
+                    {...getRootProps()}
+                    className={twMerge(
+                      'relative',
+                      readOnly ? 'cursor-not-allowed' : 'cursor-pointer',
+                      isDragActive && 'opacity-50',
+                    )}
+                  >
+                    <input {...getInputProps()} />
+                    <Avatar
+                      avatar_url={avatarURL ?? ''}
+                      name={name ?? ''}
+                      className={twMerge(
+                        'h-10 w-10 transition-opacity',
+                        !readOnly && 'hover:opacity-75',
+                      )}
+                    />
+                    {!readOnly && (
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity hover:opacity-100">
+                        <AddPhotoAlternateOutlined className="dark:text-polar-400 text-gray-600" />
+                      </div>
+                    )}
+                  </div>
+                  <FormMessage className="mt-2 text-xs/snug" />
+                </div>
+              )}
+            />
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="mb-2 block text-sm font-medium">
+                Organization Name *
+              </label>
+              <FormField
+                control={control}
+                name="name"
+                rules={{
+                  required: 'Organization name is required',
+                  validate: (v) =>
+                    !containsBlockedWord(v ?? '') ||
+                    'This name is not allowed.',
+                }}
+                render={({ field }) => (
+                  <div>
+                    <Input
+                      {...field}
+                      value={field.value || ''}
+                      placeholder="Acme Inc"
+                      disabled={readOnly}
+                    />
+                    <FormMessage />
+                  </div>
+                )}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-2 block text-sm font-medium">Country</label>
+          <FormField
+            control={control}
+            name="country"
+            render={({ field }) => (
+              <div>
+                <CountryPicker
+                  allowedCountries={enums.addressInputCountryValues}
+                  value={
+                    (field.value as schemas['CountryAlpha2Input']) ?? undefined
+                  }
+                  onChange={field.onChange as (value: string) => void}
+                  placeholder="Select country"
+                  disabled={readOnly}
+                />
+                <FormMessage />
+              </div>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div>
+            <label className="mb-2 block text-sm font-medium">Website *</label>
+            <FormField
+              control={control}
+              name="website"
+              rules={{
+                required: 'Website is required',
+                validate: (value) => {
+                  if (!value) return 'Website is required'
+                  if (!value.startsWith('https://')) {
+                    return 'Website must start with https://'
+                  }
+                  try {
+                    new URL(value)
+                    return true
+                  } catch {
+                    return 'Please enter a valid URL'
+                  }
+                },
+              }}
+              render={({ field }) => (
+                <div>
+                  <Input
+                    type="url"
+                    {...field}
+                    value={field.value || ''}
+                    disabled={readOnly}
+                    placeholder="https://acme.com"
+                    onChange={(e) => {
+                      let value = e.target.value
+                      if (value.startsWith('http://')) {
+                        value = value.replace('http://', 'https://')
+                      }
+                      const hasProtocol = value.startsWith('https://')
+                      const isTypingProtocol =
+                        'https://'.startsWith(value) ||
+                        'http://'.startsWith(value)
+                      if (!hasProtocol && !isTypingProtocol) {
+                        value = 'https://' + value
+                      }
+                      field.onChange(value)
+                    }}
+                    onBlur={(e) => {
+                      field.onBlur()
+                      validateURL(e.target.value)
+                    }}
+                    postSlot={
+                      urlStatus === 'validating' ? (
+                        <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                      ) : urlStatus === 'valid' ? (
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      ) : urlStatus === 'invalid' ? (
+                        <AlertTriangle className="h-4 w-4 text-amber-500" />
+                      ) : null
+                    }
+                  />
+                  <FormMessage />
+                  {urlStatus === 'invalid' && (
+                    <p className="mt-1 text-xs text-amber-600">
+                      Website appears to be unreachable
+                    </p>
+                  )}
+                </div>
+              )}
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium">
+              Support Email *
+            </label>
+            <FormField
+              control={control}
+              name="email"
+              rules={{ required: 'Support email is required' }}
+              render={({ field }) => (
+                <div>
+                  <Input
+                    type="email"
+                    {...field}
+                    disabled={readOnly}
+                    value={field.value || ''}
+                    placeholder="support@acme.com"
+                  />
+                  <FormMessage />
+                </div>
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Social Links - Progressive Disclosure */}
+        <div>
+          <div className="mb-4 flex flex-col items-start">
+            <label className="block text-sm font-medium">Social Media</label>
+            <p className="dark:text-polar-400 mt-2 text-xs text-gray-600">
+              Your personal social media links are used for identity
+              verification. They will never be shown publicly.
+            </p>
+          </div>
+          <OrganizationSocialLinks readOnly={readOnly} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+interface OrganizationProfileSettingsProps {
+  organization: schemas['Organization']
+  readOnly: boolean
+}
+
+const OrganizationProfileSettings: React.FC<
+  OrganizationProfileSettingsProps
+> = ({ organization: _organization, readOnly }) => {
+  const organization = _organization as schemas['Organization'] & {
+    default_presentment_currency: schemas['PresentmentCurrency']
+    country?: schemas['CountryAlpha2Input']
+  }
+  const router = useRouter()
+
+  const form = useForm<schemas['OrganizationUpdate']>({
+    defaultValues: {
+      ...organization,
+    },
+  })
+  const { setError } = form
+
+  const { currentUser } = useAuth()
+
+  const updateOrganization = useUpdateOrganization()
+
+  const onSave = async (body: schemas['OrganizationUpdate']) => {
+    const emptySocials =
+      body.socials?.filter(
+        (social) => !social.url || social.url.trim() === '',
+      ) || []
+    const cleanedBody = {
+      ...body,
+      socials: body.socials?.filter(
+        (social) => social.url && social.url.trim() !== '',
+      ),
+      details: body.details
+        ? {
+            ...body.details,
+            switching: !!body.details.switching_from,
+            switching_from: body.details.switching_from || undefined,
+          }
+        : body.details,
+    }
+
+    const { data, error } = await updateOrganization.mutateAsync({
+      id: organization.id,
+      body: cleanedBody,
+      userId: currentUser?.id,
+    })
+
+    if (error) {
+      const errorMessage = Array.isArray(error.detail)
+        ? error.detail[0]?.msg ||
+          'An error occurred while updating the organization'
+        : typeof error.detail === 'string'
+          ? error.detail
+          : 'An error occurred while updating the organization'
+
+      if (isValidationError(error.detail)) {
+        setValidationErrors(error.detail, setError)
+      } else {
+        setError('root', { message: errorMessage })
+      }
+
+      toast({
+        title: 'Organization Update Failed',
+        description: errorMessage,
+      })
+
+      return
+    }
+
+    // Refresh the router to get the updated organization data from the server
+    router.refresh()
+
+    return {
+      ...data,
+      default_presentment_currency:
+        data.default_presentment_currency as schemas['PresentmentCurrency'],
+      country: data.country as schemas['CountryAlpha2Input'] | undefined,
+      socials: [...(data.socials || []), ...emptySocials],
+    }
+  }
+
+  useAutoSave({
+    form,
+    onSave,
+    delay: 1000,
+  })
+
+  return (
+    <Form {...form}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+        }}
+      >
+        <SettingsGroup>
+          <SettingsGroupItem
+            title="Identifier"
+            description="Unique identifier for your organization"
+          >
+            <FormControl>
+              <CopyToClipboardInput
+                value={organization.id}
+                onCopy={() => {
+                  toast({
+                    title: 'Copied To Clipboard',
+                    description: `Organization ID was copied to clipboard`,
+                  })
+                }}
+              />
+            </FormControl>
+          </SettingsGroupItem>
+          <SettingsGroupItem
+            title="Organization Slug"
+            description="Used for Customer Portal, Transaction Statements, etc."
+          >
+            <FormControl>
+              <CopyToClipboardInput
+                value={organization.slug}
+                onCopy={() => {
+                  toast({
+                    title: 'Copied To Clipboard',
+                    description: `Organization Slug was copied to clipboard`,
+                  })
+                }}
+              />
+            </FormControl>
+          </SettingsGroupItem>
+          <div className="flex flex-col gap-y-4 p-4">
+            <OrganizationDetailsForm
+              organization={organization}
+              readOnly={readOnly}
+            />
+          </div>
+        </SettingsGroup>
+      </form>
+    </Form>
+  )
+}
+
+export default OrganizationProfileSettings

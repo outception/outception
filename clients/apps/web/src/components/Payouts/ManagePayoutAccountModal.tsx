@@ -1,0 +1,354 @@
+import AccessRestricted from '@/components/Finance/AccessRestricted'
+import { payoutOnboardingReturnPath } from '@/components/Finance/payoutOnboardingReturn'
+import { toast } from '@/components/Toast/use-toast'
+import { useHasPermission } from '@/hooks/permissions'
+import {
+  useDeletePayoutAccount,
+  usePayoutAccounts,
+  useSetOrganizationPayoutAccount,
+} from '@/hooks/queries/payout_accounts'
+import { extractApiErrorMessage } from '@/utils/api/errors'
+import { api } from '@/utils/client'
+import { permissionDeniedMessage } from '@/utils/permissions'
+import { schemas, unwrap } from '@polar-sh/client'
+import {
+  Button,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@polar-sh/orbit'
+import { Box } from '@polar-sh/orbit/Box'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@polar-sh/ui/components/ui/dropdown-menu'
+import FormattedDateTime from '@polar-sh/ui/components/atoms/FormattedDateTime'
+import MoreVertOutlined from '@mui/icons-material/MoreVertOutlined'
+import { ExternalLink, Plus, Trash2 } from 'lucide-react'
+import React, { useCallback, useState } from 'react'
+import { useOrganization } from '@/hooks/queries'
+
+interface ManagePayoutAccountModalProps {
+  organization: schemas['Organization']
+  onCreateNew: () => void
+}
+
+const ManagePayoutAccountModal: React.FC<ManagePayoutAccountModalProps> = ({
+  organization: _organization,
+  onCreateNew,
+}) => {
+  const canManageOrganization = useHasPermission(
+    _organization.id,
+    'organization:manage',
+  )
+  const { data: organization, refetch: refetchOrganization } = useOrganization(
+    _organization.id,
+    true,
+    _organization,
+  )
+  const {
+    data: payoutAccountsList,
+    isLoading,
+    refetch: refetchPayoutAccounts,
+  } = usePayoutAccounts()
+  const deletePayoutAccount = useDeletePayoutAccount()
+  const setOrganizationPayoutAccount = useSetOrganizationPayoutAccount(
+    _organization.id,
+  )
+  const [loadingDashboardId, setLoadingDashboardId] = useState<string | null>(
+    null,
+  )
+
+  const handleOpenStripeLink = useCallback(
+    async (payoutAccount: schemas['PayoutAccount']) => {
+      setLoadingDashboardId(payoutAccount.id)
+      try {
+        const link = await unwrap(
+          payoutAccount.is_payout_ready
+            ? api.POST('/v1/payout-accounts/{id}/dashboard-link', {
+                params: { path: { id: payoutAccount.id } },
+              })
+            : api.POST('/v1/payout-accounts/{id}/onboarding-link', {
+                params: {
+                  path: { id: payoutAccount.id },
+                  query: {
+                    return_path: payoutOnboardingReturnPath(
+                      _organization.slug,
+                      payoutAccount.id,
+                    ),
+                  },
+                },
+              }),
+        )
+        window.open(link.url, '_blank')
+      } catch {
+        toast({
+          title: payoutAccount.is_payout_ready
+            ? 'Failed to open Stripe dashboard'
+            : 'Failed to open Stripe onboarding',
+          description: 'An error occurred while generating the link.',
+        })
+      } finally {
+        setLoadingDashboardId(null)
+      }
+    },
+    [_organization],
+  )
+
+  const handleSwitch = useCallback(
+    async (payoutAccountId: string) => {
+      const { error } =
+        await setOrganizationPayoutAccount.mutateAsync(payoutAccountId)
+      if (error) {
+        toast({
+          title: 'Failed to switch payout account',
+          description: extractApiErrorMessage(
+            error,
+            'An error occurred while switching the payout account.',
+          ),
+        })
+      } else {
+        toast({
+          title: 'Payout account updated',
+          description: 'Your active payout account has been updated.',
+        })
+        refetchOrganization()
+        refetchPayoutAccounts()
+      }
+    },
+    [setOrganizationPayoutAccount, refetchOrganization, refetchPayoutAccounts],
+  )
+
+  const handleDelete = useCallback(
+    async (payoutAccountId: string) => {
+      const { error } = await deletePayoutAccount.mutateAsync(payoutAccountId)
+      if (error) {
+        toast({
+          title: 'Failed to delete payout account',
+          description: extractApiErrorMessage(
+            error,
+            'An error occurred while deleting the payout account.',
+          ),
+        })
+      } else {
+        toast({
+          title: 'Payout account deleted',
+          description: 'Your payout account has been successfully deleted.',
+        })
+        refetchOrganization()
+        refetchPayoutAccounts()
+      }
+    },
+    [deletePayoutAccount, refetchOrganization, refetchPayoutAccounts],
+  )
+
+  const accounts = [...(payoutAccountsList?.items ?? [])].sort((a, b) => {
+    const aActive =
+      organization && a.id === organization.payout_account_id ? 1 : 0
+    const bActive =
+      organization && b.id === organization.payout_account_id ? 1 : 0
+    return bActive - aActive
+  })
+
+  if (!canManageOrganization) {
+    return (
+      <Box flex={1} flexDirection="column" alignItems="center" padding="xl">
+        <AccessRestricted
+          message={permissionDeniedMessage('organization:manage')}
+        />
+      </Box>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-y-6 p-6 sm:p-8">
+      <h3 className="text-xl font-medium">Manage Payout Accounts</h3>
+      {isLoading ? (
+        <div className="flex flex-col gap-y-3">
+          {[...Array(2)].map((_, i) => (
+            <div
+              key={i}
+              className="dark:bg-polar-800 h-20 animate-pulse rounded-2xl bg-gray-100"
+            />
+          ))}
+        </div>
+      ) : accounts.length === 0 ? (
+        <p className="dark:text-polar-500 text-sm text-gray-500">
+          No payout accounts found.
+        </p>
+      ) : (
+        <ul className="flex flex-col gap-y-3">
+          {accounts.map((account) => {
+            const isActive =
+              organization && account.id === organization.payout_account_id
+
+            const isUnused = account.organizations.length === 0
+            const isShared = account.organizations.length > 1
+            return (
+              <li
+                key={account.id}
+                className="dark:border-polar-700 dark:bg-polar-800 flex flex-col gap-y-4 rounded-2xl border border-gray-200 bg-white p-4"
+              >
+                <div className="flex flex-row items-center justify-between gap-x-4">
+                  <div className="flex flex-row items-center gap-x-3">
+                    {account.processor_id ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="font-medium capitalize">
+                            {account.type}
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <span className="font-mono text-xs">
+                            {account.processor_id}
+                          </span>
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <span className="font-medium capitalize">
+                        {account.type}
+                      </span>
+                    )}
+                    {isActive && (
+                      <span className="dark:bg-polar-700 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-600 dark:text-blue-300">
+                        Active
+                      </span>
+                    )}
+                  </div>
+                  <div className="hidden flex-row flex-wrap justify-end gap-2 sm:flex">
+                    {account.type === 'stripe' && (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => handleOpenStripeLink(account)}
+                        loading={loadingDashboardId === account.id}
+                      >
+                        {account.is_payout_ready
+                          ? 'Open in Stripe'
+                          : 'Complete Setup'}
+                        <ExternalLink className="ml-2 h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                    {isUnused && (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => handleSwitch(account.id)}
+                        loading={setOrganizationPayoutAccount.isPending}
+                      >
+                        Make Active
+                      </Button>
+                    )}
+                    {isUnused && (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDelete(account.id)}
+                        loading={deletePayoutAccount.isPending}
+                      >
+                        <Trash2 className="mr-2 h-3.5 w-3.5" />
+                        Delete
+                      </Button>
+                    )}
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      className="focus:outline-none sm:hidden"
+                      asChild
+                    >
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        aria-label="Account actions"
+                      >
+                        <MoreVertOutlined fontSize="inherit" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      className="dark:bg-polar-800 bg-gray-50 shadow-lg"
+                    >
+                      {account.type === 'stripe' && (
+                        <DropdownMenuItem
+                          onClick={() => handleOpenStripeLink(account)}
+                        >
+                          {account.is_payout_ready
+                            ? 'Open in Stripe'
+                            : 'Complete Setup'}
+                        </DropdownMenuItem>
+                      )}
+                      {isUnused && (
+                        <DropdownMenuItem
+                          onClick={() => handleSwitch(account.id)}
+                        >
+                          Make Active
+                        </DropdownMenuItem>
+                      )}
+                      {isUnused && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            destructive
+                            disabled={deletePayoutAccount.isPending}
+                            onClick={() => handleDelete(account.id)}
+                          >
+                            Delete
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                <div className="dark:border-polar-700 flex flex-row items-center gap-x-4 border-t border-gray-100 pt-3">
+                  <span className="dark:text-polar-400 text-xs text-gray-500">
+                    {account.country.toUpperCase()} ·{' '}
+                    {account.currency.toUpperCase()} · Added{' '}
+                    <FormattedDateTime datetime={account.created_at} />
+                  </span>
+                  <span
+                    className={`inline-flex items-center gap-x-1.5 text-xs ${
+                      account.is_payout_ready
+                        ? 'text-green-600 dark:text-green-500'
+                        : 'text-yellow-600 dark:text-yellow-500'
+                    }`}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        account.is_payout_ready
+                          ? 'bg-green-600 dark:bg-green-500'
+                          : 'bg-yellow-600 dark:bg-yellow-500'
+                      }`}
+                    />
+                    {account.is_payout_ready ? 'Ready' : 'Setup required'}
+                  </span>
+                  <span className="dark:text-polar-400 text-xs text-gray-500">
+                    {isUnused
+                      ? 'Not used by any organization'
+                      : account.organizations
+                          .map(({ slug }) => slug)
+                          .join(', ')}
+                  </span>
+                </div>
+                {isShared && (
+                  <p className="text-xs text-orange-600 dark:text-orange-400">
+                    Stripe requires one payout account per organization. Give
+                    each of these their own.
+                  </p>
+                )}
+              </li>
+            )
+          })}
+        </ul>
+      )}
+      <Button className="self-start" variant="secondary" onClick={onCreateNew}>
+        <Plus className="mr-2 h-4 w-4" />
+        Add Payout Account
+      </Button>
+    </div>
+  )
+}
+
+export default ManagePayoutAccountModal

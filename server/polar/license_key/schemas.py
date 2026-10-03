@@ -1,0 +1,394 @@
+import typing
+from datetime import datetime
+from typing import Annotated, Literal, Self
+
+from dateutil.relativedelta import relativedelta
+from pydantic import UUID4, AliasChoices, AliasPath, Field
+from pydantic.json_schema import SkipJsonSchema
+
+from polar.benefit.schemas import BenefitID
+from polar.benefit.strategies.license_keys.properties import (
+    BenefitLicenseKeyActivationProperties,
+    BenefitLicenseKeyExpirationProperties,
+)
+from polar.customer.schemas.customer import CustomerBase
+from polar.exceptions import BadRequest, NotPermitted, ResourceNotFound, Unauthorized
+from polar.kit.metadata import (
+    MAXIMUM_KEYS,
+    METADATA_DESCRIPTION,
+    MetadataKey,
+    MetadataValue,
+)
+from polar.kit.schemas import IDSchema, Int32, Schema, TimestampedSchema
+from polar.kit.utils import generate_uuid, utc_now
+from polar.kit.versioning import Version
+from polar.models.license_key import LicenseKeyStatus
+from polar.models.order import OrderStatus
+from polar.models.subscription import SubscriptionStatus
+from polar.openapi import cli_confirm_one_of
+from polar.order.schemas import OrderBase
+from polar.subscription.schemas import SubscriptionBase
+from polar.version import V2026_10, V2027_01
+
+###############################################################################
+# RESPONSES
+###############################################################################
+
+NotFoundResponse = {
+    "description": "License key not found.",
+    "model": ResourceNotFound.schema(),
+}
+
+ActivationNotFoundResponse = {
+    "description": "License key or activation not found, or activation does not belong to the license key.",
+    "model": ResourceNotFound.schema(),
+}
+
+ValidationBadRequestResponse = {
+    "description": "The requested usage increment exceeds the license key's remaining usage allowance.",
+    "model": BadRequest.schema(),
+}
+
+ValidationNotFoundResponse = {
+    "description": (
+        "License key not found, revoked, disabled, or expired, "
+        "or the supplied activation is missing or does not match, or the conditions, benefit, or customer do not match."
+    ),
+    "model": ResourceNotFound.schema(),
+}
+
+UnauthorizedResponse = {
+    "description": "Not authorized to manage license key.",
+    "model": Unauthorized.schema(),
+}
+
+
+ActivationNotPermitted = {
+    "description": "License key is revoked, disabled, or expired, does not support activations, or has reached its activation limit. Use /validate for licenses without activations.",
+    "model": NotPermitted.schema(),
+}
+
+
+###############################################################################
+# RESPONSES
+###############################################################################
+
+ConditionsField = Annotated[
+    dict[MetadataKey, MetadataValue],
+    Field(
+        default_factory=dict,
+        max_length=MAXIMUM_KEYS,
+        description=METADATA_DESCRIPTION.format(
+            heading=(
+                "Key-value object allowing you to set conditions "
+                "that must match when validating the license key."
+            )
+        ),
+    ),
+]
+
+MetaField = Annotated[
+    dict[MetadataKey, MetadataValue],
+    Field(
+        default_factory=dict,
+        max_length=MAXIMUM_KEYS,
+        description=METADATA_DESCRIPTION.format(
+            heading=(
+                "Key-value object allowing you to store additional information "
+                "about the activation"
+            )
+        ),
+    ),
+]
+
+
+class LicenseKeyValidate(Schema):
+    key: str
+    organization_id: UUID4
+    activation_id: UUID4 | None = None
+    benefit_id: BenefitID | None = None
+    customer_id: UUID4 | None = None
+    increment_usage: int | None = Field(default=None, ge=0)
+    conditions: ConditionsField
+
+
+class LicenseKeyActivate(Schema):
+    key: str
+    organization_id: UUID4
+    label: str
+    conditions: ConditionsField
+    meta: MetaField
+
+
+class LicenseKeyDeactivate(Schema):
+    key: str
+    organization_id: UUID4
+    activation_id: UUID4
+
+
+class LicenseKeyCustomer(CustomerBase): ...
+
+
+class LicenseKeyMember(IDSchema):
+    email: str = Field(description="The email address of the seat member.")
+    external_id: str | None = Field(
+        description="The external ID of the seat member, if set."
+    )
+
+
+class LicenseKeyUser(Schema):
+    id: UUID4 = Field(
+        validation_alias=AliasChoices(
+            # Validate from ORM model
+            "legacy_user_id",
+            # Validate from stored webhook payload
+            "id",
+        )
+    )
+    email: str | None = None
+    public_name: str = Field(
+        validation_alias=AliasChoices(
+            # Validate from ORM model
+            "legacy_user_public_name",
+            # Validate from stored webhook payload
+            "public_name",
+        )
+    )
+    avatar_url: str | None = Field(None)
+
+
+class LicenseKeyRead(TimestampedSchema, IDSchema):
+    organization_id: UUID4
+    user_id: SkipJsonSchema[UUID4] = Field(
+        validation_alias=AliasChoices(
+            # Validate from stored webhook payload
+            "user_id",
+            # Validate from ORM model
+            AliasPath("customer", "legacy_user_id"),
+        ),
+        deprecated="Use `customer_id`.",
+    )
+    customer_id: UUID4
+    user: SkipJsonSchema[LicenseKeyUser] = Field(
+        validation_alias=AliasChoices(
+            # Validate from stored webhook payload
+            "user",
+            # Validate from ORM model
+            "customer",
+        ),
+        deprecated="Use `customer`.",
+    )
+    customer: LicenseKeyCustomer
+    member_id: Annotated[
+        UUID4 | None,
+        Version(starting_from=V2026_10),
+        Field(description="The ID of the seat member holding this key, if any."),
+    ]
+    member: Annotated[
+        LicenseKeyMember | None,
+        Version(starting_from=V2026_10),
+        Field(
+            description=(
+                "The seat member holding this key. Set for keys granted through a "
+                "seat-based product; `null` for keys granted to the customer directly."
+            )
+        ),
+    ]
+    benefit_id: BenefitID
+    key: str
+    display_key: str
+    status: LicenseKeyStatus
+    limit_activations: int | None
+    usage: int
+    limit_usage: int | None
+    validations: int
+    last_validated_at: datetime | None
+    expires_at: datetime | None
+
+
+class LicenseKeyActivationBase(Schema):
+    id: UUID4
+    license_key_id: UUID4
+    label: str
+    meta: dict[str, str | int | float | bool]
+    created_at: datetime
+    modified_at: datetime | None
+
+
+class LicenseKeyWithActivations(LicenseKeyRead):
+    activations: list[LicenseKeyActivationBase]
+
+
+class LicenseKeySubscription(IDSchema):
+    status: Annotated[SubscriptionStatus, SubscriptionBase.model_fields["status"]]
+    current_period_start: Annotated[
+        datetime, SubscriptionBase.model_fields["current_period_start"]
+    ]
+    current_period_end: Annotated[
+        datetime, SubscriptionBase.model_fields["current_period_end"]
+    ]
+    cancel_at_period_end: Annotated[
+        bool, SubscriptionBase.model_fields["cancel_at_period_end"]
+    ]
+    ends_at: Annotated[datetime | None, SubscriptionBase.model_fields["ends_at"]]
+
+
+class LicenseKeyOrder(IDSchema):
+    created_at: Annotated[datetime, OrderBase.model_fields["created_at"]]
+    status: Annotated[OrderStatus, OrderBase.model_fields["status"]]
+    paid: Annotated[bool, OrderBase.model_fields["paid"]]
+
+
+class GrantedLicenseKey(LicenseKeyRead):
+    status: Literal[LicenseKeyStatus.granted]
+    subscription_id: Annotated[
+        UUID4 | None,
+        Version(starting_from=V2027_01),
+        Field(description="The ID of the subscription granting the license key."),
+    ]
+    subscription: Annotated[
+        LicenseKeySubscription | None,
+        Version(starting_from=V2027_01),
+        Field(description="The subscription granting the license key, if any."),
+    ]
+    order_id: Annotated[
+        UUID4 | None,
+        Version(starting_from=V2027_01),
+        Field(description="The ID of the one-time order granting the license key."),
+    ]
+    order: Annotated[
+        LicenseKeyOrder | None,
+        Version(starting_from=V2027_01),
+        Field(description="The one-time order granting the license key, if any."),
+    ]
+
+
+class RotatedLicenseKey(LicenseKeyRead):
+    status: Literal[LicenseKeyStatus.granted, LicenseKeyStatus.disabled]
+
+
+class ValidatedLicenseKey(GrantedLicenseKey):
+    activation: LicenseKeyActivationBase | None = None
+
+
+class LicenseKeyActivationRead(LicenseKeyActivationBase):
+    license_key: LicenseKeyRead
+
+
+class LicenseKeyActivationCreated(LicenseKeyActivationRead):
+    license_key: GrantedLicenseKey
+
+
+class LicenseKeyUpdate(Schema):
+    status: LicenseKeyStatus | None = Field(
+        default=None,
+        json_schema_extra=cli_confirm_one_of("revoked", "disabled"),
+    )
+    usage: Int32 = 0
+    limit_activations: Int32 | None = Field(gt=0, default=None)
+    limit_usage: Int32 | None = Field(gt=0, default=None)
+    expires_at: datetime | None = None
+
+
+class LicenseKeyCreate(LicenseKeyUpdate):
+    organization_id: UUID4
+    customer_id: UUID4
+    benefit_id: BenefitID
+    key: str
+
+    @classmethod
+    def generate_key(cls, prefix: str | None = None) -> str:
+        key = str(generate_uuid()).upper()
+        if prefix is None:
+            return key
+
+        prefix = prefix.strip().upper()
+        return f"{prefix}-{key}"
+
+    @classmethod
+    def generate_expiration_dt(
+        cls, ttl: int, timeframe: Literal["year", "month", "day"]
+    ) -> datetime:
+        now = utc_now()
+        try:
+            match timeframe:
+                case "year":
+                    return now + relativedelta(years=ttl)
+                case "month":
+                    return now + relativedelta(months=ttl)
+                case _:
+                    return now + relativedelta(days=ttl)
+        except ValueError, OverflowError:
+            raise ValueError(
+                f"Expiration date overflows: ttl={ttl} with timeframe='{timeframe}' "
+                f"produces a date beyond year 9999."
+            )
+
+    @typing.overload
+    @classmethod
+    def build(
+        cls,
+        *,
+        organization_id: UUID4,
+        customer_id: UUID4,
+        benefit_id: UUID4,
+        prefix: str | None = None,
+        status: LicenseKeyStatus = LicenseKeyStatus.granted,
+        limit_usage: int | None = None,
+        activations: BenefitLicenseKeyActivationProperties | None = None,
+        expires: BenefitLicenseKeyExpirationProperties | None = None,
+    ) -> Self: ...
+
+    @typing.overload
+    @classmethod
+    def build(
+        cls,
+        *,
+        organization_id: UUID4,
+        customer_id: UUID4,
+        benefit_id: UUID4,
+        key: str | None = None,
+        status: LicenseKeyStatus = LicenseKeyStatus.granted,
+        limit_usage: int | None = None,
+        activations: BenefitLicenseKeyActivationProperties | None = None,
+        expires: BenefitLicenseKeyExpirationProperties | None = None,
+    ) -> Self: ...
+
+    @classmethod
+    def build(
+        cls,
+        *,
+        organization_id: UUID4,
+        customer_id: UUID4,
+        benefit_id: UUID4,
+        prefix: str | None = None,
+        key: str | None = None,
+        status: LicenseKeyStatus = LicenseKeyStatus.granted,
+        limit_usage: int | None = None,
+        activations: BenefitLicenseKeyActivationProperties | None = None,
+        expires: BenefitLicenseKeyExpirationProperties | None = None,
+    ) -> Self:
+        expires_at = None
+        if expires:
+            ttl = expires.get("ttl", None)
+            timeframe = expires.get("timeframe", None)
+            if ttl and timeframe:
+                expires_at = cls.generate_expiration_dt(ttl, timeframe)
+
+        limit_activations = None
+        if activations:
+            limit_activations = activations.get("limit", None)
+
+        if key is None:
+            key = cls.generate_key(prefix=prefix)
+
+        return cls(
+            organization_id=organization_id,
+            customer_id=customer_id,
+            benefit_id=benefit_id,
+            key=key,
+            status=status,
+            limit_activations=limit_activations,
+            limit_usage=limit_usage,
+            expires_at=expires_at,
+        )

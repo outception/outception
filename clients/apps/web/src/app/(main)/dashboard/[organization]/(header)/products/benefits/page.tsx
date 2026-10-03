@@ -1,0 +1,60 @@
+import { MasterDetailIndex } from '@/components/Layout/MasterDetailIndex'
+import { getServerSideAPI } from '@/utils/client/serverside'
+import { getOrganizationBySlugOrNotFound } from '@/utils/organization'
+import { Button } from '@polar-sh/orbit'
+import { Metadata } from 'next'
+import Link from 'next/link'
+
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: 'Benefits', // " | Polar is added by the template"
+  }
+}
+
+export default async function Page(props: {
+  params: Promise<{ organization: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+  const params = await props.params
+  const searchParams = await props.searchParams
+  const api = await getServerSideAPI()
+  const organization = await getOrganizationBySlugOrNotFound(
+    api,
+    params.organization,
+  )
+
+  // Fetch the newest benefit
+  const { data } = await api.GET('/v1/benefits/', {
+    params: {
+      query: {
+        organization_id: organization.id,
+        limit: 1,
+        sorting: ['-created_at'],
+      },
+    },
+  })
+
+  // If there's a newest benefit, redirect to it on desktop (on mobile, show the list)
+  if (data?.items && data.items.length > 0) {
+    const queryString = new URLSearchParams(
+      searchParams as Record<string, string>,
+    ).toString()
+    const redirectUrl = `/dashboard/${organization.slug}/products/benefits/${data.items[0].id}${queryString ? `?${queryString}` : ''}`
+    return <MasterDetailIndex redirectTo={redirectUrl} />
+  }
+
+  // Otherwise show empty state
+  return (
+    <div className="mt-96 flex w-full flex-col items-center justify-center gap-4">
+      <h1 className="text-2xl">No Benefits</h1>
+      <p className="dark:text-polar-500 text-gray-500">
+        Create a benefit to get started
+      </p>
+      <Link
+        href={`/dashboard/${organization.slug}/products/benefits?create_benefit=true`}
+      >
+        <Button>Create Benefit</Button>
+      </Link>
+    </div>
+  )
+}

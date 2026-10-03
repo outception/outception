@@ -1,0 +1,953 @@
+import uuid
+
+import pytest
+from httpx import AsyncClient
+
+from polar.enums import SubscriptionRecurringInterval
+from polar.kit.currency import PresentmentCurrency
+from polar.kit.utils import utc_now
+from polar.kit.visibility import Visibility
+from polar.models import Customer, Member, Organization, Product, Subscription
+from polar.models.order import OrderStatus
+from polar.models.product_price import ProductPriceSeatUnit
+from polar.models.subscription import SubscriptionStatus
+from polar.postgres import AsyncSession
+from tests.fixtures.auth import (
+    CUSTOMER_AUTH_SUBJECT,
+    MEMBER_AUTH_SUBJECT,
+    MEMBER_BILLING_MANAGER_AUTH_SUBJECT,
+    MEMBER_OWNER_AUTH_SUBJECT,
+)
+from tests.fixtures.database import SaveFixture
+from tests.fixtures.random_objects import (
+    create_active_subscription,
+    create_benefit,
+    create_canceled_subscription,
+    create_order,
+    create_payment_method,
+    create_product,
+    create_subscription_with_seats,
+    set_product_benefits,
+)
+
+
+@pytest.mark.asyncio
+class TestGetSubscription:
+    @pytest.mark.auth(CUSTOMER_AUTH_SUBJECT)
+    async def test_excludes_non_public_benefits(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        organization: Organization,
+        product: Product,
+        subscription: Subscription,
+        customer: Customer,
+    ) -> None:
+        public_benefit = await create_benefit(
+            save_fixture, organization=organization, description="Public benefit"
+        )
+        private_benefit = await create_benefit(
+            save_fixture, organization=organization, description="Private benefit"
+        )
+        private_benefit.visibility = Visibility.private
+        await save_fixture(private_benefit)
+        await set_product_benefits(
+            save_fixture,
+            product=product,
+            benefits=[public_benefit, private_benefit],
+        )
+
+        response = await client.get(
+            f"/v1/customer-portal/subscriptions/{subscription.id}"
+        )
+
+        assert response.status_code == 200
+
+        json = response.json()
+        benefit_ids = {benefit["id"] for benefit in json["product"]["benefits"]}
+        assert str(public_benefit.id) in benefit_ids
+        assert str(private_benefit.id) not in benefit_ids
+
+
+@pytest.mark.asyncio
+class TestGetCancelPreview:
+    async def test_anonymous(self, client: AsyncClient) -> None:
+        response = await client.get(
+            f"/v1/customer-portal/subscriptions/{uuid.uuid4()}/cancel-preview"
+        )
+
+        assert response.status_code == 401
+
+    @pytest.mark.auth(CUSTOMER_AUTH_SUBJECT)
+    async def test_past_due_no_grace_stops_collection(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture, product=product, customer=customer
+        )
+        subscription.status = SubscriptionStatus.past_due
+        subscription.past_due_at = utc_now()
+        await save_fixture(subscription)
+        await create_order(
+            save_fixture,
+            customer=customer,
+            product=product,
+            subscription=subscription,
+            status=OrderStatus.pending,
+            next_payment_attempt_at=utc_now(),
+        )
+
+        response = await client.get(
+            f"/v1/customer-portal/subscriptions/{subscription.id}/cancel-preview"
+        )
+
+        assert response.status_code == 200
+        json = response.json()
+        assert json["stops_collection"] is True
+        assert json["outstanding_amount"] == 1000
+
+
+@pytest.mark.asyncio
+class TestCustomerSubscriptionProductUpdate:
+    async def test_anonymous(
+        self, client: AsyncClient, session: AsyncSession, subscription: Subscription
+    ) -> None:
+        non_existing = uuid.uuid4()
+        response = await client.patch(
+            f"/v1/customer-portal/subscriptions/{subscription.id}",
+            json={"product_id": str(non_existing)},
+        )
+        assert response.status_code == 401
+
+    @pytest.mark.auth(CUSTOMER_AUTH_SUBJECT)
+    async def test_non_existing_product(
+        self, client: AsyncClient, session: AsyncSession, subscription: Subscription
+    ) -> None:
+        non_existing = uuid.uuid4()
+        response = await client.patch(
+            f"/v1/customer-portal/subscriptions/{subscription.id}",
+            json={"product_id": str(non_existing)},
+        )
+        assert response.status_code == 422
+
+    @pytest.mark.auth(CUSTOMER_AUTH_SUBJECT)
+    async def test_non_recurring_product(
+        self,
+        client: AsyncClient,
+        session: AsyncSession,
+        save_fixture: SaveFixture,
+        organization: Organization,
+        subscription: Subscription,
+    ) -> None:
+        product = await create_product(
+            save_fixture, organization=organization, recurring_interval=None
+        )
+        response = await client.patch(
+            f"/v1/customer-portal/subscriptions/{subscription.id}",
+            json={"product_id": str(product.id)},
+        )
+        assert response.status_code == 422
+
+    @pytest.mark.auth(CUSTOMER_AUTH_SUBJECT)
+    async def test_extraneous_tier(
+        self,
+        client: AsyncClient,
+        subscription: Subscription,
+        product_organization_second: Product,
+    ) -> None:
+        response = await client.patch(
+            f"/v1/customer-portal/subscriptions/{subscription.id}",
+            json={"product_id": str(product_organization_second.id)},
+        )
+        assert response.status_code == 422
+
+    @pytest.mark.auth(CUSTOMER_AUTH_SUBJECT)
+    async def test_non_public_product(
+        self,
+        client: AsyncClient,
+        session: AsyncSession,
+        save_fixture: SaveFixture,
+        organization: Organization,
+        subscription: Subscription,
+    ) -> None:
+        private_product = await create_product(
+            save_fixture,
+            organization=organization,
+            recurring_interval=SubscriptionRecurringInterval.month,
+            visibility=Visibility.private,
+        )
+        response = await client.patch(
+            f"/v1/customer-portal/subscriptions/{subscription.id}",
+            json={"product_id": str(private_product.id)},
+        )
+        assert response.status_code == 422
+
+    @pytest.mark.auth(CUSTOMER_AUTH_SUBJECT)
+    @pytest.mark.keep_session_state
+    async def test_valid(
+        self,
+        client: AsyncClient,
+        subscription: Subscription,
+        save_fixture: SaveFixture,
+        organization: Organization,
+        customer: Customer,
+        product: Product,
+        product_second: Product,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+        response = await client.patch(
+            f"/v1/customer-portal/subscriptions/{subscription.id}",
+            json={"product_id": str(product_second.id)},
+        )
+
+        assert response.status_code == 200
+        updated_subscription = response.json()
+        assert updated_subscription["product"]["id"] == str(product_second.id)
+
+    @pytest.mark.auth(CUSTOMER_AUTH_SUBJECT)
+    async def test_update_plan_not_allowed(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        organization: Organization,
+        customer: Customer,
+        product: Product,
+        product_second: Product,
+    ) -> None:
+        organization.customer_portal_settings = {
+            **organization.customer_portal_settings,
+            "subscription": {
+                **organization.customer_portal_settings["subscription"],
+                "update_plan": False,
+            },
+        }
+        await save_fixture(organization)
+        subscription = await create_active_subscription(
+            save_fixture, product=product, customer=customer
+        )
+
+        response = await client.patch(
+            f"/v1/customer-portal/subscriptions/{subscription.id}",
+            json={"product_id": str(product_second.id)},
+        )
+
+        assert response.status_code == 403
+        error = response.json()
+        assert error["error"] == "UpdateSubscriptionPlanNotAllowed"
+        assert "not allowed" in error["detail"].lower()
+
+    @pytest.mark.auth(CUSTOMER_AUTH_SUBJECT)
+    async def test_seat_to_seat_below_target_minimum_returns_422_on_product_id(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        organization: Organization,
+        customer: Customer,
+    ) -> None:
+        old_seat_product = await create_product(
+            save_fixture,
+            organization=organization,
+            recurring_interval=SubscriptionRecurringInterval.month,
+            prices=[("seat", 1000, "usd")],
+        )
+        new_seat_product = await create_product(
+            save_fixture,
+            organization=organization,
+            recurring_interval=SubscriptionRecurringInterval.month,
+            prices=[],
+        )
+        new_seat_price = ProductPriceSeatUnit(
+            price_currency=PresentmentCurrency.usd,
+            seat_tiers={
+                "tiers": [
+                    {"min_seats": 5, "max_seats": None, "price_per_seat": 2000},
+                ],
+            },
+            product=new_seat_product,
+        )
+        await save_fixture(new_seat_price)
+        new_seat_product.prices.append(new_seat_price)
+        await save_fixture(new_seat_product)
+
+        subscription = await create_subscription_with_seats(
+            save_fixture, product=old_seat_product, customer=customer, seats=3
+        )
+
+        response = await client.patch(
+            f"/v1/customer-portal/subscriptions/{subscription.id}",
+            json={"product_id": str(new_seat_product.id)},
+        )
+
+        assert response.status_code == 422
+        error = response.json()
+        assert error["detail"][0]["loc"] == ["body", "product_id"]
+        assert "below the minimum of 5 seats" in error["detail"][0]["msg"]
+
+
+@pytest.mark.asyncio
+class TestCustomerSubscriptionUpdateUnknownFields:
+    @pytest.mark.auth(CUSTOMER_AUTH_SUBJECT)
+    async def test_unknown_field(
+        self, client: AsyncClient, subscription: Subscription
+    ) -> None:
+        response = await client.patch(
+            f"/v1/customer-portal/subscriptions/{subscription.id}",
+            json={"pause_at_periodend": True},
+        )
+        assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+class TestCustomerSubscriptionUpdateCancel:
+    async def test_anonymous(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+        response = await client.patch(
+            f"/v1/customer-portal/subscriptions/{subscription.id}",
+            json={
+                "cancel_at_period_end": True,
+            },
+        )
+        assert response.status_code == 401
+
+    @pytest.mark.auth(CUSTOMER_AUTH_SUBJECT)
+    async def test_tampered(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        product: Product,
+        customer_second: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer_second,
+        )
+        response = await client.patch(
+            f"/v1/customer-portal/subscriptions/{subscription.id}",
+            json={
+                "cancel_at_period_end": True,
+            },
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.auth(CUSTOMER_AUTH_SUBJECT)
+    async def test_valid(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+
+        reason = "too_complex"
+        comment = "Too many settings"
+
+        response = await client.patch(
+            f"/v1/customer-portal/subscriptions/{subscription.id}",
+            json={
+                "cancel_at_period_end": True,
+                "cancellation_reason": reason,
+                "cancellation_comment": comment,
+            },
+        )
+
+        assert response.status_code == 200
+        updated_subscription = response.json()
+        current_period_end = updated_subscription["current_period_end"]
+        assert updated_subscription["id"] == str(subscription.id)
+        assert updated_subscription["status"] == SubscriptionStatus.active
+        assert updated_subscription["ended_at"] is None
+        assert updated_subscription["cancel_at_period_end"]
+        assert updated_subscription["ends_at"] == current_period_end
+        assert updated_subscription["customer_cancellation_reason"] == reason
+        assert updated_subscription["customer_cancellation_comment"] == comment
+
+
+@pytest.mark.asyncio
+class TestSubscriptionUpdateUncancel:
+    async def test_anonymous(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        organization: Organization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_canceled_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+        response = await client.patch(
+            f"/v1/customer-portal/subscriptions/{subscription.id}",
+            json={
+                "cancel_at_period_end": False,
+            },
+        )
+        assert response.status_code == 401
+
+    @pytest.mark.auth(CUSTOMER_AUTH_SUBJECT)
+    async def test_tampered(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        product_organization_second: Product,
+        customer: Customer,
+        customer_second: Customer,
+    ) -> None:
+        subscription = await create_canceled_subscription(
+            save_fixture,
+            product=product_organization_second,
+            customer=customer_second,
+        )
+        response = await client.patch(
+            f"/v1/customer-portal/subscriptions/{subscription.id}",
+            json={
+                "cancel_at_period_end": False,
+            },
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.auth(CUSTOMER_AUTH_SUBJECT)
+    async def test_uncancel_revoked(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_canceled_subscription(
+            save_fixture, product=product, customer=customer, revoke=True
+        )
+        response = await client.patch(
+            f"/v1/customer-portal/subscriptions/{subscription.id}",
+            json={
+                "cancel_at_period_end": False,
+            },
+        )
+        assert response.status_code == 410
+
+    @pytest.mark.auth(CUSTOMER_AUTH_SUBJECT)
+    async def test_uncancel_without_payment_method(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_canceled_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+
+        response = await client.patch(
+            f"/v1/customer-portal/subscriptions/{subscription.id}",
+            json={
+                "cancel_at_period_end": False,
+            },
+        )
+
+        assert response.status_code == 409
+
+    @pytest.mark.auth(CUSTOMER_AUTH_SUBJECT)
+    async def test_valid(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        await create_payment_method(save_fixture, customer)
+        subscription = await create_canceled_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+
+        response = await client.patch(
+            f"/v1/customer-portal/subscriptions/{subscription.id}",
+            json={
+                "cancel_at_period_end": False,
+            },
+        )
+
+        assert response.status_code == 200
+        updated_subscription = response.json()
+        assert updated_subscription["status"] == SubscriptionStatus.active
+        assert updated_subscription["cancel_at_period_end"] is False
+        assert updated_subscription["ends_at"] is None
+        assert updated_subscription["ended_at"] is None
+        assert updated_subscription["customer_cancellation_reason"] is None
+        assert updated_subscription["customer_cancellation_comment"] is None
+
+    @pytest.mark.auth(CUSTOMER_AUTH_SUBJECT)
+    async def test_uncancel_not_scheduled(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+        assert subscription.cancel_at_period_end is False
+
+        response = await client.patch(
+            f"/v1/customer-portal/subscriptions/{subscription.id}",
+            json={
+                "cancel_at_period_end": False,
+            },
+        )
+
+        assert response.status_code == 409
+        assert response.json() == {
+            "error": "SubscriptionNotScheduledToCancel",
+            "detail": (
+                "This subscription is not scheduled to be canceled, "
+                "so it cannot be uncanceled."
+            ),
+        }
+
+
+@pytest.mark.asyncio
+class TestCustomerSubscriptionCancel:
+    async def test_anonymous(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+
+        response = await client.delete(
+            f"/v1/customer-portal/subscriptions/{subscription.id}",
+        )
+        assert response.status_code == 401
+
+    @pytest.mark.auth(CUSTOMER_AUTH_SUBJECT)
+    async def test_tampered(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        product: Product,
+        customer_second: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer_second,
+        )
+
+        response = await client.delete(
+            f"/v1/customer-portal/subscriptions/{subscription.id}",
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.auth(CUSTOMER_AUTH_SUBJECT)
+    async def test_valid(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+
+        response = await client.delete(
+            f"/v1/customer-portal/subscriptions/{subscription.id}",
+        )
+
+        assert response.status_code == 200
+        updated_subscription = response.json()
+        current_period_end = updated_subscription["current_period_end"]
+        assert updated_subscription["id"] == str(subscription.id)
+        assert updated_subscription["status"] == SubscriptionStatus.active
+        assert updated_subscription["ended_at"] is None
+        assert updated_subscription["cancel_at_period_end"]
+        assert updated_subscription["ends_at"] == current_period_end
+
+
+@pytest.mark.asyncio
+class TestCustomerSubscriptionRevoke:
+    async def test_anonymous(self, client: AsyncClient) -> None:
+        response = await client.post(
+            f"/v1/customer-portal/subscriptions/{uuid.uuid4()}/revoke", json={}
+        )
+        assert response.status_code == 401
+
+    async def _create_past_due(
+        self,
+        save_fixture: SaveFixture,
+        product: Product,
+        customer: Customer,
+    ) -> Subscription:
+        subscription = await create_active_subscription(
+            save_fixture, product=product, customer=customer
+        )
+        subscription.status = SubscriptionStatus.past_due
+        subscription.past_due_at = utc_now()
+        await save_fixture(subscription)
+        await create_order(
+            save_fixture,
+            customer=customer,
+            product=product,
+            subscription=subscription,
+            status=OrderStatus.pending,
+            next_payment_attempt_at=utc_now(),
+        )
+        return subscription
+
+    @pytest.mark.auth(CUSTOMER_AUTH_SUBJECT)
+    async def test_valid_past_due_no_grace(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await self._create_past_due(save_fixture, product, customer)
+
+        response = await client.post(
+            f"/v1/customer-portal/subscriptions/{subscription.id}/revoke", json={}
+        )
+
+        assert response.status_code == 200
+        updated_subscription = response.json()
+        assert updated_subscription["id"] == str(subscription.id)
+        assert updated_subscription["status"] == SubscriptionStatus.canceled
+        assert updated_subscription["cancel_at_period_end"] is False
+        assert updated_subscription["ended_at"] is not None
+
+    @pytest.mark.auth(CUSTOMER_AUTH_SUBJECT)
+    async def test_active_not_allowed(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture, product=product, customer=customer
+        )
+
+        response = await client.post(
+            f"/v1/customer-portal/subscriptions/{subscription.id}/revoke", json={}
+        )
+
+        assert response.status_code == 409
+
+    @pytest.mark.auth(CUSTOMER_AUTH_SUBJECT)
+    async def test_past_due_with_grace_not_allowed(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        product.organization.subscription_settings = {
+            **product.organization.subscription_settings,
+            "benefit_revocation_grace_period": 7,
+        }
+        await save_fixture(product.organization)
+        subscription = await self._create_past_due(save_fixture, product, customer)
+
+        response = await client.post(
+            f"/v1/customer-portal/subscriptions/{subscription.id}/revoke", json={}
+        )
+
+        assert response.status_code == 409
+
+    @pytest.mark.auth(CUSTOMER_AUTH_SUBJECT)
+    async def test_already_canceled_returns_403(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_canceled_subscription(
+            save_fixture, product=product, customer=customer, revoke=True
+        )
+
+        response = await client.post(
+            f"/v1/customer-portal/subscriptions/{subscription.id}/revoke", json={}
+        )
+
+        assert response.status_code == 403
+
+
+@pytest.mark.asyncio
+class TestMemberRoleEnforcementSubscriptionUpdate:
+    """Tests for role-based access control on subscription update endpoint.
+
+    Verifies that:
+    - Owner members can update subscriptions
+    - Billing manager members can update subscriptions
+    - Regular members (read-only) cannot update subscriptions (403)
+    """
+
+    @pytest.mark.auth(MEMBER_OWNER_AUTH_SUBJECT)
+    async def test_owner_can_update(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        product: Product,
+        customer: Customer,
+        member_owner: Member,
+    ) -> None:
+        """Owner members should be able to update subscriptions."""
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+
+        response = await client.patch(
+            f"/v1/customer-portal/subscriptions/{subscription.id}",
+            json={
+                "cancel_at_period_end": True,
+                "cancellation_reason": "too_expensive",
+            },
+        )
+
+        assert response.status_code == 200
+        updated_subscription = response.json()
+        assert updated_subscription["cancel_at_period_end"] is True
+
+    @pytest.mark.auth(MEMBER_BILLING_MANAGER_AUTH_SUBJECT)
+    async def test_billing_manager_can_update(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        product: Product,
+        customer: Customer,
+        member_billing_manager: Member,
+    ) -> None:
+        """Billing manager members should be able to update subscriptions."""
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+
+        response = await client.patch(
+            f"/v1/customer-portal/subscriptions/{subscription.id}",
+            json={
+                "cancel_at_period_end": True,
+                "cancellation_reason": "too_expensive",
+            },
+        )
+
+        assert response.status_code == 200
+        updated_subscription = response.json()
+        assert updated_subscription["cancel_at_period_end"] is True
+
+    @pytest.mark.auth(MEMBER_AUTH_SUBJECT)
+    async def test_regular_member_cannot_update(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        product: Product,
+        customer: Customer,
+        member: Member,
+    ) -> None:
+        """Regular members (read-only) should NOT be able to update subscriptions."""
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+
+        response = await client.patch(
+            f"/v1/customer-portal/subscriptions/{subscription.id}",
+            json={
+                "cancel_at_period_end": True,
+            },
+        )
+
+        assert response.status_code == 403
+        error = response.json()
+        assert any(
+            word in error["detail"].lower() for word in ["billing", "permission"]
+        )
+
+
+@pytest.mark.asyncio
+class TestMemberRoleEnforcementSubscriptionCancel:
+    """Tests for role-based access control on subscription cancel endpoint.
+
+    Verifies that:
+    - Owner members can cancel subscriptions
+    - Billing manager members can cancel subscriptions
+    - Regular members (read-only) cannot cancel subscriptions (403)
+    """
+
+    @pytest.mark.auth(MEMBER_OWNER_AUTH_SUBJECT)
+    async def test_owner_can_cancel(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        product: Product,
+        customer: Customer,
+        member_owner: Member,
+    ) -> None:
+        """Owner members should be able to cancel subscriptions."""
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+
+        response = await client.delete(
+            f"/v1/customer-portal/subscriptions/{subscription.id}",
+        )
+
+        assert response.status_code == 200
+        updated_subscription = response.json()
+        assert updated_subscription["cancel_at_period_end"] is True
+
+    @pytest.mark.auth(MEMBER_BILLING_MANAGER_AUTH_SUBJECT)
+    async def test_billing_manager_can_cancel(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        product: Product,
+        customer: Customer,
+        member_billing_manager: Member,
+    ) -> None:
+        """Billing manager members should be able to cancel subscriptions."""
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+
+        response = await client.delete(
+            f"/v1/customer-portal/subscriptions/{subscription.id}",
+        )
+
+        assert response.status_code == 200
+        updated_subscription = response.json()
+        assert updated_subscription["cancel_at_period_end"] is True
+
+    @pytest.mark.auth(MEMBER_AUTH_SUBJECT)
+    async def test_regular_member_cannot_cancel(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        product: Product,
+        customer: Customer,
+        member: Member,
+    ) -> None:
+        """Regular members (read-only) should NOT be able to cancel subscriptions."""
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+
+        response = await client.delete(
+            f"/v1/customer-portal/subscriptions/{subscription.id}",
+        )
+
+        assert response.status_code == 403
+        error = response.json()
+        assert any(
+            word in error["detail"].lower() for word in ["billing", "permission"]
+        )
+
+
+@pytest.mark.asyncio
+class TestPreviewChange:
+    @pytest.mark.auth(CUSTOMER_AUTH_SUBJECT)
+    async def test_product_change(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        organization: Organization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture, product=product, customer=customer
+        )
+        new_product = await create_product(
+            save_fixture,
+            organization=organization,
+            recurring_interval=product.recurring_interval,
+            prices=[(5000, "usd")],
+        )
+
+        response = await client.post(
+            f"/v1/customer-portal/subscriptions/{subscription.id}/change-preview",
+            json={"product_id": str(new_product.id)},
+        )
+
+        assert response.status_code == 200
+        assert len(response.json()["prorations"]) == 2
+
+    @pytest.mark.auth(CUSTOMER_AUTH_SUBJECT)
+    async def test_product_change_rejects_proration_behavior(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        organization: Organization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        """The portal's product update takes no proration behavior, so neither may
+        the preview: a previewable behavior that cannot be applied would quote a
+        total the customer is not charged.
+        """
+        subscription = await create_active_subscription(
+            save_fixture, product=product, customer=customer
+        )
+        new_product = await create_product(
+            save_fixture,
+            organization=organization,
+            recurring_interval=product.recurring_interval,
+            prices=[(5000, "usd")],
+        )
+
+        response = await client.post(
+            f"/v1/customer-portal/subscriptions/{subscription.id}/change-preview",
+            json={"product_id": str(new_product.id), "proration_behavior": "reset"},
+        )
+
+        assert response.status_code == 422

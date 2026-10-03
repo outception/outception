@@ -1,0 +1,1417 @@
+"""Reads a merchant's Stripe account with its own restricted-key client
+(never Polar's platform key) and normalizes it into CanonicalRecords."""
+
+import asyncio
+from collections.abc import AsyncIterator, Awaitable, Callable, Sequence
+from dataclasses import dataclass, replace
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Any, TypeVar
+
+import stripe as stripe_lib
+from pydantic import ValidationError
+
+from polar.enums import TaxBehavior
+from polar.kit.address import Address
+from polar.kit.schemas import Schema
+from polar.kit.utils import utc_now
+from polar.tax.tax_id import COUNTRY_TAX_ID_MAP, TaxID, TaxIDFormat, from_stripe_tax_id
+
+from ..canonical import (
+    CanonicalAccount,
+    CanonicalCollectionMethod,
+    CanonicalCustomer,
+    CanonicalDiscount,
+    CanonicalDiscountDuration,
+    CanonicalDiscountType,
+    CanonicalPaymentMethod,
+    CanonicalPaymentMethodType,
+    CanonicalPrice,
+    CanonicalPricingScheme,
+    CanonicalProduct,
+    CanonicalRecord,
+    CanonicalSubscription,
+    CanonicalSubscriptionStatus,
+    SubscriptionDiscountBlock,
+    apply_customer_discount,
+    earlier_datetime,
+    parse_tax_behavior,
+    polar_discount_code,
+    tighter_cap,
+)
+from ..errors import MerchantMigrationError
+from .base import ExtractionPage
+
+# Period data lives on the subscription item; read it per item. Subscriptions
+# return `managed_payments` from 2026-04-22.dahlia on.
+STRIPE_API_VERSION = "2026-08-26.dahlia"
+PAGE_SIZE = 100
+
+_T = TypeVar("_T")
+
+
+class StripeMissingScope(MerchantMigrationError):
+    def __init__(self, label: str) -> None:
+        self.label = label
+        super().__init__(
+            f"The Stripe API key is missing access to: {label}.",
+            400,
+        )
+
+
+SKIPPED_SUBSCRIPTION_STATUSES = frozenset(
+    {"canceled", "incomplete", "incomplete_expired"}
+)
+
+# Written to `cancellation_details.comment` when the cutover stops a source
+# subscription, and matched when reading one back. A cutover that crashes
+# between the Stripe cancellation and its own commit retries against a
+# subscription it already cancelled; without this marker the retry would read
+# that as the customer having churned and strand the subscription unbilled.
+CANCELLATION_COMMENT_PREFIX = "Migrated to Polar"
+_PERIOD_END_MARKER = "cancel at period end"
+_RENEWS_MARKER = "renews"
+
+
+def _cancellation_comment(reference: str, *, cancel_at_period_end: bool) -> str:
+    decision = _PERIOD_END_MARKER if cancel_at_period_end else _RENEWS_MARKER
+    return f"{CANCELLATION_COMMENT_PREFIX} (migration {reference}; {decision})"
+
+
+def _recorded_cancel_at_period_end(
+    subscription: stripe_lib.Subscription,
+) -> bool | None:
+    """The flag written into our stop comment, or None for an older stop."""
+    details = subscription.cancellation_details
+    comment = details.comment if details is not None else None
+    if comment is None or not comment.startswith(CANCELLATION_COMMENT_PREFIX):
+        return None
+    if _PERIOD_END_MARKER in comment:
+        return True
+    if _RENEWS_MARKER in comment:
+        return False
+    return None
+
+
+def _pending_period_end(
+    subscription: stripe_lib.Subscription, current_period_end: int | None
+) -> bool:
+    if subscription.cancel_at_period_end:
+        return True
+    # A cancel date on the period end is the same end, set without the flag.
+    cancel_at = subscription.cancel_at
+    return cancel_at is not None and cancel_at == current_period_end
+
+
+def _cancel_at_period_end(
+    subscription: stripe_lib.Subscription, current_period_end: int | None
+) -> bool:
+    recorded = _recorded_cancel_at_period_end(subscription)
+    if subscription.status == "canceled" and recorded is not None:
+        return recorded
+    return _pending_period_end(subscription, current_period_end)
+
+
+def _cancellation_feedback(
+    subscription: stripe_lib.Subscription, current_period_end: int | None
+) -> str | None:
+    if not _pending_period_end(subscription, current_period_end):
+        return None
+    details = subscription.cancellation_details
+    return details.feedback if details is not None else None
+
+
+def _cancel_at_period_end_known(subscription: stripe_lib.Subscription) -> bool:
+    return (
+        subscription.status == "canceled"
+        and _recorded_cancel_at_period_end(subscription) is not None
+    )
+
+
+# Expansions the cutover needs on a single subscription read.
+_SUBSCRIPTION_EXPAND = [
+    "default_payment_method",
+    "customer.invoice_settings.default_payment_method",
+    "customer.default_source",
+    "customer.discount",
+    "discounts",
+    "items.data.discounts",
+    "schedule",
+]
+# The import never checks the invoice, and a page of them is heavy.
+_CUTOVER_SUBSCRIPTION_EXPAND = [*_SUBSCRIPTION_EXPAND, "latest_invoice"]
+
+
+def _occupied_item_discounts(
+    item_keys: tuple[frozenset[str], ...],
+) -> frozenset[frozenset[str]]:
+    return frozenset(keys for keys in item_keys if keys)
+
+
+class StripeExtractionPhase(StrEnum):
+    prices = "prices"
+    inactive_prices = "inactive_prices"
+    coupons = "coupons"
+    promotion_codes = "promotion_codes"
+    customers = "customers"
+    subscriptions = "subscriptions"
+
+
+class StripeExtractionCursor(Schema):
+    phase: StripeExtractionPhase = StripeExtractionPhase.prices
+    starting_after: str | None = None
+
+
+@dataclass(frozen=True)
+class _CouponApplication:
+    coupon_id: str | None
+    started_at: datetime | None
+
+
+@dataclass(frozen=True)
+class MappedSubscriptionDiscounts:
+    source_ids: list[str]
+    started_at: datetime | None
+    has_discount: bool
+    starts: dict[str, datetime]
+    customer_source_id: str | None = None
+    customer_started_at: datetime | None = None
+    block: str | None = None
+
+
+class StripeAdapter:
+    def __init__(self, access_token: str) -> None:
+        self._client = stripe_lib.StripeClient(
+            access_token, stripe_version=STRIPE_API_VERSION
+        )
+        self._account: stripe_lib.Account | None = None
+        self._coupon_products: dict[str, list[str] | None] = {}
+
+    async def verify_scopes(self) -> list[str]:
+        """Probe every permission the migration needs, concurrently, and return the
+        labels of the ones the key is missing (empty list = fully scoped).
+
+        Stripe has no endpoint to introspect a restricted key's permissions, so we
+        exercise each one: a missing permission raises ``PermissionError``. Any
+        other failure — an invalid key (``AuthenticationError``), a rate limit, a
+        network blip — propagates, so we fail closed rather than accept a key we
+        couldn't fully check. The probes cover exactly what ``extract()`` and the
+        cutover read, including every object they expand (a restricted key needs
+        read access to each one), plus the ``subscription_write`` needed to stop
+        billing at cutover and Accounts Read so we can store the Stripe account
+        id and check country / Connect blockers.
+
+        Labels are the row names in Stripe's restricted-key form. Stripe has no
+        separate row for subscription schedules: the Subscriptions row grants
+        them, so the schedule probe reports as Subscriptions.
+        """
+        v1 = self._client.v1
+        probes: list[tuple[str, Callable[[], Awaitable[Any]]]] = [
+            ("Customers", lambda: v1.customers.list_async(params={"limit": 1})),
+            ("Products", lambda: v1.products.list_async(params={"limit": 1})),
+            ("Prices", lambda: v1.prices.list_async(params={"limit": 1})),
+            ("Subscriptions", lambda: v1.subscriptions.list_async(params={"limit": 1})),
+            (
+                "Subscriptions",
+                lambda: v1.subscription_schedules.list_async(params={"limit": 1}),
+            ),
+            ("Invoices", lambda: v1.invoices.list_async(params={"limit": 1})),
+            (
+                "Payment Methods",
+                lambda: v1.payment_methods.list_async(
+                    params={"limit": 1, "type": "card"}
+                ),
+            ),
+            ("Accounts", self._probe_account_read),
+            ("Coupons", lambda: v1.coupons.list_async(params={"limit": 1})),
+            (
+                "Promotion Codes",
+                lambda: v1.promotion_codes.list_async(params={"limit": 1}),
+            ),
+            ("Subscriptions (write)", self._probe_subscription_write),
+        ]
+        results = await asyncio.gather(
+            *(self._probe_scope(label, probe) for label, probe in probes)
+        )
+        return list(dict.fromkeys(label for label in results if label is not None))
+
+    async def _probe_scope(
+        self, label: str, probe: Callable[[], Awaitable[Any]]
+    ) -> str | None:
+        try:
+            await probe()
+            return None
+        except stripe_lib.PermissionError:
+            return label
+
+    async def _request(self, label: str, request: Awaitable[_T]) -> _T:
+        try:
+            return await request
+        except stripe_lib.PermissionError as e:
+            raise StripeMissingScope(label) from e
+
+    async def _probe_subscription_write(self) -> None:
+        # Probe write access without side effects: cancelling a non-existent
+        # subscription fails with "no such subscription" (InvalidRequestError)
+        # when the key can write, and with PermissionError when it can't. Only the
+        # former means the scope is granted.
+        try:
+            await self._client.v1.subscriptions.cancel_async("sub_polar_scope_probe")
+        except stripe_lib.InvalidRequestError:
+            pass
+
+    async def _probe_account_read(self) -> None:
+        # Direct retrieve so PermissionError isn't swallowed by _current_account.
+        self._account = await self._client.v1.accounts.retrieve_current_async()
+
+    async def _current_account(self) -> stripe_lib.Account | None:
+        # Create probes this via verify_scopes. Extract still best-effort for
+        # keys stored before Accounts Read was required. Only a successful
+        # read is cached — a rate-limited read must not stick and cost the id
+        # we would otherwise have stored.
+        if self._account is None:
+            try:
+                self._account = await self._client.v1.accounts.retrieve_current_async()
+            except stripe_lib.StripeError:
+                return None
+        return self._account
+
+    async def get_account_id(self) -> str | None:
+        account = await self._current_account()
+        return account.id if account else None
+
+    async def extract(self) -> AsyncIterator[CanonicalRecord]:
+        cursor: dict[str, Any] | None = None
+        while True:
+            page = await self.extract_page(cursor)
+            for record in page.records:
+                yield record
+            cursor = page.next_cursor
+            if cursor is None:
+                return
+
+    async def extract_page(
+        self, cursor: dict[str, Any] | None = None
+    ) -> ExtractionPage:
+        extraction_cursor = StripeExtractionCursor.model_validate(cursor or {})
+        if extraction_cursor.phase in (
+            StripeExtractionPhase.prices,
+            StripeExtractionPhase.inactive_prices,
+        ):
+            return await self._extract_price_page(extraction_cursor)
+        if extraction_cursor.phase == StripeExtractionPhase.coupons:
+            return await self._extract_coupon_page(extraction_cursor)
+        if extraction_cursor.phase == StripeExtractionPhase.promotion_codes:
+            return await self._extract_promotion_code_page(extraction_cursor)
+        if extraction_cursor.phase == StripeExtractionPhase.customers:
+            return await self._extract_customer_page(extraction_cursor)
+        return await self._extract_subscription_page(extraction_cursor)
+
+    async def _has_connected_accounts(self) -> bool:
+        # Best-effort: a restricted key may lack Connect read scope. Stripe
+        # answers with an empty list for a non-platform rather than an error, so
+        # only an actual connected account counts.
+        try:
+            accounts = await self._client.v1.accounts.list_async(params={"limit": 1})
+        except stripe_lib.StripeError:
+            return False
+        return bool(accounts.data)
+
+    async def get_source_account(self) -> CanonicalAccount:
+        account, has_connected_accounts = await asyncio.gather(
+            self._current_account(), self._has_connected_accounts()
+        )
+        return CanonicalAccount(
+            country=account.country if account else None,
+            has_connected_accounts=has_connected_accounts,
+        )
+
+    async def _extract_price_page(
+        self, cursor: StripeExtractionCursor
+    ) -> ExtractionPage:
+        listing_active = cursor.phase == StripeExtractionPhase.prices
+        params: stripe_lib.params.PriceListParams = {
+            "limit": PAGE_SIZE,
+            "expand": ["data.product", "data.currency_options"],
+            "active": listing_active,
+        }
+        if cursor.starting_after is not None:
+            params["starting_after"] = cursor.starting_after
+        prices = await self._request(
+            "Prices", self._client.v1.prices.list_async(params=params)
+        )
+        records = self._map_product_page(prices.data)
+        next_phase = (
+            StripeExtractionPhase.inactive_prices
+            if listing_active
+            else StripeExtractionPhase.coupons
+        )
+        return ExtractionPage(
+            records,
+            self._next_cursor(
+                cursor.phase,
+                next_phase,
+                prices.data,
+                prices.has_more,
+            ),
+        )
+
+    def _map_product_page(
+        self, prices: Sequence[stripe_lib.Price]
+    ) -> list[CanonicalProduct]:
+        grouped: dict[str, CanonicalProduct] = {}
+        for price in prices:
+            product = price.product
+            # Deleted products have no catalog row; subscriptions on them stay
+            # on the source. Archived products and inactive prices are catalog
+            # rows, so their subscriptions can still move.
+            if not isinstance(product, stripe_lib.Product) or product.get("deleted"):
+                continue
+            recurring = price.recurring
+            interval = recurring.interval if recurring else None
+            interval_count = recurring.interval_count if recurring else 1
+            key = f"{product.id}:{interval}:{interval_count}"
+            canonical = grouped.get(key)
+            if canonical is None:
+                canonical = CanonicalProduct(
+                    source_id=key,
+                    product_source_id=product.id,
+                    name=product.name or "",
+                    recurring_interval=interval,
+                    recurring_interval_count=interval_count,
+                    prices=[],
+                    archived=not bool(product.get("active")),
+                )
+                grouped[key] = canonical
+            canonical.prices.extend(self._map_prices(price, product))
+        return list(grouped.values())
+
+    async def _extract_coupon_page(
+        self, cursor: StripeExtractionCursor
+    ) -> ExtractionPage:
+        params: stripe_lib.params.CouponListParams = {
+            "limit": PAGE_SIZE,
+            "expand": ["data.applies_to", "data.currency_options"],
+        }
+        if cursor.starting_after is not None:
+            params["starting_after"] = cursor.starting_after
+        coupons = await self._request(
+            "Coupons", self._client.v1.coupons.list_async(params=params)
+        )
+        records = [
+            mapped
+            for coupon in coupons.data
+            if (mapped := self._map_coupon(coupon)) is not None
+        ]
+        return ExtractionPage(
+            records,
+            self._next_cursor(
+                StripeExtractionPhase.coupons,
+                StripeExtractionPhase.promotion_codes,
+                coupons.data,
+                coupons.has_more,
+            ),
+        )
+
+    async def _extract_promotion_code_page(
+        self, cursor: StripeExtractionCursor
+    ) -> ExtractionPage:
+        params: stripe_lib.params.PromotionCodeListParams = {
+            "limit": PAGE_SIZE,
+            "expand": [
+                "data.promotion.coupon",
+                "data.promotion.coupon.applies_to",
+                "data.promotion.coupon.currency_options",
+            ],
+        }
+        if cursor.starting_after is not None:
+            params["starting_after"] = cursor.starting_after
+        promotion_codes = await self._request(
+            "Promotion Codes",
+            self._client.v1.promotion_codes.list_async(params=params),
+        )
+        records = [
+            mapped
+            for promotion_code in promotion_codes.data
+            if (mapped := self._map_promotion_code(promotion_code)) is not None
+        ]
+        return ExtractionPage(
+            records,
+            self._next_cursor(
+                StripeExtractionPhase.promotion_codes,
+                StripeExtractionPhase.customers,
+                promotion_codes.data,
+                promotion_codes.has_more,
+            ),
+        )
+
+    async def _extract_customer_page(
+        self, cursor: StripeExtractionCursor
+    ) -> ExtractionPage:
+        params: stripe_lib.params.CustomerListParams = {
+            "limit": PAGE_SIZE,
+            "expand": [
+                "data.invoice_settings.default_payment_method",
+                "data.tax_ids",
+            ],
+        }
+        if cursor.starting_after is not None:
+            params["starting_after"] = cursor.starting_after
+        customers = await self._request(
+            "Customers", self._client.v1.customers.list_async(params=params)
+        )
+        return ExtractionPage(
+            [self._map_customer(customer) for customer in customers.data],
+            self._next_cursor(
+                StripeExtractionPhase.customers,
+                StripeExtractionPhase.subscriptions,
+                customers.data,
+                customers.has_more,
+            ),
+        )
+
+    async def _extract_subscription_page(
+        self, cursor: StripeExtractionCursor
+    ) -> ExtractionPage:
+        params: stripe_lib.params.SubscriptionListParams = {
+            "status": "all",
+            "limit": PAGE_SIZE,
+            "expand": [f"data.{path}" for path in _SUBSCRIPTION_EXPAND],
+        }
+        if cursor.starting_after is not None:
+            params["starting_after"] = cursor.starting_after
+        subscriptions = await self._request(
+            "Subscriptions",
+            self._client.v1.subscriptions.list_async(params=params),
+        )
+        records = []
+        for subscription in subscriptions.data:
+            if (
+                subscription.status in SKIPPED_SUBSCRIPTION_STATUSES
+                or not subscription["items"]["data"]
+            ):
+                continue
+            records.append(await self._subscription_record(subscription))
+        return ExtractionPage(
+            records,
+            self._next_cursor(
+                StripeExtractionPhase.subscriptions,
+                None,
+                subscriptions.data,
+                subscriptions.has_more,
+            ),
+        )
+
+    def _next_cursor(
+        self,
+        phase: StripeExtractionPhase,
+        next_phase: StripeExtractionPhase | None,
+        data: Sequence[Any],
+        has_more: bool,
+    ) -> dict[str, Any] | None:
+        if has_more:
+            return StripeExtractionCursor(
+                phase=phase, starting_after=data[-1].id
+            ).model_dump(mode="json")
+        if next_phase is None:
+            return None
+        return StripeExtractionCursor(phase=next_phase).model_dump(mode="json")
+
+    async def get_subscription(self, source_id: str) -> CanonicalSubscription | None:
+        try:
+            subscription = await self._client.v1.subscriptions.retrieve_async(
+                source_id, params={"expand": _CUTOVER_SUBSCRIPTION_EXPAND}
+            )
+        except stripe_lib.InvalidRequestError as e:
+            # The merchant deleted it on Stripe since the import.
+            if e.code == "resource_missing":
+                return None
+            raise
+        if not subscription["items"]["data"]:
+            return None
+        return await self._subscription_record(subscription, with_latest_invoice=True)
+
+    async def _subscription_record(
+        self,
+        subscription: stripe_lib.Subscription,
+        *,
+        with_latest_invoice: bool = False,
+    ) -> CanonicalSubscription:
+        record = self._map_subscription(
+            subscription, with_latest_invoice=with_latest_invoice
+        )
+        return await self._resolve_customer_discount(subscription, record)
+
+    async def _resolve_customer_discount(
+        self,
+        subscription: stripe_lib.Subscription,
+        record: CanonicalSubscription,
+    ) -> CanonicalSubscription:
+        """A customer coupon bills every recurring invoice. Fold it into this
+        subscription only when Stripe already limits it to this product."""
+        if (
+            record.discount_block is not None
+            or record.customer_discount_source_id is None
+            or record.discount_source_ids
+        ):
+            return record
+        applies_to = await self._coupon_product_ids(record.customer_discount_source_id)
+        return apply_customer_discount(
+            record,
+            self._subscription_product_id(subscription),
+            applies_to,
+        )
+
+    async def _coupon_product_ids(self, coupon_id: str) -> list[str] | None:
+        if coupon_id in self._coupon_products:
+            return self._coupon_products[coupon_id]
+        products = await self._load_coupon_product_ids(coupon_id)
+        self._coupon_products[coupon_id] = products
+        return products
+
+    async def _load_coupon_product_ids(self, coupon_id: str) -> list[str] | None:
+        try:
+            coupon = await self._request(
+                "Coupons",
+                self._client.v1.coupons.retrieve_async(
+                    coupon_id, params={"expand": ["applies_to"]}
+                ),
+            )
+        except stripe_lib.InvalidRequestError:
+            return None
+        if coupon.get("deleted"):
+            return None
+        applies_to = coupon.get("applies_to")
+        if applies_to is None:
+            return []
+        return [self._id_of(product) for product in applies_to.get("products") or []]
+
+    def _subscription_product_id(
+        self, subscription: stripe_lib.Subscription
+    ) -> str | None:
+        items = subscription["items"]["data"]
+        if not items:
+            return None
+        price = items[0].get("price")
+        if price is None or isinstance(price, str):
+            return None
+        product = price.get("product")
+        if product is None:
+            return None
+        return self._id_of(product)
+
+    async def stop_source_subscription(
+        self,
+        source_id: str,
+        *,
+        reference: str,
+        cancel_at_period_end: bool = False,
+    ) -> None:
+        """Cancel the subscription on Stripe, right now.
+
+        No proration and no final invoice: the customer already paid the source
+        through the end of the period, and the caller takes the subscription on
+        with that same period end. Cancelling one Stripe has already cancelled
+        is treated as done, so a retry converges instead of failing.
+        """
+        comment = _cancellation_comment(
+            reference, cancel_at_period_end=cancel_at_period_end
+        )
+        try:
+            await self._client.v1.subscriptions.cancel_async(
+                source_id,
+                params={"cancellation_details": {"comment": comment}},
+            )
+        except stripe_lib.InvalidRequestError:
+            if await self._is_stopped(source_id):
+                return
+            raise
+
+    async def _is_stopped(self, source_id: str) -> bool:
+        try:
+            subscription = await self._client.v1.subscriptions.retrieve_async(source_id)
+        except stripe_lib.InvalidRequestError as e:
+            # Gone entirely: it certainly isn't billing anyone.
+            return e.code == "resource_missing"
+        return subscription.status == "canceled"
+
+    def _map_prices(
+        self, price: stripe_lib.Price, product: stripe_lib.Product
+    ) -> list[CanonicalPrice]:
+        pricing_scheme = self._map_pricing_scheme(price)
+        amounts: dict[str, int | None] = {price.currency: price.unit_amount}
+        for currency, option in (price.get("currency_options") or {}).items():
+            amounts[currency] = option.get("unit_amount")
+        default_price = product.get("default_price")
+        is_default = (
+            default_price is not None and self._id_of(default_price) == price.id
+        )
+        created_at = self._to_datetime(price.get("created"))
+        active = bool(price.get("active"))
+        return [
+            CanonicalPrice(
+                source_id=price.id,
+                currency=currency,
+                amount=amount,
+                pricing_scheme=pricing_scheme,
+                is_default=is_default,
+                created_at=created_at,
+                active=active,
+            )
+            for currency, amount in amounts.items()
+        ]
+
+    def _map_pricing_scheme(self, price: stripe_lib.Price) -> CanonicalPricingScheme:
+        if price.billing_scheme == "tiered":
+            return CanonicalPricingScheme.tiered
+        recurring = price.recurring
+        if recurring is not None and recurring.usage_type == "metered":
+            return CanonicalPricingScheme.metered
+        if self._package_rounds_down(price):
+            return CanonicalPricingScheme.package
+        return CanonicalPricingScheme.fixed
+
+    def _package_rounds_down(self, price: stripe_lib.Price) -> bool:
+        # One unit rounded down to whole packages bills nothing. Rounded up it bills
+        # one package, the flat unit amount, which imports as a fixed price.
+        transform = price.get("transform_quantity")
+        if transform is None:
+            return False
+        return transform.get("round") == "down" and transform.get("divide_by") > 1
+
+    def _map_subscription(
+        self,
+        subscription: stripe_lib.Subscription,
+        *,
+        with_latest_invoice: bool = False,
+    ) -> CanonicalSubscription:
+        items = subscription["items"]["data"]
+        first_item = items[0]
+        discounts = self._map_discount_attachments(subscription)
+        current_period_end = first_item.get("current_period_end")
+        return CanonicalSubscription(
+            source_id=subscription.id,
+            customer_source_id=self._id_of(subscription.customer),
+            price_source_id=self._id_of(first_item["price"]),
+            status=self._map_status(subscription.status),
+            collection_method=self._map_collection_method(
+                subscription.collection_method
+            ),
+            current_period_start=self._to_datetime(
+                first_item.get("current_period_start")
+            ),
+            current_period_end=self._to_datetime(current_period_end),
+            trialing=subscription.status == "trialing",
+            paused_collection=subscription.pause_collection is not None,
+            line_item_count=len(items),
+            quantity=self._quantity(first_item),
+            payment_method=self._resolve_payment_method(subscription),
+            has_discount=discounts.has_discount,
+            discount_source_ids=discounts.source_ids,
+            discount_started_at=discounts.started_at,
+            discount_starts=discounts.starts,
+            customer_discount_source_id=discounts.customer_source_id,
+            customer_discount_started_at=discounts.customer_started_at,
+            discount_block=discounts.block,
+            cancel_at_period_end=_cancel_at_period_end(
+                subscription, current_period_end
+            ),
+            cancel_at_period_end_known=_cancel_at_period_end_known(subscription),
+            cancel_at=self._to_datetime(subscription.cancel_at),
+            has_scheduled_changes=self._has_scheduled_changes(subscription),
+            # For a pending end Stripe dates the request, not the end itself.
+            canceled_at=self._to_datetime(subscription.canceled_at)
+            if _pending_period_end(subscription, current_period_end)
+            else None,
+            cancellation_reason=_cancellation_feedback(
+                subscription, current_period_end
+            ),
+            trial_end=self._to_datetime(subscription.trial_end),
+            stopped_for_migration=self._stopped_for_migration(subscription),
+            latest_invoice_unpaid=with_latest_invoice
+            and self._latest_invoice_unpaid(subscription),
+            anchor_day=self._anchor_day(subscription),
+            currency=subscription.currency,
+            automatic_tax=self._automatic_tax(subscription),
+            price_tax_behavior=self._price_tax_behavior(first_item.get("price")),
+            has_tax_rates=self._has_tax_rates(subscription, first_item),
+            tax_rate_behavior=self._tax_rate_behavior(subscription, first_item),
+            customer_balance=self._customer_balance(subscription),
+            managed_payments=self._managed_payments(subscription),
+        )
+
+    def _managed_payments(self, subscription: stripe_lib.Subscription) -> bool:
+        settings = subscription.get("managed_payments")
+        return bool(settings and settings.get("enabled"))
+
+    def _quantity(self, item: Any) -> int:
+        # Metered items carry no quantity; 0 is a real quantity that bills nothing.
+        quantity = item.get("quantity")
+        return 1 if quantity is None else quantity
+
+    def _map_subscription_discounts(
+        self, subscription: stripe_lib.Subscription
+    ) -> MappedSubscriptionDiscounts:
+        """Expanded Clover discounts carry ``source.coupon``. A bare id still
+        means a coupon is present, but not which one."""
+        discounts = subscription.get("discounts") or []
+        source_ids: list[str] = []
+        starts: dict[str, datetime] = {}
+        started_at: datetime | None = None
+        for discount in discounts:
+            coupon_id = self._coupon_id_of_discount(discount)
+            if coupon_id is None or coupon_id in source_ids:
+                continue
+            source_ids.append(coupon_id)
+            start = self._to_datetime(
+                discount.get("start") if not isinstance(discount, str) else None
+            )
+            if start is not None:
+                starts[coupon_id] = start
+            if started_at is None:
+                started_at = start
+        return MappedSubscriptionDiscounts(
+            source_ids=source_ids,
+            started_at=started_at,
+            has_discount=bool(discounts) or bool(source_ids),
+            starts=starts,
+        )
+
+    def _coupon_id_of_discount(self, discount: Any) -> str | None:
+        if isinstance(discount, str):
+            return None
+        source = discount.get("source")
+        coupon = source.get("coupon") if source is not None else discount.get("coupon")
+        if coupon is None:
+            return None
+        return self._id_of(coupon)
+
+    def _map_discount_attachments(
+        self, subscription: stripe_lib.Subscription
+    ) -> MappedSubscriptionDiscounts:
+        """Keep a discount only when one Polar coupon would take the same amount
+        off this charge for the same duration. Anything else blocks the import."""
+        mapped = self._map_subscription_discounts(subscription)
+        items = subscription["items"]["data"]
+        per_item = [
+            self._coupon_applications(item.get("discounts") or []) for item in items
+        ]
+        any_item = any(per_item)
+        customer_id, customer_started_at, customer_present = self._customer_discount(
+            subscription
+        )
+        source_ids = list(mapped.source_ids)
+        starts = dict(mapped.starts)
+        started_at = mapped.started_at
+        has_discount = mapped.has_discount
+        block: str | None = None
+        subscription_stack = self._subscription_discounts_stack(subscription)
+
+        if (
+            (mapped.has_discount and any_item)
+            or self._an_item_has_several_coupons(per_item)
+            or (any_item and customer_present)
+            or subscription_stack
+        ):
+            block = SubscriptionDiscountBlock.stacked
+            has_discount = True
+            if subscription_stack:
+                source_ids = []
+                starts = {}
+                started_at = None
+        elif len(items) == 1 and any_item and not mapped.has_discount:
+            folded = self._fold_single_item_coupon(per_item[0])
+            if folded is not None:
+                source_ids, starts, started_at = folded
+            has_discount = True
+        elif len(items) > 1 and any_item and not self._items_share_one_coupon(per_item):
+            block = SubscriptionDiscountBlock.item
+            has_discount = True
+        elif any_item:
+            has_discount = True
+
+        if block is None and mapped.has_discount and customer_present:
+            customer_id = None
+            customer_started_at = None
+            customer_present = False
+        if block is None and customer_present and not source_ids:
+            has_discount = True
+            if customer_id is None:
+                block = SubscriptionDiscountBlock.customer
+
+        schedule_block = self._schedule_discount_block(subscription)
+        if schedule_block is not None:
+            has_discount = True
+            if block is None:
+                block = schedule_block
+        if block is not None:
+            customer_id = None
+            customer_started_at = None
+
+        return MappedSubscriptionDiscounts(
+            source_ids=source_ids,
+            started_at=started_at,
+            has_discount=has_discount,
+            starts=starts,
+            customer_source_id=customer_id,
+            customer_started_at=customer_started_at,
+            block=block,
+        )
+
+    def _fold_single_item_coupon(
+        self, applications: list[_CouponApplication]
+    ) -> tuple[list[str], dict[str, datetime], datetime | None] | None:
+        if len(applications) != 1:
+            return None
+        coupon_id = applications[0].coupon_id
+        if coupon_id is None:
+            return None
+        started_at = applications[0].started_at
+        starts = {coupon_id: started_at} if started_at is not None else {}
+        return [coupon_id], starts, started_at
+
+    def _coupon_applications(self, discounts: list[Any]) -> list[_CouponApplication]:
+        applications: list[_CouponApplication] = []
+        for discount in discounts:
+            if isinstance(discount, str):
+                applications.append(_CouponApplication(None, None))
+                continue
+            applications.append(
+                _CouponApplication(
+                    self._coupon_id_of_discount(discount),
+                    self._to_datetime(discount.get("start")),
+                )
+            )
+        return applications
+
+    def _an_item_has_several_coupons(
+        self, per_item: list[list[_CouponApplication]]
+    ) -> bool:
+        return any(len(applications) > 1 for applications in per_item)
+
+    def _subscription_discounts_stack(
+        self, subscription: stripe_lib.Subscription
+    ) -> bool:
+        """Several different coupons on the subscription each come off the invoice."""
+        keys: set[str] = set()
+        for index, discount in enumerate(subscription.get("discounts") or []):
+            if isinstance(discount, str):
+                keys.add(f"id:{discount}")
+                continue
+            coupon_id = self._coupon_id_of_discount(discount)
+            if coupon_id is not None:
+                keys.add(f"coupon:{coupon_id}")
+                continue
+            discount_id = discount.get("id")
+            keys.add(f"id:{discount_id}" if discount_id else f"unknown:{index}")
+        return len(keys) > 1
+
+    def _items_share_one_coupon(self, per_item: list[list[_CouponApplication]]) -> bool:
+        if not per_item or any(not applications for applications in per_item):
+            return False
+        coupon_ids: list[str] = []
+        for applications in per_item:
+            if len(applications) != 1 or applications[0].coupon_id is None:
+                return False
+            coupon_ids.append(applications[0].coupon_id)
+        return len(set(coupon_ids)) == 1
+
+    def _customer_discount(
+        self, subscription: stripe_lib.Subscription
+    ) -> tuple[str | None, datetime | None, bool]:
+        customer = subscription.get("customer")
+        if customer is None or isinstance(customer, str):
+            return None, None, False
+        discount = customer.get("discount")
+        if not discount:
+            return None, None, False
+        if isinstance(discount, str):
+            return None, None, True
+        return (
+            self._coupon_id_of_discount(discount),
+            self._to_datetime(discount.get("start")),
+            True,
+        )
+
+    def _schedule_discount_block(
+        self, subscription: stripe_lib.Subscription
+    ) -> str | None:
+        schedule = subscription.get("schedule")
+        if not schedule:
+            return None
+        if isinstance(schedule, str):
+            return SubscriptionDiscountBlock.scheduled
+        if schedule.get("status") != "active":
+            return None
+        phases = schedule.get("phases") or []
+        if any(self._phase_discounts_an_invoice_item(phase) for phase in phases):
+            return SubscriptionDiscountBlock.invoice_item
+        current = schedule.get("current_phase")
+        if not current:
+            return SubscriptionDiscountBlock.scheduled
+        boundary = current.get("end_date")
+        if boundary is None:
+            return None
+        known = self._known_discount_keys(subscription)
+        current_signature = self._live_discount_signature(subscription)
+        for phase in phases:
+            start = phase.get("start_date")
+            if start is None or start < boundary:
+                continue
+            if self._signatures_differ(
+                current_signature, self._phase_signature(phase, known)
+            ):
+                return SubscriptionDiscountBlock.scheduled
+        return None
+
+    def _signatures_differ(
+        self,
+        current: tuple[frozenset[str], tuple[frozenset[str], ...]],
+        upcoming: tuple[frozenset[str], tuple[frozenset[str], ...]],
+    ) -> bool:
+        if current[0] != upcoming[0]:
+            return True
+        if len(current[1]) == len(upcoming[1]):
+            return current[1] != upcoming[1]
+        return _occupied_item_discounts(current[1]) != _occupied_item_discounts(
+            upcoming[1]
+        )
+
+    def _phase_discounts_an_invoice_item(self, phase: Any) -> bool:
+        return any(
+            item.get("discounts") for item in (phase.get("add_invoice_items") or [])
+        )
+
+    def _known_discount_keys(
+        self, subscription: stripe_lib.Subscription
+    ) -> dict[str, str]:
+        known: dict[str, str] = {}
+        discounts = list(subscription.get("discounts") or [])
+        customer = subscription.get("customer")
+        if customer is not None and not isinstance(customer, str):
+            customer_discount = customer.get("discount")
+            if customer_discount:
+                discounts.append(customer_discount)
+        for item in subscription["items"]["data"]:
+            discounts.extend(item.get("discounts") or [])
+        for discount in discounts:
+            if isinstance(discount, str):
+                continue
+            key = self._live_discount_key(discount)
+            discount_id = discount.get("id")
+            if key is None or not discount_id:
+                continue
+            known[discount_id] = key
+            promo = discount.get("promotion_code")
+            if promo:
+                known[f"promo:{self._id_of(promo)}"] = key
+        return known
+
+    def _live_discount_signature(
+        self, subscription: stripe_lib.Subscription
+    ) -> tuple[frozenset[str], tuple[frozenset[str], ...]]:
+        subscription_keys = frozenset(
+            key
+            for discount in (subscription.get("discounts") or [])
+            if (key := self._live_discount_key(discount)) is not None
+        )
+        item_keys = tuple(
+            frozenset(
+                key
+                for discount in (item.get("discounts") or [])
+                if (key := self._live_discount_key(discount)) is not None
+            )
+            for item in subscription["items"]["data"]
+        )
+        return subscription_keys, item_keys
+
+    def _live_discount_key(self, discount: Any) -> str | None:
+        if isinstance(discount, str):
+            return f"id:{discount}"
+        coupon_id = self._coupon_id_of_discount(discount)
+        if coupon_id is not None:
+            return f"coupon:{coupon_id}"
+        promo = discount.get("promotion_code")
+        if promo:
+            return f"promo:{self._id_of(promo)}"
+        discount_id = discount.get("id")
+        if discount_id:
+            return f"id:{discount_id}"
+        return None
+
+    def _phase_signature(
+        self, phase: Any, known: dict[str, str]
+    ) -> tuple[frozenset[str], tuple[frozenset[str], ...]]:
+        subscription_keys = self._phase_discount_keys(
+            phase.get("discounts") or [], known
+        )
+        phase_items = phase.get("items") or []
+        item_keys = tuple(
+            self._phase_discount_keys(item.get("discounts") or [], known)
+            for item in phase_items
+        )
+        return subscription_keys, item_keys
+
+    def _phase_discount_keys(
+        self, entries: list[Any], known: dict[str, str]
+    ) -> frozenset[str]:
+        return frozenset(
+            key
+            for entry in entries
+            if (key := self._phase_discount_key(entry, known)) is not None
+        )
+
+    def _phase_discount_key(self, entry: Any, known: dict[str, str]) -> str | None:
+        if isinstance(entry, str):
+            return known.get(entry, f"id:{entry}")
+        coupon = entry.get("coupon")
+        if coupon:
+            return f"coupon:{self._id_of(coupon)}"
+        promo = entry.get("promotion_code")
+        if promo:
+            promo_id = self._id_of(promo)
+            return known.get(f"promo:{promo_id}", f"promo:{promo_id}")
+        discount = entry.get("discount")
+        if discount:
+            discount_id = (
+                discount if isinstance(discount, str) else self._id_of(discount)
+            )
+            return known.get(discount_id, f"id:{discount_id}")
+        return None
+
+    def _map_coupon(self, coupon: stripe_lib.Coupon) -> CanonicalDiscount | None:
+        if coupon.get("deleted"):
+            return None
+        try:
+            duration = CanonicalDiscountDuration(coupon.duration)
+        except TypeError, ValueError:
+            return None
+        percent_off = coupon.percent_off
+        if percent_off is not None:
+            basis_points = round(percent_off * 100)
+            discount_type = CanonicalDiscountType.percentage
+            amounts: dict[str, int] = {}
+        else:
+            basis_points = None
+            discount_type = CanonicalDiscountType.fixed
+            amounts = self._coupon_amounts(coupon)
+        remaining = self._remaining_redemptions(
+            coupon.max_redemptions, coupon.times_redeemed or 0
+        )
+        applies_to = coupon.get("applies_to")
+        product_source_ids = list(applies_to.products) if applies_to is not None else []
+        return CanonicalDiscount(
+            source_id=coupon.id,
+            name=coupon.name or coupon.id,
+            discount_type=discount_type,
+            duration=duration,
+            duration_in_months=coupon.duration_in_months,
+            basis_points=basis_points,
+            amounts=amounts,
+            ends_at=self._to_datetime(coupon.redeem_by),
+            max_redemptions=remaining,
+            product_source_ids=product_source_ids,
+        )
+
+    def _map_promotion_code(
+        self, promotion_code: stripe_lib.PromotionCode
+    ) -> CanonicalDiscount | None:
+        promotion = promotion_code.promotion
+        coupon = promotion.coupon if promotion is not None else None
+        if coupon is None or isinstance(coupon, str):
+            return None
+        # A customer's own code says nothing about the coupon's public code.
+        if promotion_code.get("customer"):
+            return None
+        mapped = self._map_coupon(coupon)
+        if mapped is None:
+            return None
+        code = polar_discount_code(promotion_code.code)
+        if code is None:
+            return None
+        remaining = tighter_cap(
+            mapped.max_redemptions,
+            self._remaining_redemptions(
+                promotion_code.get("max_redemptions"),
+                promotion_code.get("times_redeemed") or 0,
+            ),
+        )
+        ends_at = earlier_datetime(
+            mapped.ends_at, self._to_datetime(promotion_code.get("expires_at"))
+        )
+        spent = (
+            not promotion_code.get("active", True)
+            or remaining == 0
+            or (ends_at is not None and ends_at <= utc_now())
+        )
+        # A spent code can't be redeemed, so restrictions Polar can't enforce
+        # don't matter: keep it at its limit instead of dropping the code.
+        if not spent and self._promotion_code_is_restricted(promotion_code):
+            return None
+        return replace(
+            mapped,
+            code=code,
+            max_redemptions=0 if spent else remaining,
+            ends_at=ends_at,
+        )
+
+    def _promotion_code_is_restricted(
+        self, promotion_code: stripe_lib.PromotionCode
+    ) -> bool:
+        restrictions = promotion_code.get("restrictions")
+        if restrictions is None:
+            return False
+        return bool(restrictions.get("first_time_transaction")) or (
+            restrictions.get("minimum_amount") is not None
+        )
+
+    def _coupon_amounts(self, coupon: stripe_lib.Coupon) -> dict[str, int]:
+        amounts: dict[str, int] = {}
+        if coupon.amount_off is not None and coupon.currency is not None:
+            amounts[coupon.currency] = coupon.amount_off
+        for currency, option in (coupon.get("currency_options") or {}).items():
+            amount_off = option.get("amount_off")
+            if amount_off is not None:
+                amounts[currency] = amount_off
+        return amounts
+
+    def _remaining_redemptions(
+        self, max_redemptions: int | None, times_redeemed: int
+    ) -> int | None:
+        if max_redemptions is None:
+            return None
+        return max(max_redemptions - times_redeemed, 0)
+
+    def _automatic_tax(self, subscription: stripe_lib.Subscription) -> bool | None:
+        automatic_tax = subscription.get("automatic_tax")
+        if automatic_tax is None:
+            return None
+        return bool(automatic_tax.get("enabled"))
+
+    def _price_tax_behavior(self, price: Any) -> TaxBehavior | None:
+        if price is None or isinstance(price, str):
+            return None
+        return parse_tax_behavior(price.get("tax_behavior"))
+
+    def _has_tax_rates(
+        self, subscription: stripe_lib.Subscription, first_item: Any
+    ) -> bool:
+        return bool(subscription.get("default_tax_rates")) or bool(
+            first_item.get("tax_rates")
+        )
+
+    def _has_scheduled_changes(self, subscription: stripe_lib.Subscription) -> bool:
+        """Any attached schedule counts, even one only running its current phase:
+        the merchant can add a phase to it at any time."""
+        return bool(subscription.get("schedule"))
+
+    def _tax_rate_behavior(
+        self, subscription: stripe_lib.Subscription, first_item: Any
+    ) -> TaxBehavior | None:
+        # An item's own rates replace the subscription's defaults.
+        rates = first_item.get("tax_rates") or subscription.get("default_tax_rates")
+        inclusive = {rate.get("inclusive") for rate in rates or []}
+        if inclusive == {True}:
+            return TaxBehavior.inclusive
+        if inclusive == {False}:
+            return TaxBehavior.exclusive
+        return None
+
+    def _customer_balance(self, subscription: stripe_lib.Subscription) -> int | None:
+        customer = subscription.customer
+        if not isinstance(customer, stripe_lib.Customer):
+            return None
+        return customer.get("balance")
+
+    def _anchor_day(self, subscription: stripe_lib.Subscription) -> int | None:
+        anchor = self._to_datetime(subscription.billing_cycle_anchor)
+        return anchor.day if anchor is not None else None
+
+    def _stopped_for_migration(self, subscription: stripe_lib.Subscription) -> bool:
+        """Prefix, not the full reference: missing our own cancellation strands a
+        customer billed by nobody, while matching someone else's only takes over a
+        subscription whose source billing is already stopped."""
+        if subscription.status != "canceled":
+            return False
+        details = subscription.cancellation_details
+        comment = details.comment if details is not None else None
+        return bool(comment and comment.startswith(CANCELLATION_COMMENT_PREFIX))
+
+    def _latest_invoice_unpaid(self, subscription: stripe_lib.Subscription) -> bool:
+        """An unexpanded invoice counts: we can't tell whether it was paid."""
+        invoice = subscription.get("latest_invoice")
+        if not invoice:
+            return False
+        if isinstance(invoice, str):
+            return True
+        return invoice.get("status") in {"draft", "open"} and bool(
+            invoice.get("amount_due")
+        )
+
+    def _map_customer(self, customer: stripe_lib.Customer) -> CanonicalCustomer:
+        address = customer.get("address")
+        country = address.get("country") if address is not None else None
+        tax_id = self._map_tax_id(customer, country)
+        return CanonicalCustomer(
+            source_id=customer.id,
+            email=customer.email or "",
+            name=customer.name,
+            country=country,
+            country_hint=None if country else self._customer_country_hint(customer),
+            billing_address=self._billing_address(address, country),
+            tax_id=tax_id,
+            tax_id_dropped=tax_id is None and self._has_source_tax_id(customer),
+            tax_exempt=customer.get("tax_exempt") == "exempt",
+        )
+
+    def _billing_address(self, address: Any, country: str | None) -> Address | None:
+        if address is None or not country:
+            return None
+        try:
+            return Address.model_validate(
+                {
+                    "line1": address.get("line1"),
+                    "line2": address.get("line2"),
+                    "postal_code": address.get("postal_code"),
+                    "city": address.get("city"),
+                    "state": address.get("state"),
+                    "country": country.upper(),
+                }
+            )
+        except ValidationError:
+            return None
+
+    def _customer_country_hint(self, customer: stripe_lib.Customer) -> str | None:
+        invoice_settings = customer.get("invoice_settings")
+        payment_method = (
+            invoice_settings.get("default_payment_method")
+            if invoice_settings is not None
+            else None
+        )
+        billing_country, card_country = self._payment_method_countries(payment_method)
+        if billing_country or card_country:
+            return billing_country or card_country
+        source_billing_country, source_card_country = self._source_countries(
+            customer.get("default_source")
+        )
+        return source_billing_country or source_card_country
+
+    def _payment_method_countries(
+        self, payment_method: Any
+    ) -> tuple[str | None, str | None]:
+        if not isinstance(payment_method, stripe_lib.PaymentMethod):
+            return None, None
+        billing_details = payment_method.get("billing_details")
+        address = (
+            billing_details.get("address") if billing_details is not None else None
+        )
+        billing_country = address.get("country") if address is not None else None
+        details = payment_method.get(payment_method.type) or {}
+        return billing_country, details.get("country")
+
+    def _source_countries(self, source: Any) -> tuple[str | None, str | None]:
+        if source is None or isinstance(source, str):
+            return None, None
+        owner = source.get("owner") or {}
+        address = owner.get("address") or {}
+        billing_country = source.get("address_country") or address.get("country")
+        card = source.get("card") or {}
+        return billing_country, source.get("country") or card.get("country")
+
+    def _has_source_tax_id(self, customer: stripe_lib.Customer) -> bool:
+        tax_ids = customer.get("tax_ids")
+        return customer.get("tax_exempt") == "reverse" or bool(
+            tax_ids and tax_ids["data"]
+        )
+
+    def _map_tax_id(
+        self, customer: stripe_lib.Customer, country: str | None
+    ) -> TaxID | None:
+        tax_ids = customer.get("tax_ids")
+        mapped: list[TaxID] = []
+        for item in (tax_ids["data"] if tax_ids else None) or []:
+            tax_id = from_stripe_tax_id(item.get("type") or "", item.get("value"))
+            if tax_id is not None:
+                mapped.append(tax_id)
+        if not mapped:
+            return None
+
+        allowed = COUNTRY_TAX_ID_MAP.get(country.upper()) if country else None
+        if allowed is not None:
+            for fmt in allowed:
+                for tax_id in mapped:
+                    if tax_id[1] is fmt:
+                        return tax_id
+            return None
+
+        for tax_id in mapped:
+            if tax_id[1] is TaxIDFormat.eu_vat:
+                return tax_id
+        return None
+
+    def _resolve_payment_method(
+        self, subscription: stripe_lib.Subscription
+    ) -> CanonicalPaymentMethod | None:
+        # Fall back to the customer's default like Stripe does when the sub has
+        # no explicit method, so a re-entry-only method isn't silently missed.
+        payment_method = self._map_payment_method(subscription.default_payment_method)
+        if payment_method is not None:
+            return payment_method
+        customer = subscription.customer
+        if not isinstance(customer, stripe_lib.Customer):
+            return None
+        invoice_settings = customer.invoice_settings
+        if invoice_settings is not None:
+            payment_method = self._map_payment_method(
+                invoice_settings.default_payment_method
+            )
+            if payment_method is not None:
+                return payment_method
+        default_source = customer.default_source
+        if default_source is not None and not isinstance(default_source, str):
+            # Legacy `source`/`card` object (not a PaymentMethod): doesn't PAN-copy.
+            return CanonicalPaymentMethod(
+                source_id=default_source["id"], type=CanonicalPaymentMethodType.other
+            )
+        return None
+
+    def _map_status(self, status: str) -> CanonicalSubscriptionStatus:
+        try:
+            return CanonicalSubscriptionStatus(status)
+        except ValueError:
+            return CanonicalSubscriptionStatus.other
+
+    def _map_collection_method(self, method: str | None) -> CanonicalCollectionMethod:
+        if method == "send_invoice":
+            return CanonicalCollectionMethod.send_invoice
+        return CanonicalCollectionMethod.charge_automatically
+
+    def _map_payment_method(self, payment_method: Any) -> CanonicalPaymentMethod | None:
+        if not isinstance(payment_method, stripe_lib.PaymentMethod):
+            return None
+        try:
+            type = CanonicalPaymentMethodType(payment_method.type)
+        except ValueError:
+            type = CanonicalPaymentMethodType.other
+        details = payment_method.get(payment_method.type) or {}
+        billing_country, card_country = self._payment_method_countries(payment_method)
+        return CanonicalPaymentMethod(
+            source_id=payment_method.id,
+            type=type,
+            last4=details.get("last4"),
+            brand=details.get("brand"),
+            exp_month=details.get("exp_month"),
+            exp_year=details.get("exp_year"),
+            billing_country=billing_country,
+            card_country=card_country,
+        )
+
+    def _id_of(self, value: Any) -> str:
+        if isinstance(value, str):
+            return value
+        return value["id"]
+
+    def _to_datetime(self, timestamp: int | None) -> datetime | None:
+        if timestamp is None:
+            return None
+        return datetime.fromtimestamp(timestamp, tz=UTC)

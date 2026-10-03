@@ -1,0 +1,71 @@
+from datetime import UTC, date, datetime
+from enum import StrEnum
+
+from sqlalchemy import (
+    CTE,
+    Function,
+    SQLColumnExpression,
+    TextClause,
+    cte,
+    func,
+    select,
+    text,
+)
+
+
+class TimeInterval(StrEnum):
+    year = "year"
+    month = "month"
+    week = "week"
+    day = "day"
+    hour = "hour"
+
+    def sql_interval(self) -> TextClause:
+        return text(f"'1 {self.value}'::interval")
+
+    def sql_date_trunc(
+        self, column: SQLColumnExpression[datetime] | datetime
+    ) -> Function[datetime]:
+        return func.date_trunc(self.value, column)
+
+
+def get_timestamp_series_cte(
+    start_timestamp: datetime | SQLColumnExpression[datetime],
+    end_timestamp: datetime | SQLColumnExpression[datetime],
+    interval: TimeInterval,
+) -> CTE:
+    # generate_series steps by wall-clock time: after a DST gap at midnight
+    # (e.g. America/Santiago) every later value sits at 01:00, no longer at the
+    # bucket start other queries truncate to.
+    series = func.generate_series(
+        start_timestamp, end_timestamp, interval.sql_interval()
+    ).column_valued("timestamp")
+    return cte(select(interval.sql_date_trunc(series).label("timestamp")))
+
+
+MIN_DATETIME = datetime(
+    2023, 1, 1, tzinfo=UTC
+)  # Before that, Polar didn't even exist! 🚀
+MIN_DATE = MIN_DATETIME.date()
+
+MAX_INTERVAL_DAYS: dict[TimeInterval, int] = {
+    TimeInterval.hour: 7,
+    TimeInterval.day: 366,
+    TimeInterval.week: 7 * 53,
+    TimeInterval.month: 365 * 4,
+    TimeInterval.year: 365 * 10,
+}
+
+MIN_INTERVAL_DAYS: dict[TimeInterval, int] = {
+    TimeInterval.hour: 0,
+    TimeInterval.day: 0,
+    TimeInterval.week: 14,
+    TimeInterval.month: 60,
+    TimeInterval.year: 366,
+}
+
+
+def is_under_limits(start_date: date, end_date: date, interval: TimeInterval) -> bool:
+    if start_date > end_date:
+        return False
+    return end_date.toordinal() - start_date.toordinal() <= MAX_INTERVAL_DAYS[interval]

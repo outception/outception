@@ -1,0 +1,469 @@
+from collections.abc import Sequence
+from typing import cast
+from uuid import UUID
+
+import structlog
+from sqlalchemy import CursorResult, Select, func
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import joinedload
+
+from polar.config import settings
+from polar.exceptions import PolarError
+from polar.integrations.polar.service import billing_member_role
+from polar.integrations.polar.service import polar_self as polar_self_service
+from polar.kit.utils import utc_now
+from polar.models import User, UserOrganization
+from polar.models.user import IdentityVerificationStatus
+from polar.models.user_organization import (
+    OrganizationNotificationSettings,
+    OrganizationRole,
+)
+from polar.postgres import AsyncReadSession, AsyncSession, sql
+
+from .repository import UserOrganizationRepository
+
+log = structlog.get_logger()
+
+ADMIN_CAPABLE_ROLES = {OrganizationRole.owner, OrganizationRole.admin}
+
+
+class UserOrganizationError(PolarError): ...
+
+
+class OrganizationNotFound(UserOrganizationError):
+    def __init__(self, organization_id: UUID) -> None:
+        self.organization_id = organization_id
+        message = f"Organization with id {organization_id} not found."
+        super().__init__(message, 404)
+
+
+class UserNotMemberOfOrganization(UserOrganizationError):
+    def __init__(self, user_id: UUID, organization_id: UUID) -> None:
+        self.user_id = user_id
+        self.organization_id = organization_id
+        message = (
+            f"User with id {user_id} is not a member of organization {organization_id}."
+        )
+        super().__init__(message, 404)
+
+
+class CannotRemoveOrganizationOwner(UserOrganizationError):
+    def __init__(self, user_id: UUID, organization_id: UUID) -> None:
+        self.user_id = user_id
+        self.organization_id = organization_id
+        message = f"Cannot remove user {user_id} - they are the owner of organization {organization_id}."
+        super().__init__(message, 403)
+
+
+class OrganizationWouldHaveNoAdmins(UserOrganizationError):
+    def __init__(self, organization_id: UUID) -> None:
+        self.organization_id = organization_id
+        message = (
+            f"Operation rejected: organization {organization_id} would be left "
+            f"with no users holding admin or owner role."
+        )
+        super().__init__(message, 403)
+
+
+class InvalidOwnerRoleAssignment(UserOrganizationError):
+    def __init__(self, user_id: UUID, organization_id: UUID) -> None:
+        self.user_id = user_id
+        self.organization_id = organization_id
+        message = (
+            f"User {user_id} cannot be assigned the 'owner' role on "
+            f"organization {organization_id}."
+        )
+        super().__init__(message, 400)
+
+
+class OwnerRoleCannotBeRemoved(UserOrganizationError):
+    def __init__(self, user_id: UUID, organization_id: UUID) -> None:
+        self.user_id = user_id
+        self.organization_id = organization_id
+        message = (
+            f"User {user_id} carries the 'owner' role on organization "
+            f"{organization_id} and cannot be moved off it directly. "
+            f"Ownership must be transferred first."
+        )
+        super().__init__(message, 400)
+
+
+class ConcurrentRoleModification(UserOrganizationError):
+    def __init__(self, user_id: UUID, organization_id: UUID) -> None:
+        self.user_id = user_id
+        self.organization_id = organization_id
+        message = (
+            f"User {user_id}'s role on organization {organization_id} was "
+            f"modified by a concurrent request; retry the role change."
+        )
+        super().__init__(message, 409)
+
+
+class NewOwnerNotVerified(UserOrganizationError):
+    def __init__(self, user_id: UUID, status: IdentityVerificationStatus) -> None:
+        self.user_id = user_id
+        message = (
+            f"User {user_id} cannot be promoted to 'owner': "
+            f"identity verification status is {status.get_display_name()}, "
+            f"must be {IdentityVerificationStatus.verified.get_display_name()}."
+        )
+        super().__init__(message, 400)
+
+
+class AlreadyOwner(UserOrganizationError):
+    def __init__(self, user_id: UUID, organization_id: UUID) -> None:
+        self.user_id = user_id
+        self.organization_id = organization_id
+        message = (
+            f"User {user_id} already holds 'owner' on organization {organization_id}."
+        )
+        super().__init__(message, 400)
+
+
+class UserOrganizationService:
+    async def list_by_org(
+        self, session: AsyncReadSession, org_id: UUID
+    ) -> Sequence[UserOrganization]:
+        stmt = (
+            sql.select(UserOrganization)
+            .where(
+                UserOrganization.organization_id == org_id,
+                ~UserOrganization.is_deleted,
+            )
+            .options(
+                joinedload(UserOrganization.user),
+                joinedload(UserOrganization.organization),
+            )
+        )
+
+        res = await session.execute(stmt)
+        return res.scalars().unique().all()
+
+    async def get_member_count(self, session: AsyncReadSession, org_id: UUID) -> int:
+        """Get the count of active members in an organization."""
+        stmt = sql.select(func.count(UserOrganization.user_id)).where(
+            UserOrganization.organization_id == org_id,
+            ~UserOrganization.is_deleted,
+        )
+        res = await session.execute(stmt)
+        count = res.scalar()
+        return count if count else 0
+
+    async def list_by_user_id(
+        self, session: AsyncSession, user_id: UUID
+    ) -> Sequence[UserOrganization]:
+        stmt = self._get_list_by_user_id_query(user_id)
+        res = await session.execute(stmt)
+        return res.scalars().unique().all()
+
+    async def get_user_organization_count(
+        self, session: AsyncSession, user_id: UUID
+    ) -> int:
+        stmt = self._get_list_by_user_id_query(
+            user_id, ordered=False
+        ).with_only_columns(func.count(UserOrganization.organization_id))
+        res = await session.execute(stmt)
+        count = res.scalar()
+        if count:
+            return count
+        return 0
+
+    async def get_by_user_and_org(
+        self,
+        session: AsyncReadSession,
+        user_id: UUID,
+        organization_id: UUID,
+    ) -> UserOrganization | None:
+        stmt = (
+            sql.select(UserOrganization)
+            .where(
+                UserOrganization.user_id == user_id,
+                UserOrganization.organization_id == organization_id,
+                ~UserOrganization.is_deleted,
+            )
+            .options(
+                joinedload(UserOrganization.user),
+                joinedload(UserOrganization.organization),
+            )
+        )
+
+        res = await session.execute(stmt)
+        return res.scalars().unique().one_or_none()
+
+    async def set_role(
+        self,
+        session: AsyncSession,
+        *,
+        user_id: UUID,
+        organization_id: UUID,
+        role: OrganizationRole,
+    ) -> UserOrganization:
+        """
+        Set a user's role on an organization, with validation.
+
+        - `role == owner` is rejected. Ownership transfers flow through
+          a dedicated path (today: backoffice `change_owner`), which
+          atomically demotes the previous owner.
+        - A user that currently carries `owner` cannot be moved off it
+          directly; ownership transfer must promote a replacement.
+        """
+        user_org = await self.get_by_user_and_org(session, user_id, organization_id)
+        if user_org is None:
+            raise UserNotMemberOfOrganization(user_id, organization_id)
+
+        if role == OrganizationRole.owner:
+            raise InvalidOwnerRoleAssignment(user_id, organization_id)
+
+        if user_org.role == OrganizationRole.owner:
+            raise OwnerRoleCannotBeRemoved(user_id, organization_id)
+
+        if user_org.role == role:
+            return user_org
+
+        if user_org.role in ADMIN_CAPABLE_ROLES and role not in ADMIN_CAPABLE_ROLES:
+            await self._assert_admin_capability_after_loss(
+                session, user_id=user_id, organization_id=organization_id
+            )
+
+        previous_role = user_org.role
+        result = cast(
+            CursorResult[UserOrganization],
+            await session.execute(
+                sql.update(UserOrganization)
+                .where(
+                    UserOrganization.user_id == user_id,
+                    UserOrganization.organization_id == organization_id,
+                    UserOrganization.role == previous_role,
+                )
+                .values(role=role)
+            ),
+        )
+        if result.rowcount == 0:
+            raise ConcurrentRoleModification(user_id, organization_id)
+        user_org.role = role
+        user = user_org.user
+        polar_self_service.enqueue_update_member(
+            external_customer_id=str(organization_id),
+            external_id=str(user_id),
+            name=user.full_name or user.email.split("@", 1)[0],
+            role=billing_member_role(role),
+        )
+        log.info(
+            "organization.member.role_changed",
+            organization_id=organization_id,
+            user_id=user_id,
+            previous_role=previous_role,
+            role=role,
+        )
+        return user_org
+
+    async def transfer_ownership(
+        self,
+        session: AsyncSession,
+        *,
+        new_owner_user_id: UUID,
+        organization_id: UUID,
+    ) -> User:
+        """
+        Atomically demote the current `owner` (if any) to `admin` and
+        promote `new_owner_user_id` to `owner`.
+
+        Fires the `IdentityVerificationStatus.verified` gate on the new
+        owner, since payouts route through whoever holds `owner`. The gate
+        is skipped in the sandbox environment.
+        """
+        new_owner_user_org = await self.get_by_user_and_org(
+            session, new_owner_user_id, organization_id
+        )
+        if new_owner_user_org is None:
+            raise UserNotMemberOfOrganization(new_owner_user_id, organization_id)
+
+        new_owner_user = new_owner_user_org.user
+
+        if new_owner_user_org.role == OrganizationRole.owner:
+            raise AlreadyOwner(new_owner_user_id, organization_id)
+
+        if (
+            not settings.is_sandbox()
+            and new_owner_user.identity_verification_status
+            != IdentityVerificationStatus.verified
+        ):
+            raise NewOwnerNotVerified(
+                new_owner_user_id, new_owner_user.identity_verification_status
+            )
+
+        repository = UserOrganizationRepository.from_session(session)
+        await repository.lock_members_for_update(organization_id)
+        previous_owner_user_id = await repository.demote_current_owner(organization_id)
+        try:
+            await repository.promote_to_owner(organization_id, new_owner_user_id)
+            await session.flush()
+        except IntegrityError as e:
+            # Partial unique index `ix_user_organizations_owner_per_org`
+            # rejected a concurrent transfer that beat us to setting a
+            # different user as owner. Surface as `AlreadyOwner` so the
+            # caller can refresh state and retry.
+            raise AlreadyOwner(new_owner_user_id, organization_id) from e
+        polar_self_service.enqueue_update_member(
+            external_customer_id=str(organization_id),
+            external_id=str(new_owner_user_id),
+            name=new_owner_user.full_name or new_owner_user.email.split("@", 1)[0],
+            role=billing_member_role(OrganizationRole.owner),
+        )
+        log.info(
+            "organization.ownership.transferred",
+            organization_id=organization_id,
+            new_owner_user_id=new_owner_user_id,
+            previous_owner_user_id=previous_owner_user_id,
+        )
+        return new_owner_user
+
+    async def remove_member(
+        self,
+        session: AsyncSession,
+        *,
+        user_id: UUID,
+        organization_id: UUID,
+    ) -> None:
+        await self._assert_admin_capability_after_loss(
+            session, user_id=user_id, organization_id=organization_id
+        )
+
+        existing = await self.get_by_user_and_org(session, user_id, organization_id)
+
+        stmt = (
+            sql.update(UserOrganization)
+            .where(
+                UserOrganization.user_id == user_id,
+                UserOrganization.organization_id == organization_id,
+                ~UserOrganization.is_deleted,
+            )
+            .values(deleted_at=utc_now())
+            .returning(UserOrganization.user_id)
+        )
+        result = await session.execute(stmt)
+        removed_user_id = result.scalar_one_or_none()
+        if removed_user_id is not None:
+            log.info(
+                "organization.member.removed",
+                organization_id=organization_id,
+                user_id=user_id,
+                role=existing.role if existing is not None else None,
+            )
+            polar_self_service.enqueue_remove_member(
+                external_customer_id=str(organization_id),
+                external_id=str(user_id),
+            )
+
+    async def _assert_admin_capability_after_loss(
+        self,
+        session: AsyncSession,
+        *,
+        user_id: UUID,
+        organization_id: UUID,
+    ) -> None:
+        """
+        Defense-in-depth guard for the admin-capability invariant: an
+        organization always has at least one user in `role ∈ {owner, admin}`.
+
+        Called before any operation that takes `user_id` out of the
+        admin-capable set (removal or demotion). Rejects only when the
+        operation would actually reduce the admin-capable count to zero;
+        operations on non-admin-capable users are always allowed (they
+        don't make the state worse). The admin-capable rows are locked
+        with `FOR UPDATE` to serialize concurrent removals and demotions.
+        """
+        result = await session.scalars(
+            sql.select(UserOrganization.user_id)
+            .where(
+                UserOrganization.organization_id == organization_id,
+                UserOrganization.role.in_(ADMIN_CAPABLE_ROLES),
+                ~UserOrganization.is_deleted,
+            )
+            .order_by(UserOrganization.user_id)
+            .with_for_update()
+        )
+        admin_capable_ids = set(result.all())
+        if user_id not in admin_capable_ids:
+            return
+
+        other_admin_capable_ids = admin_capable_ids - {user_id}
+        if len(other_admin_capable_ids) == 0:
+            raise OrganizationWouldHaveNoAdmins(organization_id)
+
+    async def remove_member_safe(
+        self,
+        session: AsyncSession,
+        *,
+        user_id: UUID,
+        organization_id: UUID,
+    ) -> None:
+        """
+        Safely remove a member from an organization.
+
+        Raises:
+            OrganizationNotFound: If the organization doesn't exist
+            UserNotMemberOfOrganization: If the user is not a member of the organization
+            CannotRemoveOrganizationOwner: If the user holds the `owner` role
+        """
+        from polar.organization.repository import OrganizationRepository
+
+        org_repo = OrganizationRepository.from_session(session)
+        organization = await org_repo.get_by_id(organization_id)
+
+        if not organization:
+            raise OrganizationNotFound(organization_id)
+
+        user_org = await self.get_by_user_and_org(session, user_id, organization_id)
+        if not user_org:
+            raise UserNotMemberOfOrganization(user_id, organization_id)
+
+        if user_org.role == OrganizationRole.owner:
+            raise CannotRemoveOrganizationOwner(user_id, organization_id)
+
+        await self.remove_member(
+            session,
+            user_id=user_id,
+            organization_id=organization_id,
+        )
+
+    def _get_list_by_user_id_query(
+        self, user_id: UUID, ordered: bool = True
+    ) -> Select[tuple[UserOrganization]]:
+        stmt = (
+            sql.select(UserOrganization)
+            .where(
+                UserOrganization.user_id == user_id,
+                ~UserOrganization.is_deleted,
+            )
+            .options(
+                joinedload(UserOrganization.user),
+                joinedload(UserOrganization.organization),
+            )
+        )
+        if ordered:
+            stmt = stmt.order_by(UserOrganization.created_at.asc())
+
+        return stmt
+
+    async def update_notification_settings(
+        self,
+        session: AsyncSession,
+        *,
+        user_id: UUID,
+        organization_id: UUID,
+        notification_settings: OrganizationNotificationSettings,
+    ) -> UserOrganization:
+        """Update the current user's notification settings for an organization."""
+        user_org = await self.get_by_user_and_org(session, user_id, organization_id)
+        if user_org is None:
+            raise UserNotMemberOfOrganization(user_id, organization_id)
+
+        user_org.notification_settings = {
+            **user_org.notification_settings,
+            **notification_settings,
+        }
+        return user_org
+
+
+user_organization = UserOrganizationService()

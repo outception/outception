@@ -1,0 +1,2325 @@
+import uuid
+from datetime import UTC, datetime, timedelta
+from unittest.mock import AsyncMock
+
+import pytest
+import pytest_asyncio
+from httpx import AsyncClient
+from pytest_mock import MockerFixture
+
+from polar.auth.scope import Scope
+from polar.enums import SubscriptionProrationBehavior, SubscriptionRecurringInterval
+from polar.kit.currency import PresentmentCurrency
+from polar.kit.utils import utc_now
+from polar.kit.visibility import Visibility
+from polar.models import (
+    Customer,
+    Organization,
+    Product,
+    Subscription,
+    UserOrganization,
+)
+from polar.models.customer_seat import SeatStatus
+from polar.models.order import OrderStatus
+from polar.models.product_price import ProductPriceSeatUnit
+from polar.models.subscription import CustomerCancellationReason, SubscriptionStatus
+from polar.order.service import PaymentFailed, PaymentFailedReason
+from polar.postgres import AsyncSession
+from polar.subscription.repository import SubscriptionRepository
+from polar.subscription.service import subscription as subscription_service
+from tests.fixtures.auth import AuthSubjectFixture
+from tests.fixtures.database import SaveFixture
+from tests.fixtures.random_objects import (
+    create_active_subscription,
+    create_canceled_subscription,
+    create_customer,
+    create_customer_seat,
+    create_order,
+    create_product,
+    create_subscription,
+    create_subscription_with_seats,
+)
+
+
+@pytest_asyncio.fixture
+async def subscription_organization_second(
+    save_fixture: SaveFixture,
+    product_organization_second: Product,
+    customer_organization_second: Customer,
+) -> Subscription:
+    return await create_active_subscription(
+        save_fixture,
+        product=product_organization_second,
+        customer=customer_organization_second,
+    )
+
+
+@pytest.mark.asyncio
+class TestListSubscriptions:
+    async def test_anonymous(
+        self, client: AsyncClient, organization: Organization
+    ) -> None:
+        response = await client.get("/v1/subscriptions/")
+
+        assert response.status_code == 401
+
+    @pytest.mark.auth
+    async def test_valid(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            started_at=datetime(2023, 1, 1, tzinfo=UTC),
+            ended_at=datetime(2023, 6, 15, tzinfo=UTC),
+        )
+
+        response = await client.get("/v1/subscriptions/")
+
+        assert response.status_code == 200
+
+        json = response.json()
+        assert json["pagination"]["total_count"] == 1
+        for item in json["items"]:
+            assert "user" in item
+            assert "customer" in item
+            assert item["user"]["id"] == item["customer"]["id"]
+
+    @pytest.mark.auth
+    async def test_metadata(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            user_metadata={"reference_id": "ABC"},
+        )
+        await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            user_metadata={"reference_id": "DEF"},
+        )
+        await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            user_metadata={"reference_id": "GHI"},
+        )
+
+        response = await client.get(
+            "/v1/subscriptions/", params={"metadata[reference_id]": ["ABC", "DEF"]}
+        )
+
+        assert response.status_code == 200
+
+        json = response.json()
+        assert json["pagination"]["total_count"] == 2
+
+    @pytest.mark.auth
+    async def test_customer_cancellation_reason(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        sub1 = await create_canceled_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+        sub1.customer_cancellation_reason = CustomerCancellationReason.too_expensive
+        await save_fixture(sub1)
+
+        sub2 = await create_canceled_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+        sub2.customer_cancellation_reason = CustomerCancellationReason.other
+        sub2.customer_cancellation_comment = "Not useful"
+        await save_fixture(sub2)
+
+        sub3 = await create_canceled_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+        sub3.customer_cancellation_reason = CustomerCancellationReason.unused
+        await save_fixture(sub3)
+
+        # Filter by single reason
+        response = await client.get(
+            "/v1/subscriptions/",
+            params={"customer_cancellation_reason": "too_expensive"},
+        )
+        assert response.status_code == 200
+        json = response.json()
+        assert json["pagination"]["total_count"] == 1
+
+        # Filter by multiple reasons
+        response = await client.get(
+            "/v1/subscriptions/",
+            params={"customer_cancellation_reason": ["too_expensive", "other"]},
+        )
+        assert response.status_code == 200
+        json = response.json()
+        assert json["pagination"]["total_count"] == 2
+
+    @pytest.mark.auth
+    async def test_canceled_at_date_range(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        sub1 = await create_canceled_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+        sub1.canceled_at = datetime(2024, 3, 15, tzinfo=UTC)
+        await save_fixture(sub1)
+
+        sub2 = await create_canceled_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+        sub2.canceled_at = datetime(2024, 6, 15, tzinfo=UTC)
+        await save_fixture(sub2)
+
+        sub3 = await create_canceled_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+        sub3.canceled_at = datetime(2024, 9, 15, tzinfo=UTC)
+        await save_fixture(sub3)
+
+        # Filter by date range
+        response = await client.get(
+            "/v1/subscriptions/",
+            params={
+                "canceled_at_after": "2024-03-01T00:00:00Z",
+                "canceled_at_before": "2024-07-01T00:00:00Z",
+            },
+        )
+        assert response.status_code == 200
+        json = response.json()
+        assert json["pagination"]["total_count"] == 2
+
+    @pytest.mark.auth
+    async def test_started_date_range(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        for started_at in (
+            datetime(2024, 3, 15, tzinfo=UTC),
+            datetime(2024, 6, 15, tzinfo=UTC),
+            datetime(2024, 9, 15, tzinfo=UTC),
+        ):
+            await create_active_subscription(
+                save_fixture,
+                product=product,
+                customer=customer,
+                started_at=started_at,
+            )
+
+        response = await client.get(
+            "/v1/subscriptions/",
+            params={
+                "started_after": "2024-03-01T00:00:00Z",
+                "started_before": "2024-07-01T00:00:00Z",
+            },
+        )
+        assert response.status_code == 200
+        json = response.json()
+        assert json["pagination"]["total_count"] == 2
+
+    @pytest.mark.auth
+    async def test_cancellation_reason_with_date_range(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        sub1 = await create_canceled_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+        sub1.customer_cancellation_reason = CustomerCancellationReason.too_expensive
+        sub1.canceled_at = datetime(2024, 3, 15, tzinfo=UTC)
+        await save_fixture(sub1)
+
+        sub2 = await create_canceled_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+        sub2.customer_cancellation_reason = CustomerCancellationReason.too_expensive
+        sub2.canceled_at = datetime(2024, 9, 15, tzinfo=UTC)
+        await save_fixture(sub2)
+
+        sub3 = await create_canceled_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+        sub3.customer_cancellation_reason = CustomerCancellationReason.unused
+        sub3.canceled_at = datetime(2024, 3, 15, tzinfo=UTC)
+        await save_fixture(sub3)
+
+        # Combine reason + date range
+        response = await client.get(
+            "/v1/subscriptions/",
+            params={
+                "customer_cancellation_reason": "too_expensive",
+                "canceled_at_after": "2024-01-01T00:00:00Z",
+                "canceled_at_before": "2024-06-01T00:00:00Z",
+            },
+        )
+        assert response.status_code == 200
+        json = response.json()
+        assert json["pagination"]["total_count"] == 1
+
+
+@pytest.mark.asyncio
+class TestCreateSubscription:
+    async def test_anonymous(
+        self,
+        client: AsyncClient,
+        product_recurring_free_price: Product,
+        customer: Customer,
+    ) -> None:
+        response = await client.post(
+            "/v1/subscriptions/",
+            json={
+                "product_id": str(product_recurring_free_price.id),
+                "customer_id": str(customer.id),
+            },
+        )
+        assert response.status_code == 401
+
+    @pytest.mark.auth
+    async def test_valid_with_customer_id(
+        self,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product_recurring_free_price: Product,
+        customer: Customer,
+    ) -> None:
+        response = await client.post(
+            "/v1/subscriptions/",
+            json={
+                "product_id": str(product_recurring_free_price.id),
+                "customer_id": str(customer.id),
+            },
+        )
+        assert response.status_code == 201
+
+        json = response.json()
+        assert json["product_id"] == str(product_recurring_free_price.id)
+        assert json["customer_id"] == str(customer.id)
+        assert json["status"] == SubscriptionStatus.active
+        assert "user" in json
+        assert "customer" in json
+
+    @pytest.mark.auth
+    async def test_valid_with_external_customer_id(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product_recurring_free_price: Product,
+        organization: Organization,
+        customer_external_id: Customer,
+    ) -> None:
+        response = await client.post(
+            "/v1/subscriptions/",
+            json={
+                "product_id": str(product_recurring_free_price.id),
+                "external_customer_id": customer_external_id.external_id,
+            },
+        )
+        assert response.status_code == 201
+
+        json = response.json()
+        assert json["product_id"] == str(product_recurring_free_price.id)
+        assert json["customer_id"] == str(customer_external_id.id)
+        assert json["status"] == SubscriptionStatus.active
+
+    @pytest.mark.auth
+    async def test_valid_with_metadata(
+        self,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product_recurring_free_price: Product,
+        customer: Customer,
+    ) -> None:
+        metadata = {"reference_id": "ABC123"}
+        response = await client.post(
+            "/v1/subscriptions/",
+            json={
+                "product_id": str(product_recurring_free_price.id),
+                "customer_id": str(customer.id),
+                "metadata": metadata,
+            },
+        )
+        assert response.status_code == 201
+
+        json = response.json()
+        assert json["metadata"] == metadata
+
+
+@pytest.mark.asyncio
+class TestSubscriptionProductUpdate:
+    async def test_anonymous(
+        self, client: AsyncClient, session: AsyncSession, subscription: Subscription
+    ) -> None:
+        non_existing = uuid.uuid4()
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"product_price_id": str(non_existing)},
+        )
+        assert response.status_code == 401
+
+    @pytest.mark.auth
+    async def test_canceled_subscription(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        user_organization: UserOrganization,
+        product: Product,
+        product_second: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_canceled_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"product_id": str(product_second.id)},
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.auth
+    async def test_non_existing_product(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        organization: Organization,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        non_existing = uuid.uuid4()
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            started_at=datetime(2023, 1, 1, tzinfo=UTC),
+        )
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"product_id": str(non_existing)},
+        )
+        assert response.status_code == 422
+
+    @pytest.mark.auth
+    async def test_non_recurring_product(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        organization: Organization,
+        product: Product,
+        user_organization: UserOrganization,
+        customer: Customer,
+    ) -> None:
+        new_product = await create_product(
+            save_fixture, organization=organization, recurring_interval=None
+        )
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            started_at=datetime(2023, 1, 1, tzinfo=UTC),
+        )
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"product_id": str(new_product.id)},
+        )
+        assert response.status_code == 422
+
+    @pytest.mark.auth
+    async def test_extraneous_tier(
+        self,
+        client: AsyncClient,
+        subscription: Subscription,
+        save_fixture: SaveFixture,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+        product_organization_second: Product,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            started_at=datetime(2023, 1, 1, tzinfo=UTC),
+        )
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"product_id": str(product_organization_second.id)},
+        )
+        assert response.status_code == 422
+
+    @pytest.mark.auth
+    async def test_non_public_product(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        customer: Customer,
+        organization: Organization,
+        user_organization: UserOrganization,
+        product: Product,
+    ) -> None:
+        private_product = await create_product(
+            save_fixture,
+            organization=organization,
+            recurring_interval=SubscriptionRecurringInterval.month,
+            visibility=Visibility.private,
+        )
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"product_id": str(private_product.id)},
+        )
+        assert response.status_code == 200
+        updated_subscription = response.json()
+        assert updated_subscription["product"]["id"] == str(private_product.id)
+
+    @pytest.mark.auth
+    async def test_valid(
+        self,
+        client: AsyncClient,
+        subscription: Subscription,
+        save_fixture: SaveFixture,
+        customer: Customer,
+        organization: Organization,
+        user_organization: UserOrganization,
+        product: Product,
+        product_second: Product,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"product_id": str(product_second.id)},
+        )
+        assert response.status_code == 200
+        updated_subscription = response.json()
+        assert updated_subscription["product"]["id"] == str(product_second.id)
+
+    @pytest.mark.auth
+    async def test_seat_to_seat_below_target_minimum_returns_422_on_product_id(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        organization: Organization,
+        user_organization: UserOrganization,
+        customer: Customer,
+    ) -> None:
+        old_seat_product = await create_product(
+            save_fixture,
+            organization=organization,
+            recurring_interval=SubscriptionRecurringInterval.month,
+            prices=[("seat", 1000, "usd")],
+        )
+        new_seat_product = await create_product(
+            save_fixture,
+            organization=organization,
+            recurring_interval=SubscriptionRecurringInterval.month,
+            prices=[],
+        )
+        new_seat_price = ProductPriceSeatUnit(
+            price_currency=PresentmentCurrency.usd,
+            seat_tiers={
+                "tiers": [
+                    {"min_seats": 5, "max_seats": None, "price_per_seat": 2000},
+                ],
+            },
+            product=new_seat_product,
+        )
+        await save_fixture(new_seat_price)
+        new_seat_product.prices.append(new_seat_price)
+        await save_fixture(new_seat_product)
+
+        subscription = await create_subscription_with_seats(
+            save_fixture, product=old_seat_product, customer=customer, seats=3
+        )
+
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"product_id": str(new_seat_product.id)},
+        )
+
+        assert response.status_code == 422
+        error = response.json()
+        assert error["detail"][0]["loc"] == ["body", "product_id"]
+        assert "below the minimum of 5 seats" in error["detail"][0]["msg"]
+        assert error["detail"][0]["input"] == str(new_seat_product.id)
+
+    @pytest.mark.auth
+    async def test_seat_to_seat_above_target_maximum_returns_422_on_product_id(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        organization: Organization,
+        user_organization: UserOrganization,
+        customer: Customer,
+    ) -> None:
+        old_seat_product = await create_product(
+            save_fixture,
+            organization=organization,
+            recurring_interval=SubscriptionRecurringInterval.month,
+            prices=[("seat", 1000, "usd")],
+        )
+        new_seat_product = await create_product(
+            save_fixture,
+            organization=organization,
+            recurring_interval=SubscriptionRecurringInterval.month,
+            prices=[],
+        )
+        new_seat_price = ProductPriceSeatUnit(
+            price_currency=PresentmentCurrency.usd,
+            seat_tiers={
+                "tiers": [
+                    {"min_seats": 1, "max_seats": 10, "price_per_seat": 1000},
+                ],
+            },
+            product=new_seat_product,
+        )
+        await save_fixture(new_seat_price)
+        new_seat_product.prices.append(new_seat_price)
+        await save_fixture(new_seat_product)
+
+        subscription = await create_subscription_with_seats(
+            save_fixture, product=old_seat_product, customer=customer, seats=50
+        )
+
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={
+                "product_id": str(new_seat_product.id),
+                "proration_behavior": SubscriptionProrationBehavior.next_period.value,
+            },
+        )
+
+        assert response.status_code == 422
+        error = response.json()
+        assert error["detail"][0]["loc"] == ["body", "product_id"]
+        assert "above the maximum of 10 seats" in error["detail"][0]["msg"]
+        assert error["detail"][0]["input"] == str(new_seat_product.id)
+
+
+@pytest.mark.asyncio
+class TestSubscriptionUpdateMetadata:
+    @pytest.mark.auth
+    async def test_valid(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            user_metadata={"reference_id": "ABC", "keep": "no"},
+        )
+
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"metadata": {"reference_id": "DEF"}},
+        )
+        assert response.status_code == 200
+        updated_subscription = response.json()
+        # Setting metadata replaces the whole object, it doesn't merge with the existing one
+        assert updated_subscription["metadata"] == {"reference_id": "DEF"}
+
+    @pytest.mark.auth
+    async def test_not_provided_leaves_metadata_untouched(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        user_organization: UserOrganization,
+        product: Product,
+        product_second: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            user_metadata={"reference_id": "ABC"},
+        )
+
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"product_id": str(product_second.id)},
+        )
+        assert response.status_code == 200
+        updated_subscription = response.json()
+        assert updated_subscription["metadata"] == {"reference_id": "ABC"}
+
+
+@pytest.mark.asyncio
+class TestSubscriptionUpdateMixedFields:
+    @pytest.mark.auth
+    async def test_mixed_seats_and_discount_returns_422(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        """
+        Mixing fields from different SubscriptionUpdate union members should return 422.
+
+        A payload with both 'seats' (from SubscriptionUpdateSeats) and 'discount_id'
+        (from SubscriptionUpdateBase) is invalid. Before the fix, Pydantic silently
+        matched SubscriptionUpdateBase and dropped 'seats', returning HTTP 200.
+        After the fix, extra='forbid' on all union members causes a 422.
+        """
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            started_at=datetime(2023, 1, 1, tzinfo=UTC),
+        )
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"seats": 10, "discount_id": None},
+        )
+        assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+class TestSubscriptionUpdateCancel:
+    async def test_anonymous(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        organization: Organization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            started_at=datetime(2023, 1, 1, tzinfo=UTC),
+        )
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={
+                "cancel_at_period_end": True,
+                "customer_cancellation_reason": "too_expensive",
+                "customer_cancellation_comment": "Inflation be crazy",
+            },
+        )
+        assert response.status_code == 401
+
+    @pytest.mark.auth
+    async def test_tampered(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        organization: Organization,
+        user_organization: UserOrganization,
+        product_organization_second: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product_organization_second,
+            customer=customer,
+            started_at=datetime(2023, 1, 1, tzinfo=UTC),
+        )
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={
+                "cancel_at_period_end": True,
+                "customer_cancellation_reason": "too_expensive",
+                "customer_cancellation_comment": "Inflation be crazy",
+            },
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.auth
+    async def test_valid(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            started_at=datetime(2023, 1, 1, tzinfo=UTC),
+        )
+
+        reason = "too_expensive"
+        comment = "Inflation be crazy"
+
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={
+                "cancel_at_period_end": True,
+                "customer_cancellation_reason": reason,
+                "customer_cancellation_comment": comment,
+            },
+        )
+
+        assert response.status_code == 200
+        updated_subscription = response.json()
+        current_period_end = updated_subscription["current_period_end"]
+        assert updated_subscription["status"] == SubscriptionStatus.active
+        assert updated_subscription["cancel_at_period_end"]
+        assert updated_subscription["ends_at"] == current_period_end
+        assert updated_subscription["ended_at"] is None
+        assert updated_subscription["customer_cancellation_reason"] == reason
+        assert updated_subscription["customer_cancellation_comment"] == comment
+
+    @pytest.mark.auth
+    async def test_valid_past_due(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            started_at=datetime(2023, 1, 1, tzinfo=UTC),
+            status=SubscriptionStatus.past_due,
+        )
+
+        reason = "too_expensive"
+        comment = "Inflation be crazy"
+
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={
+                "cancel_at_period_end": True,
+                "customer_cancellation_reason": reason,
+                "customer_cancellation_comment": comment,
+            },
+        )
+
+        assert response.status_code == 200
+        updated_subscription = response.json()
+        assert updated_subscription["status"] == SubscriptionStatus.past_due
+
+
+@pytest.mark.asyncio
+class TestSubscriptionUpdateUncancel:
+    async def test_anonymous(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        organization: Organization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_canceled_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={
+                "cancel_at_period_end": False,
+            },
+        )
+        assert response.status_code == 401
+
+    @pytest.mark.auth
+    async def test_tampered(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        organization: Organization,
+        user_organization: UserOrganization,
+        product_organization_second: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_canceled_subscription(
+            save_fixture,
+            product=product_organization_second,
+            customer=customer,
+        )
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={
+                "cancel_at_period_end": True,
+            },
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.auth
+    async def test_uncancel_revoked(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        organization: Organization,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_canceled_subscription(
+            save_fixture, product=product, customer=customer, revoke=True
+        )
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={
+                "cancel_at_period_end": False,
+            },
+        )
+        assert response.status_code == 410
+
+    @pytest.mark.auth
+    async def test_valid(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_canceled_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={
+                "cancel_at_period_end": False,
+            },
+        )
+
+        assert response.status_code == 200
+        updated_subscription = response.json()
+        assert updated_subscription["status"] == SubscriptionStatus.active
+        assert updated_subscription["cancel_at_period_end"] is False
+        assert updated_subscription["ends_at"] is None
+        assert updated_subscription["ended_at"] is None
+        assert updated_subscription["customer_cancellation_reason"] is None
+        assert updated_subscription["customer_cancellation_comment"] is None
+
+    @pytest.mark.auth
+    async def test_uncancel_not_scheduled(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+        )
+        assert subscription.cancel_at_period_end is False
+
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={
+                "cancel_at_period_end": False,
+            },
+        )
+
+        assert response.status_code == 409
+        assert response.json() == {
+            "error": "SubscriptionNotScheduledToCancel",
+            "detail": (
+                "This subscription is not scheduled to be canceled, "
+                "so it cannot be uncanceled."
+            ),
+        }
+
+
+@pytest.mark.asyncio
+class TestSubscriptionUpdateRevoke:
+    async def test_anonymous(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        organization: Organization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            started_at=datetime(2023, 1, 1, tzinfo=UTC),
+        )
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={
+                "revoke": True,
+                "customer_cancellation_reason": "too_expensive",
+                "customer_cancellation_comment": "Inflation be crazy",
+            },
+        )
+        assert response.status_code == 401
+
+    @pytest.mark.auth
+    async def test_tampered(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        organization: Organization,
+        user_organization: UserOrganization,
+        product_organization_second: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product_organization_second,
+            customer=customer,
+            started_at=datetime(2023, 1, 1, tzinfo=UTC),
+        )
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={
+                "revoke": True,
+                "customer_cancellation_reason": "too_expensive",
+                "customer_cancellation_comment": "Inflation be crazy",
+            },
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.auth
+    async def test_valid(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            started_at=datetime(2023, 1, 1, tzinfo=UTC),
+        )
+
+        reason = "too_expensive"
+        comment = "Inflation be crazy"
+
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={
+                "revoke": True,
+                "customer_cancellation_reason": reason,
+                "customer_cancellation_comment": comment,
+            },
+        )
+
+        assert response.status_code == 200
+        updated_subscription = response.json()
+        ended_at = updated_subscription["ended_at"]
+        assert ended_at
+        assert updated_subscription["status"] == SubscriptionStatus.canceled
+        assert updated_subscription["cancel_at_period_end"] is False
+        assert updated_subscription["ends_at"] == ended_at
+        assert updated_subscription["customer_cancellation_reason"] == reason
+        assert updated_subscription["customer_cancellation_comment"] == comment
+
+
+@pytest.mark.asyncio
+class TestSubscriptionRevoke:
+    async def test_anonymous(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        organization: Organization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            started_at=datetime(2023, 1, 1, tzinfo=UTC),
+        )
+        response = await client.delete(f"/v1/subscriptions/{subscription.id}")
+        assert response.status_code == 401
+
+    @pytest.mark.auth
+    async def test_tampered(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        organization: Organization,
+        user_organization: UserOrganization,
+        product_organization_second: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product_organization_second,
+            customer=customer,
+            started_at=datetime(2023, 1, 1, tzinfo=UTC),
+        )
+        response = await client.delete(f"/v1/subscriptions/{subscription.id}")
+        assert response.status_code == 404
+
+    @pytest.mark.auth
+    async def test_valid(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            started_at=datetime(2023, 1, 1, tzinfo=UTC),
+        )
+
+        response = await client.delete(f"/v1/subscriptions/{subscription.id}")
+
+        assert response.status_code == 200
+        updated_subscription = response.json()
+        assert updated_subscription["status"] == SubscriptionStatus.canceled
+
+
+@pytest.mark.asyncio
+class TestSubscriptionUpdateSeats:
+    async def test_anonymous(
+        self, client: AsyncClient, subscription: Subscription
+    ) -> None:
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"seats": 10},
+        )
+        assert response.status_code == 401
+
+    @pytest.mark.auth
+    async def test_seat_increase(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        user_organization: UserOrganization,
+        customer: Customer,
+        organization: Organization,
+    ) -> None:
+        # Given: Subscription with 5 seats
+        product = await create_product(
+            save_fixture,
+            organization=organization,
+            recurring_interval=SubscriptionRecurringInterval.month,
+            prices=[("seat", 1000, "usd")],
+        )
+        subscription = await create_subscription_with_seats(
+            save_fixture,
+            product=product,
+            customer=customer,
+            seats=5,
+        )
+        assert subscription.seats == 5
+        assert subscription.amount == 5000
+
+        # When: Increase to 10 seats
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"seats": 10},
+        )
+
+        # Then: Successfully updated
+        assert response.status_code == 200
+        updated = response.json()
+        assert updated["seats"] == 10
+        assert updated["amount"] == 10000
+
+    @pytest.mark.auth
+    async def test_seat_decrease(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        user_organization: UserOrganization,
+        customer: Customer,
+        organization: Organization,
+    ) -> None:
+        # Given: Subscription with 10 seats, 3 assigned
+        product = await create_product(
+            save_fixture,
+            organization=organization,
+            recurring_interval=SubscriptionRecurringInterval.month,
+            prices=[("seat", 1000, "usd")],
+        )
+        subscription = await create_subscription_with_seats(
+            save_fixture,
+            product=product,
+            customer=customer,
+            seats=10,
+        )
+
+        # Create 3 assigned seats
+        for i in range(3):
+            from tests.fixtures.random_objects import create_customer
+
+            seat_customer = await create_customer(
+                save_fixture,
+                organization=organization,
+                email=f"customer-{i}@example.com",
+            )
+            await create_customer_seat(
+                save_fixture,
+                subscription=subscription,
+                status=SeatStatus.claimed,
+                customer=seat_customer,
+            )
+
+        # When: Decrease to 5 seats (above assigned count)
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"seats": 5},
+        )
+
+        # Then: Successfully updated
+        assert response.status_code == 200
+        updated = response.json()
+        assert updated["seats"] == 5
+        assert updated["amount"] == 5000
+
+    @pytest.mark.auth
+    async def test_seat_decrease_blocked_by_assignments(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        user_organization: UserOrganization,
+        customer: Customer,
+        organization: Organization,
+    ) -> None:
+        # Given: Subscription with 10 seats, 7 assigned
+        product = await create_product(
+            save_fixture,
+            organization=organization,
+            recurring_interval=SubscriptionRecurringInterval.month,
+            prices=[("seat", 1000, "usd")],
+        )
+        subscription = await create_subscription_with_seats(
+            save_fixture,
+            product=product,
+            customer=customer,
+            seats=10,
+        )
+
+        # Create 7 assigned seats
+        for i in range(7):
+            seat_customer = await create_customer(
+                save_fixture,
+                organization=organization,
+                email=f"customer-{i}@example.com",
+            )
+            await create_customer_seat(
+                save_fixture,
+                subscription=subscription,
+                status=SeatStatus.claimed,
+                customer=seat_customer,
+            )
+
+        # When: Try to decrease to 5 seats
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"seats": 5},
+        )
+
+        # Then: Error response
+        assert response.status_code == 422
+        error = response.json()
+        assert error["detail"][0]["loc"] == ["body", "seats"]
+        assert "7 seats are assigned" in error["detail"][0]["msg"]
+
+    @pytest.mark.auth
+    async def test_not_seat_based_subscription(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        user_organization: UserOrganization,
+        customer: Customer,
+        product: Product,  # This is a fixed price product
+    ) -> None:
+        # Given: Subscription without seat-based pricing
+        subscription = await create_active_subscription(
+            save_fixture, product=product, customer=customer
+        )
+
+        # When: Try to update seats
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"seats": 10},
+        )
+
+        # Then: Error response
+        assert response.status_code == 422
+        error = response.json()
+        assert error["detail"][0]["loc"] == ["body", "seats"]
+        assert "not support seat-based pricing" in error["detail"][0]["msg"]
+
+    @pytest.mark.auth
+    async def test_trialing_subscription(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        user_organization: UserOrganization,
+        customer: Customer,
+        organization: Organization,
+    ) -> None:
+        """
+        Test that updating seats on a trialing subscription succeeds.
+
+        Seat updates are allowed during trial - no proration is created
+        since the customer isn't being billed yet.
+        """
+        # Given: Trialing subscription with seats
+        product = await create_product(
+            save_fixture,
+            organization=organization,
+            recurring_interval=SubscriptionRecurringInterval.month,
+            prices=[("seat", 1000, "usd")],
+        )
+        subscription = await create_subscription_with_seats(
+            save_fixture,
+            product=product,
+            customer=customer,
+            seats=5,
+            status=SubscriptionStatus.trialing,
+            started_at=datetime.now(UTC),
+            trial_start=datetime.now(UTC),
+            trial_end=datetime.now(UTC) + timedelta(days=30),
+        )
+
+        # When: Update seats during trial
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"seats": 10},
+        )
+
+        # Then: Successfully updated
+        assert response.status_code == 200
+        updated = response.json()
+        assert updated["seats"] == 10
+        assert updated["amount"] == 10000
+
+
+@pytest.mark.asyncio
+class TestSubscriptionUpdateTrial:
+    @pytest.mark.auth
+    async def test_end_trial_payment_failure_returns_402(
+        self,
+        client: AsyncClient,
+        session: AsyncSession,
+        save_fixture: SaveFixture,
+        mocker: MockerFixture,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        mocker.patch.object(
+            subscription_service,
+            "_create_subscription_update_order",
+            new=AsyncMock(side_effect=PaymentFailed(PaymentFailedReason.card_error)),
+        )
+        subscription = await create_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            status=SubscriptionStatus.trialing,
+            started_at=utc_now(),
+            trial_start=utc_now(),
+            trial_end=utc_now() + timedelta(days=14),
+        )
+        original_trial_end = subscription.trial_end
+        original_period_end = subscription.current_period_end
+        nested = await session.begin_nested()
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}", json={"trial_end": "now"}
+        )
+
+        assert response.status_code == 402
+        await nested.rollback()
+        repository = SubscriptionRepository.from_session(session)
+        persisted_subscription = await repository.get_by_id(subscription.id)
+        assert persisted_subscription is not None
+        assert persisted_subscription.status == SubscriptionStatus.trialing
+        assert persisted_subscription.trial_end == original_trial_end
+        assert persisted_subscription.current_period_end == original_period_end
+
+    @pytest.mark.auth
+    async def test_extend_trial_seat_based_subscription(
+        self,
+        client: AsyncClient,
+        save_fixture: SaveFixture,
+        user_organization: UserOrganization,
+        customer: Customer,
+        organization: Organization,
+    ) -> None:
+        """Test that trial end date can be updated for seat-based subscriptions."""
+        # Given: Trialing seat-based subscription
+        product = await create_product(
+            save_fixture,
+            organization=organization,
+            recurring_interval=SubscriptionRecurringInterval.month,
+            prices=[("seat", 1000, "usd")],
+        )
+        subscription = await create_subscription_with_seats(
+            save_fixture,
+            product=product,
+            customer=customer,
+            seats=5,
+            status=SubscriptionStatus.trialing,
+            started_at=datetime.now(UTC),
+            trial_start=datetime.now(UTC),
+            trial_end=datetime.now(UTC) + timedelta(days=14),
+        )
+
+        # When: Extend trial by 30 days
+        new_trial_end = datetime.now(UTC) + timedelta(days=44)
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"trial_end": new_trial_end.isoformat()},
+        )
+
+        # Then: Trial extended, seats preserved
+        assert response.status_code == 200
+        updated = response.json()
+        assert updated["status"] == SubscriptionStatus.trialing
+        assert updated["seats"] == 5
+        assert updated["amount"] == 5000
+        assert datetime.fromisoformat(updated["trial_end"]) == new_trial_end
+
+
+@pytest.mark.asyncio
+class TestSubscriptionUpdateBillingPeriod:
+    async def test_anonymous(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture, product=product, customer=customer
+        )
+        new_period_end = (datetime.now(UTC) + timedelta(days=365)).isoformat()
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"current_billing_period_end": new_period_end},
+        )
+        assert response.status_code == 401
+
+    @pytest.mark.auth
+    async def test_tampered(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product_organization_second: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture, product=product_organization_second, customer=customer
+        )
+        new_period_end = (datetime.now(UTC) + timedelta(days=365)).isoformat()
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"current_billing_period_end": new_period_end},
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.auth
+    async def test_valid_extension(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture, product=product, customer=customer
+        )
+
+        new_period_end = datetime.now(UTC) + timedelta(days=365)
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"current_billing_period_end": new_period_end.isoformat()},
+        )
+
+        assert response.status_code == 200
+        updated_subscription = response.json()
+        returned_period_end = datetime.fromisoformat(
+            updated_subscription["current_period_end"]
+        )
+        assert returned_period_end == new_period_end
+        assert updated_subscription["status"] == SubscriptionStatus.active
+
+    @pytest.mark.auth
+    async def test_revoked_subscription(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_canceled_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            revoke=True,
+        )
+
+        new_period_end = (datetime.now(UTC) + timedelta(days=365)).isoformat()
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"current_billing_period_end": new_period_end},
+        )
+
+        assert response.status_code == 403
+
+    @pytest.mark.auth
+    async def test_extend_scheduled_cancellation(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_canceled_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            revoke=False,
+        )
+        assert subscription.cancel_at_period_end is True
+
+        new_period_end = datetime.now(UTC) + timedelta(days=365)
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"current_billing_period_end": new_period_end.isoformat()},
+        )
+
+        assert response.status_code == 200
+        updated_subscription = response.json()
+        assert (
+            datetime.fromisoformat(updated_subscription["current_period_end"])
+            == new_period_end
+        )
+        assert datetime.fromisoformat(updated_subscription["ends_at"]) == new_period_end
+        assert updated_subscription["cancel_at_period_end"] is True
+
+    @pytest.mark.auth
+    async def test_inactive_subscription_past_due(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        current_end = datetime.now(UTC) + timedelta(days=30)
+        subscription = await create_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            status=SubscriptionStatus.past_due,
+            started_at=datetime(2023, 1, 1, tzinfo=UTC),
+            current_period_end=current_end,
+        )
+
+        new_period_end = (datetime.now(UTC) + timedelta(days=365)).isoformat()
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"current_billing_period_end": new_period_end},
+        )
+
+        assert response.status_code == 403
+        assert response.json()["error"] == "InactiveSubscription"
+
+
+EXPORT_DEFAULT_HEADER = (
+    "Email,Started At,Product,Amount,Currency,Status,Billing Interval"
+)
+
+
+@pytest.mark.asyncio
+class TestExportSubscriptions:
+    async def test_anonymous(self, client: AsyncClient) -> None:
+        response = await client.get("/v1/subscriptions/export")
+
+        assert response.status_code == 401
+
+    @pytest.mark.auth
+    async def test_user_not_organization_member(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        await create_active_subscription(
+            save_fixture, product=product, customer=customer
+        )
+
+        response = await client.get("/v1/subscriptions/export")
+
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "text/csv; charset=utf-8"
+        assert (
+            response.headers["content-disposition"]
+            == 'attachment; filename="polar-subscriptions.csv"'
+        )
+
+        csv_lines = response.text.strip().split("\r\n")
+        assert len(csv_lines) == 1
+        assert csv_lines[0] == EXPORT_DEFAULT_HEADER
+
+    @pytest.mark.auth(
+        AuthSubjectFixture(scopes={Scope.subscriptions_read}),
+    )
+    async def test_user_valid(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture, product=product, customer=customer
+        )
+
+        response = await client.get("/v1/subscriptions/export")
+
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "text/csv; charset=utf-8"
+
+        csv_lines = response.text.strip().split("\r\n")
+        assert len(csv_lines) == 2
+        assert csv_lines[0] == EXPORT_DEFAULT_HEADER
+
+        data_row = csv_lines[1]
+        assert customer.email is not None
+        assert customer.email in data_row
+        assert product.name in data_row
+        assert subscription.currency in data_row
+        assert subscription.status.value in data_row
+
+    @pytest.mark.auth(
+        AuthSubjectFixture(subject="organization", scopes={Scope.subscriptions_read}),
+    )
+    async def test_organization(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        await create_active_subscription(
+            save_fixture, product=product, customer=customer
+        )
+
+        response = await client.get("/v1/subscriptions/export")
+
+        assert response.status_code == 200
+        csv_lines = response.text.strip().split("\r\n")
+        assert len(csv_lines) == 2
+
+    @pytest.mark.auth
+    async def test_filter_by_product(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        product_second: Product,
+        customer: Customer,
+    ) -> None:
+        await create_active_subscription(
+            save_fixture, product=product, customer=customer
+        )
+        await create_active_subscription(
+            save_fixture, product=product_second, customer=customer
+        )
+
+        response = await client.get(
+            "/v1/subscriptions/export",
+            params={"product_id": str(product.id), "columns": ["product"]},
+        )
+
+        assert response.status_code == 200
+        csv_lines = response.text.strip().split("\r\n")
+        assert csv_lines == ["Product", product.name]
+
+    @pytest.mark.auth
+    async def test_filter_by_status(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        await create_active_subscription(
+            save_fixture, product=product, customer=customer
+        )
+        await create_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            status=SubscriptionStatus.canceled,
+            started_at=utc_now(),
+        )
+
+        response = await client.get(
+            "/v1/subscriptions/export", params={"status": "canceled"}
+        )
+
+        assert response.status_code == 200
+        csv_lines = response.text.strip().split("\r\n")
+        assert len(csv_lines) == 2
+        assert SubscriptionStatus.canceled.value in csv_lines[1]
+
+    @pytest.mark.auth
+    async def test_filter_by_cancel_at_period_end(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        await create_active_subscription(
+            save_fixture, product=product, customer=customer
+        )
+        await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            cancel_at_period_end=True,
+        )
+
+        response = await client.get(
+            "/v1/subscriptions/export",
+            params={
+                "cancel_at_period_end": "true",
+                "columns": ["cancel_at_period_end"],
+            },
+        )
+
+        assert response.status_code == 200
+        csv_lines = response.text.strip().split("\r\n")
+        assert csv_lines == ["Cancels At Period End", "true"]
+
+    @pytest.mark.auth
+    async def test_filter_by_date_range(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        product_second: Product,
+        customer: Customer,
+    ) -> None:
+        await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            started_at=datetime(2024, 1, 15, tzinfo=UTC),
+        )
+        await create_active_subscription(
+            save_fixture,
+            product=product_second,
+            customer=customer,
+            started_at=datetime(2024, 6, 15, tzinfo=UTC),
+        )
+
+        response = await client.get(
+            "/v1/subscriptions/export",
+            params={
+                "started_after": "2024-06-01T00:00:00Z",
+                "started_before": "2024-06-30T23:59:59Z",
+                "columns": ["product"],
+            },
+        )
+
+        assert response.status_code == 200
+        assert (
+            response.headers["content-disposition"]
+            == 'attachment; filename="polar-subscriptions-2024-06-01-2024-06-30.csv"'
+        )
+        csv_lines = response.text.strip().split("\r\n")
+        assert csv_lines == ["Product", product_second.name]
+
+    @pytest.mark.auth
+    async def test_naive_date_bounds(
+        self, client: AsyncClient, user_organization: UserOrganization
+    ) -> None:
+        response = await client.get(
+            "/v1/subscriptions/export",
+            params={"started_after": "2024-06-01T00:00:00"},
+        )
+
+        assert response.status_code == 422
+
+    @pytest.mark.auth
+    async def test_custom_columns(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        await create_active_subscription(
+            save_fixture, product=product, customer=customer
+        )
+
+        response = await client.get(
+            "/v1/subscriptions/export",
+            params={
+                "columns": [
+                    "email",
+                    "net_amount",
+                    "current_period_end",
+                    "cancellation_reason",
+                ]
+            },
+        )
+
+        assert response.status_code == 200
+        csv_lines = response.text.strip().split("\r\n")
+        assert csv_lines[0] == "Email,Net Amount,Current Period End,Cancellation Reason"
+        assert csv_lines[1].startswith(f"{customer.email},")
+
+    @pytest.mark.auth
+    async def test_invalid_column(
+        self, client: AsyncClient, user_organization: UserOrganization
+    ) -> None:
+        response = await client.get(
+            "/v1/subscriptions/export", params={"columns": ["not_a_column"]}
+        )
+
+        assert response.status_code == 422
+
+    @pytest.mark.auth
+    async def test_timezone(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            started_at=datetime(2024, 6, 15, 23, 0, tzinfo=UTC),
+        )
+
+        response = await client.get(
+            "/v1/subscriptions/export", params={"timezone": "Europe/Stockholm"}
+        )
+
+        assert response.status_code == 200
+        csv_lines = response.text.strip().split("\r\n")
+        assert "2024-06-16T01:00:00+02:00" in csv_lines[1]
+
+    @pytest.mark.auth
+    async def test_invalid_timezone(
+        self, client: AsyncClient, user_organization: UserOrganization
+    ) -> None:
+        response = await client.get(
+            "/v1/subscriptions/export", params={"timezone": "Not/AZone"}
+        )
+
+        assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+class TestGetSubscription:
+    async def test_anonymous(self, client: AsyncClient) -> None:
+        response = await client.get(f"/v1/subscriptions/{uuid.uuid4()}")
+
+        assert response.status_code == 401
+
+    @pytest.mark.auth
+    async def test_user_cannot_access_other_organization_subscription(
+        self,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        subscription_organization_second: Subscription,
+    ) -> None:
+        response = await client.get(
+            f"/v1/subscriptions/{subscription_organization_second.id}"
+        )
+
+        assert response.status_code == 404
+
+    @pytest.mark.auth(
+        AuthSubjectFixture(scopes={Scope.subscriptions_read}),
+    )
+    async def test_past_due_at(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        past_due_at = datetime(2025, 6, 1, tzinfo=UTC)
+        subscription = await create_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            status=SubscriptionStatus.past_due,
+            started_at=utc_now(),
+            past_due_at=past_due_at,
+        )
+
+        response = await client.get(f"/v1/subscriptions/{subscription.id}")
+
+        assert response.status_code == 200
+        assert response.json()["past_due_at"] == past_due_at.isoformat().replace(
+            "+00:00", "Z"
+        )
+
+
+@pytest.mark.asyncio
+class TestGetChargePreview:
+    async def test_anonymous(self, client: AsyncClient) -> None:
+        response = await client.get(f"/v1/subscriptions/{uuid.uuid4()}/charge-preview")
+
+        assert response.status_code == 401
+
+    @pytest.mark.auth
+    async def test_user_cannot_access_other_organization_subscription(
+        self,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        subscription_organization_second: Subscription,
+    ) -> None:
+        response = await client.get(
+            f"/v1/subscriptions/{subscription_organization_second.id}/charge-preview"
+        )
+
+        assert response.status_code == 404
+
+    @pytest.mark.auth
+    async def test_paused_with_resume(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        current_period_end = utc_now() + timedelta(days=30)
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            current_period_end=current_period_end,
+        )
+        subscription.status = SubscriptionStatus.paused
+        subscription.paused_at = utc_now()
+        subscription.resumes_at = current_period_end + timedelta(days=30)
+        await save_fixture(subscription)
+
+        response = await client.get(
+            f"/v1/subscriptions/{subscription.id}/charge-preview"
+        )
+
+        assert response.status_code == 200
+
+    @pytest.mark.auth
+    async def test_paused_indefinitely_not_found(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture, product=product, customer=customer
+        )
+        subscription.status = SubscriptionStatus.paused
+        subscription.paused_at = utc_now()
+        subscription.resumes_at = None
+        await save_fixture(subscription)
+
+        response = await client.get(
+            f"/v1/subscriptions/{subscription.id}/charge-preview"
+        )
+
+        assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+class TestGetCancelPreview:
+    async def test_anonymous(self, client: AsyncClient) -> None:
+        response = await client.get(f"/v1/subscriptions/{uuid.uuid4()}/cancel-preview")
+
+        assert response.status_code == 401
+
+    @pytest.mark.auth
+    async def test_past_due_no_grace_stops_collection(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture, product=product, customer=customer
+        )
+        subscription.status = SubscriptionStatus.past_due
+        subscription.past_due_at = utc_now()
+        await save_fixture(subscription)
+        await create_order(
+            save_fixture,
+            customer=customer,
+            product=product,
+            subscription=subscription,
+            status=OrderStatus.pending,
+            next_payment_attempt_at=utc_now(),
+        )
+
+        response = await client.get(
+            f"/v1/subscriptions/{subscription.id}/cancel-preview"
+        )
+
+        assert response.status_code == 200
+        json = response.json()
+        assert json["stops_collection"] is True
+        assert json["outstanding_amount"] == 1000
+
+    @pytest.mark.auth
+    async def test_past_due_within_grace_keeps_collecting(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        product.organization.subscription_settings = {
+            **product.organization.subscription_settings,
+            "benefit_revocation_grace_period": 7,
+        }
+        await save_fixture(product.organization)
+
+        subscription = await create_active_subscription(
+            save_fixture, product=product, customer=customer
+        )
+        subscription.status = SubscriptionStatus.past_due
+        subscription.past_due_at = utc_now()
+        await save_fixture(subscription)
+        await create_order(
+            save_fixture,
+            customer=customer,
+            product=product,
+            subscription=subscription,
+            status=OrderStatus.pending,
+            next_payment_attempt_at=utc_now(),
+        )
+
+        response = await client.get(
+            f"/v1/subscriptions/{subscription.id}/cancel-preview"
+        )
+
+        assert response.status_code == 200
+        json = response.json()
+        assert json["stops_collection"] is False
+        assert json["outstanding_amount"] is None
+
+    @pytest.mark.auth
+    async def test_active_keeps_collecting(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture, product=product, customer=customer
+        )
+
+        response = await client.get(
+            f"/v1/subscriptions/{subscription.id}/cancel-preview"
+        )
+
+        assert response.status_code == 200
+        json = response.json()
+        assert json["stops_collection"] is False
+        assert json["outstanding_amount"] is None
+
+
+@pytest.mark.asyncio
+class TestSubscriptionUpdatePause:
+    async def test_anonymous(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture, product=product, customer=customer
+        )
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"pause_at_period_end": True},
+        )
+        assert response.status_code == 401
+
+    @pytest.mark.auth
+    async def test_valid(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        current_period_end = utc_now() + timedelta(days=30)
+        subscription = await create_active_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            current_period_end=current_period_end,
+        )
+        resumes_at = current_period_end + timedelta(days=30)
+
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={
+                "pause_at_period_end": True,
+                "resumes_at": resumes_at.isoformat(),
+            },
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == SubscriptionStatus.active
+        assert data["pause_at_period_end"] is True
+        assert datetime.fromisoformat(data["resumes_at"]) == resumes_at
+        assert data["paused_at"] is None
+
+    @pytest.mark.auth
+    async def test_cancel_scheduled_pause(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture, product=product, customer=customer
+        )
+        subscription.pause_at_period_end = True
+        subscription.resumes_at = utc_now() + timedelta(days=30)
+        await save_fixture(subscription)
+
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"pause_at_period_end": False},
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == SubscriptionStatus.active
+        assert data["pause_at_period_end"] is False
+        assert data["resumes_at"] is None
+        assert data["paused_at"] is None
+
+    @pytest.mark.auth
+    async def test_not_pausable(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            started_at=utc_now(),
+            status=SubscriptionStatus.past_due,
+        )
+
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"pause_at_period_end": True},
+        )
+
+        assert response.status_code == 409
+
+
+@pytest.mark.asyncio
+class TestSubscriptionUpdateResume:
+    @pytest.mark.auth
+    async def test_valid(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            started_at=utc_now(),
+            status=SubscriptionStatus.paused,
+        )
+        subscription.paused_at = utc_now() - timedelta(days=10)
+        subscription.resumes_at = utc_now() + timedelta(days=20)
+        await save_fixture(subscription)
+
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"resume": True},
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == SubscriptionStatus.active
+        assert data["paused_at"] is None
+        assert data["resumes_at"] is None
+
+    @pytest.mark.auth
+    async def test_renewals_disabled_skips_resume(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        organization: Organization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        organization.capabilities = {
+            **organization.capabilities,
+            "subscription_renewals": False,
+        }
+        await save_fixture(organization)
+
+        subscription = await create_subscription(
+            save_fixture,
+            product=product,
+            customer=customer,
+            started_at=utc_now(),
+            status=SubscriptionStatus.paused,
+        )
+        subscription.paused_at = utc_now() - timedelta(days=10)
+        subscription.resumes_at = utc_now() + timedelta(days=20)
+        await save_fixture(subscription)
+
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"resume": True},
+        )
+
+        # Guard skips the resume: the subscription stays paused, nothing is charged.
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == SubscriptionStatus.paused
+        assert data["paused_at"] is not None
+        assert data["resumes_at"] is not None
+
+    @pytest.mark.auth
+    async def test_not_paused(
+        self,
+        save_fixture: SaveFixture,
+        client: AsyncClient,
+        user_organization: UserOrganization,
+        product: Product,
+        customer: Customer,
+    ) -> None:
+        subscription = await create_active_subscription(
+            save_fixture, product=product, customer=customer
+        )
+
+        response = await client.patch(
+            f"/v1/subscriptions/{subscription.id}",
+            json={"resume": True},
+        )
+
+        assert response.status_code == 409

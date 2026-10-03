@@ -1,0 +1,282 @@
+import uuid
+from collections.abc import Sequence
+from enum import StrEnum
+from typing import Any, cast
+
+from sqlalchemy import Select, UnaryExpression, and_, asc, desc, or_, select
+from sqlalchemy.orm import contains_eager, joinedload
+
+from polar.auth.models import AuthSubject, Customer, Member, is_customer, is_member
+from polar.customer.repository import CustomerRepository
+from polar.exceptions import NotPermitted, PolarRequestValidationError
+from polar.kit.db.postgres import AsyncSession
+from polar.kit.pagination import PaginationParams, paginate
+from polar.kit.services import ResourceServiceReader
+from polar.kit.sorting import Sorting
+from polar.kit.visibility import Visibility
+from polar.models import (
+    Benefit,
+    BenefitGrant,
+    Order,
+    Organization,
+    Product,
+    ProductBenefit,
+    Subscription,
+)
+from polar.models.benefit import BenefitType
+from polar.worker import enqueue_job
+
+from ..schemas.benefit_grant import (
+    CustomerBenefitGrantDiscordUpdate,
+    CustomerBenefitGrantGitHubRepositoryUpdate,
+    CustomerBenefitGrantSlackSharedChannelUpdate,
+    CustomerBenefitGrantUpdate,
+)
+
+
+class CustomerBenefitGrantSortProperty(StrEnum):
+    granted_at = "granted_at"
+    type = "type"
+    organization = "organization"
+    product_benefit = "product_benefit"
+
+
+class CustomerBenefitGrantService(ResourceServiceReader[BenefitGrant]):
+    async def list(
+        self,
+        session: AsyncSession,
+        auth_subject: AuthSubject[Customer | Member],
+        *,
+        query: str | None = None,
+        type: Sequence[BenefitType] | None = None,
+        benefit_id: Sequence[uuid.UUID] | None = None,
+        checkout_id: Sequence[uuid.UUID] | None = None,
+        order_id: Sequence[uuid.UUID] | None = None,
+        subscription_id: Sequence[uuid.UUID] | None = None,
+        member_id: Sequence[uuid.UUID] | None = None,
+        pagination: PaginationParams,
+        sorting: Sequence[Sorting[CustomerBenefitGrantSortProperty]] = (
+            (CustomerBenefitGrantSortProperty.product_benefit, False),
+            (CustomerBenefitGrantSortProperty.granted_at, True),
+        ),
+    ) -> tuple[Sequence[BenefitGrant], int]:
+        statement = self._get_readable_benefit_grant_statement(auth_subject)
+
+        if query is not None:
+            statement = statement.where(
+                Benefit.description.icontains(query, autoescape=True)
+            )
+
+        if type is not None:
+            statement = statement.where(Benefit.type.in_(type))
+
+        if benefit_id is not None:
+            statement = statement.where(BenefitGrant.benefit_id.in_(benefit_id))
+
+        statement = (
+            statement.join(
+                Subscription,
+                onclause=Subscription.id == BenefitGrant.subscription_id,
+                isouter=True,
+            )
+            .join(
+                Order,
+                onclause=Order.id == BenefitGrant.order_id,
+                isouter=True,
+            )
+            .join(
+                Product,
+                onclause=or_(
+                    Product.id == Subscription.product_id,
+                    Product.id == Order.product_id,
+                ),
+                isouter=True,
+            )
+            .join(
+                ProductBenefit,
+                onclause=and_(
+                    ProductBenefit.product_id == Product.id,
+                    ProductBenefit.benefit_id == BenefitGrant.benefit_id,
+                ),
+                isouter=True,
+            )
+        )
+
+        if checkout_id is not None:
+            statement = statement.where(
+                or_(
+                    Subscription.checkout_id.in_(checkout_id),
+                    Order.checkout_id.in_(checkout_id),
+                )
+            )
+
+        if order_id is not None:
+            statement = statement.where(BenefitGrant.order_id.in_(order_id))
+
+        if subscription_id is not None:
+            statement = statement.where(
+                BenefitGrant.subscription_id.in_(subscription_id)
+            )
+
+        if member_id is not None:
+            statement = statement.where(BenefitGrant.member_id.in_(member_id))
+
+        order_by_clauses: list[UnaryExpression[Any]] = []
+        for criterion, is_desc in sorting:
+            clause_function = desc if is_desc else asc
+            if criterion == CustomerBenefitGrantSortProperty.granted_at:
+                order_by_clauses.append(clause_function(BenefitGrant.granted_at))
+            elif criterion == CustomerBenefitGrantSortProperty.type:
+                order_by_clauses.append(clause_function(Benefit.type))
+            elif criterion == CustomerBenefitGrantSortProperty.organization:
+                order_by_clauses.append(clause_function(Organization.slug))
+            elif criterion == CustomerBenefitGrantSortProperty.product_benefit:
+                order_by_clauses.append(clause_function(ProductBenefit.order))
+        statement = statement.order_by(*order_by_clauses)
+
+        return await paginate(session, statement, pagination=pagination)
+
+    async def get_by_id(
+        self,
+        session: AsyncSession,
+        auth_subject: AuthSubject[Customer | Member],
+        id: uuid.UUID,
+    ) -> BenefitGrant | None:
+        statement = self._get_readable_benefit_grant_statement(auth_subject).where(
+            BenefitGrant.id == id
+        )
+
+        result = await session.execute(statement)
+        return result.scalar_one_or_none()
+
+    async def update(
+        self,
+        session: AsyncSession,
+        benefit_grant: BenefitGrant,
+        benefit_grant_update: CustomerBenefitGrantUpdate,
+    ) -> BenefitGrant:
+        if benefit_grant.is_revoked:
+            raise NotPermitted("Cannot update a revoked benefit grant.")
+
+        if benefit_grant_update.benefit_type != benefit_grant.benefit.type:
+            raise PolarRequestValidationError(
+                [
+                    {
+                        "type": "value_error",
+                        "loc": ("body", "benefit_type"),
+                        "msg": "Benefit type must match the existing granted benefit type.",
+                        "input": benefit_grant_update.benefit_type,
+                    }
+                ]
+            )
+
+        if isinstance(
+            benefit_grant_update,
+            (
+                CustomerBenefitGrantDiscordUpdate,
+                CustomerBenefitGrantGitHubRepositoryUpdate,
+            ),
+        ):
+            account_id = benefit_grant_update.properties["account_id"]
+            if account_id is not None:
+                platform = benefit_grant_update.get_oauth_platform()
+
+                # Check member's OAuth accounts first if member_id is set
+                oauth_account = None
+                if benefit_grant.member_id:
+                    from polar.member.repository import MemberRepository
+
+                    member_repository = MemberRepository.from_session(session)
+                    member = await member_repository.get_by_id(benefit_grant.member_id)
+                    if member is not None:
+                        oauth_account = member.get_oauth_account(account_id, platform)
+
+                # Fall back to customer
+                if oauth_account is None:
+                    customer_repository = CustomerRepository.from_session(session)
+                    customer = await customer_repository.get_by_id(
+                        benefit_grant.customer_id
+                    )
+                    assert customer is not None
+                    oauth_account = customer.get_oauth_account(account_id, platform)
+
+                if oauth_account is None:
+                    raise PolarRequestValidationError(
+                        [
+                            {
+                                "type": "value_error",
+                                "loc": ("body", "properties", "account_id"),
+                                "msg": "OAuth account does not exist.",
+                                "input": account_id,
+                            }
+                        ]
+                    )
+
+        if isinstance(
+            benefit_grant_update,
+            (
+                CustomerBenefitGrantDiscordUpdate,
+                CustomerBenefitGrantGitHubRepositoryUpdate,
+                CustomerBenefitGrantSlackSharedChannelUpdate,
+            ),
+        ):
+            properties = {
+                **benefit_grant.properties,
+                **benefit_grant_update.properties,
+            }
+            if isinstance(
+                benefit_grant_update, CustomerBenefitGrantSlackSharedChannelUpdate
+            ) and benefit_grant_update.properties[
+                "invited_email"
+            ] != benefit_grant.properties.get("invited_email"):
+                properties.pop("invite_id", None)
+                properties.pop("invite_url", None)
+            benefit_grant.properties = cast(Any, properties)
+            benefit_grant.error = None
+            enqueue_job("benefit.update", benefit_grant.id)
+
+        for attr, value in benefit_grant_update.model_dump(
+            exclude_unset=True, exclude={"properties", "benefit_type"}
+        ).items():
+            setattr(benefit_grant, attr, value)
+
+        session.add(benefit_grant)
+        return benefit_grant
+
+    def _get_readable_benefit_grant_statement(
+        self, auth_subject: AuthSubject[Customer | Member]
+    ) -> Select[tuple[BenefitGrant]]:
+        statement = (
+            select(BenefitGrant)
+            .join(Benefit, onclause=Benefit.id == BenefitGrant.benefit_id)
+            .join(Organization, onclause=Benefit.organization_id == Organization.id)
+            .where(
+                ~BenefitGrant.is_deleted,
+                ~BenefitGrant.is_revoked,
+                Benefit.visibility == Visibility.public,
+            )
+            .options(
+                contains_eager(BenefitGrant.benefit).options(
+                    contains_eager(Benefit.organization)
+                ),
+                joinedload(BenefitGrant.customer),
+                joinedload(BenefitGrant.member.and_(~Member.is_deleted)),
+            )
+        )
+
+        # Filter based on auth subject type
+        if is_member(auth_subject):
+            # Member: filter by member_id to show only this member's grants
+            statement = statement.where(
+                BenefitGrant.member_id == auth_subject.subject.id
+            )
+        elif is_customer(auth_subject):
+            # Customer: filter by customer_id to show all customer grants
+            statement = statement.where(
+                BenefitGrant.customer_id == auth_subject.subject.id
+            )
+
+        return statement
+
+
+customer_benefit_grant = CustomerBenefitGrantService(BenefitGrant)

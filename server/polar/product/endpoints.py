@@ -1,0 +1,295 @@
+import builtins
+from typing import Annotated
+
+from fastapi import Depends, Query
+
+from polar.benefit.schemas import BenefitID
+from polar.exceptions import NotPermitted, ResourceNotFound
+from polar.kit.metadata import MetadataQuery, get_metadata_query_openapi_schema
+from polar.kit.pagination import ListResource, PaginationParamsQuery
+from polar.kit.schemas import MultipleQueryFilter
+from polar.kit.sorting import Sorting, SortingGetter
+from polar.kit.versioning import version
+from polar.models import Product
+from polar.models.product import ProductVisibility
+from polar.openapi import APITag, cli_preview
+from polar.organization.schemas import OrganizationID
+from polar.postgres import (
+    AsyncReadSession,
+    AsyncSession,
+    get_db_read_session,
+    get_db_session,
+)
+from polar.routing import APIRouter
+from polar.version import V2027_01
+
+from . import auth, legacy_schemas
+from .schemas import Product as ProductSchema
+from .schemas import (
+    ProductBenefitsUpdate,
+    ProductCreate,
+    ProductID,
+    ProductUpdate,
+)
+from .service import ProductNotDeletable
+from .service import product as product_service
+from .sorting import ProductSortProperty
+
+router = APIRouter(
+    prefix="/products",
+    tags=["products", APITag.public, APITag.mcp, APITag.cli],
+)
+
+ProductNotFound = {
+    "description": "Product not found.",
+    "model": ResourceNotFound.schema(),
+}
+
+
+ListSorting = Annotated[
+    list[Sorting[ProductSortProperty]],
+    Depends(SortingGetter(ProductSortProperty, ["-created_at"])),
+]
+
+
+@router.get(
+    "/",
+    summary="List Products",
+    response_model=ListResource[ProductSchema],
+    openapi_extra={"parameters": [get_metadata_query_openapi_schema()]},
+)
+async def list(
+    pagination: PaginationParamsQuery,
+    sorting: ListSorting,
+    auth_subject: auth.CreatorProductsRead,
+    metadata: MetadataQuery,
+    id: MultipleQueryFilter[ProductID] | None = Query(
+        None, title="ProductID Filter", description="Filter by product ID."
+    ),
+    organization_id: MultipleQueryFilter[OrganizationID] | None = Query(
+        None, title="OrganizationID Filter", description="Filter by organization ID."
+    ),
+    query: str | None = Query(None, description="Filter by product name."),
+    is_archived: bool | None = Query(None, description="Filter on archived products."),
+    is_recurring: bool | None = Query(
+        None,
+        description=(
+            "Filter on recurring products. "
+            "If `true`, only subscriptions tiers are returned. "
+            "If `false`, only one-time purchase products are returned. "
+        ),
+    ),
+    benefit_id: MultipleQueryFilter[BenefitID] | None = Query(
+        None,
+        title="BenefitID Filter",
+        description="Filter products granting specific benefit.",
+    ),
+    visibility: builtins.list[ProductVisibility] | None = Query(
+        default=None,
+        description="Filter by visibility.",
+    ),
+    session: AsyncReadSession = Depends(get_db_read_session),
+) -> ListResource[ProductSchema]:
+    """List products."""
+    results, count = await product_service.list(
+        session,
+        auth_subject,
+        id=id,
+        organization_id=organization_id,
+        query=query,
+        is_archived=is_archived,
+        is_recurring=is_recurring,
+        visibility=visibility,
+        benefit_id=benefit_id,
+        metadata=metadata,
+        pagination=pagination,
+        sorting=sorting,
+    )
+
+    return ListResource.from_paginated_results(
+        [ProductSchema.model_validate(result) for result in results],
+        count,
+        pagination,
+    )
+
+
+@router.get(
+    "/{id}",
+    summary="Get Product",
+    openapi_extra=cli_preview(
+        ("id", "ID"), ("name", "Name"), ("is_archived", "Archived")
+    ),
+    response_model=ProductSchema,
+    responses={404: ProductNotFound},
+)
+async def get(
+    id: ProductID,
+    auth_subject: auth.CreatorProductsRead,
+    session: AsyncReadSession = Depends(get_db_read_session),
+) -> Product:
+    """Get a product by ID."""
+    product = await product_service.get(session, auth_subject, id)
+
+    if product is None:
+        raise ResourceNotFound()
+
+    return product
+
+
+@router.post(
+    "/",
+    response_model=ProductSchema,
+    status_code=201,
+    summary="Create Product",
+    responses={201: {"description": "Product created."}},
+)
+async def create(
+    product_create: legacy_schemas.ProductCreate,
+    auth_subject: auth.CreatorProductsWrite,
+    session: AsyncSession = Depends(get_db_session),
+) -> Product:
+    """Create a product."""
+    return await product_service.create(session, product_create, auth_subject)
+
+
+@router.post(
+    "/",
+    name="create",
+    response_model=ProductSchema,
+    status_code=201,
+    summary="Create Product",
+    responses={201: {"description": "Product created."}},
+)
+@version(starting_from=V2027_01)
+async def create_v2027_01(
+    product_create: ProductCreate,
+    auth_subject: auth.CreatorProductsWrite,
+    session: AsyncSession = Depends(get_db_session),
+) -> Product:
+    """Create a product."""
+    return await product_service.create(session, product_create, auth_subject)
+
+
+@router.patch(
+    "/{id}",
+    response_model=ProductSchema,
+    summary="Update Product",
+    responses={
+        200: {"description": "Product updated."},
+        403: {
+            "description": "You don't have the permission to update this product.",
+            "model": NotPermitted.schema(),
+        },
+        404: ProductNotFound,
+    },
+)
+async def update(
+    id: ProductID,
+    product_update: legacy_schemas.ProductUpdate,
+    auth_subject: auth.CreatorProductsWrite,
+    session: AsyncSession = Depends(get_db_session),
+) -> Product:
+    """Update a product."""
+    product = await product_service.get(session, auth_subject, id)
+
+    if product is None:
+        raise ResourceNotFound()
+
+    return await product_service.update(session, product, product_update, auth_subject)
+
+
+@router.patch(
+    "/{id}",
+    name="update",
+    response_model=ProductSchema,
+    summary="Update Product",
+    responses={
+        200: {"description": "Product updated."},
+        403: {
+            "description": "You don't have the permission to update this product.",
+            "model": NotPermitted.schema(),
+        },
+        404: ProductNotFound,
+    },
+)
+@version(starting_from=V2027_01)
+async def update_v2027_01(
+    id: ProductID,
+    product_update: ProductUpdate,
+    auth_subject: auth.CreatorProductsWrite,
+    session: AsyncSession = Depends(get_db_session),
+) -> Product:
+    """Update a product."""
+    product = await product_service.get(session, auth_subject, id)
+
+    if product is None:
+        raise ResourceNotFound()
+
+    return await product_service.update(session, product, product_update, auth_subject)
+
+
+@router.post(
+    "/{id}/benefits",
+    response_model=ProductSchema,
+    summary="Update Product Benefits",
+    responses={
+        200: {"description": "Product benefits updated."},
+        403: {
+            "description": "You don't have the permission to update this product.",
+            "model": NotPermitted.schema(),
+        },
+        404: ProductNotFound,
+    },
+)
+async def update_benefits(
+    id: ProductID,
+    benefits_update: ProductBenefitsUpdate,
+    auth_subject: auth.CreatorProductsWrite,
+    session: AsyncSession = Depends(get_db_session),
+) -> Product:
+    """Update benefits granted by a product."""
+    product = await product_service.get(session, auth_subject, id)
+
+    if product is None:
+        raise ResourceNotFound()
+
+    product, _, _ = await product_service.update_benefits(
+        session, product, benefits_update.benefits, auth_subject
+    )
+    return product
+
+
+@router.delete(
+    "/{id}",
+    status_code=204,
+    summary="Delete Product",
+    responses={
+        204: {"description": "Product deleted."},
+        403: {
+            "description": "You don't have the permission to delete this product.",
+            "model": NotPermitted.schema(),
+        },
+        404: ProductNotFound,
+        409: {
+            "description": "Product is in use and cannot be deleted.",
+            "model": ProductNotDeletable.schema(),
+        },
+    },
+)
+async def delete(
+    id: ProductID,
+    auth_subject: auth.CreatorProductsWrite,
+    session: AsyncSession = Depends(get_db_session),
+) -> None:
+    """
+    Delete a product.
+
+    Only products without orders, subscriptions, trials or discounts can be deleted.
+    Products that are in use can only be archived.
+    """
+    product = await product_service.get(session, auth_subject, id)
+
+    if product is None:
+        raise ResourceNotFound()
+
+    await product_service.delete(session, product, auth_subject)

@@ -1,0 +1,253 @@
+import json
+from textwrap import dedent
+
+import structlog
+from fastapi import Depends, Query, Request
+from fastapi.responses import Response
+from pydantic import UUID4
+from sse_starlette import EventSourceResponse
+
+from polar.customer.service import customer as main_customer_service
+from polar.eventstream.endpoints import subscribe
+from polar.eventstream.service import Receivers
+from polar.exceptions import ResourceNotFound
+from polar.kit.http import get_content_disposition
+from polar.kit.pagination import ListResource, PaginationParamsQuery
+from polar.models import Customer
+from polar.openapi import APITag
+from polar.organization.embed_hosts import csp_frame_ancestors, match_origin
+from polar.payment_method.service import PaymentMethodInUseByActiveSubscription
+from polar.postgres import (
+    AsyncReadSession,
+    AsyncSession,
+    get_db_read_session,
+    get_db_session,
+)
+from polar.redis import Redis, get_redis
+from polar.routing import APIRouter
+
+from .. import auth
+from ..schemas.customer import (
+    CustomerPaymentMethod,
+    CustomerPaymentMethodConfirm,
+    CustomerPaymentMethodCreate,
+    CustomerPaymentMethodCreateResponse,
+    CustomerPaymentMethodTypeAdapter,
+    CustomerPortalCustomer,
+    CustomerPortalCustomerUpdate,
+    CustomerPortalEmbedPolicy,
+)
+from ..service.customer import CustomerNotReady, PaymentMethodSetupFailed
+from ..service.customer import customer as customer_service
+from ..utils import get_audit_context, get_customer, get_customer_id
+
+log = structlog.get_logger()
+
+router = APIRouter(prefix="/customers", tags=["customers", APITag.public])
+
+LIST_PAYMENT_METHODS_MINTLIFY_CONTENT = dedent(
+    """
+    <Note>
+      To change the default payment method, call the [`PATCH /v1/customer-portal/customers/me`](/api-reference/customer_portal/update-customer) endpoint with the desired `default_payment_method_id`.
+    </Note>
+    """
+).strip()
+
+
+@router.get("/stream", include_in_schema=False)
+async def stream(
+    request: Request,
+    auth_subject: auth.CustomerPortalUnionRead,
+    session: AsyncSession = Depends(get_db_session),
+    redis: Redis = Depends(get_redis),
+) -> EventSourceResponse:
+    await session.commit()
+    receivers = Receivers(customer_id=get_customer_id(auth_subject))
+    channels = receivers.get_channels()
+    return EventSourceResponse(subscribe(redis, channels, request))
+
+
+@router.get("/me", summary="Get Customer", response_model=CustomerPortalCustomer)
+async def get(auth_subject: auth.CustomerPortalUnionRead) -> Customer:
+    """Get authenticated customer."""
+    return get_customer(auth_subject)
+
+
+@router.get(
+    "/me/embed-policy",
+    response_model=CustomerPortalEmbedPolicy,
+    tags=[APITag.private],
+    include_in_schema=False,
+)
+async def get_embed_policy(
+    auth_subject: auth.CustomerPortalUnionRead,
+    embed_origin: str | None = Query(
+        None, description="The origin of the page embedding the customer portal."
+    ),
+) -> CustomerPortalEmbedPolicy:
+    organization = get_customer(auth_subject).organization
+    return CustomerPortalEmbedPolicy(
+        frame_ancestors=csp_frame_ancestors(organization.embed_hosts)
+        if organization.is_frame_ancestors_enforced
+        else ["*"],
+        embed_origin=match_origin(embed_origin, organization.embed_hosts)
+        if embed_origin is not None
+        else None,
+    )
+
+
+@router.get(
+    "/me/export",
+    summary="Export Customer Data",
+    tags=[APITag.private],
+    responses={
+        200: {
+            "content": {"application/json": {"schema": {"type": "object"}}},
+            "description": "Customer data exported as a JSON file.",
+        }
+    },
+)
+async def export(
+    auth_subject: auth.CustomerPortalUnionRead,
+    session: AsyncReadSession = Depends(get_db_read_session),
+) -> Response:
+    """Export all data for the authenticated customer as a JSON file."""
+    customer = get_customer(auth_subject)
+    data = await main_customer_service.get_export(session, customer)
+    filename = f"polar-customer-export-{customer.id}.json"
+    return Response(
+        content=json.dumps(data, indent=2),
+        media_type="application/json",
+        headers={"Content-Disposition": get_content_disposition(filename)},
+    )
+
+
+@router.patch(
+    "/me",
+    summary="Update Customer",
+    responses={
+        200: {"description": "Customer updated."},
+    },
+    response_model=CustomerPortalCustomer,
+)
+async def update(
+    customer_update: CustomerPortalCustomerUpdate,
+    auth_subject: auth.CustomerPortalUnionBillingWrite,
+    session: AsyncSession = Depends(get_db_session),
+) -> Customer:
+    """Update authenticated customer."""
+    return await customer_service.update(
+        session, get_customer(auth_subject), customer_update
+    )
+
+
+@router.get(
+    "/me/payment-methods",
+    summary="List Customer Payment Methods",
+    response_model=ListResource[CustomerPaymentMethod],
+    openapi_extra={"x-mint": {"content": LIST_PAYMENT_METHODS_MINTLIFY_CONTENT}},
+)
+async def list_payment_methods(
+    auth_subject: auth.CustomerPortalUnionBillingRead,
+    pagination: PaginationParamsQuery,
+    session: AsyncSession = Depends(get_db_session),
+) -> ListResource[CustomerPaymentMethod]:
+    """Get saved payment methods of the authenticated customer."""
+    results, count = await customer_service.list_payment_methods(
+        session, auth_subject, pagination=pagination
+    )
+    return ListResource.from_paginated_results(
+        [
+            CustomerPaymentMethodTypeAdapter.validate_python(result)
+            for result in results
+        ],
+        count,
+        pagination,
+    )
+
+
+@router.post(
+    "/me/payment-methods",
+    summary="Add Customer Payment Method",
+    status_code=201,
+    responses={
+        201: {"description": "Payment method created or setup initiated."},
+        400: {
+            "description": "The card was declined while setting up the payment method.",
+            "model": PaymentMethodSetupFailed.schema(),
+        },
+    },
+    response_model=CustomerPaymentMethodCreateResponse,
+)
+async def add_payment_method(
+    auth_subject: auth.CustomerPortalUnionBillingWrite,
+    payment_method_create: CustomerPaymentMethodCreate,
+    session: AsyncSession = Depends(get_db_session),
+) -> CustomerPaymentMethodCreateResponse:
+    """Add a payment method to the authenticated customer."""
+    log.info(
+        "customer_portal.payment_method.add",
+        **get_audit_context(auth_subject),
+    )
+    return await customer_service.add_payment_method(
+        session, get_customer(auth_subject), payment_method_create
+    )
+
+
+@router.post(
+    "/me/payment-methods/confirm",
+    summary="Confirm Customer Payment Method",
+    status_code=201,
+    responses={
+        201: {"description": "Payment method created or setup initiated."},
+        403: {
+            "description": "Customer is not ready to confirm a payment method.",
+            "model": CustomerNotReady.schema(),
+        },
+    },
+    response_model=CustomerPaymentMethodCreateResponse,
+)
+async def confirm_payment_method(
+    auth_subject: auth.CustomerPortalUnionBillingWrite,
+    payment_method_confirm: CustomerPaymentMethodConfirm,
+    session: AsyncSession = Depends(get_db_session),
+) -> CustomerPaymentMethodCreateResponse:
+    """Confirm a payment method for the authenticated customer."""
+    return await customer_service.confirm_payment_method(
+        session, get_customer(auth_subject), payment_method_confirm
+    )
+
+
+@router.delete(
+    "/me/payment-methods/{id}",
+    summary="Delete Customer Payment Method",
+    status_code=204,
+    responses={
+        204: {"description": "Payment method deleted."},
+        400: {
+            "description": "Payment method is still needed to bill a subscription.",
+            "model": PaymentMethodInUseByActiveSubscription.schema(),
+        },
+        404: {
+            "description": "Payment method not found.",
+            "model": ResourceNotFound.schema(),
+        },
+    },
+)
+async def delete_payment_method(
+    id: UUID4,
+    auth_subject: auth.CustomerPortalUnionBillingWrite,
+    session: AsyncSession = Depends(get_db_session),
+) -> None:
+    """Delete a payment method from the authenticated customer."""
+    payment_method = await customer_service.get_payment_method(
+        session, auth_subject, id
+    )
+    if payment_method is None:
+        raise ResourceNotFound()
+    log.info(
+        "customer_portal.payment_method.delete",
+        payment_method_id=id,
+        **get_audit_context(auth_subject),
+    )
+    await customer_service.delete_payment_method(session, payment_method)

@@ -1,0 +1,196 @@
+import { Box } from '@/components/Shared/Box'
+import { useTheme } from '@/design-system/useTheme'
+import {
+  MaintainerAccountCreditsGrantedNotificationPayload,
+  MaintainerFileFlaggedMaliciousNotificationPayload,
+  MaintainerNewPaidSubscriptionNotificationPayload,
+  MaintainerNewProductSaleNotificationPayload,
+  MaintainerNewTrialNotificationPayload,
+  MaintainerSubscriptionCancellationNotificationPayload,
+  MaintainerSubscriptionRenewalNotificationPayload,
+} from '@/hooks/polar/notifications'
+import MaterialIcons from '@expo/vector-icons/MaterialIcons'
+import { formatCurrency } from '@polar-sh/currency'
+import { useMemo } from 'react'
+import { StyleProp, ViewStyle } from 'react-native'
+import { Text } from '../Shared/Text'
+
+export interface NotificationProps {
+  style?: StyleProp<ViewStyle>
+  type: string
+  createdAt: string
+  payload:
+    | MaintainerNewPaidSubscriptionNotificationPayload
+    | MaintainerNewTrialNotificationPayload
+    | MaintainerSubscriptionCancellationNotificationPayload
+    | MaintainerNewProductSaleNotificationPayload
+    | MaintainerAccountCreditsGrantedNotificationPayload
+    | MaintainerSubscriptionRenewalNotificationPayload
+    | MaintainerFileFlaggedMaliciousNotificationPayload
+}
+
+export const Notification = ({
+  type,
+  payload,
+  style,
+  createdAt,
+}: NotificationProps) => {
+  const theme = useTheme()
+
+  const icon = useMemo(() => {
+    switch (type) {
+      case 'MaintainerNewPaidSubscriptionNotification':
+        return (
+          <MaterialIcons
+            name="all-inclusive"
+            size={20}
+            color={theme.colors.text}
+          />
+        )
+      case 'MaintainerNewTrialNotification':
+        return (
+          <MaterialIcons
+            name="hourglass-empty"
+            size={20}
+            color={theme.colors.text}
+          />
+        )
+      case 'MaintainerSubscriptionCancellationNotification':
+        return (
+          <MaterialIcons
+            name="person-remove"
+            size={20}
+            color={theme.colors.text}
+          />
+        )
+      case 'MaintainerNewProductSaleNotification':
+        return (
+          <MaterialIcons
+            name="lightbulb-outline"
+            size={20}
+            color={theme.colors.text}
+          />
+        )
+      case 'MaintainerSubscriptionRenewalNotification':
+        return (
+          <MaterialIcons name="autorenew" size={20} color={theme.colors.text} />
+        )
+      case 'MaintainerAccountCreditsGrantedNotification':
+        return <MaterialIcons name="bolt" size={20} color={theme.colors.text} />
+      case 'MaintainerFileFlaggedMaliciousNotification':
+        return (
+          <MaterialIcons name="gpp-maybe" size={20} color={theme.colors.text} />
+        )
+      default:
+        return (
+          <MaterialIcons
+            name="notifications"
+            size={20}
+            color={theme.colors.text}
+          />
+        )
+    }
+  }, [type, theme.colors.text])
+
+  const title = useMemo(() => {
+    switch (type) {
+      case 'MaintainerNewPaidSubscriptionNotification':
+        return 'New Subscription'
+      case 'MaintainerNewTrialNotification':
+        return 'New Trial'
+      case 'MaintainerSubscriptionCancellationNotification':
+        return 'Subscription Canceled'
+      case 'MaintainerNewProductSaleNotification':
+        return 'New Product Sale'
+      case 'MaintainerSubscriptionRenewalNotification':
+        return 'Subscription Renewal'
+      case 'MaintainerAccountCreditsGrantedNotification':
+        return 'Credits Granted'
+      case 'MaintainerFileFlaggedMaliciousNotification':
+        return 'File Flagged as Malicious'
+      default:
+        return 'New Notification'
+    }
+  }, [type])
+
+  const description = useMemo(() => {
+    switch (type) {
+      case 'MaintainerNewPaidSubscriptionNotification':
+        const { subscriber_name, tier_name } =
+          payload as MaintainerNewPaidSubscriptionNotificationPayload
+        return `${subscriber_name} subscribed to ${tier_name}`
+      case 'MaintainerNewTrialNotification':
+        const {
+          subscriber_name: trialSubscriberName,
+          product_name: trialProductName,
+        } = payload as MaintainerNewTrialNotificationPayload
+        return `${trialSubscriberName} started a ${trialProductName} trial`
+      case 'MaintainerSubscriptionCancellationNotification':
+        const {
+          subscriber_name: cancellationSubscriberName,
+          product_name: cancellationProductName,
+        } = payload as MaintainerSubscriptionCancellationNotificationPayload
+        return `${cancellationSubscriberName} canceled their ${cancellationProductName} subscription`
+      case 'MaintainerNewProductSaleNotification':
+        const {
+          customer_name,
+          product_name,
+          product_price_amount,
+          currency: saleCurrency,
+        } = payload as MaintainerNewProductSaleNotificationPayload
+        return `${customer_name} bought ${product_name} for ${formatCurrency(
+          'compact',
+        )(product_price_amount, saleCurrency || 'usd')}`
+      case 'MaintainerSubscriptionRenewalNotification':
+        const {
+          customer_name: renewalCustomerName,
+          product_name: renewalProductName,
+          product_price_amount: renewalAmount,
+          currency: renewalCurrency,
+        } = payload as MaintainerSubscriptionRenewalNotificationPayload
+        return `${renewalCustomerName} renewed ${renewalProductName} for ${formatCurrency(
+          'compact',
+        )(renewalAmount, renewalCurrency || 'usd')}`
+      case 'MaintainerAccountCreditsGrantedNotification':
+        const {
+          organization_name,
+          amount,
+          currency: creditsCurrency,
+        } = payload as MaintainerAccountCreditsGrantedNotificationPayload
+        return `${organization_name} has received ${formatCurrency('compact')(amount, creditsCurrency || 'usd')} in fee credits!`
+      case 'MaintainerFileFlaggedMaliciousNotification':
+        const { file_name } =
+          payload as MaintainerFileFlaggedMaliciousNotificationPayload
+        return `${file_name} was flagged as malicious by our automated malware scanning`
+      default:
+        return 'A new notification has been created'
+    }
+  }, [type, payload])
+
+  return (
+    <Box flexDirection="row" gap="spacing-16" style={style}>
+      <Box
+        backgroundColor="card"
+        width={40}
+        height={40}
+        borderRadius="border-radius-8"
+        alignItems="center"
+        justifyContent="center"
+      >
+        <Text>{icon}</Text>
+      </Box>
+      <Box flex={1} flexDirection="column" gap="spacing-4">
+        <Box flexDirection="row" gap="spacing-12">
+          <Text>{title}</Text>
+          <Text color="subtext">
+            {new Date(createdAt).toLocaleTimeString('en-US', {
+              hour: 'numeric',
+              minute: 'numeric',
+            })}
+          </Text>
+        </Box>
+        <Text color="subtext">{description}</Text>
+      </Box>
+    </Box>
+  )
+}

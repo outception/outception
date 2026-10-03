@@ -1,0 +1,140 @@
+'use client'
+
+import { type schemas } from '@polar-sh/client'
+import {
+  DEFAULT_LOCALE,
+  useTranslations,
+  type AcceptedLocale,
+} from '@polar-sh/i18n'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { getUnitPrice, type ProductCheckoutPublic } from '../guards'
+import { ErrorResponse } from '../providers/CheckoutProvider'
+import { capitalize } from '../utils/string'
+import { getUnitLabels } from '../utils/units'
+import { UnitQuantityControl } from './UnitQuantityControl'
+
+export interface CheckoutUnitSelectorProps {
+  checkout: ProductCheckoutPublic
+  updateCheckout: (
+    data: schemas['CheckoutUpdatePublic'],
+  ) => Promise<schemas['CheckoutPublic']>
+  locale?: AcceptedLocale
+}
+
+const CheckoutUnitSelector = ({
+  checkout,
+  updateCheckout,
+  locale = DEFAULT_LOCALE,
+}: CheckoutUnitSelectorProps) => {
+  const t = useTranslations(locale)
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const autoCorrectAttempted = useRef(false)
+
+  const getErrorMessage = useCallback(
+    (error: ErrorResponse<'checkouts:client_update'> | null): string => {
+      if (error && error.error === 'PolarRequestValidationError') {
+        return error.detail[0]?.msg
+      }
+
+      return t('checkout.pricing.units.updateFailed')
+    },
+    [t],
+  )
+
+  const unitPrice = getUnitPrice(checkout)
+  const isUnitBased = unitPrice !== null
+
+  const unitLabels = getUnitLabels(unitPrice, locale)
+  const tierMinimumUnits = unitPrice?.minimum_units ?? 1
+  const tierMaximumUnits = unitPrice?.maximum_units ?? null
+  const minimumUnits = checkout.min_units ?? tierMinimumUnits
+  const maximumUnits = checkout.max_units ?? tierMaximumUnits
+  const hasMaximumLimit = maximumUnits !== null
+  const isFixedUnits = hasMaximumLimit && minimumUnits === maximumUnits
+
+  const displayUnits = Math.max(checkout.units || minimumUnits, minimumUnits)
+  const needsUnitCorrection =
+    checkout.units !== null &&
+    checkout.units !== undefined &&
+    checkout.units < minimumUnits
+
+  // Auto-correct unit count if it's below the minimum (only attempt once)
+  useEffect(() => {
+    if (
+      isUnitBased &&
+      needsUnitCorrection &&
+      !isFixedUnits &&
+      !isUpdating &&
+      !autoCorrectAttempted.current
+    ) {
+      autoCorrectAttempted.current = true
+
+      updateCheckout({
+        units: minimumUnits,
+      }).catch((err) => {
+        setError(getErrorMessage(err))
+      })
+    }
+  }, [
+    isUnitBased,
+    needsUnitCorrection,
+    isFixedUnits,
+    minimumUnits,
+    isUpdating,
+    updateCheckout,
+    getErrorMessage,
+  ])
+
+  if (!isUnitBased) {
+    return null
+  }
+
+  const handleUpdateUnits = async (newUnits: number) => {
+    if (newUnits < minimumUnits || isUpdating) return
+    if (hasMaximumLimit && newUnits > maximumUnits) return
+
+    setIsUpdating(true)
+    setError(null)
+
+    await updateCheckout({
+      units: newUnits,
+    })
+      .catch((error) => {
+        setError(getErrorMessage(error))
+      })
+      .finally(() => {
+        setIsUpdating(false)
+      })
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-row items-center justify-between">
+        <div className="flex flex-col gap-0.5">
+          <span className="text-sm font-medium dark:text-white">
+            {t('checkout.pricing.units.label', {
+              unitLabelPlural: capitalize(unitLabels.unitLabelPlural),
+            })}
+          </span>
+        </div>
+        {isFixedUnits ? (
+          <span className="text-sm font-medium dark:text-white">
+            {displayUnits}
+          </span>
+        ) : (
+          <UnitQuantityControl
+            units={displayUnits}
+            minimumUnits={minimumUnits}
+            maximumUnits={maximumUnits}
+            isUpdating={isUpdating}
+            onUpdate={handleUpdateUnits}
+          />
+        )}
+      </div>
+      {error && <p className="text-destructive-foreground text-sm">{error}</p>}
+    </div>
+  )
+}
+
+export default CheckoutUnitSelector

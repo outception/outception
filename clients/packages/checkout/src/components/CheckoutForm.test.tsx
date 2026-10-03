@@ -1,0 +1,1045 @@
+import type { schemas } from '@polar-sh/client'
+import type { ThemingPresetProps } from '@polar-sh/ui/hooks/theming'
+import { act, fireEvent, render, screen } from '@testing-library/react'
+import { useEffect } from 'react'
+import type { UseFormReturn } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
+import type { ProductCheckoutPublic } from '../guards'
+import {
+  CheckoutFormContext,
+  type CheckoutFormContextProps,
+} from '../providers/CheckoutFormProvider'
+import { createCheckout } from '../test-utils/makeCheckout'
+import CheckoutForm from './CheckoutForm'
+
+const { mockLoadStripe, ElementsCapture, captureOptions } = vi.hoisted(() => {
+  const captureOptions = vi.fn()
+  const mockLoadStripe = vi.fn(() => Promise.resolve({}))
+  const ElementsCapture = ({
+    children,
+    options,
+  }: {
+    children: React.ReactNode
+    options: unknown
+  }) => {
+    captureOptions(options)
+    return <>{children}</>
+  }
+  return { mockLoadStripe, ElementsCapture, captureOptions }
+})
+
+const lastElementsOptions = () => {
+  const calls = captureOptions.mock.calls
+  return calls.length ? calls[calls.length - 1][0] : null
+}
+
+vi.mock('@stripe/stripe-js', () => ({
+  loadStripe: mockLoadStripe,
+}))
+
+vi.mock('@stripe/react-stripe-js', () => ({
+  Elements: ElementsCapture,
+  ElementsConsumer: ({
+    children,
+  }: {
+    children: (ctx: { stripe: unknown; elements: unknown }) => React.ReactNode
+  }) => <>{children({ stripe: null, elements: null })}</>,
+  PaymentElement: () => (
+    <div data-testid="mock-payment-element">mock payment element</div>
+  ),
+}))
+
+beforeAll(() => {
+  globalThis.ResizeObserver ??= class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+    // oxlint-disable-next-line typescript/no-explicit-any
+  } as any
+})
+
+afterEach(() => {
+  captureOptions.mockClear()
+  mockLoadStripe.mockClear()
+  vi.useRealTimers()
+})
+
+function FormWrapper({
+  checkout,
+  defaultValues,
+  onForm,
+  ...props
+}: Omit<Parameters<typeof CheckoutForm>[0], 'form'> & {
+  defaultValues?: Partial<schemas['CheckoutUpdatePublic']>
+  onForm?: (form: UseFormReturn<schemas['CheckoutUpdatePublic']>) => void
+}) {
+  const form = useForm<schemas['CheckoutUpdatePublic']>({
+    defaultValues: { customer_email: '', ...defaultValues },
+  })
+  // oxlint-disable-next-line react/exhaustive-deps
+  useEffect(() => onForm?.(form), [])
+  return <CheckoutForm form={form} checkout={checkout} {...props} />
+}
+
+const defaultProps = {
+  update: vi.fn(async () => createCheckout()),
+  confirm: vi.fn(async () => ({
+    ...createCheckout(),
+    status: 'confirmed' as const,
+    customer_session_token: '',
+  })),
+  loading: false,
+  loadingLabel: undefined,
+  themePreset: {} as ThemingPresetProps,
+}
+
+const recurringProduct = {
+  id: 'prod_1',
+  name: 'Test',
+  recurring_interval: 'month' as const,
+  recurring_interval_count: null,
+  is_recurring: true,
+  meter_interval: null,
+  meter_interval_count: null,
+  trial_interval: null,
+  trial_interval_count: null,
+  visibility: 'public' as const,
+  prices: [],
+  benefits: [],
+  medias: [],
+  description: null,
+  is_archived: false,
+  organization_id: 'org_1',
+  created_at: new Date().toISOString(),
+  modified_at: null,
+}
+
+describe('CheckoutForm', () => {
+  describe('CTA button label', () => {
+    it('shows "Start trial" when trial is active', () => {
+      const checkout = createCheckout({
+        // oxlint-disable-next-line typescript/no-explicit-any
+        payment_processor: 'dummy' as any,
+        active_trial_interval: 'month',
+        active_trial_interval_count: 1,
+        is_payment_form_required: true,
+        product: {
+          ...recurringProduct,
+          trial_interval: 'month',
+          trial_interval_count: 1,
+        },
+      })
+
+      render(<FormWrapper checkout={checkout} {...defaultProps} locale="en" />)
+
+      expect(
+        screen.getByRole('button', { name: 'Start trial' }),
+      ).toBeInTheDocument()
+    })
+
+    it('shows "Subscribe now" for recurring paid product', () => {
+      const checkout = createCheckout({
+        // oxlint-disable-next-line typescript/no-explicit-any
+        payment_processor: 'dummy' as any,
+        is_payment_form_required: true,
+        product: recurringProduct,
+      })
+
+      render(<FormWrapper checkout={checkout} {...defaultProps} locale="en" />)
+
+      expect(
+        screen.getByRole('button', { name: 'Subscribe now' }),
+      ).toBeInTheDocument()
+    })
+
+    it('shows "Pay now" for one-time paid product', () => {
+      const checkout = createCheckout({
+        // oxlint-disable-next-line typescript/no-explicit-any
+        payment_processor: 'dummy' as any,
+        is_payment_form_required: true,
+      })
+
+      render(<FormWrapper checkout={checkout} {...defaultProps} locale="en" />)
+
+      expect(
+        screen.getByRole('button', { name: 'Pay now' }),
+      ).toBeInTheDocument()
+    })
+
+    it('shows "Get for free" when payment is not required', () => {
+      const checkout = createCheckout({
+        // oxlint-disable-next-line typescript/no-explicit-any
+        payment_processor: 'dummy' as any,
+        is_payment_form_required: false,
+        is_payment_required: false,
+        is_free_product_price: true,
+        amount: 0,
+        total_amount: 0,
+        net_amount: 0,
+      })
+
+      render(<FormWrapper checkout={checkout} {...defaultProps} locale="en" />)
+
+      expect(
+        screen.getByRole('button', { name: 'Get for free' }),
+      ).toBeInTheDocument()
+    })
+  })
+
+  describe('footer mandate text', () => {
+    it('shows trial mandate for trial checkout', () => {
+      const checkout = createCheckout({
+        // oxlint-disable-next-line typescript/no-explicit-any
+        payment_processor: 'dummy' as any,
+        is_payment_form_required: true,
+        active_trial_interval: 'month',
+        active_trial_interval_count: 1,
+      })
+
+      render(<FormWrapper checkout={checkout} {...defaultProps} locale="en" />)
+
+      expect(
+        screen.getByText(/at the end of your trial period/),
+      ).toBeInTheDocument()
+    })
+
+    it('shows subscription mandate for recurring product', () => {
+      const checkout = createCheckout({
+        // oxlint-disable-next-line typescript/no-explicit-any
+        payment_processor: 'dummy' as any,
+        is_payment_form_required: true,
+        product: recurringProduct,
+      })
+
+      render(<FormWrapper checkout={checkout} {...defaultProps} locale="en" />)
+
+      expect(
+        screen.getByText(/on each subsequent billing date until you cancel/),
+      ).toBeInTheDocument()
+    })
+
+    it('shows one-time mandate for one-time product', () => {
+      const checkout = createCheckout({
+        // oxlint-disable-next-line typescript/no-explicit-any
+        payment_processor: 'dummy' as any,
+        is_payment_form_required: true,
+      })
+
+      render(<FormWrapper checkout={checkout} {...defaultProps} locale="en" />)
+
+      expect(screen.getByText(/one-time charge/)).toBeInTheDocument()
+    })
+
+    it('shows merchant of record text for free product', () => {
+      const checkout = createCheckout({
+        // oxlint-disable-next-line typescript/no-explicit-any
+        payment_processor: 'dummy' as any,
+        is_payment_form_required: false,
+        is_payment_required: false,
+        is_free_product_price: true,
+        amount: 0,
+        total_amount: 0,
+        net_amount: 0,
+      })
+
+      render(<FormWrapper checkout={checkout} {...defaultProps} locale="en" />)
+
+      expect(
+        screen.getByText(/online reseller & Merchant of Record/),
+      ).toBeInTheDocument()
+    })
+  })
+
+  describe('disabled state', () => {
+    it('disables the submit button when disabled prop is true', () => {
+      const checkout = createCheckout({
+        // oxlint-disable-next-line typescript/no-explicit-any
+        payment_processor: 'dummy' as any,
+      })
+
+      render(
+        <FormWrapper
+          checkout={checkout}
+          {...defaultProps}
+          disabled={true}
+          locale="en"
+        />,
+      )
+
+      expect(screen.getByRole('button')).toBeDisabled()
+    })
+  })
+
+  describe('trial unavailable notice', () => {
+    const renderWithTrialUnavailable = (trialUnavailable: boolean) => {
+      const checkout = createCheckout({
+        // oxlint-disable-next-line typescript/no-explicit-any
+        payment_processor: 'dummy' as any,
+      })
+
+      render(
+        <CheckoutFormContext.Provider
+          value={{ trialUnavailable } as CheckoutFormContextProps}
+        >
+          <FormWrapper checkout={checkout} {...defaultProps} locale="en" />
+        </CheckoutFormContext.Provider>,
+      )
+    }
+
+    it('shows the banner when trialUnavailable is true', () => {
+      renderWithTrialUnavailable(true)
+
+      expect(
+        screen.getByText('No free trial for this purchase'),
+      ).toBeInTheDocument()
+      expect(screen.getByText(/you'll be charged today/i)).toBeInTheDocument()
+    })
+
+    it('does not show the banner when trialUnavailable is false', () => {
+      renderWithTrialUnavailable(false)
+
+      expect(
+        screen.queryByText('No free trial for this purchase'),
+      ).not.toBeInTheDocument()
+    })
+  })
+
+  it('resets state field when country changes', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    let form: UseFormReturn<schemas['CheckoutUpdatePublic']> | null = null
+    const update = vi.fn(async () => createCheckout())
+    const checkout = createCheckout({
+      // oxlint-disable-next-line typescript/no-explicit-any
+      payment_processor: 'dummy' as any,
+      billing_address_fields: {
+        country: 'required',
+        state: 'required',
+        city: 'optional',
+        postal_code: 'optional',
+        line1: 'optional',
+        line2: 'disabled',
+      },
+    })
+
+    render(
+      <FormWrapper
+        checkout={checkout}
+        {...defaultProps}
+        update={update}
+        onForm={(f) => {
+          form = f
+        }}
+        defaultValues={{
+          customer_billing_address: {
+            country: 'SE',
+            state: 'Stockholm',
+            postal_code: '12391',
+            city: 'Stockholm',
+            line1: 'Foo St',
+          },
+        }}
+        locale="en"
+      />,
+    )
+
+    expect(form!.getValues('customer_billing_address.state')).toBe('Stockholm')
+    expect(form!.getValues('customer_billing_address.postal_code')).toBe(
+      '12391',
+    )
+    expect(form!.getValues('customer_billing_address.city')).toBe('Stockholm')
+    expect(form!.getValues('customer_billing_address.line1')).toBe('Foo St')
+
+    await act(async () => {
+      form!.setValue('customer_billing_address.country', 'US')
+    })
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(600)
+    })
+
+    // Only state should be reset
+    expect(form!.getValues('customer_billing_address.state')).toBe('')
+    expect(form!.getValues('customer_billing_address.postal_code')).toBe(
+      '12391',
+    )
+    expect(form!.getValues('customer_billing_address.city')).toBe('Stockholm')
+    expect(form!.getValues('customer_billing_address.line1')).toBe('Foo St')
+  })
+
+  it('displays validation error on billing address state field', async () => {
+    let form: UseFormReturn<schemas['CheckoutUpdatePublic']> | null = null
+    const checkout = createCheckout({
+      // oxlint-disable-next-line typescript/no-explicit-any
+      payment_processor: 'dummy' as any,
+      billing_address_fields: {
+        country: 'required',
+        state: 'required',
+        city: 'optional',
+        postal_code: 'optional',
+        line1: 'optional',
+        line2: 'disabled',
+      },
+    })
+
+    render(
+      <FormWrapper
+        checkout={checkout}
+        {...defaultProps}
+        onForm={(f) => {
+          form = f
+        }}
+        defaultValues={{
+          customer_billing_address: {
+            country: 'US',
+            state: 'California',
+          },
+        }}
+        locale="en"
+      />,
+    )
+
+    await act(async () => {
+      form!.setError('customer_billing_address.state', {
+        type: 'value_error',
+        message: 'Invalid US state',
+      })
+    })
+
+    expect(screen.getByText('Invalid US state')).toBeInTheDocument()
+  })
+
+  it('clears billing address errors when country changes', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    let form: UseFormReturn<schemas['CheckoutUpdatePublic']> | null = null
+    const checkout = createCheckout({
+      // oxlint-disable-next-line typescript/no-explicit-any
+      payment_processor: 'dummy' as any,
+      billing_address_fields: {
+        country: 'required',
+        state: 'required',
+        city: 'optional',
+        postal_code: 'optional',
+        line1: 'optional',
+        line2: 'disabled',
+      },
+    })
+
+    render(
+      <FormWrapper
+        checkout={checkout}
+        {...defaultProps}
+        onForm={(f) => {
+          form = f
+        }}
+        defaultValues={{
+          customer_billing_address: {
+            country: 'US',
+            state: 'California',
+          },
+        }}
+        locale="en"
+      />,
+    )
+
+    await act(async () => {
+      form!.setError('customer_billing_address.state', {
+        type: 'value_error',
+        message: 'Invalid US state',
+      })
+    })
+
+    expect(screen.getByText('Invalid US state')).toBeInTheDocument()
+
+    await act(async () => {
+      form!.setValue('customer_billing_address.country', 'CA')
+    })
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(600)
+    })
+
+    expect(screen.queryByText('Invalid US state')).not.toBeInTheDocument()
+  })
+
+  describe('tax ID handling on country change', () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true })
+    })
+
+    const businessCheckout = (
+      overrides: Partial<ProductCheckoutPublic> = {},
+    ): ProductCheckoutPublic =>
+      createCheckout({
+        is_business_customer: true,
+        customer_billing_address: { country: 'FR' },
+        customer_tax_id: 'FR61954506077',
+        billing_address_fields: {
+          country: 'required',
+          state: 'required',
+          city: 'optional',
+          postal_code: 'optional',
+          line1: 'optional',
+          line2: 'disabled',
+        },
+        ...overrides,
+      })
+
+    const renderForm = (
+      checkout: ProductCheckoutPublic,
+      update: () => Promise<schemas['CheckoutPublic']> = vi.fn(async () =>
+        createCheckout(),
+      ),
+      defaultValues?: Partial<schemas['CheckoutUpdatePublic']>,
+    ) => {
+      let form!: UseFormReturn<schemas['CheckoutUpdatePublic']>
+      render(
+        <FormWrapper
+          checkout={checkout}
+          {...defaultProps}
+          update={update}
+          onForm={(f) => {
+            form = f
+          }}
+          themePreset={{ stripe: {} } as ThemingPresetProps}
+          defaultValues={defaultValues}
+          locale="en"
+        />,
+      )
+      return { form, update }
+    }
+
+    const waitForDebounce = () =>
+      act(async () => {
+        await vi.advanceTimersByTimeAsync(600)
+      })
+
+    it('clears an applied tax ID on the server and form when the country changes', async () => {
+      const update = vi.fn(async () => createCheckout())
+      const { form } = renderForm(businessCheckout(), update, {
+        customer_billing_address: {
+          country: 'FR',
+          state: '',
+        },
+        customer_tax_id: 'FR61954506077',
+      })
+
+      await act(async () => {
+        form.setValue('customer_billing_address.country', 'US')
+      })
+      await waitForDebounce()
+
+      expect(update).toHaveBeenLastCalledWith({
+        customer_billing_address: { country: 'US' },
+        customer_tax_id: null,
+      })
+      expect(form.getValues('customer_tax_id')).toBe('')
+    })
+
+    it('clears a typed-but-unapplied tax ID when the country changes', async () => {
+      const update = vi.fn(async () => createCheckout())
+      const { form } = renderForm(
+        businessCheckout({ customer_tax_id: null }),
+        update,
+        {
+          customer_billing_address: {
+            country: 'FR',
+            state: '',
+          },
+          customer_tax_id: 'FR61954506077',
+        },
+      )
+
+      await act(async () => {
+        form.setValue('customer_billing_address.country', 'US')
+      })
+      await waitForDebounce()
+
+      expect(update).toHaveBeenLastCalledWith({
+        customer_billing_address: { country: 'US' },
+        customer_tax_id: null,
+      })
+      expect(form.getValues('customer_tax_id')).toBe('')
+    })
+
+    it('clears a stale customer_tax_id error when the country changes', async () => {
+      const { form } = renderForm(businessCheckout(), undefined, {
+        customer_billing_address: {
+          country: 'FR',
+          state: '',
+        },
+        customer_tax_id: 'FR61954506077',
+      })
+
+      await act(async () => {
+        form.setError('customer_tax_id', {
+          type: 'value_error',
+          message: 'Invalid tax ID.',
+        })
+      })
+      expect(screen.getByText('Invalid tax ID.')).toBeInTheDocument()
+
+      await act(async () => {
+        form.setValue('customer_billing_address.country', 'US')
+      })
+      await waitForDebounce()
+
+      expect(screen.queryByText('Invalid tax ID.')).not.toBeInTheDocument()
+    })
+
+    it('does not send customer_tax_id when the country changes and no tax id is present', async () => {
+      const update = vi.fn(async () => createCheckout())
+      const { form } = renderForm(
+        createCheckout({
+          billing_address_fields: {
+            country: 'required',
+            state: 'required',
+            city: 'optional',
+            postal_code: 'optional',
+            line1: 'optional',
+            line2: 'disabled',
+          },
+        }),
+        update,
+        {
+          customer_billing_address: {
+            country: 'FR',
+            state: '',
+          },
+        },
+      )
+
+      await act(async () => {
+        form.setValue('customer_billing_address.country', 'US')
+      })
+      await waitForDebounce()
+
+      expect(update).toHaveBeenLastCalledWith({
+        customer_billing_address: { country: 'US' },
+      })
+    })
+
+    it('resets both the state field and the tax ID when the country changes', async () => {
+      const update = vi.fn(async () => createCheckout())
+      const { form } = renderForm(businessCheckout(), update, {
+        customer_billing_address: {
+          country: 'SE',
+          state: 'Stockholm',
+          postal_code: '12391',
+          city: 'Stockholm',
+          line1: 'Foo St',
+        },
+        customer_tax_id: 'FR61954506077',
+      })
+
+      await act(async () => {
+        form.setValue('customer_billing_address.country', 'US')
+      })
+      await waitForDebounce()
+
+      expect(form.getValues('customer_billing_address.state')).toBe('')
+      expect(form.getValues('customer_tax_id')).toBe('')
+      expect(update).toHaveBeenLastCalledWith({
+        customer_billing_address: { country: 'US' },
+        customer_tax_id: null,
+      })
+    })
+  })
+
+  describe('Stripe checkout form', () => {
+    const stripeCheckout = (
+      overrides: Partial<ProductCheckoutPublic> = {},
+    ): ProductCheckoutPublic =>
+      createCheckout({
+        payment_processor: 'stripe',
+        payment_processor_metadata: { publishable_key: 'pk_test_123' },
+        ...overrides,
+      })
+
+    it('routes to StripeCheckoutForm when payment_processor is "stripe"', () => {
+      render(
+        <FormWrapper
+          checkout={stripeCheckout()}
+          {...defaultProps}
+          themePreset={{ stripe: {} } as ThemingPresetProps}
+          locale="en"
+        />,
+      )
+
+      expect(mockLoadStripe).toHaveBeenCalledWith('pk_test_123', {
+        developerTools: { assistant: { enabled: false } },
+      })
+      expect(screen.getByTestId('mock-payment-element')).toBeInTheDocument()
+    })
+
+    it('does not render the PaymentElement when is_payment_form_required is false', () => {
+      const checkout = stripeCheckout({
+        is_payment_form_required: false,
+        is_payment_required: false,
+        is_free_product_price: true,
+        amount: 0,
+        net_amount: 0,
+        total_amount: 0,
+      })
+
+      render(
+        <FormWrapper
+          checkout={checkout}
+          {...defaultProps}
+          themePreset={{ stripe: {} } as ThemingPresetProps}
+          locale="en"
+        />,
+      )
+
+      expect(
+        screen.queryByTestId('mock-payment-element'),
+      ).not.toBeInTheDocument()
+    })
+
+    it('uses subscription mode when payment setup + payment are required and total > 0', () => {
+      const checkout = stripeCheckout({
+        is_payment_setup_required: true,
+        is_payment_required: true,
+        total_amount: 1500,
+        currency: 'usd',
+      })
+
+      render(
+        <FormWrapper
+          checkout={checkout}
+          {...defaultProps}
+          themePreset={{ stripe: {} } as ThemingPresetProps}
+          locale="en"
+        />,
+      )
+
+      expect(lastElementsOptions()).toMatchObject({
+        mode: 'subscription',
+        excludedPaymentMethodTypes: [
+          'bancontact',
+          'ideal',
+          'sepa_debit',
+          'sofort',
+        ],
+        setupFutureUsage: 'off_session',
+        amount: 1500,
+        currency: 'usd',
+      })
+    })
+
+    it('uses payment mode for one-off payments', () => {
+      const checkout = stripeCheckout({
+        is_payment_setup_required: false,
+        is_payment_required: true,
+        total_amount: 999,
+        currency: 'eur',
+      })
+
+      render(
+        <FormWrapper
+          checkout={checkout}
+          {...defaultProps}
+          themePreset={{ stripe: {} } as ThemingPresetProps}
+          locale="en"
+        />,
+      )
+
+      expect(lastElementsOptions()).toMatchObject({
+        mode: 'payment',
+        excludedPaymentMethodTypes: undefined,
+        amount: 999,
+        currency: 'eur',
+      })
+    })
+
+    it('excludes SEPA methods during a free trial with no payment due now', () => {
+      const checkout = stripeCheckout({
+        is_payment_setup_required: true,
+        is_payment_required: false,
+        total_amount: 0,
+        currency: 'usd',
+      })
+
+      render(
+        <FormWrapper
+          checkout={checkout}
+          {...defaultProps}
+          themePreset={{ stripe: {} } as ThemingPresetProps}
+          locale="en"
+        />,
+      )
+
+      expect(lastElementsOptions()).toMatchObject({
+        mode: 'setup',
+        excludedPaymentMethodTypes: [
+          'bancontact',
+          'ideal',
+          'sepa_debit',
+          'sofort',
+        ],
+        setupFutureUsage: 'off_session',
+        currency: 'usd',
+      })
+    })
+
+    it('passes a converted Stripe locale through Elements options', () => {
+      render(
+        <FormWrapper
+          checkout={stripeCheckout()}
+          {...defaultProps}
+          themePreset={{ stripe: {} } as ThemingPresetProps}
+          locale="pt-PT"
+        />,
+      )
+
+      expect(lastElementsOptions()).toMatchObject({ locale: 'pt' })
+    })
+
+    it('forwards customer_session_client_secret from payment_processor_metadata', () => {
+      const checkout = stripeCheckout({
+        payment_processor_metadata: {
+          publishable_key: 'pk_test_123',
+          customer_session_client_secret: 'cs_secret_abc',
+        },
+      })
+
+      render(
+        <FormWrapper
+          checkout={checkout}
+          {...defaultProps}
+          themePreset={{ stripe: {} } as ThemingPresetProps}
+          locale="en"
+        />,
+      )
+
+      expect(lastElementsOptions()).toMatchObject({
+        customerSessionClientSecret: 'cs_secret_abc',
+      })
+    })
+  })
+
+  describe('contact capture', () => {
+    it('accepts checkbox toggles while a contact update is pending', async () => {
+      const update = vi.fn(async () => createCheckout())
+      render(
+        <FormWrapper
+          checkout={createCheckout()}
+          {...defaultProps}
+          update={update}
+          isUpdatePending
+          themePreset={{ stripe: {} } as ThemingPresetProps}
+          locale="en"
+        />,
+      )
+
+      await act(async () => {
+        fireEvent.click(
+          screen.getByRole('checkbox', { name: /purchasing as a business/i }),
+        )
+      })
+      expect(update).toHaveBeenLastCalledWith({ is_business_customer: true })
+      await act(async () => {
+        fireEvent.click(
+          screen.getByRole('checkbox', { name: /purchasing as a business/i }),
+        )
+      })
+      expect(update).toHaveBeenLastCalledWith({ is_business_customer: false })
+    })
+
+    const rejectingUpdate = () =>
+      vi.fn(async () => {
+        throw new Error('rejected')
+      })
+
+    const renderForm = (
+      checkout: ProductCheckoutPublic = createCheckout(),
+      update: () => Promise<schemas['CheckoutPublic']> = vi.fn(async () =>
+        createCheckout(),
+      ),
+    ) => {
+      let form!: UseFormReturn<schemas['CheckoutUpdatePublic']>
+      render(
+        <FormWrapper
+          checkout={checkout}
+          {...defaultProps}
+          update={update}
+          onForm={(f) => {
+            form = f
+          }}
+          themePreset={{ stripe: {} } as ThemingPresetProps}
+          locale="en"
+        />,
+      )
+      return { update, form }
+    }
+
+    const fill = (label: string, value: string) => {
+      const input = screen.getByLabelText(label)
+      fireEvent.change(input, { target: { value } })
+      fireEvent.blur(input)
+    }
+
+    it('stores the email once the buyer leaves the field', () => {
+      const { update } = renderForm()
+
+      fill('Email', 'buyer@example.com')
+
+      expect(update).toHaveBeenCalledWith({
+        customer_email: 'buyer@example.com',
+      })
+    })
+
+    it('stores the cardholder name once the buyer leaves the field', () => {
+      const { update } = renderForm()
+
+      fill('Cardholder name', 'Buyer Example')
+
+      expect(update).toHaveBeenCalledWith({ customer_name: 'Buyer Example' })
+    })
+
+    it('waits for an address the browser reads as one', () => {
+      const { update } = renderForm()
+
+      fill('Email', 'buyer@')
+
+      expect(update).not.toHaveBeenCalled()
+    })
+
+    it('skips a value the checkout already holds', () => {
+      const { update } = renderForm(
+        createCheckout({ customer_email: 'buyer@example.com' }),
+      )
+
+      fill('Email', 'buyer@example.com')
+
+      expect(update).not.toHaveBeenCalled()
+    })
+
+    it('clears the error left by a rejected write', async () => {
+      const { form } = renderForm(createCheckout(), rejectingUpdate())
+      act(() => form.setError('customer_email', { message: 'Server said no' }))
+      expect(screen.getByText('Server said no')).toBeInTheDocument()
+
+      await act(async () => {
+        fill('Email', 'buyer@example.com')
+      })
+
+      expect(screen.queryByText('Server said no')).not.toBeInTheDocument()
+    })
+
+    it('keeps the error the rejected write raised', async () => {
+      const holder: {
+        form?: UseFormReturn<schemas['CheckoutUpdatePublic']>
+      } = {}
+      const failingUpdate = vi.fn(async () => {
+        holder.form?.setError('customer_email', {
+          message:
+            'buyer@example.com is not a valid email address: The domain name example.com does not accept email.',
+        })
+        throw new Error('rejected')
+      })
+
+      holder.form = renderForm(createCheckout(), failingUpdate).form
+
+      await act(async () => {
+        fill('Email', 'buyer@example.com')
+      })
+
+      expect(
+        screen.getByText(/The domain name example.com does not accept email/),
+      ).toBeInTheDocument()
+    })
+
+    it('stores the value again after a rejected write', async () => {
+      const { update } = renderForm(createCheckout(), rejectingUpdate())
+
+      await act(async () => {
+        fill('Email', 'buyer@example.com')
+      })
+      await act(async () => {
+        fireEvent.blur(screen.getByLabelText('Email'))
+      })
+
+      expect(update).toHaveBeenCalledTimes(2)
+    })
+
+    it('keeps server validation errors visible when update rejects', async () => {
+      let form!: UseFormReturn<schemas['CheckoutUpdatePublic']>
+      const update = vi.fn(async () => {
+        form.setError('customer_email', {
+          type: 'validation_error',
+          message: 'Email is not deliverable',
+        })
+        throw new Error('validation failed')
+      })
+      render(
+        <FormWrapper
+          checkout={createCheckout()}
+          {...defaultProps}
+          update={update}
+          onForm={(f) => {
+            form = f
+          }}
+          themePreset={{ stripe: {} } as ThemingPresetProps}
+          locale="en"
+        />,
+      )
+
+      await act(async () => {
+        fill('Email', 'undeliverable@example.com')
+      })
+
+      expect(update).toHaveBeenCalledWith({
+        customer_email: 'undeliverable@example.com',
+      })
+      expect(screen.getByText('Email is not deliverable')).toBeInTheDocument()
+    })
+
+    it('clears a stale error and shows the new server error on retry', async () => {
+      let form!: UseFormReturn<schemas['CheckoutUpdatePublic']>
+      const update = vi.fn(async () => {
+        form.setError('customer_email', {
+          type: 'validation_error',
+          message: 'This domain does not accept email',
+        })
+        throw new Error('validation failed')
+      })
+      render(
+        <FormWrapper
+          checkout={createCheckout()}
+          {...defaultProps}
+          update={update}
+          onForm={(f) => {
+            form = f
+          }}
+          themePreset={{ stripe: {} } as ThemingPresetProps}
+          locale="en"
+        />,
+      )
+
+      act(() =>
+        form.setError('customer_email', { message: 'Previous server error' }),
+      )
+      expect(screen.getByText('Previous server error')).toBeInTheDocument()
+
+      await act(async () => {
+        fill('Email', 'undeliverable@example.com')
+      })
+
+      expect(
+        screen.queryByText('Previous server error'),
+      ).not.toBeInTheDocument()
+      expect(
+        screen.getByText('This domain does not accept email'),
+      ).toBeInTheDocument()
+    })
+  })
+})

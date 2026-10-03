@@ -1,0 +1,88 @@
+from enum import StrEnum
+from typing import Annotated, NotRequired, TypedDict
+from uuid import UUID
+
+from sqlalchemy import ForeignKey, Index, Uuid
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped, declared_attr, mapped_column, relationship
+
+from polar.kit.db.models import TimestampedModel
+from polar.kit.extensions.sqlalchemy.types import StringEnum
+from polar.kit.versioning import Version
+from polar.models.organization import Organization
+from polar.models.user import User
+from polar.version import V2027_01
+
+
+class OrganizationRole(StrEnum):
+    owner = "owner"
+    admin = "admin"
+    finance = "finance"
+    member = "member"
+
+
+class OrganizationNotificationSettings(TypedDict):
+    new_order: bool
+    new_subscription: bool
+    new_trial: Annotated[NotRequired[bool], Version(starting_from=V2027_01)]
+    chargeback_prevention: bool
+    subscription_renewal: bool
+    subscription_cancellation: Annotated[
+        NotRequired[bool], Version(starting_from=V2027_01)
+    ]
+    exclude_free_products: Annotated[NotRequired[bool], Version(starting_from=V2027_01)]
+
+
+_default_notification_settings: OrganizationNotificationSettings = {
+    "new_order": True,
+    "new_subscription": True,
+    "new_trial": True,
+    "chargeback_prevention": True,
+    "subscription_renewal": False,
+    "subscription_cancellation": False,
+    "exclude_free_products": False,
+}
+
+
+class UserOrganization(TimestampedModel):
+    __tablename__ = "user_organizations"
+    __table_args__ = (
+        Index(
+            "ix_user_organizations_owner_per_org",
+            "organization_id",
+            unique=True,
+            postgresql_where="role = 'owner' AND deleted_at IS NULL",
+        ),
+    )
+
+    user_id: Mapped[UUID] = mapped_column(
+        Uuid,
+        ForeignKey("users.id"),
+        nullable=False,
+        primary_key=True,
+    )
+
+    organization_id: Mapped[UUID] = mapped_column(
+        Uuid,
+        ForeignKey("organizations.id", ondelete="CASCADE"),
+        nullable=False,
+        primary_key=True,
+    )
+
+    role: Mapped[OrganizationRole] = mapped_column(
+        StringEnum(OrganizationRole),
+        nullable=False,
+        default=OrganizationRole.member,
+    )
+
+    notification_settings: Mapped[OrganizationNotificationSettings] = mapped_column(
+        JSONB, nullable=False, default=_default_notification_settings
+    )
+
+    @declared_attr
+    def user(cls) -> "Mapped[User]":
+        return relationship("User", lazy="raise")
+
+    @declared_attr
+    def organization(cls) -> "Mapped[Organization]":
+        return relationship("Organization", lazy="raise")

@@ -1,0 +1,680 @@
+import json
+import uuid
+from collections.abc import AsyncGenerator, AsyncIterator, Sequence
+from typing import TYPE_CHECKING, Any, Final, Literal, Unpack, cast, overload
+from urllib.parse import urlencode
+
+import stripe as stripe_lib
+import structlog
+from stripe.params._customer_create_params import (
+    CustomerCreateParams,
+    CustomerCreateParamsTaxIdDatum,
+)
+from stripe.params._customer_modify_params import CustomerModifyParams
+from stripe.params._payment_intent_create_params import PaymentIntentCreateParams
+from stripe.params._payment_intent_modify_params import PaymentIntentModifyParams
+from stripe.params._setup_intent_confirm_params import SetupIntentConfirmParams
+from stripe.params._setup_intent_create_params import SetupIntentCreateParams
+from stripe.params._setup_intent_modify_params import SetupIntentModifyParams
+from stripe.params._setup_intent_retrieve_params import SetupIntentRetrieveParams
+from stripe.params.tax._calculation_create_params import CalculationCreateParams
+
+from polar.config import settings
+from polar.exceptions import PolarError
+from polar.kit.http import get_safe_return_url
+from polar.logfire import instrument_httpx
+from polar.logging import Logger
+
+if TYPE_CHECKING:
+    from stripe.params._account_create_params import AccountCreateParams
+    from stripe.params._balance_transaction_list_params import (
+        BalanceTransactionListParams,
+    )
+    from stripe.params._transfer_create_params import TransferCreateParams
+    from stripe.params._transfer_create_reversal_params import (
+        TransferCreateReversalParams,
+    )
+    from stripe.params._transfer_modify_params import TransferModifyParams
+    from stripe.params.tax._transaction_create_reversal_params import (
+        TransactionCreateReversalParams,
+    )
+
+    from polar.models import User
+
+#: Stripe PaymentIntent metadata key carrying the
+#: :class:`polar.models.payment.PaymentTrigger`. Producers (in
+#: ``polar.order.service``) and the consumer in ``polar.integrations.stripe.payment``
+#: must agree on this string.
+STRIPE_METADATA_PAYMENT_TRIGGER = "payment_trigger"
+SEPA_PAYMENT_METHOD_TYPES: Final = ("bancontact", "ideal", "sepa_debit", "sofort")
+
+
+stripe_lib.api_key = settings.STRIPE_SECRET_KEY
+stripe_lib.api_version = "2026-01-28.clover"
+
+stripe_http_client = stripe_lib.HTTPXClient(allow_sync_methods=True)
+instrument_httpx(stripe_http_client._client_async)
+stripe_lib.default_http_client = stripe_http_client
+
+STRIPE_ACCOUNT_SIGNALS_API_VERSION = "2026-08-26.preview"
+FX_QUOTES_API_VERSION = "2026-02-25.preview"
+stripe_risk_client = stripe_lib.StripeClient(
+    settings.STRIPE_SECRET_KEY, http_client=stripe_http_client
+)
+
+log: Logger = structlog.get_logger()
+
+
+StripeCancellationReasons = Literal[
+    "customer_service",
+    "low_quality",
+    "missing_features",
+    "other",
+    "switched_service",
+    "too_complex",
+    "too_expensive",
+    "unused",
+]
+
+StripeAccountRejectReason = Literal["fraud", "terms_of_service", "other"]
+
+
+class StripeError(PolarError): ...
+
+
+class StripeService:
+    async def retrieve_intent(self, id: str) -> stripe_lib.PaymentIntent:
+        return await stripe_lib.PaymentIntent.retrieve_async(id)
+
+    async def create_account(
+        self, country: str, name: str | None
+    ) -> stripe_lib.Account:
+        create_params: AccountCreateParams = {
+            "country": country,
+            "type": "express",
+            "capabilities": {"transfers": {"requested": True}},
+            "settings": {
+                "payouts": {"schedule": {"interval": "manual"}},
+            },
+        }
+
+        if name:
+            create_params["business_profile"] = {"name": name}
+
+        if country != "US":
+            create_params["tos_acceptance"] = {"service_agreement": "recipient"}
+
+        return await stripe_lib.Account.create_async(**create_params)
+
+    async def update_account(self, id: str, name: str | None) -> None:
+        obj = {}
+        if name:
+            obj["business_profile"] = {"name": name}
+        await stripe_lib.Account.modify_async(id, **obj)
+
+    async def update_account_website(self, id: str, url: str) -> None:
+        log.info("stripe.account.update_website", account_id=id, url=url)
+        await stripe_lib.Account.modify_async(id, business_profile={"url": url})
+
+    async def retrieve_account(self, id: str) -> stripe_lib.Account:
+        return await stripe_lib.Account.retrieve_async(id)
+
+    async def account_exists(self, id: str) -> bool:
+        try:
+            account = await stripe_lib.Account.retrieve_async(id)
+            return bool(account)
+        except stripe_lib.PermissionError, stripe_lib.InvalidRequestError:
+            # No access, or the account was deleted / never existed.
+            return False
+
+    async def delete_account(self, id: str) -> stripe_lib.Account:
+        # TODO: Check if this fails when account balance is non-zero
+        log.info(
+            "stripe.account.delete",
+            account_id=id,
+        )
+        return await stripe_lib.Account.delete_async(id)
+
+    async def reject_account(
+        self, id: str, reason: StripeAccountRejectReason
+    ) -> stripe_lib.Account:
+        log.info(
+            "stripe.account.reject",
+            account_id=id,
+            reason=reason,
+        )
+        return await stripe_lib.Account.reject_async(id, reason=reason)
+
+    async def retrieve_balance(self, account_id: str, currency: str) -> tuple[str, int]:
+        balance = await stripe_lib.Balance.retrieve_async(stripe_account=account_id)
+        for b in balance.available:
+            if b.currency == currency:
+                return (currency, b.amount)
+        return currency, 0
+
+    async def create_account_link(
+        self, stripe_id: str, return_path: str, payout_account_id: uuid.UUID
+    ) -> stripe_lib.AccountLink:
+        # Account links are single-use and short-lived. Stripe sends the merchant to
+        # `refresh_url` once one goes stale, and we mint a replacement from `id`.
+        refresh_query = urlencode(
+            {"return_path": return_path, "id": str(payout_account_id)}
+        )
+        refresh_url = settings.generate_external_url(
+            f"/v1/integrations/stripe/refresh?{refresh_query}"
+        )
+        return_url = get_safe_return_url(return_path)
+        return await stripe_lib.AccountLink.create_async(
+            account=stripe_id,
+            refresh_url=refresh_url,
+            return_url=return_url,
+            type="account_onboarding",
+        )
+
+    async def create_login_link(self, stripe_id: str) -> stripe_lib.LoginLink:
+        return await stripe_lib.Account.create_login_link_async(stripe_id)
+
+    async def transfer(
+        self,
+        destination_stripe_id: str,
+        amount: int,
+        *,
+        source_transaction: str | None = None,
+        transfer_group: str | None = None,
+        metadata: dict[str, str] | None = None,
+        idempotency_key: str | None = None,
+    ) -> stripe_lib.Transfer:
+        log.info(
+            "stripe.transfer.create",
+            destination_account=destination_stripe_id,
+            amount=amount,
+            currency="usd",
+            source_transaction=source_transaction,
+            transfer_group=transfer_group,
+            idempotency_key=idempotency_key,
+        )
+        create_params: TransferCreateParams = {
+            "amount": amount,
+            "currency": "usd",
+            "destination": destination_stripe_id,
+            "metadata": metadata or {},
+            "idempotency_key": idempotency_key,
+        }
+        if source_transaction is not None:
+            create_params["source_transaction"] = source_transaction
+        if transfer_group is not None:
+            create_params["transfer_group"] = transfer_group
+
+        return await stripe_lib.Transfer.create_async(**create_params)
+
+    async def get_transfer(self, id: str) -> stripe_lib.Transfer:
+        return await stripe_lib.Transfer.retrieve_async(id)
+
+    async def update_transfer(
+        self, id: str, metadata: dict[str, str]
+    ) -> stripe_lib.Transfer:
+        update_params: TransferModifyParams = {
+            "metadata": metadata,
+        }
+        return await stripe_lib.Transfer.modify_async(id, **update_params)
+
+    async def reverse_transfer(
+        self,
+        id: str,
+        *,
+        amount: int | None = None,
+        metadata: dict[str, str] | None = None,
+    ) -> stripe_lib.Reversal:
+        reverse_params: TransferCreateReversalParams = {
+            "metadata": metadata or {},
+            "idempotency_key": f"polar:transfer_reverse:{id}",
+        }
+        if amount is not None:
+            reverse_params["amount"] = amount
+
+        return await stripe_lib.Transfer.create_reversal_async(id, **reverse_params)
+
+    async def get_customer(self, customer_id: str) -> stripe_lib.Customer:
+        return await stripe_lib.Customer.retrieve_async(customer_id)
+
+    async def get_balance_transaction(self, id: str) -> stripe_lib.BalanceTransaction:
+        return await stripe_lib.BalanceTransaction.retrieve_async(id)
+
+    async def get_invoice(self, id: str) -> stripe_lib.Invoice:
+        return await stripe_lib.Invoice.retrieve_async(
+            id, expand=["total_tax_amounts.tax_rate"]
+        )
+
+    async def list_balance_transactions(
+        self,
+        *,
+        account_id: str | None = None,
+        payout: str | None = None,
+        type: str | None = None,
+        expand: list[str] | None = None,
+    ) -> AsyncIterator[stripe_lib.BalanceTransaction]:
+        params: BalanceTransactionListParams = {
+            "limit": 100,
+            "stripe_account": account_id,
+        }
+        if payout is not None:
+            params["payout"] = payout
+        if type is not None:
+            params["type"] = type
+        if expand is not None:
+            params["expand"] = expand
+
+        result = await stripe_lib.BalanceTransaction.list_async(**params)
+        return result.auto_paging_iter()
+
+    async def create_refund(
+        self,
+        *,
+        charge_id: str,
+        amount: int,
+        reason: Literal["duplicate", "requested_by_customer"],
+        metadata: dict[str, str] | None = None,
+    ) -> stripe_lib.Refund:
+        log.info(
+            "stripe.refund.create",
+            charge_id=charge_id,
+            amount=amount,
+            reason=reason,
+        )
+        stripe_metadata: Literal[""] | dict[str, str] = ""
+        if metadata is not None:
+            stripe_metadata = metadata
+
+        return await stripe_lib.Refund.create_async(
+            charge=charge_id,
+            amount=amount,
+            reason=reason,
+            metadata=stripe_metadata,
+        )
+
+    async def get_charge(
+        self,
+        id: str,
+        *,
+        stripe_account: str | None = None,
+        expand: list[str] | None = None,
+    ) -> stripe_lib.Charge:
+        return await stripe_lib.Charge.retrieve_async(
+            id, stripe_account=stripe_account, expand=expand or []
+        )
+
+    async def get_refund(
+        self,
+        id: str,
+        *,
+        stripe_account: str | None = None,
+        expand: list[str] | None = None,
+    ) -> stripe_lib.Refund:
+        return await stripe_lib.Refund.retrieve_async(
+            id, stripe_account=stripe_account, expand=expand or []
+        )
+
+    async def get_dispute(
+        self,
+        id: str,
+        *,
+        stripe_account: str | None = None,
+        expand: list[str] | None = None,
+    ) -> stripe_lib.Dispute:
+        return await stripe_lib.Dispute.retrieve_async(
+            id, stripe_account=stripe_account, expand=expand or []
+        )
+
+    async def close_dispute(
+        self,
+        id: str,
+        *,
+        stripe_account: str | None = None,
+    ) -> stripe_lib.Dispute:
+        """Close the dispute, conceding the chargeback. Settles it as ``lost``."""
+        return await stripe_lib.Dispute.close_async(id, stripe_account=stripe_account)
+
+    async def get_confirmation_token(
+        self,
+        id: str,
+        *,
+        expand: list[str] | None = None,
+    ) -> stripe_lib.ConfirmationToken:
+        return await stripe_lib.ConfirmationToken.retrieve_async(
+            id, expand=expand or []
+        )
+
+    async def get_payout(
+        self,
+        *,
+        payout_id: str,
+        stripe_account: str,
+    ) -> stripe_lib.Payout:
+        return await stripe_lib.Payout.retrieve_async(
+            payout_id, stripe_account=stripe_account
+        )
+
+    async def create_payout(
+        self,
+        *,
+        stripe_account: str,
+        amount: int,
+        currency: str,
+        metadata: dict[str, str] | None = None,
+    ) -> stripe_lib.Payout:
+        log.info(
+            "stripe.payout.create",
+            account_id=stripe_account,
+            amount=amount,
+            currency=currency,
+        )
+        return await stripe_lib.Payout.create_async(
+            stripe_account=stripe_account,
+            amount=amount,
+            currency=currency,
+            statement_descriptor=settings.STRIPE_STATEMENT_DESCRIPTOR,
+            metadata=metadata or {},
+        )
+
+    async def create_payment_intent(
+        self, **params: Unpack[PaymentIntentCreateParams]
+    ) -> stripe_lib.PaymentIntent:
+        if params.get("setup_future_usage") == "off_session":
+            params["excluded_payment_method_types"] = [
+                *params.get("excluded_payment_method_types", []),
+                *SEPA_PAYMENT_METHOD_TYPES,
+            ]
+        log.info(
+            "stripe.payment_intent.create",
+            amount=params.get("amount"),
+            currency=params.get("currency"),
+            customer=params.get("customer"),
+        )
+        return await stripe_lib.PaymentIntent.create_async(**params)
+
+    async def get_payment_intent(self, id: str) -> stripe_lib.PaymentIntent:
+        return await stripe_lib.PaymentIntent.retrieve_async(id)
+
+    async def cancel_payment_intent(self, id: str) -> stripe_lib.PaymentIntent:
+        log.info("stripe.payment_intent.cancel", payment_intent_id=id)
+        return await stripe_lib.PaymentIntent.cancel_async(id)
+
+    async def create_setup_intent(
+        self, **params: Unpack[SetupIntentCreateParams]
+    ) -> stripe_lib.SetupIntent:
+        params["excluded_payment_method_types"] = [
+            *params.get("excluded_payment_method_types", []),
+            *SEPA_PAYMENT_METHOD_TYPES,
+        ]
+        log.info(
+            "stripe.setup_intent.create",
+            customer=params.get("customer"),
+            usage=params.get("usage"),
+        )
+        return await stripe_lib.SetupIntent.create_async(**params)
+
+    async def modify_setup_intent(
+        self, id: str, **params: Unpack[SetupIntentModifyParams]
+    ) -> stripe_lib.SetupIntent:
+        log.info("stripe.setup_intent.modify", setup_intent_id=id)
+        return await stripe_lib.SetupIntent.modify_async(id, **params)
+
+    async def confirm_setup_intent(
+        self, id: str, **params: Unpack[SetupIntentConfirmParams]
+    ) -> stripe_lib.SetupIntent:
+        log.info("stripe.setup_intent.confirm", setup_intent_id=id)
+        return await stripe_lib.SetupIntent.confirm_async(id, **params)
+
+    async def modify_payment_intent(
+        self, id: str, **params: Unpack[PaymentIntentModifyParams]
+    ) -> stripe_lib.PaymentIntent:
+        log.info("stripe.payment_intent.modify", payment_intent_id=id)
+        return await stripe_lib.PaymentIntent.modify_async(id, **params)
+
+    async def get_setup_intent(
+        self, id: str, **params: Unpack[SetupIntentRetrieveParams]
+    ) -> stripe_lib.SetupIntent:
+        return await stripe_lib.SetupIntent.retrieve_async(id, **params)
+
+    async def cancel_setup_intent(self, id: str) -> stripe_lib.SetupIntent:
+        log.info("stripe.setup_intent.cancel", setup_intent_id=id)
+        return await stripe_lib.SetupIntent.cancel_async(id)
+
+    async def create_customer(
+        self, **params: Unpack[CustomerCreateParams]
+    ) -> stripe_lib.Customer:
+        return await stripe_lib.Customer.create_async(**params)
+
+    async def update_customer(
+        self,
+        id: str,
+        tax_id: CustomerCreateParamsTaxIdDatum | None = None,
+        **params: Unpack[CustomerModifyParams],
+    ) -> stripe_lib.Customer:
+        params = {**params, "expand": ["tax_ids"]}
+        customer = await stripe_lib.Customer.modify_async(id, **params)
+        if tax_id is None:
+            return customer
+
+        if any(
+            existing_tax_id.value == tax_id["value"]
+            and existing_tax_id.type == tax_id["type"]
+            for existing_tax_id in customer.tax_ids or []
+        ):
+            return customer
+
+        try:
+            await stripe_lib.Customer.create_tax_id_async(id, **tax_id)
+        except stripe_lib.InvalidRequestError as e:
+            # Potential race condition with Stripe not returning the new Tax ID
+            # during our customer modification, but exists upon attempted
+            # creation. Since the matching resource exists we can return vs. raise.
+            if e.code != "resource_already_exists":
+                raise e
+
+        return customer
+
+    async def create_customer_session(
+        self, customer_id: str
+    ) -> stripe_lib.CustomerSession:
+        return await stripe_lib.CustomerSession.create_async(
+            components={
+                "payment_element": {
+                    "enabled": True,
+                    "features": {
+                        "payment_method_allow_redisplay_filters": [
+                            "always",
+                            "limited",
+                            "unspecified",
+                        ],
+                        "payment_method_redisplay": "enabled",
+                    },
+                }
+            },
+            customer=customer_id,
+        )
+
+    async def create_tax_calculation(
+        self,
+        **params: Unpack[CalculationCreateParams],
+    ) -> stripe_lib.tax.Calculation:
+        return await stripe_lib.tax.Calculation.create_async(**params)
+
+    async def get_tax_calculation(self, id: str) -> stripe_lib.tax.Calculation:
+        return await stripe_lib.tax.Calculation.retrieve_async(id)
+
+    async def create_tax_transaction(
+        self, calculation_id: str, reference: str
+    ) -> stripe_lib.tax.Transaction:
+        log.info(
+            "stripe.tax.transaction.create",
+            calculation_id=calculation_id,
+            reference=reference,
+        )
+        return await stripe_lib.tax.Transaction.create_from_calculation_async(
+            calculation=calculation_id,
+            reference=reference,
+            idempotency_key=f"polar:tax_transaction:{reference}",
+        )
+
+    @overload
+    async def revert_tax_transaction(
+        self, original_transaction_id: str, mode: Literal["full"], reference: str
+    ) -> stripe_lib.tax.Transaction: ...
+
+    @overload
+    async def revert_tax_transaction(
+        self,
+        original_transaction_id: str,
+        mode: Literal["partial"],
+        reference: str,
+        amount: int,
+    ) -> stripe_lib.tax.Transaction: ...
+
+    async def revert_tax_transaction(
+        self,
+        original_transaction_id: str,
+        mode: Literal["full", "partial"],
+        reference: str,
+        amount: int | None = None,
+    ) -> stripe_lib.tax.Transaction:
+        params: TransactionCreateReversalParams = {
+            "mode": mode,
+            "original_transaction": original_transaction_id,
+            "reference": reference,
+            "idempotency_key": f"polar:tax_transaction_revert:{reference}",
+        }
+        if mode == "partial" and amount is not None:
+            params["flat_amount"] = amount
+        return await stripe_lib.tax.Transaction.create_reversal_async(**params)
+
+    async def list_payment_methods(
+        self, customer: str
+    ) -> AsyncGenerator[stripe_lib.PaymentMethod]:
+        payment_methods = await stripe_lib.Customer.list_payment_methods_async(customer)
+        async for payment_method in payment_methods.auto_paging_iter():
+            yield payment_method
+
+    async def get_payment_method(
+        self, payment_method_id: str
+    ) -> stripe_lib.PaymentMethod:
+        return await stripe_lib.PaymentMethod.retrieve_async(payment_method_id)
+
+    async def delete_payment_method(
+        self, payment_method_id: str
+    ) -> stripe_lib.PaymentMethod:
+        log.info(
+            "stripe.payment_method.delete",
+            payment_method_id=payment_method_id,
+        )
+        return await stripe_lib.PaymentMethod.detach_async(payment_method_id)
+
+    async def create_payment_method_domain(
+        self, domain_name: str
+    ) -> stripe_lib.PaymentMethodDomain:
+        log.info("stripe.payment_method_domain.create", domain_name=domain_name)
+        return await stripe_lib.PaymentMethodDomain.create_async(
+            domain_name=domain_name, enabled=True
+        )
+
+    async def get_verification_session(
+        self, id: str, *, expand: list[str] | None = None
+    ) -> stripe_lib.identity.VerificationSession:
+        if expand is not None:
+            return await stripe_lib.identity.VerificationSession.retrieve_async(
+                id, expand=expand
+            )
+        return await stripe_lib.identity.VerificationSession.retrieve_async(id)
+
+    async def create_verification_session(
+        self, user: "User"
+    ) -> stripe_lib.identity.VerificationSession:
+        return await stripe_lib.identity.VerificationSession.create_async(
+            type="document",
+            options={
+                "document": {
+                    "allowed_types": ["driving_license", "id_card", "passport"],
+                    "require_live_capture": True,
+                    "require_matching_selfie": True,
+                }
+            },
+            provided_details={
+                "email": user.email,
+            },
+            client_reference_id=str(user.id),
+            metadata={"user_id": str(user.id)},
+        )
+
+    async def redact_verification_session(
+        self, id: str
+    ) -> stripe_lib.identity.VerificationSession:
+        log.info("stripe.identity.verification_session.redact", id=id)
+        return await stripe_lib.identity.VerificationSession.redact_async(id)
+
+    async def get_tax_rate(self, id: str) -> stripe_lib.TaxRate:
+        return await stripe_lib.TaxRate.retrieve_async(id)
+
+    async def create_website_risk_evaluation(self, website_url: str) -> dict[str, Any]:
+        """Ask Stripe to evaluate a website for fraud.
+
+        Result arrives asynchronously as a fraudulent_website_ready event.
+        Uses raw_request because the endpoint is preview-only (no typed SDK).
+        """
+        response = await stripe_risk_client.raw_request_async(
+            "post",
+            "/v2/signals/account_evaluations",
+            account_details={
+                "data": {
+                    "defaults": {
+                        "profile": {"business_url": website_url},
+                    }
+                }
+            },
+            requested_signals=["fraudulent_website"],
+            stripe_version=STRIPE_ACCOUNT_SIGNALS_API_VERSION,
+        )
+        return cast(dict[str, Any], json.loads(response.body))
+
+    async def get_account_signal(self, signal_id: str) -> dict[str, Any]:
+        """Fetch a Radar Account Signal by id (thin events only carry related_object)."""
+        response = await stripe_risk_client.raw_request_async(
+            "get",
+            f"/v2/signals/account_signals/{signal_id}",
+            stripe_version=STRIPE_ACCOUNT_SIGNALS_API_VERSION,
+        )
+        return cast(dict[str, Any], json.loads(response.body))
+
+    async def get_usd_base_rates(self, currencies: Sequence[str]) -> dict[str, float]:
+        """Presentment→USD mid rates (`base_rate`) from Stripe FX Quotes.
+
+        `lock_duration=none` is the free unlocked quote. The endpoint is
+        preview-only, so this sends an explicit `.preview` Stripe-Version.
+        """
+        needed = sorted(
+            {currency.lower() for currency in currencies if currency.lower() != "usd"}
+        )
+        if not needed:
+            return {}
+        try:
+            response = await stripe_risk_client.raw_request_async(
+                "post",
+                "/v1/fx_quotes",
+                to_currency="usd",
+                from_currencies=needed,
+                lock_duration="none",
+                stripe_version=FX_QUOTES_API_VERSION,
+            )
+        except stripe_lib.StripeError as e:
+            log.warning("stripe.fx_quotes.failed", error=str(e))
+            return {}
+        quotes = json.loads(response.body).get("rates") or {}
+        rates: dict[str, float] = {}
+        for currency in needed:
+            quote = quotes.get(currency) or {}
+            rate = (quote.get("rate_details") or {}).get("base_rate")
+            if rate is not None:
+                rates[currency] = float(rate)
+        return rates
+
+
+stripe = StripeService()

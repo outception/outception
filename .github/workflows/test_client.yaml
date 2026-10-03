@@ -1,0 +1,112 @@
+name: Client
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    types: [opened, synchronize, edited]
+  merge_group:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: ./clients
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    name: "Detect changes"
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    outputs:
+      clients: ${{ steps.filter.outputs.clients }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: dorny/paths-filter@v4.0.3
+        id: filter
+        with:
+          filters: |
+            clients:
+              - 'clients/**'
+              - 'sdk/cli-commands/**'
+              - 'docs/integrate/cli/**'
+              - 'docs/docs.json'
+              - '.github/workflows/test_client.yaml'
+              - '.github/workflows/release_cli.yml'
+
+  build:
+    name: "Client: Tests 🎨"
+    needs: changes
+    if: needs.changes.outputs.clients == 'true'
+    timeout-minutes: 15
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+
+    env:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      VERCEL_ENV: "testing"
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v7.0.1
+
+      - uses: pnpm/action-setup@v6.1.0
+        with:
+          package_json_file: clients/package.json
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: "pnpm"
+          cache-dependency-path: "clients/pnpm-lock.yaml"
+
+      - name: 📦 Install dependencies
+        run: pnpm install
+
+      - name: 💅 Format check
+        run: pnpm run format:check
+
+      - name: 💅 Lint
+        run: pnpm run lint
+
+      - name: 🌍 Validate i18n
+        run: pnpm --filter @polar-sh/i18n validate
+
+      - name: 👀 Typecheck
+        run: pnpm run typecheck
+
+      - name: "🧪 Test: App"
+        run: pnpm --filter @polar-sh/app test
+
+      - name: "🧪 Test: Web"
+        run: pnpm --filter web test
+
+      - name: "🧪 Test: @polar-sh/currency"
+        run: pnpm --filter @polar-sh/currency test
+
+      - name: "🧪 Test: @polar-sh/checkout"
+        run: pnpm --filter @polar-sh/checkout test
+
+      - name: "🧪 Test: @polar-sh/orbit"
+        run: pnpm --filter @polar-sh/orbit test
+
+      - name: "🧪 Test: Adapters"
+        run: pnpm turbo run test --filter='./adapters/*'
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: clients/packages/cli/package.json
+
+      - name: "🧪 Test: CLI"
+        run: pnpm --filter @polar-sh/cli test
+
+      - name: "📚 CLI docs are up to date"
+        run: pnpm --filter @polar-sh/cli docs:check
+
+      - name: 🛠️ Build
+        run: pnpm build

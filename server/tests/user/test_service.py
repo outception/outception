@@ -1,0 +1,931 @@
+import pytest
+import stripe as stripe_lib
+from pytest_mock import MockerFixture
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
+
+from polar.kit.utils import utc_now
+from polar.models import (
+    NotificationRecipient,
+    OAuthAccount,
+    Organization,
+    User,
+    UserOrganization,
+)
+from polar.models.user import IdentityVerificationStatus, OAuthPlatform
+from polar.models.user_organization import OrganizationRole
+from polar.postgres import AsyncSession
+from polar.user.repository import UserRepository
+from polar.user.schemas import UserDeletionBlockedReason, UserUpdate
+from polar.user.service import (
+    IdentityAlreadyVerified,
+    IdentityVerificationForUnknownUser,
+    IdentityVerificationProcessing,
+)
+from polar.user.service import user as user_service
+from tests.fixtures.database import SaveFixture
+from tests.fixtures.random_objects import (
+    create_notification_recipient,
+    create_oauth_account,
+    create_payout_account,
+)
+
+
+@pytest.mark.asyncio
+class TestGetByEmailOrCreate:
+    async def test_existing_user(self, session: AsyncSession, user: User) -> None:
+        result, created = await user_service.get_by_email_or_create(
+            session, user.email.upper()
+        )
+
+        assert result.id == user.id
+        assert created is False
+
+    async def test_creates_missing_user(self, session: AsyncSession) -> None:
+        result, created = await user_service.get_by_email_or_create(
+            session, "new-user@example.com"
+        )
+
+        assert result.email == "new-user@example.com"
+        assert created is True
+
+    async def test_concurrent_creation_returns_existing_user(
+        self, session: AsyncSession, mocker: MockerFixture, user: User
+    ) -> None:
+        """Both concurrent requests saw no user, so the insert hits the unique
+        index on the email: the loser must recover the row instead of failing."""
+        mocker.patch.object(UserRepository, "get_by_email", side_effect=[None, user])
+
+        result, created = await user_service.get_by_email_or_create(session, user.email)
+
+        assert result.id == user.id
+        assert created is False
+
+    async def test_integrity_error_without_conflicting_user(
+        self, session: AsyncSession, mocker: MockerFixture, user: User
+    ) -> None:
+        """An IntegrityError we can't explain by a concurrent creation must not be
+        swallowed."""
+        mocker.patch.object(UserRepository, "get_by_email", side_effect=[None, None])
+
+        with pytest.raises(IntegrityError):
+            await user_service.get_by_email_or_create(session, user.email)
+
+
+@pytest.mark.asyncio
+class TestCheckCanDelete:
+    async def test_can_delete_no_organizations(
+        self,
+        session: AsyncSession,
+        user: User,
+    ) -> None:
+        """User with no organizations can be deleted."""
+        result = await user_service.check_can_delete(session, user)
+
+        assert result.blocked_reasons == []
+        assert result.blocking_organizations == []
+
+    async def test_blocked_with_active_organization(
+        self,
+        session: AsyncSession,
+        user: User,
+        organization: Organization,
+        user_organization: UserOrganization,
+    ) -> None:
+        """User with active organization cannot be deleted."""
+        result = await user_service.check_can_delete(session, user)
+
+        assert (
+            UserDeletionBlockedReason.HAS_ACTIVE_ORGANIZATIONS in result.blocked_reasons
+        )
+        assert len(result.blocking_organizations) == 1
+        assert result.blocking_organizations[0].id == organization.id
+        assert result.blocking_organizations[0].slug == organization.slug
+
+    async def test_can_delete_with_deleted_organization(
+        self,
+        session: AsyncSession,
+        save_fixture: SaveFixture,
+        user: User,
+        organization: Organization,
+        user_organization: UserOrganization,
+    ) -> None:
+        """User can be deleted if all organizations are soft-deleted."""
+        organization.deleted_at = utc_now()
+        await save_fixture(organization)
+
+        result = await user_service.check_can_delete(session, user)
+
+        assert result.blocked_reasons == []
+        assert result.blocking_organizations == []
+
+    async def test_can_delete_with_deleted_membership(
+        self,
+        session: AsyncSession,
+        save_fixture: SaveFixture,
+        user: User,
+        organization: Organization,
+        user_organization: UserOrganization,
+    ) -> None:
+        """User can be deleted if membership is soft-deleted."""
+        user_organization.deleted_at = utc_now()
+        await save_fixture(user_organization)
+
+        result = await user_service.check_can_delete(session, user)
+
+        assert result.blocked_reasons == []
+        assert result.blocking_organizations == []
+
+
+@pytest.mark.asyncio
+class TestUpdate:
+    async def test_enqueues_member_name_update_when_name_changes(
+        self,
+        mocker: MockerFixture,
+        session: AsyncSession,
+        save_fixture: SaveFixture,
+        user: User,
+        organization: Organization,
+        user_organization: UserOrganization,
+    ) -> None:
+        user.first_name = "Old"
+        user.last_name = "Name"
+        await save_fixture(user)
+
+        enqueue_mock = mocker.patch(
+            "polar.user.service.polar_self_service.enqueue_update_member"
+        )
+
+        await user_service.update(
+            session, user, UserUpdate(first_name="New", last_name="Name")
+        )
+
+        enqueue_mock.assert_called_once_with(
+            external_customer_id=str(organization.id),
+            external_id=str(user.id),
+            name="New Name",
+        )
+
+    async def test_skips_when_name_cleared(
+        self,
+        mocker: MockerFixture,
+        session: AsyncSession,
+        save_fixture: SaveFixture,
+        user: User,
+        organization: Organization,
+        user_organization: UserOrganization,
+    ) -> None:
+        user.first_name = "Old"
+        user.last_name = "Name"
+        await save_fixture(user)
+
+        enqueue_mock = mocker.patch(
+            "polar.user.service.polar_self_service.enqueue_update_member"
+        )
+
+        await user_service.update(
+            session, user, UserUpdate(first_name=None, last_name=None)
+        )
+
+        enqueue_mock.assert_not_called()
+
+    async def test_skips_when_name_unchanged(
+        self,
+        mocker: MockerFixture,
+        session: AsyncSession,
+        save_fixture: SaveFixture,
+        user: User,
+        organization: Organization,
+        user_organization: UserOrganization,
+    ) -> None:
+        user.first_name = "Same"
+        user.last_name = "Name"
+        await save_fixture(user)
+
+        enqueue_mock = mocker.patch(
+            "polar.user.service.polar_self_service.enqueue_update_member"
+        )
+
+        await user_service.update(
+            session, user, UserUpdate(first_name="Same", last_name="Name")
+        )
+
+        enqueue_mock.assert_not_called()
+
+
+@pytest.mark.asyncio
+class TestRequestDeletion:
+    async def test_immediate_deletion_no_organizations(
+        self,
+        session: AsyncSession,
+        user: User,
+    ) -> None:
+        """User with no organizations is immediately deleted."""
+        original_email = user.email
+
+        result = await user_service.request_deletion(session, user)
+
+        assert result.deleted is True
+        assert result.blocked_reasons == []
+        assert user.deleted_at is not None
+        assert user.email != original_email
+        assert user.email.endswith("@anonymized.polar.sh")
+
+    async def test_blocked_with_active_organization(
+        self,
+        session: AsyncSession,
+        user: User,
+        organization: Organization,
+        user_organization: UserOrganization,
+    ) -> None:
+        """User with active organization is blocked from deletion."""
+        result = await user_service.request_deletion(session, user)
+
+        assert result.deleted is False
+        assert (
+            UserDeletionBlockedReason.HAS_ACTIVE_ORGANIZATIONS in result.blocked_reasons
+        )
+        assert len(result.blocking_organizations) == 1
+        assert user.deleted_at is None
+
+    async def test_anonymization(
+        self,
+        session: AsyncSession,
+        save_fixture: SaveFixture,
+        user: User,
+    ) -> None:
+        """User PII is properly anonymized on deletion."""
+        user.avatar_url = "https://example.com/avatar.png"
+        user.meta = {"signup": {"intent": "creator"}}
+        await save_fixture(user)
+
+        original_email = user.email
+
+        result = await user_service.request_deletion(session, user)
+
+        assert result.deleted is True
+        assert user.email != original_email
+        assert user.email.endswith("@anonymized.polar.sh")
+        assert user.avatar_url is None
+        assert user.meta == {}
+        assert user.deleted_at is not None
+
+    async def test_oauth_accounts_deleted(
+        self,
+        session: AsyncSession,
+        save_fixture: SaveFixture,
+        user: User,
+    ) -> None:
+        """OAuth accounts are deleted when user is deleted."""
+        await create_oauth_account(save_fixture, user, OAuthPlatform.github)
+        await create_oauth_account(save_fixture, user, OAuthPlatform.google)
+
+        stmt = select(OAuthAccount).where(OAuthAccount.user_id == user.id)
+        result = await session.execute(stmt)
+        assert len(result.scalars().all()) == 2
+
+        deletion_result = await user_service.request_deletion(session, user)
+
+        assert deletion_result.deleted is True
+
+        result = await session.execute(stmt)
+        assert len(result.scalars().all()) == 0
+
+    async def test_notification_recipients_deleted(
+        self,
+        session: AsyncSession,
+        save_fixture: SaveFixture,
+        user: User,
+    ) -> None:
+        """Notification recipients are soft-deleted when user is deleted."""
+        await create_notification_recipient(
+            save_fixture, user=user, expo_push_token="ExponentPushToken[token1]"
+        )
+        await create_notification_recipient(
+            save_fixture, user=user, expo_push_token="ExponentPushToken[token2]"
+        )
+
+        stmt = select(NotificationRecipient).where(
+            NotificationRecipient.user_id == user.id,
+            NotificationRecipient.deleted_at.is_(None),
+        )
+        result = await session.execute(stmt)
+        assert len(result.scalars().all()) == 2
+
+        deletion_result = await user_service.request_deletion(session, user)
+
+        assert deletion_result.deleted is True
+
+        result = await session.execute(stmt)
+        assert len(result.scalars().all()) == 0
+
+        stmt_all = select(NotificationRecipient).where(
+            NotificationRecipient.user_id == user.id,
+        )
+        result = await session.execute(stmt_all)
+        recipients = result.scalars().all()
+        assert len(recipients) == 2
+        assert all(r.deleted_at is not None for r in recipients)
+
+    async def test_identity_verification_redacted_on_deletion(
+        self,
+        mocker: MockerFixture,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        user: User,
+    ) -> None:
+        """An in-flight Stripe Identity session is redacted on user deletion."""
+        user.identity_verification_id = "vs_delete_me"
+        user.identity_verification_status = IdentityVerificationStatus.pending
+        await save_fixture(user)
+
+        redact_mock = mocker.patch(
+            "polar.user.service.stripe_service.redact_verification_session",
+            new_callable=mocker.AsyncMock,
+        )
+
+        result = await user_service.request_deletion(session, user)
+
+        assert result.deleted is True
+        redact_mock.assert_awaited_once_with("vs_delete_me")
+        assert user.identity_verification_id is None
+        assert (
+            user.identity_verification_status == IdentityVerificationStatus.unverified
+        )
+
+    async def test_identity_verification_not_redacted_when_no_session(
+        self,
+        mocker: MockerFixture,
+        session: AsyncSession,
+        user: User,
+    ) -> None:
+        """A user without an in-flight identity session makes no Stripe call."""
+        assert user.identity_verification_id is None
+
+        redact_mock = mocker.patch(
+            "polar.user.service.stripe_service.redact_verification_session",
+            new_callable=mocker.AsyncMock,
+        )
+
+        result = await user_service.request_deletion(session, user)
+
+        assert result.deleted is True
+        redact_mock.assert_not_awaited()
+
+    async def test_identity_verification_redact_swallows_stripe_error(
+        self,
+        mocker: MockerFixture,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        user: User,
+    ) -> None:
+        """Deletion completes even if Stripe reports the session already gone."""
+        user.identity_verification_id = "vs_missing"
+        user.identity_verification_status = IdentityVerificationStatus.pending
+        await save_fixture(user)
+
+        mocker.patch(
+            "polar.user.service.stripe_service.redact_verification_session",
+            new_callable=mocker.AsyncMock,
+            side_effect=stripe_lib.InvalidRequestError(
+                "No such verification session: vs_missing", "id"
+            ),
+        )
+
+        result = await user_service.request_deletion(session, user)
+
+        assert result.deleted is True
+        assert user.identity_verification_id is None
+        assert (
+            user.identity_verification_status == IdentityVerificationStatus.unverified
+        )
+
+
+def _verification_session(
+    id: str, status: str
+) -> stripe_lib.identity.VerificationSession:
+    return stripe_lib.identity.VerificationSession.construct_from(
+        {"id": id, "status": status, "client_secret": f"{id}_secret"}, None
+    )
+
+
+@pytest.mark.asyncio
+class TestCreateIdentityVerification:
+    async def test_creates_first_session(
+        self,
+        mocker: MockerFixture,
+        session: AsyncSession,
+        user: User,
+    ) -> None:
+        create_mock = mocker.patch(
+            "polar.user.service.stripe_service.create_verification_session",
+            new_callable=mocker.AsyncMock,
+            return_value=_verification_session("vs_new", "requires_input"),
+        )
+
+        verification = await user_service.create_identity_verification(session, user)
+
+        create_mock.assert_awaited_once()
+        assert verification.id == "vs_new"
+        assert user.identity_verification_id == "vs_new"
+
+    async def test_reuses_session_requiring_input(
+        self,
+        mocker: MockerFixture,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        user: User,
+    ) -> None:
+        user.identity_verification_id = "vs_existing"
+        await save_fixture(user)
+
+        mocker.patch(
+            "polar.user.service.stripe_service.get_verification_session",
+            new_callable=mocker.AsyncMock,
+            return_value=_verification_session("vs_existing", "requires_input"),
+        )
+        create_mock = mocker.patch(
+            "polar.user.service.stripe_service.create_verification_session",
+            new_callable=mocker.AsyncMock,
+        )
+
+        verification = await user_service.create_identity_verification(session, user)
+
+        create_mock.assert_not_awaited()
+        assert verification.id == "vs_existing"
+
+    async def test_reuses_session_requiring_input_when_status_is_stale(
+        self,
+        mocker: MockerFixture,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        user: User,
+    ) -> None:
+        user.identity_verification_id = "vs_existing"
+        user.identity_verification_status = IdentityVerificationStatus.pending
+        await save_fixture(user)
+
+        mocker.patch(
+            "polar.user.service.stripe_service.get_verification_session",
+            new_callable=mocker.AsyncMock,
+            return_value=_verification_session("vs_existing", "requires_input"),
+        )
+        create_mock = mocker.patch(
+            "polar.user.service.stripe_service.create_verification_session",
+            new_callable=mocker.AsyncMock,
+        )
+
+        verification = await user_service.create_identity_verification(session, user)
+
+        create_mock.assert_not_awaited()
+        assert verification.id == "vs_existing"
+
+    async def test_refuses_while_stripe_is_processing(
+        self,
+        mocker: MockerFixture,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        user: User,
+    ) -> None:
+        user.identity_verification_id = "vs_existing"
+        user.identity_verification_status = IdentityVerificationStatus.unverified
+        await save_fixture(user)
+
+        mocker.patch(
+            "polar.user.service.stripe_service.get_verification_session",
+            new_callable=mocker.AsyncMock,
+            return_value=_verification_session("vs_existing", "processing"),
+        )
+        create_mock = mocker.patch(
+            "polar.user.service.stripe_service.create_verification_session",
+            new_callable=mocker.AsyncMock,
+        )
+
+        with pytest.raises(IdentityVerificationProcessing):
+            await user_service.create_identity_verification(session, user)
+
+        create_mock.assert_not_awaited()
+        assert user.identity_verification_id == "vs_existing"
+
+    async def test_refuses_when_stripe_already_verified(
+        self,
+        mocker: MockerFixture,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        user: User,
+    ) -> None:
+        user.identity_verification_id = "vs_existing"
+        user.identity_verification_status = IdentityVerificationStatus.unverified
+        await save_fixture(user)
+
+        mocker.patch(
+            "polar.user.service.stripe_service.get_verification_session",
+            new_callable=mocker.AsyncMock,
+            return_value=_verification_session("vs_existing", "verified"),
+        )
+        create_mock = mocker.patch(
+            "polar.user.service.stripe_service.create_verification_session",
+            new_callable=mocker.AsyncMock,
+        )
+
+        with pytest.raises(IdentityAlreadyVerified):
+            await user_service.create_identity_verification(session, user)
+
+        create_mock.assert_not_awaited()
+        assert user.identity_verification_id == "vs_existing"
+
+    async def test_replaces_canceled_session(
+        self,
+        mocker: MockerFixture,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        user: User,
+    ) -> None:
+        user.identity_verification_id = "vs_canceled"
+        await save_fixture(user)
+
+        mocker.patch(
+            "polar.user.service.stripe_service.get_verification_session",
+            new_callable=mocker.AsyncMock,
+            return_value=_verification_session("vs_canceled", "canceled"),
+        )
+        mocker.patch(
+            "polar.user.service.stripe_service.create_verification_session",
+            new_callable=mocker.AsyncMock,
+            return_value=_verification_session("vs_new", "requires_input"),
+        )
+
+        verification = await user_service.create_identity_verification(session, user)
+
+        assert verification.id == "vs_new"
+        assert user.identity_verification_id == "vs_new"
+
+
+@pytest.mark.asyncio
+class TestIdentityVerificationVerified:
+    async def test_activates_organizations_owned_by_user(
+        self,
+        mocker: MockerFixture,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        user: User,
+        organization: Organization,
+        organization_second: Organization,
+    ) -> None:
+        """The webhook activates orgs where the verified user is the owner,
+        not orgs where they are merely the (static) payout account admin.
+        """
+        user.identity_verification_id = "vs_owner_test"
+        await save_fixture(user)
+
+        # User owns `organization`.
+        await save_fixture(
+            UserOrganization(
+                user_id=user.id,
+                organization_id=organization.id,
+                role=OrganizationRole.owner,
+            )
+        )
+
+        # User is only the payout account admin of `organization_second`
+        # (not the owner) — the old behavior would have tried to activate it.
+        await save_fixture(
+            UserOrganization(
+                user_id=user.id,
+                organization_id=organization_second.id,
+                role=OrganizationRole.member,
+            )
+        )
+        await create_payout_account(save_fixture, organization_second, user)
+
+        maybe_activate_mock = mocker.patch(
+            "polar.user.service.organization_service.maybe_activate",
+            new_callable=mocker.AsyncMock,
+        )
+
+        verification_session = stripe_lib.identity.VerificationSession.construct_from(
+            {"id": "vs_owner_test", "status": "verified"}, None
+        )
+
+        updated_user = await user_service.identity_verification_verified(
+            session, verification_session
+        )
+        assert updated_user is not None
+
+        assert (
+            updated_user.identity_verification_status
+            == IdentityVerificationStatus.verified
+        )
+
+        activated_org_ids = {
+            call.args[1].id for call in maybe_activate_mock.call_args_list
+        }
+        assert organization.id in activated_org_ids
+        assert organization_second.id not in activated_org_ids
+
+    async def test_resolves_user_from_metadata_when_superseded(
+        self,
+        mocker: MockerFixture,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        user: User,
+    ) -> None:
+        user.identity_verification_id = "vs_second"
+        user.identity_verification_status = IdentityVerificationStatus.unverified
+        await save_fixture(user)
+
+        mocker.patch(
+            "polar.user.service.organization_service.maybe_activate",
+            new_callable=mocker.AsyncMock,
+        )
+
+        verification_session = stripe_lib.identity.VerificationSession.construct_from(
+            {
+                "id": "vs_first",
+                "status": "verified",
+                "metadata": {"user_id": str(user.id)},
+            },
+            None,
+        )
+
+        updated_user = await user_service.identity_verification_verified(
+            session, verification_session
+        )
+        assert updated_user is not None
+
+        assert (
+            updated_user.identity_verification_status
+            == IdentityVerificationStatus.verified
+        )
+        assert updated_user.identity_verification_id == "vs_first"
+
+    async def test_raises_for_unattributable_session(
+        self,
+        session: AsyncSession,
+    ) -> None:
+        verification_session = stripe_lib.identity.VerificationSession.construct_from(
+            {"id": "vs_unknown", "status": "verified"}, None
+        )
+
+        with pytest.raises(IdentityVerificationForUnknownUser):
+            await user_service.identity_verification_verified(
+                session, verification_session
+            )
+
+
+@pytest.mark.asyncio
+class TestIdentityVerificationPending:
+    async def test_sets_pending_from_unverified(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        user: User,
+    ) -> None:
+        user.identity_verification_id = "vs_pending_test"
+        user.identity_verification_status = IdentityVerificationStatus.unverified
+        await save_fixture(user)
+
+        verification_session = stripe_lib.identity.VerificationSession.construct_from(
+            {"id": "vs_pending_test", "status": "processing"}, None
+        )
+
+        updated_user = await user_service.identity_verification_pending(
+            session, verification_session
+        )
+        assert updated_user is not None
+
+        assert (
+            updated_user.identity_verification_status
+            == IdentityVerificationStatus.pending
+        )
+
+    async def test_does_not_downgrade_verified(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        user: User,
+    ) -> None:
+        """A `processing` webhook must never clobber a `verified` status.
+
+        Stripe delivers `processing` and `verified` back to back and the two
+        webhook tasks can run concurrently; if `processing` wins the race it
+        would strand a genuinely-verified user in `pending` (see T-30664).
+        """
+        user.identity_verification_id = "vs_verified_race"
+        user.identity_verification_status = IdentityVerificationStatus.verified
+        await save_fixture(user)
+
+        verification_session = stripe_lib.identity.VerificationSession.construct_from(
+            {"id": "vs_verified_race", "status": "processing"}, None
+        )
+
+        updated_user = await user_service.identity_verification_pending(
+            session, verification_session
+        )
+        assert updated_user is not None
+
+        assert (
+            updated_user.identity_verification_status
+            == IdentityVerificationStatus.verified
+        )
+
+    async def test_moves_failed_to_pending_on_retry(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        user: User,
+    ) -> None:
+        """`failed` is not terminal. A user may retry on the same (reusable)
+        verification session, so a `processing` webhook must move them back to
+        `pending`. Otherwise the status stays `failed` during reprocessing.
+        """
+        user.identity_verification_id = "vs_failed_retry"
+        user.identity_verification_status = IdentityVerificationStatus.failed
+        await save_fixture(user)
+
+        verification_session = stripe_lib.identity.VerificationSession.construct_from(
+            {"id": "vs_failed_retry", "status": "processing"}, None
+        )
+
+        updated_user = await user_service.identity_verification_pending(
+            session, verification_session
+        )
+        assert updated_user is not None
+
+        assert (
+            updated_user.identity_verification_status
+            == IdentityVerificationStatus.pending
+        )
+
+    async def test_ignores_superseded_session(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        user: User,
+    ) -> None:
+        user.identity_verification_id = "vs_second"
+        user.identity_verification_status = IdentityVerificationStatus.failed
+        await save_fixture(user)
+
+        verification_session = stripe_lib.identity.VerificationSession.construct_from(
+            {
+                "id": "vs_first",
+                "status": "processing",
+                "metadata": {"user_id": str(user.id)},
+            },
+            None,
+        )
+
+        await user_service.identity_verification_pending(session, verification_session)
+
+        assert user.identity_verification_status == IdentityVerificationStatus.failed
+
+
+@pytest.mark.asyncio
+class TestIdentityVerificationFailed:
+    async def test_sets_failed_from_pending(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        user: User,
+    ) -> None:
+        user.identity_verification_id = "vs_failed_test"
+        user.identity_verification_status = IdentityVerificationStatus.pending
+        await save_fixture(user)
+
+        verification_session = stripe_lib.identity.VerificationSession.construct_from(
+            {"id": "vs_failed_test", "status": "requires_input"}, None
+        )
+
+        updated_user = await user_service.identity_verification_failed(
+            session, verification_session
+        )
+        assert updated_user is not None
+
+        assert (
+            updated_user.identity_verification_status
+            == IdentityVerificationStatus.failed
+        )
+
+    async def test_does_not_overwrite_verified(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        user: User,
+    ) -> None:
+        """A late or redelivered `requires_input`/`canceled` webhook from an
+        earlier attempt must not un-verify a user who has since verified.
+        """
+        user.identity_verification_id = "vs_verified_stale_fail"
+        user.identity_verification_status = IdentityVerificationStatus.verified
+        await save_fixture(user)
+
+        verification_session = stripe_lib.identity.VerificationSession.construct_from(
+            {"id": "vs_verified_stale_fail", "status": "requires_input"}, None
+        )
+
+        updated_user = await user_service.identity_verification_failed(
+            session, verification_session
+        )
+        assert updated_user is not None
+
+        assert (
+            updated_user.identity_verification_status
+            == IdentityVerificationStatus.verified
+        )
+
+    async def test_ignores_superseded_session(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        user: User,
+    ) -> None:
+        user.identity_verification_id = "vs_second"
+        user.identity_verification_status = IdentityVerificationStatus.pending
+        await save_fixture(user)
+
+        verification_session = stripe_lib.identity.VerificationSession.construct_from(
+            {
+                "id": "vs_first",
+                "status": "canceled",
+                "metadata": {"user_id": str(user.id)},
+            },
+            None,
+        )
+
+        await user_service.identity_verification_failed(session, verification_session)
+
+        assert user.identity_verification_status == IdentityVerificationStatus.pending
+
+
+@pytest.mark.asyncio
+class TestIdentityVerificationAfterDeletion:
+    async def test_verified_no_ops_via_metadata_for_deleted_user(
+        self,
+        mocker: MockerFixture,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        user: User,
+    ) -> None:
+        """A verified transition arriving after deletion no-ops instead of
+        raising to dead-letter. Production sessions always carry metadata.user_id
+        (set by create_verification_session), so the metadata fallback resolves the
+        soft-deleted user and the handler short-circuits without side effects.
+        """
+        user.identity_verification_id = "vs_deleted"
+        user.identity_verification_status = IdentityVerificationStatus.pending
+        await save_fixture(user)
+
+        mocker.patch(
+            "polar.user.service.stripe_service.redact_verification_session",
+            new_callable=mocker.AsyncMock,
+        )
+        maybe_activate_mock = mocker.patch(
+            "polar.user.service.organization_service.maybe_activate",
+            new_callable=mocker.AsyncMock,
+        )
+
+        assert (await user_service.request_deletion(session, user)).deleted is True
+        assert user.identity_verification_id is None
+
+        verification_session = stripe_lib.identity.VerificationSession.construct_from(
+            {
+                "id": "vs_deleted",
+                "status": "verified",
+                "metadata": {"user_id": str(user.id)},
+            },
+            None,
+        )
+
+        result = await user_service.identity_verification_verified(
+            session, verification_session
+        )
+
+        assert result is None
+        maybe_activate_mock.assert_not_awaited()
+
+    async def test_verified_no_ops_via_primary_lookup_for_affected_row(
+        self,
+        save_fixture: SaveFixture,
+        session: AsyncSession,
+        user: User,
+    ) -> None:
+        """A transition for a user soft-deleted before the fix shipped (id still
+        set) no-ops via the primary lookup's include_deleted branch — no metadata
+        required — instead of raising to dead-letter.
+        """
+        user.identity_verification_id = "vs_affected"
+        user.identity_verification_status = IdentityVerificationStatus.pending
+        user.deleted_at = utc_now()
+        await save_fixture(user)
+
+        verification_session = stripe_lib.identity.VerificationSession.construct_from(
+            {"id": "vs_affected", "status": "verified"}, None
+        )
+
+        assert (
+            await user_service.identity_verification_verified(
+                session, verification_session
+            )
+            is None
+        )

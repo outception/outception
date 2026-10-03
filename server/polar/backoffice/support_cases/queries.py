@@ -1,0 +1,197 @@
+"""Shared query for backoffice support-case lists.
+
+Both the dedicated Cases list and an organization's Support Cases tab read the
+same polymorphic ``SupportCase`` set. Every case carries its organization id
+directly, so no query needs to reach through the appeal's review or the
+dispute's order to find the owning org.
+"""
+
+from collections.abc import Sequence
+from datetime import datetime
+from typing import Any, cast
+from uuid import UUID
+
+from sqlalchemy import Select, and_, func, or_, select
+
+from polar.models import Dispute, Organization, User
+from polar.models.dispute import DisputeStatus
+from polar.models.support_case import (
+    DisputeSupportCase,
+    SupportCase,
+    SupportCaseMessage,
+    SupportCaseMessageType,
+    SupportCaseParticipant,
+    SupportCaseParticipantKind,
+    SupportCaseType,
+)
+from polar.support_case.repository import SupportCaseMessageRepository
+
+# (case, organization, is_open, assignee_email, awaiting_platform, unread,
+#  dispute_status, evidence_due_by, evidence_past_due, needs_action) — the
+#  dispute fields are None for non-dispute cases.
+Row = tuple[
+    SupportCase,
+    Organization,
+    bool,
+    str | None,
+    bool,
+    bool,
+    DisputeStatus | None,
+    datetime | None,
+    bool | None,
+    bool,
+]
+
+# Human-readable label per case type, shared by every case list.
+TYPE_LABELS: dict[SupportCaseType, str] = {
+    SupportCaseType.review_appeal: "Review appeal",
+    SupportCaseType.dispute: "Dispute",
+}
+
+_TYPE_FILTERS = {SupportCaseType.review_appeal.value, SupportCaseType.dispute.value}
+
+
+def cases_statement(
+    *,
+    organization_id: UUID | None = None,
+    status: str = "all",
+    assigned: str = "all",
+    assigned_user_id: UUID | None = None,
+    viewer_user_id: UUID | None = None,
+    case_type: str = "all",
+    self_service: str = "all",
+    sort: str = "recency",
+) -> Select[Row]:
+    """Polymorphic case list with its organization, open state and assignee.
+
+    ``status`` (open/closed/needs_action/all), ``assigned`` (me/unassigned/all),
+    ``case_type`` (review_appeal/dispute/all) and ``self_service``
+    (enabled/disabled/all, on the org's ``disputes_enabled`` flag) narrow the
+    set; ``sort`` is pure recency, support tier first, or the dispute evidence
+    deadline soonest-first (rows without one last), each with recency as the
+    tiebreaker.
+    """
+    is_open = SupportCaseMessageRepository.is_open_expression()
+    awaiting_platform = SupportCaseMessageRepository.awaiting_platform_expression()
+    needs_action = and_(
+        is_open,
+        awaiting_platform,
+        or_(
+            SupportCase.type == SupportCaseType.review_appeal,
+            Dispute.status == DisputeStatus.needs_response,
+        ),
+    )
+
+    latest_activity = (
+        select(func.max(SupportCaseMessage.created_at))
+        .where(
+            SupportCaseMessage.case_id == SupportCase.id,
+            SupportCaseMessage.type.notin_(
+                [
+                    SupportCaseMessageType.assigned,
+                    SupportCaseMessageType.released,
+                ]
+            ),
+        )
+        .scalar_subquery()
+    )
+    viewer_read_at = (
+        select(SupportCaseParticipant.last_read_at)
+        .where(
+            SupportCaseParticipant.case_id == SupportCase.id,
+            SupportCaseParticipant.kind == SupportCaseParticipantKind.platform,
+            SupportCaseParticipant.platform_user_id == viewer_user_id,
+            SupportCaseParticipant.deleted_at.is_(None),
+        )
+        .scalar_subquery()
+    )
+    unread = and_(
+        latest_activity.isnot(None),
+        or_(viewer_read_at.is_(None), viewer_read_at < latest_activity),
+    )
+
+    statement = (
+        select(
+            SupportCase,
+            Organization,
+            is_open.label("is_open"),
+            User.email.label("assignee_email"),
+            awaiting_platform.label("awaiting_platform"),
+            unread.label("unread"),
+            Dispute.status.label("dispute_status"),
+            Dispute.evidence_due_by.label("evidence_due_by"),
+            Dispute.past_due.label("evidence_past_due"),
+            needs_action.label("needs_action"),
+        )
+        .join(Organization, Organization.id == SupportCase.organization_id)
+        .outerjoin(Dispute, DisputeSupportCase.dispute_id == Dispute.id)
+        .outerjoin(User, SupportCase.assigned_user_id == User.id)
+        .where(SupportCase.deleted_at.is_(None))
+    )
+
+    if organization_id is not None:
+        statement = statement.where(SupportCase.organization_id == organization_id)
+    if status == "open":
+        statement = statement.where(is_open)
+    elif status == "closed":
+        statement = statement.where(~is_open)
+    elif status == "needs_action":
+        statement = statement.where(needs_action)
+    if assigned == "me" and assigned_user_id is not None:
+        statement = statement.where(SupportCase.assigned_user_id == assigned_user_id)
+    elif assigned == "unassigned":
+        statement = statement.where(SupportCase.assigned_user_id.is_(None))
+    if case_type in _TYPE_FILTERS:
+        statement = statement.where(SupportCase.type == case_type)
+    disputes_enabled = Organization.feature_settings["disputes_enabled"].as_boolean()
+    if self_service == "enabled":
+        statement = statement.where(disputes_enabled)
+    elif self_service == "disabled":
+        statement = statement.where(disputes_enabled.isnot(True))
+    order_by: tuple[Any, ...]
+    if sort == "tier":
+        order_by = (Organization.support_tier.desc().nullslast(),)
+    elif sort == "evidence_due":
+        # Soonest deadline first; appeals and undated disputes sink to the
+        # bottom rather than being dropped.
+        order_by = (Dispute.evidence_due_by.asc().nullslast(),)
+    else:
+        order_by = ()
+    order_by = (*order_by, SupportCase.created_at.desc())
+    # ``assignee_email`` is NULL for unassigned cases (outer join), which the
+    # column type doesn't capture; ``Row`` models it as ``str | None``.
+    return cast("Select[Row]", statement.order_by(*order_by))
+
+
+def open_case_organization_ids(
+    *,
+    organization_ids: Sequence[UUID] | None = None,
+    awaiting_reply: bool = False,
+) -> Select[tuple[UUID]]:
+    """Distinct ids of organizations with at least one open support case of any
+    type. With ``awaiting_reply``, only those whose open case is waiting on a
+    platform reply. ``organization_ids`` narrows the scan to a known page.
+    """
+    statement = (
+        select(SupportCase.organization_id)
+        .where(
+            SupportCase.deleted_at.is_(None),
+            SupportCaseMessageRepository.is_open_expression(),
+        )
+        .distinct()
+    )
+    if awaiting_reply:
+        statement = statement.where(
+            SupportCaseMessageRepository.awaiting_platform_expression()
+        )
+    if organization_ids is not None:
+        statement = statement.where(SupportCase.organization_id.in_(organization_ids))
+    return statement
+
+
+__all__ = [
+    "TYPE_LABELS",
+    "Row",
+    "cases_statement",
+    "open_case_organization_ids",
+]

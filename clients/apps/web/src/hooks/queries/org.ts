@@ -1,0 +1,481 @@
+import revalidate from '@/app/actions'
+import { getQueryClient } from '@/utils/api/query'
+import { api } from '@/utils/client'
+import {
+  ClientResponseError,
+  operations,
+  schemas,
+  unwrap,
+} from '@polar-sh/client'
+import { skipToken, useMutation, useQuery } from '@tanstack/react-query'
+import { defaultRetry } from './retry'
+
+export const useListOrganizationMembers = (id: string) =>
+  useQuery({
+    queryKey: ['organizationMembers', id],
+    queryFn: () =>
+      unwrap(
+        api.GET('/v1/organizations/{id}/members', { params: { path: { id } } }),
+      ),
+    retry: defaultRetry,
+  })
+
+export const useInviteOrganizationMember = (id: string) =>
+  useMutation({
+    mutationFn: (email: string) => {
+      return api.POST('/v1/organizations/{id}/members/invite', {
+        params: { path: { id } },
+        body: { email },
+      })
+    },
+    onSuccess: async () => {
+      getQueryClient().invalidateQueries({
+        queryKey: ['organizationMembers', id],
+      })
+    },
+  })
+
+export const useLeaveOrganization = (id: string) =>
+  useMutation({
+    mutationFn: () => {
+      return api.DELETE('/v1/organizations/{id}/members/leave', {
+        params: { path: { id } },
+      })
+    },
+    onSuccess: async () => {
+      getQueryClient().invalidateQueries({
+        queryKey: ['organizations'],
+      })
+    },
+  })
+
+export const useRemoveOrganizationMember = (organizationId: string) =>
+  useMutation({
+    mutationFn: (userId: string) => {
+      return api.DELETE('/v1/organizations/{id}/members/{user_id}', {
+        params: { path: { id: organizationId, user_id: userId } },
+      })
+    },
+    onSuccess: async () => {
+      getQueryClient().invalidateQueries({
+        queryKey: ['organizationMembers', organizationId],
+      })
+    },
+  })
+
+export const useUpdateOrganizationMemberRole = (organizationId: string) =>
+  useMutation({
+    mutationFn: (variables: {
+      userId: string
+      role: schemas['OrganizationMemberRoleUpdate']['role']
+    }) => {
+      return api.PATCH('/v1/organizations/{id}/members/{user_id}', {
+        params: {
+          path: { id: organizationId, user_id: variables.userId },
+        },
+        body: { role: variables.role },
+      })
+    },
+    onSuccess: async () => {
+      getQueryClient().invalidateQueries({
+        queryKey: ['organizationMembers', organizationId],
+      })
+    },
+  })
+
+export const useListOrganizations = (
+  params: operations['organizations:list']['parameters']['query'],
+  enabled: boolean = true,
+) =>
+  useQuery({
+    queryKey: ['organizations', params],
+    queryFn: () =>
+      unwrap(api.GET('/v1/organizations/', { params: { query: params } })),
+    retry: defaultRetry,
+    enabled,
+  })
+
+export const useCreateOrganization = () =>
+  useMutation({
+    mutationFn: (body: schemas['OrganizationCreate']) => {
+      return api.POST('/v1/organizations/', { body })
+    },
+    onSuccess: async (result) => {
+      const { data, error } = result
+      if (error) {
+        return
+      }
+      getQueryClient().invalidateQueries({
+        queryKey: ['organizations', data.id],
+      })
+      await revalidate(`organizations:${data.id}`, { expire: 0 })
+      await revalidate(`organizations:${data.slug}`, { expire: 0 })
+    },
+  })
+
+export const useUpdateOrganization = () =>
+  useMutation({
+    mutationFn: (variables: {
+      id: string
+      body: schemas['OrganizationUpdate']
+      userId?: string
+    }) => {
+      return api.PATCH('/v1/organizations/{id}', {
+        params: { path: { id: variables.id } },
+        body: variables.body,
+      })
+    },
+    onSuccess: async (result, variables) => {
+      const { data, error } = result
+      if (error) {
+        return
+      }
+      getQueryClient().invalidateQueries({
+        queryKey: ['organizations', data.id],
+      })
+      await getQueryClient().invalidateQueries({
+        queryKey: ['organizationReviewState', data.id],
+      })
+      await revalidate(`organizations:${data.id}`, { expire: 0 })
+      await revalidate(`organizations:${data.slug}`, { expire: 0 })
+
+      if (variables.userId) {
+        await revalidate(`users:${variables.userId}:organizations`, {
+          expire: 0,
+        })
+      }
+    },
+  })
+
+export const useEnableOrganizationPreviewAccess = (organizationId: string) =>
+  useMutation({
+    mutationFn: () =>
+      api.POST('/v1/organizations/{id}/enable-preview-access', {
+        params: { path: { id: organizationId } },
+      }),
+    onSuccess: async (result) => {
+      const { data, error } = result
+      if (error) {
+        return
+      }
+      getQueryClient().invalidateQueries({
+        queryKey: ['organizations', data.id],
+      })
+      await revalidate(`organizations:${data.id}`, { expire: 0 })
+      await revalidate(`organizations:${data.slug}`, { expire: 0 })
+    },
+  })
+
+export const useOrganization = (
+  id: string,
+  enabled: boolean = true,
+  initialData?: schemas['Organization'],
+  refetchOnMount?: boolean | 'always',
+) =>
+  useQuery({
+    queryKey: ['organizations', id],
+    queryFn: () =>
+      unwrap(api.GET('/v1/organizations/{id}', { params: { path: { id } } })),
+    retry: defaultRetry,
+    enabled,
+    initialData,
+    ...(refetchOnMount !== undefined ? { refetchOnMount } : {}),
+  })
+
+export const useOrganizationKYC = (id: string, enabled: boolean = true) =>
+  useQuery({
+    queryKey: ['organizations', id, 'kyc'],
+    queryFn: () =>
+      unwrap(
+        api.GET('/v1/organizations/{id}/kyc', {
+          params: { path: { id } },
+        }),
+      ),
+    retry: defaultRetry,
+    enabled: enabled && !!id,
+  })
+
+export const useOrganizationAccount = (id?: string) =>
+  useQuery({
+    queryKey: ['organizations', 'account', id],
+    queryFn: () =>
+      unwrap(
+        api.GET('/v1/organizations/{id}/account', {
+          params: { path: { id: id ?? '' } },
+        }),
+      ),
+    retry: (failureCount, error) => {
+      if (
+        error instanceof ClientResponseError &&
+        (error.response.status === 403 || error.response.status === 404)
+      ) {
+        return false
+      }
+      return defaultRetry(failureCount, error as ClientResponseError)
+    },
+    enabled: !!id,
+  })
+
+export const useOrganizationAccessTokens = (
+  organization_id: string,
+  params?: Omit<
+    NonNullable<
+      operations['organization_access_tokens:list']['parameters']['query']
+    >,
+    'organization_id'
+  >,
+) =>
+  useQuery({
+    queryKey: [
+      'organization_access_tokens',
+      { organization_id, ...(params || {}) },
+    ],
+    queryFn: () =>
+      unwrap(
+        api.GET('/v1/organization-access-tokens/', {
+          params: {
+            query: {
+              organization_id,
+              limit: 100,
+              ...(params || {}),
+            },
+          },
+        }),
+      ),
+    retry: defaultRetry,
+  })
+
+export const useCreateOrganizationAccessToken = (organization_id: string) =>
+  useMutation({
+    mutationFn: (
+      body: Omit<schemas['OrganizationAccessTokenCreate'], 'organization_id'>,
+    ) => {
+      return api.POST('/v1/organization-access-tokens/', {
+        body: {
+          ...body,
+          organization_id,
+        },
+      })
+    },
+    onSuccess: (result) => {
+      const { error } = result
+      if (error) {
+        return
+      }
+      getQueryClient().invalidateQueries({
+        queryKey: ['organization_access_tokens', { organization_id }],
+      })
+    },
+  })
+
+export const useUpdateOrganizationAccessToken = (id: string) =>
+  useMutation({
+    mutationFn: (body: schemas['OrganizationAccessTokenUpdate']) => {
+      return api.PATCH('/v1/organization-access-tokens/{id}', {
+        params: { path: { id } },
+        body,
+      })
+    },
+    onSuccess: (result) => {
+      const { data, error } = result
+      if (error) {
+        return
+      }
+      getQueryClient().invalidateQueries({
+        queryKey: [
+          'organization_access_tokens',
+          { organization_id: data.organization_id },
+        ],
+      })
+    },
+  })
+
+export const useDeleteOrganizationAccessToken = () =>
+  useMutation({
+    mutationFn: (variables: schemas['OrganizationAccessToken']) => {
+      return api.DELETE('/v1/organization-access-tokens/{id}', {
+        params: { path: { id: variables.id } },
+      })
+    },
+    onSuccess: (result, variables) => {
+      const { error } = result
+      if (error) {
+        return
+      }
+      getQueryClient().invalidateQueries({
+        queryKey: [
+          'organization_access_tokens',
+          { organization_id: variables.organization_id },
+        ],
+      })
+    },
+  })
+
+export const useOrganizationEmbedStatus = (id: string, enabled = true) =>
+  useQuery({
+    queryKey: ['organizations', id, 'embed-status'],
+    queryFn: () =>
+      unwrap(
+        api.GET('/v1/organizations/{id}/embed-status', {
+          params: {
+            path: { id },
+          },
+        }),
+      ),
+    retry: defaultRetry,
+    enabled: !!id && enabled,
+  })
+
+export const useOrganizationPaymentStatus = (id: string) =>
+  useQuery({
+    queryKey: ['organizations', 'payment-status', id],
+    queryFn: () =>
+      unwrap(
+        api.GET('/v1/organizations/{id}/payment-status', {
+          params: {
+            path: { id },
+          },
+        }),
+      ),
+    retry: defaultRetry,
+    enabled: !!id,
+  })
+
+export const useOrganizationAppeal = (id: string) =>
+  useMutation({
+    mutationFn: ({ reason }: { reason: string }) => {
+      return api.POST('/v1/organizations/{id}/appeal', {
+        params: { path: { id } },
+        body: { reason },
+      })
+    },
+    retry: defaultRetry,
+  })
+
+export const useOrganizationReviewState = (
+  id: string,
+  enabled: boolean = true,
+) =>
+  useQuery({
+    queryKey: ['organizationReviewState', id],
+    queryFn: () =>
+      unwrap(
+        api.GET('/v1/organizations/{id}/review', {
+          params: { path: { id } },
+        }),
+      ),
+    retry: defaultRetry,
+    enabled: enabled && !!id,
+    refetchOnMount: 'always',
+  })
+
+export const useSubmitOrganizationReview = (id: string) =>
+  useMutation({
+    mutationFn: () =>
+      api.POST('/v1/organizations/{id}/submit-review', {
+        params: { path: { id } },
+      }),
+    onSuccess: async (result) => {
+      if (result.error) return
+      getQueryClient().invalidateQueries({
+        queryKey: ['organizations', id],
+      })
+      getQueryClient().invalidateQueries({
+        queryKey: ['organizationReviewState', id],
+      })
+      getQueryClient().invalidateQueries({
+        queryKey: ['organizationReviewStatus', id],
+      })
+      await revalidate(`organizations:${id}`, { expire: 0 })
+    },
+  })
+
+export const useOrganizationReviewStatus = (
+  id: string,
+  enabled: boolean = true,
+  refetchInterval?: number,
+  initialData?: schemas['OrganizationReviewStatus'],
+) =>
+  useQuery({
+    queryKey: ['organizationReviewStatus', id],
+    queryFn: () =>
+      unwrap(
+        api.GET('/v1/organizations/{id}/review-status', {
+          params: { path: { id } },
+        }),
+      ),
+    retry: defaultRetry,
+    enabled: enabled && !!id,
+    refetchInterval,
+    initialData,
+  })
+
+export const useRequestHumanReview = (id: string) =>
+  useMutation({
+    mutationFn: ({ reason }: { reason: string }) =>
+      api.POST('/v1/organizations/{id}/appeal/human-review', {
+        params: { path: { id } },
+        body: { reason },
+      }),
+    onSuccess: (result) => {
+      if (result.error) return
+      getQueryClient().invalidateQueries({
+        queryKey: ['organizationReviewStatus', id],
+      })
+    },
+  })
+
+export const useSupportCase = (
+  id: string | undefined,
+  enabled: boolean = true,
+  pollInterval: number = 10_000,
+) =>
+  useQuery({
+    queryKey: ['supportCase', id],
+    queryFn: id
+      ? () =>
+          unwrap(
+            api.GET('/v1/support-cases/{id}', {
+              params: { path: { id } },
+            }),
+          )
+      : skipToken,
+    retry: defaultRetry,
+    enabled,
+    refetchInterval: (query) => {
+      if (!query.state.data?.is_open) return false
+      const hidden = typeof document !== 'undefined' && document.hidden
+      return hidden ? Math.max(pollInterval, 30_000) : pollInterval
+    },
+    refetchIntervalInBackground: true,
+  })
+
+export const useReplyToSupportCase = () =>
+  useMutation({
+    mutationFn: ({
+      caseId,
+      ...payload
+    }: { caseId: string } & schemas['SupportCaseMessageCreate']) =>
+      api.POST('/v1/support-cases/{id}/messages', {
+        params: { path: { id: caseId } },
+        body: { ...payload, body: payload.body || null },
+      }),
+    onSuccess: async (result, { caseId }) => {
+      if (result.error) return
+      getQueryClient().invalidateQueries({ queryKey: ['supportCase', caseId] })
+    },
+  })
+
+export const useDeleteOrganization = () =>
+  useMutation({
+    mutationFn: (variables: { id: string }) => {
+      return api.DELETE('/v1/organizations/{id}', {
+        params: { path: { id: variables.id } },
+      })
+    },
+    onSuccess: async () => {
+      getQueryClient().invalidateQueries({
+        queryKey: ['organizations'],
+      })
+    },
+  })

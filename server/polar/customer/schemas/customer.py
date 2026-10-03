@@ -1,0 +1,330 @@
+from datetime import datetime
+from typing import Annotated, Literal
+
+from annotated_types import MaxLen
+from fastapi import Path
+from pydantic import (
+    UUID4,
+    Discriminator,
+    Field,
+    Tag,
+    TypeAdapter,
+    model_validator,
+)
+from pydantic.aliases import AliasChoices
+
+from polar.kit.address import Address, AddressInput
+from polar.kit.email import EmailStrDNS
+from polar.kit.locale import Locale
+from polar.kit.metadata import (
+    MetadataInputMixin,
+    MetadataOutputMixin,
+)
+from polar.kit.schemas import (
+    CUSTOMER_ID_EXAMPLE,
+    ORGANIZATION_ID_EXAMPLE,
+    ClassName,
+    EmptyStrToNoneValidator,
+    IDSchema,
+    MergeJSONSchema,
+    Schema,
+    SetSchemaReference,
+    TimestampedSchema,
+)
+from polar.member import MemberOwnerCreate
+from polar.models.customer import CustomerType
+from polar.organization.schemas import OrganizationID
+from polar.payment_method.schemas import (
+    PaymentMethodCard,
+    PaymentMethodGeneric,
+    PaymentMethodKrCard,
+)
+from polar.tax.tax_id import TaxID
+
+CustomerID = Annotated[UUID4, Path(description="The customer ID.")]
+ExternalCustomerID = Annotated[str, Path(description="The customer external ID.")]
+
+_external_id_description = (
+    "The ID of the customer in your system. "
+    "This must be unique within the organization. "
+    "Once set, it can't be updated."
+)
+_external_id_example = "usr_1337"
+_email_description = (
+    "The email address of the customer. This must be unique within the organization."
+)
+_email_example = "customer@example.com"
+_name_description = "The name of the customer."
+_name_example = "John Doe"
+
+CustomerNameInput = Annotated[
+    str,
+    MaxLen(256),
+    Field(description=_name_description, examples=[_name_example]),
+    EmptyStrToNoneValidator,
+]
+
+
+# --- Create schemas ---
+
+
+class CustomerCreateBase(MetadataInputMixin, Schema):
+    external_id: Annotated[str | None, EmptyStrToNoneValidator] = Field(
+        default=None,
+        description=_external_id_description,
+        examples=[_external_id_example],
+    )
+    name: CustomerNameInput | None = None
+    billing_address: AddressInput | None = None
+    tax_id: Annotated[str | None, EmptyStrToNoneValidator] = None
+    locale: Locale | None = None
+    organization_id: OrganizationID | None = Field(
+        default=None,
+        description=(
+            "The ID of the organization owning the customer. "
+            "**Required unless you use an organization token.**"
+        ),
+    )
+    owner: MemberOwnerCreate | None = Field(
+        default=None,
+        description=(
+            "Optional owner member to create with the customer. "
+            "If not provided, an owner member will be automatically created "
+            "using the customer's email and name."
+        ),
+    )
+
+
+class CustomerIndividualCreate(CustomerCreateBase):
+    type: Literal["individual"] = "individual"
+    email: EmailStrDNS = Field(
+        description=_email_description, examples=[_email_example]
+    )
+
+
+class CustomerTeamCreate(CustomerCreateBase):
+    type: Literal["team"]
+    email: EmailStrDNS | None = Field(
+        default=None,
+        description=(
+            "The email address of the team customer. "
+            "Optional for team customers — if omitted, an owner with an email must be provided."
+        ),
+        examples=[_email_example],
+    )
+
+    @model_validator(mode="after")
+    def _require_owner_when_no_email(self) -> "CustomerTeamCreate":
+        if self.email is None and self.owner is None:
+            raise ValueError(
+                "An owner with an email address is required when creating "
+                "a team customer without an email."
+            )
+        return self
+
+
+def _customer_create_type(v: dict[str, object] | object) -> str:
+    """Default to 'individual' for backward compat when type is omitted."""
+    if isinstance(v, dict):
+        return str(v.get("type", "individual"))
+    return str(getattr(v, "type", "individual"))
+
+
+CustomerCreate = Annotated[
+    Annotated[CustomerIndividualCreate, Tag("individual")]
+    | Annotated[CustomerTeamCreate, Tag("team")],
+    Discriminator(_customer_create_type),
+    SetSchemaReference("CustomerCreate"),
+]
+
+
+# --- Update schemas ---
+
+
+class CustomerUpdateBase(MetadataInputMixin, Schema):
+    email: EmailStrDNS | None = Field(
+        default=None, description=_email_description, examples=[_email_example]
+    )
+    name: CustomerNameInput | None = None
+    billing_address: AddressInput | None = None
+    tax_id: Annotated[str | None, EmptyStrToNoneValidator] = None
+    locale: Locale | None = None
+
+
+class CustomerUpdate(CustomerUpdateBase):
+    external_id: Annotated[str | None, EmptyStrToNoneValidator] = Field(
+        default=None,
+        description=_external_id_description,
+        examples=[_external_id_example],
+    )
+    type: CustomerType | None = Field(
+        default=None,
+        description=(
+            "The customer type. "
+            "Can only be upgraded from 'individual' to 'team', never downgraded."
+        ),
+        examples=["team"],
+    )
+
+
+class CustomerUpdateExternalID(CustomerUpdateBase): ...
+
+
+# --- Read schemas ---
+
+
+class CustomerBase(MetadataOutputMixin, TimestampedSchema, IDSchema):
+    id: UUID4 = Field(
+        description="The ID of the customer.", examples=[CUSTOMER_ID_EXAMPLE]
+    )
+    external_id: str | None = Field(
+        default=None,
+        description=_external_id_description,
+        examples=[_external_id_example],
+        validation_alias=AliasChoices(
+            # From ORM model
+            "saved_external_id",
+            # From cached state or stored webhook payload
+            "external_id",
+        ),
+    )
+    email: str | None = Field(
+        default=None, description=_email_description, examples=[_email_example]
+    )
+    email_verified: bool = Field(
+        description=(
+            "Whether the customer email address is verified. "
+            "The address is automatically verified when the customer accesses "
+            "the customer portal using their email address."
+        ),
+        examples=[True],
+    )
+    type: CustomerType = Field(
+        description=(
+            "The type of customer: 'individual' for single users, "
+            "'team' for customers with multiple members."
+        ),
+        examples=["individual"],
+    )
+    name: str | None = Field(description=_name_description, examples=[_name_example])
+    billing_name: str | None = Field(
+        description=(
+            "The name that should appear on the customer's invoices. "
+            "Falls back to the customer name when not explicitly set."
+        ),
+        examples=[_name_example],
+    )
+    billing_address: Address | None
+    tax_id: TaxID | None
+    locale: str | None = None
+    organization_id: UUID4 = Field(
+        description="The ID of the organization owning the customer.",
+        examples=[ORGANIZATION_ID_EXAMPLE],
+    )
+    default_payment_method_id: UUID4 | None = Field(
+        default=None,
+        description=(
+            "The ID of the customer's default payment method, if any. "
+            "Use the payment methods endpoint to retrieve its details."
+        ),
+    )
+
+    deleted_at: datetime | None = Field(
+        description="Timestamp for when the customer was soft deleted."
+    )
+
+    first_user_event_at: datetime | None = Field(
+        description=(
+            "Timestamp of the first event ingested for this customer. "
+            "Can predate `created_at`, and is null if no event was ever ingested."
+        )
+    )
+
+    avatar_url: str | None = Field(
+        examples=["https://www.gravatar.com/avatar/xxx?d=404"],
+    )
+
+
+class CustomerIndividual(CustomerBase):
+    """A customer in an organization."""
+
+    type: Literal[CustomerType.individual] = Field(
+        description="The type of customer.",
+        examples=["individual"],
+    )
+    email: str = Field(description=_email_description, examples=[_email_example])
+
+
+class CustomerTeam(CustomerBase):
+    """A team customer in an organization."""
+
+    type: Literal[CustomerType.team] = Field(
+        description="The type of customer. Team customers can have multiple members.",
+        examples=["team"],
+    )
+
+
+CustomerResponse = Annotated[
+    CustomerIndividual | CustomerTeam,
+    Discriminator("type"),
+    SetSchemaReference("Customer"),
+    ClassName("Customer"),
+]
+
+
+class CustomerGrowthPeriod(Schema):
+    timestamp: datetime = Field(description="The start of the period.")
+    new_customers: int = Field(
+        description="The number of customers created during the period."
+    )
+    total_customers: int = Field(
+        description="The cumulative number of customers at the end of the period."
+    )
+
+
+class TopCustomer(Schema):
+    id: UUID4 = Field(
+        description="The ID of the customer.", examples=[CUSTOMER_ID_EXAMPLE]
+    )
+    email: str | None = Field(description=_email_description, examples=[_email_example])
+    name: str | None = Field(description=_name_description, examples=[_name_example])
+    avatar_url: str | None = Field(
+        examples=["https://www.gravatar.com/avatar/xxx?d=404"],
+    )
+    order_count: int = Field(description="The number of paid orders in the period.")
+    net_revenue: int = Field(
+        description=(
+            "The net revenue from this customer in the period, in USD cents, "
+            "with refunded amounts subtracted."
+        )
+    )
+
+
+_is_default_description = (
+    "Whether this payment method is the customer's default payment method."
+)
+
+
+class CustomerPaymentMethodCard(PaymentMethodCard):
+    is_default: bool = Field(description=_is_default_description, examples=[True])
+
+
+class CustomerPaymentMethodKrCard(PaymentMethodKrCard):
+    is_default: bool = Field(description=_is_default_description, examples=[False])
+
+
+class CustomerPaymentMethodGeneric(PaymentMethodGeneric):
+    is_default: bool = Field(description=_is_default_description, examples=[False])
+
+
+CustomerPaymentMethod = Annotated[
+    CustomerPaymentMethodCard
+    | CustomerPaymentMethodKrCard
+    | CustomerPaymentMethodGeneric,
+    SetSchemaReference("PaymentMethod"),
+    MergeJSONSchema({"title": "PaymentMethod"}),
+    ClassName("PaymentMethod"),
+]
+CustomerPaymentMethodTypeAdapter: TypeAdapter[CustomerPaymentMethod] = TypeAdapter(
+    CustomerPaymentMethod
+)

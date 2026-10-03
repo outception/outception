@@ -1,0 +1,38 @@
+{
+  "private": true,
+  "name": "polar",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo watch dev",
+    "dev-web": "turbo run dev --filter=web",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint --fix .",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "generate": "pnpm -C packages/client generate",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "knip": "knip",
+    "box-codemod": "pnpm --filter @polar-sh/box-codemod box-codemod",
+    "preinstall": "npx only-allow pnpm",
+    "prepare": "pnpm --filter @polar-sh/cli exec effect-tsgo patch && turbo run build --filter='./packages/*'",
+    "release-packages": "turbo run build test --filter='./packages/*' --filter='./adapters/*' --filter='!@polar-sh/cli' && turbo run lint --filter='!@polar-sh/cli' && changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.31.1",
+    "@manypkg/cli": "^0.25.1",
+    "knip": "^5.88.1",
+    "only-allow": "1.2.2",
+    "oxfmt": "^0.41.0",
+    "oxlint": "^1.85.0",
+    "oxlint-tsgolint": "^7.0.2002",
+    "turbo": "^2.11.2",
+    "typescript": "catalog:"
+  },
+  "packageManager": "pnpm@12.8.0",
+  "manypkg": {
+    "ignoredRules": [
+      "INTERNAL_MISMATCH"
+    ]
+  }
+}

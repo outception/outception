@@ -1,0 +1,443 @@
+import uuid
+from collections.abc import Sequence
+
+import stripe as stripe_lib
+import structlog
+from sqlalchemy.orm import selectinload
+
+from polar.auth.models import AuthSubject
+from polar.authz.service import get_accessible_org_ids
+from polar.enums import PayoutAccountType
+from polar.exceptions import PolarError
+from polar.integrations.stripe.service import StripeAccountRejectReason, stripe
+from polar.kit.db.postgres import AsyncReadSession
+from polar.models import Organization, PayoutAccount, User
+from polar.organization.repository import OrganizationRepository
+from polar.organization.resolver import get_payload_organization
+from polar.payout.repository import PayoutRepository
+from polar.postgres import AsyncSession
+from polar.worker import enqueue_job
+
+from .repository import PayoutAccountRepository
+from .schemas import PayoutAccountCreate, PayoutAccountLink
+
+log = structlog.get_logger()
+
+
+class PayoutAccountServiceError(PolarError):
+    pass
+
+
+class PayoutAccountExternalIdDoesNotExist(PayoutAccountServiceError):
+    def __init__(self, external_id: str) -> None:
+        self.external_id = external_id
+        message = f"Payout account with external ID {external_id} does not exist"
+        super().__init__(message)
+
+
+class PayoutAccountExternalLinkUnsupported(PayoutAccountServiceError):
+    def __init__(self, account_type: PayoutAccountType) -> None:
+        self.account_type = account_type
+        message = f"Unsupported payout account type for external link: {account_type}"
+        super().__init__(message, 404)
+
+
+class PayoutAccountSyncUnsupported(PayoutAccountServiceError):
+    def __init__(self, account_type: PayoutAccountType) -> None:
+        self.account_type = account_type
+        message = f"Unsupported payout account type for sync: {account_type}"
+        super().__init__(message, 404)
+
+
+class PayoutAccountSyncFailed(PayoutAccountServiceError):
+    def __init__(self, stripe_id: str) -> None:
+        self.stripe_id = stripe_id
+        message = "Could not reach Stripe to refresh this payout account."
+        super().__init__(message, 503)
+
+
+class PayoutAccountStripeAccountDoesNotExist(PayoutAccountServiceError):
+    def __init__(self, stripe_id: str) -> None:
+        self.stripe_id = stripe_id
+        message = f"Stripe account {stripe_id} does not exist"
+        super().__init__(message, 422)
+
+
+class PayoutAccountNonZeroBalance(PayoutAccountServiceError):
+    def __init__(self, stripe_id: str) -> None:
+        self.stripe_id = stripe_id
+        message = (
+            f"Stripe account {stripe_id} has a non-zero balance. "
+            "Please withdraw your balance before deleting the payout account."
+        )
+        super().__init__(message, 422)
+
+
+class PayoutAccountLinkedToOrganization(PayoutAccountServiceError):
+    def __init__(self, payout_account_id: uuid.UUID) -> None:
+        self.payout_account_id = payout_account_id
+        message = (
+            f"Payout account {payout_account_id} is still linked to one or more "
+            "organizations. Please unlink it before deleting."
+        )
+        super().__init__(message, 422)
+
+
+class PayoutAccountHasPayouts(PayoutAccountServiceError):
+    def __init__(self, payout_account_id: uuid.UUID) -> None:
+        self.payout_account_id = payout_account_id
+        message = (
+            f"Payout account {payout_account_id} has received payouts "
+            "and can't be deleted."
+        )
+        super().__init__(message, 409)
+
+
+class PayoutAccountHasPendingPayouts(PayoutAccountServiceError):
+    def __init__(self, payout_account_id: uuid.UUID) -> None:
+        self.payout_account_id = payout_account_id
+        message = (
+            f"Payout account {payout_account_id} has pending payouts. "
+            "Please wait for them to complete before deleting."
+        )
+        super().__init__(message, 422)
+
+
+class PayoutAccountService:
+    async def list(
+        self,
+        session: AsyncReadSession,
+        auth_subject: AuthSubject[User],
+    ) -> Sequence[PayoutAccount]:
+        repository = PayoutAccountRepository.from_session(session)
+        statement = repository.get_statement_by_user(auth_subject.subject).options(
+            selectinload(PayoutAccount.organizations)
+        )
+        return await repository.get_all(statement)
+
+    async def get(
+        self,
+        session: AsyncReadSession,
+        auth_subject: AuthSubject[User],
+        payout_account_id: uuid.UUID,
+    ) -> PayoutAccount | None:
+        repository = PayoutAccountRepository.from_session(session)
+        org_ids = await get_accessible_org_ids(session, auth_subject)
+        statement = repository.get_statement_by_user(auth_subject.subject).where(
+            PayoutAccount.id == payout_account_id
+        )
+        return await repository.get_one_or_none(statement)
+
+    async def create(
+        self,
+        auth_subject: AuthSubject[User],
+        session: AsyncSession,
+        payout_account_create: PayoutAccountCreate,
+    ) -> PayoutAccount:
+        organization = await get_payload_organization(
+            session, auth_subject, payout_account_create
+        )
+
+        current = None
+        if organization.payout_account_id is not None:
+            repository = PayoutAccountRepository.from_session(session)
+            current = await repository.get_by_id(organization.payout_account_id)
+
+        payout_account = await self._create_stripe_account(
+            session,
+            auth_subject.subject,
+            payout_account_create.country,
+            organization.name,
+        )
+
+        # Don't make it active while a ready account is still paying them out.
+        if current is None or not current.is_payout_ready:
+            # Late import: organization.service imports payout_account.service.
+            from polar.organization.service import organization as organization_service
+
+            await organization_service.set_payout_account(
+                session, organization, payout_account
+            )
+        else:
+            # Stripe reads the website off the account during onboarding, so the new
+            # one needs it even when the organization stayed on its old account.
+            enqueue_job(
+                "organization.sync_payout_account_website",
+                organization_id=organization.id,
+                payout_account_id=payout_account.id,
+            )
+
+        return payout_account
+
+    async def onboarding_link(
+        self, payout_account: PayoutAccount, return_path: str
+    ) -> PayoutAccountLink:
+        match payout_account.type:
+            case PayoutAccountType.stripe:
+                assert payout_account.stripe_id is not None
+                account_link = await stripe.create_account_link(
+                    payout_account.stripe_id, return_path, payout_account.id
+                )
+                return PayoutAccountLink(url=account_link.url)
+            case _:
+                raise PayoutAccountExternalLinkUnsupported(payout_account.type)
+
+    async def dashboard_link(self, payout_account: PayoutAccount) -> PayoutAccountLink:
+        match payout_account.type:
+            case PayoutAccountType.stripe:
+                assert payout_account.stripe_id is not None
+                account_link = await stripe.create_login_link(payout_account.stripe_id)
+                return PayoutAccountLink(url=account_link.url)
+            case _:
+                raise PayoutAccountExternalLinkUnsupported(payout_account.type)
+
+    async def delete(
+        self,
+        session: AsyncSession,
+        payout_account: PayoutAccount,
+        *,
+        allow_paid_out: bool = False,
+    ) -> None:
+        organization_repository = OrganizationRepository.from_session(session)
+        linked_organizations = await organization_repository.get_all_by_payout_account(
+            payout_account.id
+        )
+        if linked_organizations:
+            raise PayoutAccountLinkedToOrganization(payout_account.id)
+
+        # Deleting it on Stripe takes the merchant's payout history with it.
+        payout_repository = PayoutRepository.from_session(session)
+        if (
+            not allow_paid_out
+            and await payout_repository.count_by_payout_account(payout_account.id) > 0
+        ):
+            raise PayoutAccountHasPayouts(payout_account.id)
+
+        await self._delete(session, payout_account)
+
+    async def unlink_and_maybe_delete(
+        self,
+        session: AsyncSession,
+        organization: Organization,
+    ) -> None:
+        payout_account_id = organization.payout_account_id
+        if payout_account_id is None:
+            return
+
+        organization_repository = OrganizationRepository.from_session(session)
+        linked_organizations = await organization_repository.get_all_by_payout_account(
+            payout_account_id
+        )
+        other_organizations = [
+            linked for linked in linked_organizations if linked.id != organization.id
+        ]
+
+        # Still shared: just drop this organization's link, keep the account.
+        if other_organizations:
+            await organization_repository.remove_payout_account(
+                organization.id, payout_account_id
+            )
+            return
+
+        # Would be orphaned: run the deletion guards before unlinking so a failed
+        # deletion (e.g. pending payouts) leaves the organization untouched.
+        repository = PayoutAccountRepository.from_session(session)
+        payout_account = await repository.get_by_id(payout_account_id)
+        if payout_account is not None:
+            await self._delete(session, payout_account)
+
+        await organization_repository.remove_payout_account(
+            organization.id, payout_account_id
+        )
+
+    async def _delete(
+        self, session: AsyncSession, payout_account: PayoutAccount
+    ) -> None:
+        # Verify there are no pending payouts for this account
+        payout_repository = PayoutRepository.from_session(session)
+        pending_payouts_count = await payout_repository.count_pending_by_payout_account(
+            payout_account.id
+        )
+        if pending_payouts_count > 0:
+            raise PayoutAccountHasPendingPayouts(payout_account.id)
+
+        # Delete the account on Stripe
+        if payout_account.type == PayoutAccountType.stripe:
+            assert payout_account.stripe_id is not None
+            # Verify the account exists on Stripe before deletion
+            if not await stripe.account_exists(payout_account.stripe_id):
+                raise PayoutAccountStripeAccountDoesNotExist(payout_account.stripe_id)
+            # Verify the account has a zero balance before deletion
+            _, balance = await stripe.retrieve_balance(
+                payout_account.stripe_id, payout_account.currency
+            )
+            if balance != 0:
+                raise PayoutAccountNonZeroBalance(payout_account.stripe_id)
+            await stripe.delete_account(payout_account.stripe_id)
+
+        repository = PayoutAccountRepository.from_session(session)
+        await repository.soft_delete(payout_account)
+
+    async def reject_stripe_account(
+        self,
+        session: AsyncSession,
+        payout_account_id: uuid.UUID,
+        reason: StripeAccountRejectReason,
+    ) -> None:
+        """Reject the Stripe connected account backing a payout account.
+
+        Enqueued when a human denies or blocks an organization and opts in to
+        disabling its Stripe account. A rejected account is permanently disabled
+        on Stripe's side; there is no un-reject.
+        """
+        repository = PayoutAccountRepository.from_session(session)
+        payout_account = await repository.get_by_id(payout_account_id)
+        if (
+            payout_account is None
+            or payout_account.type != PayoutAccountType.stripe
+            or payout_account.stripe_id is None
+        ):
+            return
+        if not await stripe.account_exists(payout_account.stripe_id):
+            return
+        await stripe.reject_account(payout_account.stripe_id, reason)
+
+    async def sync_from_stripe(
+        self, session: AsyncSession, payout_account: PayoutAccount
+    ) -> PayoutAccount:
+        """Refresh a payout account from Stripe, bypassing the `account.updated` webhook.
+
+        Stripe can enable or disable payouts without firing the webhook, and a merchant
+        stuck on a stale status has no other way to recheck.
+        """
+        if (
+            payout_account.type != PayoutAccountType.stripe
+            or payout_account.stripe_id is None
+        ):
+            raise PayoutAccountSyncUnsupported(payout_account.type)
+
+        try:
+            stripe_account = await stripe.retrieve_account(payout_account.stripe_id)
+        except (stripe_lib.PermissionError, stripe_lib.InvalidRequestError) as e:
+            # Deleted, or we lost access. Retrying can't repair it, so it must not read
+            # as a transient outage.
+            log.warning(
+                "payout_account.sync_account_gone",
+                stripe_id=payout_account.stripe_id,
+                error=str(e),
+            )
+            raise PayoutAccountStripeAccountDoesNotExist(
+                payout_account.stripe_id
+            ) from e
+        except stripe_lib.StripeError as e:
+            log.warning(
+                "payout_account.sync_failed",
+                stripe_id=payout_account.stripe_id,
+                error=str(e),
+            )
+            raise PayoutAccountSyncFailed(payout_account.stripe_id) from e
+
+        return await self.update_account_from_stripe(
+            session, stripe_account=stripe_account
+        )
+
+    async def update_account_from_stripe(
+        self, session: AsyncSession, *, stripe_account: stripe_lib.Account
+    ) -> PayoutAccount:
+        repository = PayoutAccountRepository.from_session(session)
+        payout_account = await repository.get_by_stripe_id(
+            stripe_account.id, include_deleted=True
+        )
+        if payout_account is None:
+            raise PayoutAccountExternalIdDoesNotExist(stripe_account.id)
+
+        payout_account.email = stripe_account.email
+        assert stripe_account.default_currency is not None
+        payout_account.currency = stripe_account.default_currency
+        payout_account.is_details_submitted = stripe_account.details_submitted or False
+        payout_account.is_charges_enabled = stripe_account.charges_enabled or False
+        payout_account.is_payouts_enabled = stripe_account.payouts_enabled or False
+        if stripe_account.country is not None:
+            payout_account.country = stripe_account.country
+        payout_account.data = stripe_account.to_dict()
+
+        repository = PayoutAccountRepository.from_session(session)
+        payout_account = await repository.update(payout_account)
+
+        # Late import: organization.service imports payout_account.service.
+        from polar.organization.service import organization as organization_service
+
+        organization_repository = OrganizationRepository.from_session(session)
+        organizations = await organization_repository.get_all_by_payout_account(
+            payout_account.id
+        )
+        for organization in organizations:
+            await organization_service.maybe_activate(session, organization)
+
+        return payout_account
+
+    async def create_manual_account(
+        self,
+        session: AsyncSession,
+        organization: Organization,
+        admin: User,
+        *,
+        country: str,
+        currency: str,
+    ) -> PayoutAccount:
+        repository = PayoutAccountRepository.from_session(session)
+        payout_account = await repository.create(
+            PayoutAccount(
+                type=PayoutAccountType.manual,
+                admin=admin,
+                country=country,
+                currency=currency,
+                is_details_submitted=True,
+                is_charges_enabled=True,
+                is_payouts_enabled=True,
+            ),
+            flush=True,
+        )
+
+        # Late import: organization.service imports payout_account.service.
+        from polar.organization.service import organization as organization_service
+
+        await organization_service.set_payout_account(
+            session, organization, payout_account
+        )
+
+        return payout_account
+
+    async def _create_stripe_account(
+        self, session: AsyncSession, admin: User, country: str, name: str
+    ) -> PayoutAccount:
+        try:
+            stripe_account = await stripe.create_account(country, name=name)
+        except stripe_lib.StripeError as e:
+            if e.user_message:
+                raise PayoutAccountServiceError(e.user_message) from e
+            else:
+                raise PayoutAccountServiceError(
+                    "An unexpected Stripe error happened"
+                ) from e
+
+        repository = PayoutAccountRepository.from_session(session)
+        return await repository.create(
+            PayoutAccount(
+                type=PayoutAccountType.stripe,
+                admin=admin,
+                stripe_id=stripe_account.id,
+                email=stripe_account.email,
+                country=stripe_account.country,
+                currency=stripe_account.default_currency,
+                is_details_submitted=stripe_account.details_submitted,
+                is_charges_enabled=stripe_account.charges_enabled,
+                is_payouts_enabled=stripe_account.payouts_enabled,
+                business_type=stripe_account.business_type,
+                data=stripe_account.to_dict(),
+            ),
+            flush=True,
+        )
+
+
+payout_account = PayoutAccountService()

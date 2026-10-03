@@ -1,0 +1,56 @@
+from .components import navigation
+
+NAVIGATION = [
+    navigation.NavigationItem("Users", "users:list", active_route_name_prefix="users:"),
+    navigation.NavigationItem(
+        "Organizations",
+        "organizations:list",
+        active_route_name_prefix="organizations",
+    ),
+    navigation.NavigationItem(
+        "Customers", "customers:list", active_route_name_prefix="customers:"
+    ),
+    navigation.NavigationItem(
+        "Benefits", "benefits:list", active_route_name_prefix="benefits:"
+    ),
+    navigation.NavigationItem(
+        "Products", "products:list", active_route_name_prefix="products:"
+    ),
+    navigation.NavigationItem(
+        "Subscriptions", "subscriptions:list", active_route_name_prefix="subscriptions:"
+    ),
+    navigation.NavigationItem(
+        "Orders", "orders:list", active_route_name_prefix="orders:"
+    ),
+    navigation.NavigationItem(
+        "Payouts", "payouts:list", active_route_name_prefix="payouts:"
+    ),
+    navigation.NavigationItem(
+        "Payout Accounts",
+        "payout_accounts:list",
+        active_route_name_prefix="payout_accounts:",
+    ),
+    navigation.NavigationItem(
+        "Migrations",
+        "merchant_migrations:list",
+        active_route_name_prefix="merchant_migrations:",
+    ),
+    navigation.NavigationItem(
+        "Email Logs", "email_logs:list", active_route_name_prefix="email_logs:"
+    ),
+    navigation.NavigationItem(
+        "External Events",
+        "external_events:list",
+        active_route_name_prefix="external_events:",
+    ),
+    navigation.NavigationItem("Tasks", "tasks:list", active_route_name_prefix="tasks:"),
+    navigation.NavigationItem(
+        "Webhooks", "webhooks:list", active_route_name_prefix="webhooks:"
+    ),
+    navigation.NavigationItem(
+        "Feedback", "feedbacks:list", active_route_name_prefix="feedbacks:"
+    ),
+    navigation.NavigationItem(
+        "Cases", "support_cases:list", active_route_name_prefix="support_cases:"
+    ),
+]

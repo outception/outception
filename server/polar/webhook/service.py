@@ -1,0 +1,1020 @@
+import asyncio
+import base64
+import datetime
+import json
+import secrets
+from collections.abc import Sequence
+from typing import Literal, cast, overload
+from uuid import UUID
+
+import structlog
+from pydantic import AnyUrl
+from sqlalchemy import CursorResult, String, desc, or_, select, text, update
+from sqlalchemy import cast as sql_cast
+from sqlalchemy.orm import joinedload
+
+from polar.auth.models import AuthSubject
+from polar.auth.permission import OrganizationPermission
+from polar.authz.service import (
+    assert_organization_permission,
+    assert_resource_permission,
+    get_accessible_org_ids,
+)
+from polar.checkout.eventstream import CheckoutEvent, publish_checkout_event
+from polar.checkout.repository import CheckoutRepository
+from polar.config import settings
+from polar.customer.schemas.state import CustomerState
+from polar.email.schemas import EmailAdapter
+from polar.email.sender import enqueue_email_template
+from polar.exceptions import PolarError, PolarRequestValidationError, ResourceNotFound
+from polar.kit.crypto import generate_token
+from polar.kit.db.postgres import AsyncSession
+from polar.kit.pagination import PaginationParams
+from polar.kit.utils import utc_now
+from polar.logging import Logger
+from polar.models import (
+    Benefit,
+    BenefitGrant,
+    Checkout,
+    Customer,
+    CustomerSeat,
+    Discount,
+    Member,
+    Order,
+    Organization,
+    Product,
+    Refund,
+    Subscription,
+    User,
+    WebhookDelivery,
+    WebhookEvent,
+)
+from polar.models.webhook_endpoint import (
+    WebhookEndpoint,
+    WebhookEventType,
+    WebhookFormat,
+)
+from polar.organization.resolver import get_payload_organization
+from polar.user_organization.service import (
+    user_organization as user_organization_service,
+)
+from polar.version import CURRENT_API_VERSION
+from polar.webhook.repository import (
+    WebhookDeliveryRepository,
+    WebhookEndpointRepository,
+    WebhookEventRepository,
+)
+from polar.worker import enqueue_job
+
+from .constants import (
+    WEBHOOK_SECRET_KEY_BYTES,
+    WEBHOOK_SECRET_PREFIX,
+    WEBHOOK_STANDARD_SIGNATURE_CUTOFF,
+)
+from .eventstream import publish_webhook_event
+from .schemas import (
+    DeprecatedWebhookEndpointCreateWithSecret,
+    WebhookEndpointCreate,
+    WebhookEndpointUpdate,
+    validate_hostname,
+)
+from .webhooks import SkipEvent, UnsupportedTarget, WebhookPayloadTypeAdapter
+
+log: Logger = structlog.get_logger()
+
+
+def generate_webhook_secret() -> str:
+    if utc_now() < WEBHOOK_STANDARD_SIGNATURE_CUTOFF:
+        return generate_token(prefix=WEBHOOK_SECRET_PREFIX)
+    key = secrets.token_bytes(WEBHOOK_SECRET_KEY_BYTES)
+    return f"{WEBHOOK_SECRET_PREFIX}{base64.b64encode(key).decode()}"
+
+
+class WebhookError(PolarError): ...
+
+
+class EventDoesNotExist(WebhookError):
+    def __init__(self, event_id: UUID) -> None:
+        self.event_id = event_id
+        message = f"Event with ID {event_id} does not exist."
+        super().__init__(message)
+
+
+class EventNotSuccessul(WebhookError):
+    def __init__(self, event_id: UUID) -> None:
+        self.event_id = event_id
+        message = f"Event with ID {event_id} is not successful."
+        super().__init__(message)
+
+
+class WebhookService:
+    async def list_endpoints(
+        self,
+        session: AsyncSession,
+        auth_subject: AuthSubject[User | Organization],
+        *,
+        organization_id: Sequence[UUID] | None,
+        pagination: PaginationParams,
+    ) -> tuple[Sequence[WebhookEndpoint], int]:
+        repository = WebhookEndpointRepository.from_session(session)
+        org_ids = await get_accessible_org_ids(
+            session, auth_subject, permission=OrganizationPermission.organization_manage
+        )
+        statement = repository.get_statement_by_org_ids(org_ids).order_by(
+            WebhookEndpoint.created_at.desc()
+        )
+
+        if organization_id is not None:
+            statement = statement.where(
+                WebhookEndpoint.organization_id.in_(organization_id)
+            )
+
+        return await repository.paginate(
+            statement, limit=pagination.limit, page=pagination.page
+        )
+
+    async def get_endpoint(
+        self,
+        session: AsyncSession,
+        auth_subject: AuthSubject[User | Organization],
+        id: UUID,
+    ) -> WebhookEndpoint | None:
+        repository = WebhookEndpointRepository.from_session(session)
+        org_ids = await get_accessible_org_ids(
+            session, auth_subject, permission=OrganizationPermission.organization_manage
+        )
+        statement = repository.get_statement_by_org_ids(org_ids).where(
+            WebhookEndpoint.id == id
+        )
+        return await repository.get_one_or_none(statement)
+
+    async def create_endpoint(
+        self,
+        session: AsyncSession,
+        auth_subject: AuthSubject[User | Organization],
+        create_schema: WebhookEndpointCreate,
+    ) -> WebhookEndpoint:
+        repository = WebhookEndpointRepository.from_session(session)
+        organization = await get_payload_organization(
+            session, auth_subject, create_schema
+        )
+        await assert_organization_permission(
+            session,
+            auth_subject,
+            organization.id,
+            OrganizationPermission.organization_manage,
+        )
+        secret: str
+        secret_generated_at: datetime.datetime | None
+        if (
+            isinstance(create_schema, DeprecatedWebhookEndpointCreateWithSecret)
+            and create_schema.secret is not None
+        ):
+            secret = create_schema.secret
+            # The secret is provided by the user and therefore not generated by us.
+            secret_generated_at = None
+        else:
+            secret = generate_webhook_secret()
+            secret_generated_at = utc_now()
+
+        endpoint = await repository.create(
+            WebhookEndpoint(
+                **create_schema.model_dump(exclude={"secret"}, by_alias=True),
+                secret=secret,
+                secret_generated_at=secret_generated_at,
+                organization=organization,
+            )
+        )
+
+        return endpoint
+
+    async def update_endpoint(
+        self,
+        session: AsyncSession,
+        auth_subject: AuthSubject[User | Organization],
+        *,
+        endpoint: WebhookEndpoint,
+        update_schema: WebhookEndpointUpdate,
+    ) -> WebhookEndpoint:
+        await assert_resource_permission(
+            session, auth_subject, endpoint, OrganizationPermission.organization_manage
+        )
+        repository = WebhookEndpointRepository.from_session(session)
+
+        is_enabling = update_schema.enabled is True and not endpoint.enabled
+        if is_enabling:
+            try:
+                validate_hostname(AnyUrl(endpoint.url))
+            except ValueError as e:
+                raise PolarRequestValidationError(
+                    [
+                        {
+                            "type": "value_error",
+                            "loc": ("body", "enabled"),
+                            "msg": "Cannot enable a webhook endpoint with an invalid URL. Please update the URL first.",
+                            "input": update_schema.enabled,
+                        }
+                    ]
+                ) from e
+
+        update_dict = update_schema.model_dump(exclude_unset=True, exclude_none=True)
+        if "secret" in update_dict:
+            update_dict["secret_generated_at"] = None
+
+        return await repository.update(
+            endpoint,
+            update_dict=update_dict,
+        )
+
+    async def reset_endpoint_secret(
+        self,
+        session: AsyncSession,
+        auth_subject: AuthSubject[User | Organization],
+        *,
+        endpoint: WebhookEndpoint,
+    ) -> WebhookEndpoint:
+        await assert_resource_permission(
+            session, auth_subject, endpoint, OrganizationPermission.organization_manage
+        )
+        repository = WebhookEndpointRepository.from_session(session)
+        return await repository.update(
+            endpoint,
+            update_dict={
+                "secret": generate_webhook_secret(),
+                "secret_generated_at": utc_now(),
+            },
+        )
+
+    async def delete_endpoint(
+        self,
+        session: AsyncSession,
+        auth_subject: AuthSubject[User | Organization],
+        *,
+        endpoint: WebhookEndpoint,
+    ) -> WebhookEndpoint:
+        await assert_resource_permission(
+            session, auth_subject, endpoint, OrganizationPermission.organization_manage
+        )
+        repository = WebhookEndpointRepository.from_session(session)
+        return await repository.soft_delete(endpoint)
+
+    async def list_deliveries(
+        self,
+        session: AsyncSession,
+        auth_subject: AuthSubject[User | Organization],
+        *,
+        endpoint_id: Sequence[UUID] | None = None,
+        start_timestamp: datetime.datetime | None = None,
+        end_timestamp: datetime.datetime | None = None,
+        succeeded: bool | None = None,
+        query: str | None = None,
+        http_code_class: Literal["2xx", "3xx", "4xx", "5xx"] | None = None,
+        event_type: Sequence[WebhookEventType] | None = None,
+        pagination: PaginationParams,
+    ) -> tuple[Sequence[WebhookDelivery], int]:
+        repository = WebhookDeliveryRepository.from_session(session)
+        org_ids = await get_accessible_org_ids(
+            session, auth_subject, permission=OrganizationPermission.organization_manage
+        )
+
+        if endpoint_id is not None:
+            endpoint_repository = WebhookEndpointRepository.from_session(session)
+            allowed_endpoint_ids = await endpoint_repository.get_accessible_ids(
+                org_ids, endpoint_id
+            )
+            if not allowed_endpoint_ids:
+                return [], 0
+            base_statement = repository.get_base_statement().where(
+                WebhookDelivery.webhook_endpoint_id.in_(allowed_endpoint_ids)
+            )
+        else:
+            base_statement = repository.get_statement_by_org_ids(org_ids)
+
+        statement = base_statement.options(
+            joinedload(WebhookDelivery.webhook_event)
+        ).order_by(desc(WebhookDelivery.created_at))
+
+        if start_timestamp is not None:
+            statement = statement.where(WebhookDelivery.created_at > start_timestamp)
+
+        if end_timestamp is not None:
+            statement = statement.where(WebhookDelivery.created_at < end_timestamp)
+
+        if succeeded is not None:
+            statement = statement.where(WebhookDelivery.succeeded == succeeded)
+
+        if query is not None:
+            statement = statement.where(
+                or_(
+                    sql_cast(WebhookDelivery.id, String).ilike(f"%{query}%"),
+                    sql_cast(WebhookDelivery.webhook_event_id, String).ilike(
+                        f"%{query}%"
+                    ),
+                    sql_cast(WebhookDelivery.http_code, String).ilike(f"%{query}%"),
+                )
+            )
+
+        if http_code_class is not None:
+            if http_code_class == "2xx":
+                statement = statement.where(
+                    WebhookDelivery.http_code >= 200,
+                    WebhookDelivery.http_code < 300,
+                )
+            elif http_code_class == "3xx":
+                statement = statement.where(
+                    WebhookDelivery.http_code >= 300,
+                    WebhookDelivery.http_code < 400,
+                )
+            elif http_code_class == "4xx":
+                statement = statement.where(
+                    WebhookDelivery.http_code >= 400,
+                    WebhookDelivery.http_code < 500,
+                )
+            elif http_code_class == "5xx":
+                statement = statement.where(
+                    WebhookDelivery.http_code >= 500,
+                    WebhookDelivery.http_code < 600,
+                )
+
+        if event_type is not None:
+            statement = statement.join(
+                WebhookEvent, WebhookDelivery.webhook_event_id == WebhookEvent.id
+            ).where(WebhookEvent.type.in_(event_type))
+
+        return await repository.paginate(
+            statement, limit=pagination.limit, page=pagination.page
+        )
+
+    async def redeliver_event(
+        self,
+        session: AsyncSession,
+        auth_subject: AuthSubject[User | Organization],
+        id: UUID,
+    ) -> None:
+        repository = WebhookEventRepository.from_session(session)
+        org_ids = await get_accessible_org_ids(
+            session, auth_subject, permission=OrganizationPermission.organization_manage
+        )
+        statement = repository.get_statement_by_org_ids(org_ids).where(
+            WebhookEvent.id == id
+        )
+        event = await repository.get_one_or_none(statement)
+
+        if event is None:
+            raise ResourceNotFound()
+
+        enqueue_job("webhook_event.send", webhook_event_id=event.id, redeliver=True)
+
+    async def on_event_success(self, session: AsyncSession, id: UUID) -> None:
+        """
+        Helper to hook into the event success event.
+
+        Useful to trigger logic that might wait for an event to be delivered.
+        """
+        repository = WebhookEventRepository.from_session(session)
+        event = await repository.get_by_id(id, options=repository.get_eager_options())
+        if event is None:
+            raise EventDoesNotExist(id)
+
+        if not event.succeeded:
+            raise EventNotSuccessul(id)
+
+        if event.webhook_endpoint.format != WebhookFormat.raw:
+            return
+
+        if event.payload is None:
+            return
+
+        payload = json.loads(event.payload)
+        if "data" not in payload:
+            return
+
+        if event.type == WebhookEventType.checkout_updated:
+            checkout_repository = CheckoutRepository.from_session(session)
+
+            checkout = await checkout_repository.get_by_id(UUID(payload["data"]["id"]))
+            assert checkout is not None
+            await publish_checkout_event(
+                checkout.client_secret,
+                CheckoutEvent.webhook_event_delivered,
+                {"status": checkout.status},
+            )
+
+    async def on_event_failed(self, session: AsyncSession, id: UUID) -> None:
+        """
+        Helper to hook into the event failed event.
+
+        Detects consecutive failures and disables the endpoint if threshold is exceeded.
+        """
+        webhook_event_repository = WebhookEventRepository.from_session(session)
+        event = await webhook_event_repository.get_by_id(
+            id, options=webhook_event_repository.get_eager_options()
+        )
+        if event is None:
+            raise EventDoesNotExist(id)
+
+        if event.succeeded is not False:
+            return
+
+        endpoint = event.webhook_endpoint
+        if not endpoint.enabled:
+            return
+
+        recent_outcomes = (
+            await webhook_event_repository.get_recent_outcomes_by_endpoint(
+                endpoint.id, limit=settings.WEBHOOK_FAILURE_THRESHOLD
+            )
+        )
+
+        if len(recent_outcomes) >= settings.WEBHOOK_FAILURE_THRESHOLD and all(
+            succeeded is False for succeeded in recent_outcomes
+        ):
+            log.warning(
+                "Disabling webhook endpoint due to consecutive failures",
+                webhook_endpoint_id=endpoint.id,
+                failure_count=len(recent_outcomes),
+            )
+            webhook_endpoint_repository = WebhookEndpointRepository.from_session(
+                session
+            )
+            await webhook_endpoint_repository.update(
+                endpoint, update_dict={"enabled": False}, flush=True
+            )
+
+            # Mark all pending events as skipped
+            pending_events = await webhook_event_repository.get_pending_by_endpoint(
+                endpoint.id
+            )
+            for pending_event in pending_events:
+                pending_event.skipped = True
+                session.add(pending_event)
+
+            if pending_events:
+                log.info(
+                    "Marked pending events as skipped",
+                    webhook_endpoint_id=endpoint.id,
+                    count=len(pending_events),
+                )
+
+            # Send email to all organization members
+            organization_id = endpoint.organization_id
+            user_organizations = await user_organization_service.list_by_org(
+                session, organization_id
+            )
+
+            if user_organizations:
+                # User and Organization are eagerly loaded
+                organization = user_organizations[0].organization
+                dashboard_url = f"{settings.FRONTEND_BASE_URL}/dashboard/{organization.slug}/settings/webhooks"
+
+                for user_org in user_organizations:
+                    user = user_org.user
+                    email = EmailAdapter.validate_python(
+                        {
+                            "template": "webhook_endpoint_disabled",
+                            "props": {
+                                "email": user.email,
+                                "organization": organization,
+                                "webhook_endpoint_url": endpoint.url,
+                                "dashboard_url": dashboard_url,
+                            },
+                        }
+                    )
+
+                    enqueue_email_template(
+                        email,
+                        to_email_addr=user.email,
+                        subject=f"Webhook endpoint disabled for {organization.name}",
+                    )
+
+    async def count_earlier_pending_events(
+        self, session: AsyncSession, event: WebhookEvent
+    ) -> int:
+        age_limit = utc_now() - settings.WEBHOOK_FIFO_GUARD_MAX_AGE
+        repository = WebhookEventRepository.from_session(session)
+        return await repository.count_earlier_pending(event, age_limit=age_limit)
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.checkout_created],
+        data: Checkout,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.checkout_updated],
+        data: Checkout,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.checkout_expired],
+        data: Checkout,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.customer_created],
+        data: Customer,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.customer_updated],
+        data: Customer,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.customer_deleted],
+        data: Customer,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.customer_state_changed],
+        data: CustomerState,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.customer_seat_assigned],
+        data: CustomerSeat,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.customer_seat_claimed],
+        data: CustomerSeat,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.customer_seat_revoked],
+        data: CustomerSeat,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.member_created],
+        data: Member,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.member_updated],
+        data: Member,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.member_deleted],
+        data: Member,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.order_created],
+        data: Order,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.order_updated],
+        data: Order,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.order_paid],
+        data: Order,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.order_refunded],
+        data: Order,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.subscription_created],
+        data: Subscription,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.subscription_updated],
+        data: Subscription,
+        *,
+        previous_product_name: str | None = None,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.subscription_active],
+        data: Subscription,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.subscription_canceled],
+        data: Subscription,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.subscription_uncanceled],
+        data: Subscription,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.subscription_cycled],
+        data: Subscription,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.subscription_revoked],
+        data: Subscription,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.subscription_past_due],
+        data: Subscription,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.subscription_paused],
+        data: Subscription,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.subscription_resumed],
+        data: Subscription,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.subscription_migrated],
+        data: Subscription,
+        *,
+        provider: str,
+        provider_subscription_id: str,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.refund_created],
+        data: Refund,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.refund_updated],
+        data: Refund,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.product_created],
+        data: Product,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.product_updated],
+        data: Product,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.discount_created],
+        data: Discount,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.discount_updated],
+        data: Discount,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.discount_deleted],
+        data: Discount,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.organization_updated],
+        data: Organization,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.benefit_created],
+        data: Benefit,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.benefit_updated],
+        data: Benefit,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.benefit_grant_created],
+        data: BenefitGrant,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.benefit_grant_updated],
+        data: BenefitGrant,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.benefit_grant_cycled],
+        data: BenefitGrant,
+    ) -> list[WebhookEvent]: ...
+
+    @overload
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: Literal[WebhookEventType.benefit_grant_revoked],
+        data: BenefitGrant,
+    ) -> list[WebhookEvent]: ...
+
+    async def send(
+        self,
+        session: AsyncSession,
+        target: Organization,
+        event: WebhookEventType,
+        data: object,
+        **payload_fields: object,
+    ) -> list[WebhookEvent]:
+        now = utc_now()
+        payload = WebhookPayloadTypeAdapter.validate_python(
+            {
+                "type": event,
+                "timestamp": now,
+                "data": data,
+                # Set arbitrary version to build a base payload,
+                # each endpoint will make a copy and set their own version.
+                "api_version": CURRENT_API_VERSION,
+                **payload_fields,
+            }
+        )
+
+        # Publish to eventstream for CLI listeners, regardless of webhook endpoints
+        await publish_webhook_event(
+            organization_id=target.id,
+            payload=payload.get_raw_payload(),
+        )
+
+        events: list[WebhookEvent] = []
+        for endpoint in await self._get_event_target_endpoints(
+            session, event=event, target=target
+        ):
+            endpoint_payload = payload.model_copy(
+                update={"api_version": endpoint.api_version}
+            )
+            try:
+                payload_data = endpoint_payload.get_payload(endpoint.format, target)
+                event_type = WebhookEvent(
+                    created_at=endpoint_payload.timestamp,
+                    webhook_endpoint=endpoint,
+                    type=event,
+                    payload=payload_data,
+                    api_version=endpoint_payload.api_version,
+                )
+                session.add(event_type)
+                events.append(event_type)
+                await session.flush()
+                enqueue_job("webhook_event.send", webhook_event_id=event_type.id)
+            except UnsupportedTarget as e:
+                # Log the error but do not raise to not fail the whole request
+                log.error(e.message)
+                continue
+            except SkipEvent:
+                continue
+
+        return events
+
+    async def archive_events(
+        self,
+        session: AsyncSession,
+        older_than: datetime.datetime,
+        batch_size: int = 5000,
+    ) -> None:
+        log.debug(
+            "Archive webhook events", older_than=older_than, batch_size=batch_size
+        )
+
+        while True:
+            batch_subquery = (
+                select(WebhookEvent.id)
+                .where(
+                    WebhookEvent.created_at < older_than,
+                    WebhookEvent.payload.is_not(None),
+                )
+                .order_by(WebhookEvent.created_at.asc())
+                .limit(batch_size)
+            )
+            statement = (
+                update(WebhookEvent)
+                .where(WebhookEvent.id.in_(batch_subquery))
+                .values(payload=None)
+            )
+
+            # https://github.com/sqlalchemy/sqlalchemy/commit/67f62aac5b49b6d048ca39019e5bd123d3c9cfb2
+            result = cast(CursorResult[WebhookEvent], await session.execute(statement))
+            updated_count = result.rowcount
+
+            await session.commit()
+
+            log.debug("Archived webhook events batch", updated_count=updated_count)
+
+            if updated_count < batch_size:
+                break
+
+    async def archive_delivery_payloads(
+        self,
+        session: AsyncSession,
+        older_than: datetime.datetime,
+        batch_size: int = 5000,
+        sleep_seconds: float = 0.1,
+    ) -> int:
+        repository = WebhookDeliveryRepository.from_session(session)
+        cursor: tuple[datetime.datetime, UUID] | None = None
+        total_scrubbed = 0
+
+        while True:
+            page = await repository.get_scrubbable_response_page(
+                older_than=older_than, limit=batch_size, after=cursor
+            )
+            if not page:
+                break
+
+            await repository.scrub_responses([id for id, _ in page])
+            await session.commit()
+
+            total_scrubbed += len(page)
+            last_id, last_created_at = page[-1]
+            cursor = (last_created_at, last_id)
+
+            if sleep_seconds > 0:
+                await asyncio.sleep(sleep_seconds)
+
+        return total_scrubbed
+
+    async def _get_event_target_endpoints(
+        self,
+        session: AsyncSession,
+        *,
+        event: WebhookEventType,
+        target: Organization,
+    ) -> Sequence[WebhookEndpoint]:
+        statement = select(WebhookEndpoint).where(
+            ~WebhookEndpoint.is_deleted,
+            WebhookEndpoint.enabled,
+            WebhookEndpoint.events.bool_op("@>")(text(f"'[\"{event}\"]'")),
+            WebhookEndpoint.organization_id == target.id,
+        )
+        res = await session.execute(statement)
+        return res.scalars().unique().all()
+
+
+webhook = WebhookService()

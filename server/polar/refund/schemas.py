@@ -1,0 +1,68 @@
+import inspect
+from typing import Annotated
+
+from fastapi import Path
+from pydantic import UUID4, Field
+
+from polar.dispute.schemas import DisputeBase
+from polar.kit.currency import format_currency
+from polar.kit.metadata import (
+    MetadataInputMixin,
+    MetadataOutputMixin,
+)
+from polar.kit.schemas import IDSchema, Schema, TimestampedSchema
+from polar.models.refund import (
+    ManualRefundReason,
+    RefundReason,
+    RefundStatus,
+)
+from polar.openapi import cli_confirm_equals
+
+RefundID = Annotated[UUID4, Path(description="The refund ID.")]
+
+
+class RefundDispute(DisputeBase):
+    """
+    Dispute associated with a refund,
+    in case we prevented a dispute by issuing a refund.
+    """
+
+
+class Refund(MetadataOutputMixin, IDSchema, TimestampedSchema):
+    status: RefundStatus
+    reason: RefundReason
+    amount: int
+    tax_amount: int
+    currency: str
+    organization_id: UUID4
+    order_id: UUID4
+    subscription_id: UUID4 | None
+    customer_id: UUID4
+    revoke_benefits: bool
+    dispute: RefundDispute | None
+
+    def get_amount_display(self) -> str:
+        return format_currency(self.amount, self.currency)
+
+
+class RefundCreate(MetadataInputMixin, Schema):
+    order_id: UUID4
+    reason: ManualRefundReason = Field(description="Reason for the refund.")
+    amount: int = Field(description="Amount to refund in cents. Minimum is 1.", gt=0)
+    comment: str | None = Field(
+        None, description="An internal comment about the refund."
+    )
+    revoke_benefits: bool = Field(
+        False,
+        json_schema_extra=cli_confirm_equals(True),
+        description=inspect.cleandoc(
+            """
+            Should this refund trigger the associated customer benefits to be revoked?
+
+            **Note:**
+            Only allowed in case the `order` is a one-time purchase.
+            Subscriptions automatically revoke customer benefits once the
+            subscription itself is revoked, i.e fully canceled.
+            """
+        ),
+    )

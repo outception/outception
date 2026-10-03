@@ -1,0 +1,338 @@
+name: "Emergency Merge 🚨"
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  emergency:
+    if: |
+      github.event.issue.pull_request &&
+      startsWith(github.event.comment.body, '/emergency')
+    runs-on: ubuntu-latest
+    concurrency:
+      group: emergency-merge-${{ github.event.issue.number }}
+      cancel-in-progress: false
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+      - name: Check authorization
+        id: auth
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { data: perm } = await github.rest.repos.getCollaboratorPermissionLevel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              username: context.payload.comment.user.login,
+            });
+            const level = perm.permission;
+            const allowed = ['admin', 'maintain', 'write'];
+            if (!allowed.includes(level)) {
+              core.setFailed(`User ${context.payload.comment.user.login} has '${level}' permission — write access required`);
+              return;
+            }
+            core.info(`User ${context.payload.comment.user.login} authorized (${level})`);
+
+      - name: React to comment
+        uses: actions/github-script@v9
+        with:
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'rocket',
+            });
+
+      - name: Generate App token
+        id: app-token
+        uses: actions/create-github-app-token@v3.2.0
+        with:
+          app-id: ${{ secrets.EMERGENCY_MERGE_APP_ID }}
+          private-key: ${{ secrets.EMERGENCY_MERGE_APP_PRIVATE_KEY }}
+
+      - name: Label as emergency merge
+        # Set a label so we can run post-merge checks against emergency merged PR's
+        continue-on-error: true
+        uses: actions/github-script@v9
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const name = 'emergency-merge';
+            try {
+              await github.rest.issues.getLabel({ owner: context.repo.owner, repo: context.repo.repo, name });
+            } catch (error) {
+              if (error.status !== 404) throw error;
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name,
+                color: 'B60205',
+                description: 'Merged with /emergency, skipping review and checks',
+              });
+            }
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              labels: [name],
+            });
+
+      - name: Merge PR
+        id: merge
+        uses: actions/github-script@v9
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const prNumber = context.payload.issue.number;
+
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+
+            if (pr.state !== 'open') {
+              if (pr.merged) {
+                core.info(`PR #${prNumber} is already merged — nothing to do`);
+                core.setOutput('outcome', 'already_merged');
+                return;
+              }
+              core.setFailed('PR is closed but not merged');
+              return;
+            }
+
+            const comment = context.payload.comment.body.trim();
+            let method = 'squash';
+            if (comment.includes('--merge')) method = 'merge';
+            if (comment.includes('--rebase')) method = 'rebase';
+
+            // Leave a trailer in the merge commit so the emergency merge is
+            // visible in git history, not only on GitHub. Rebase merges keep
+            // the original commits, so they only get the label.
+            const trailer = `Emergency-Merge: /emergency by ${context.payload.comment.user.login}`;
+            let commitMessage;
+            try {
+              if (method === 'squash') {
+                const commits = await github.paginate(github.rest.pulls.listCommits, {
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: prNumber,
+                  per_page: 100,
+                });
+                const messages = commits.map((c) => `* ${c.commit.message.trim()}`).join('\n\n');
+                commitMessage = `${messages}\n\n${trailer}`;
+              } else if (method === 'merge') {
+                commitMessage = `${pr.title}\n\n${trailer}`;
+              }
+            } catch (error) {
+              core.warning(`Could not build the merge commit message, merging without the trailer: ${error.message}`);
+              commitMessage = undefined;
+            }
+
+            const mergeDirectly = () => github.rest.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+              merge_method: method,
+              ...(commitMessage ? { commit_message: commitMessage } : {}),
+            });
+
+            const isInMergeQueue = (error) =>
+              error.status === 405 && /merge queue/i.test(error.message);
+
+            const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+            const mergeAfterDequeue = async (attempt = 1) => {
+              try {
+                await mergeDirectly();
+              } catch (error) {
+                if (!isInMergeQueue(error)) throw error;
+                if (attempt >= 10) {
+                  throw new Error('still in the merge queue after dequeue — try /emergency again');
+                }
+                await sleep(3000);
+                return mergeAfterDequeue(attempt + 1);
+              }
+            };
+
+            try {
+              await mergeDirectly();
+              core.info(`PR #${prNumber} merged via ${method}`);
+              core.setOutput('outcome', 'merged');
+            } catch (error) {
+              if (!isInMergeQueue(error)) {
+                core.setFailed(`Failed to merge: ${error.message}`);
+                return;
+              }
+
+              core.info(`PR #${prNumber} is in the merge queue. Removing it to merge immediately`);
+              await github.graphql(
+                `mutation($id: ID!) {
+                  dequeuePullRequest(input: { id: $id }) {
+                    mergeQueueEntry { id }
+                  }
+                }`,
+                { id: pr.node_id },
+              );
+
+              try {
+                await mergeAfterDequeue();
+                core.info(`PR #${prNumber} dequeued and merged via ${method}`);
+                core.setOutput('outcome', 'merged');
+              } catch (retryError) {
+                core.setFailed(`Failed to merge: ${retryError.message}`);
+              }
+            }
+
+      - name: Eject other PRs from the merge queue
+        id: eject
+        if: steps.merge.outputs.outcome == 'merged'
+        uses: actions/github-script@v9
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const emergencyPr = context.payload.issue.number;
+
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: emergencyPr,
+            });
+            const branch = pr.base.ref;
+
+            const { repository } = await github.graphql(
+              `query($owner: String!, $repo: String!, $branch: String!) {
+                repository(owner: $owner, name: $repo) {
+                  mergeQueue(branch: $branch) {
+                    entries(first: 100) {
+                      nodes {
+                        pullRequest { number, id, title, url, author { login } }
+                      }
+                    }
+                  }
+                }
+              }`,
+              { owner: context.repo.owner, repo: context.repo.repo, branch },
+            );
+
+            const entries = repository.mergeQueue?.entries?.nodes ?? [];
+            const ejected = [];
+
+            for (const entry of entries) {
+              const queued = entry.pullRequest;
+              if (!queued || queued.number === emergencyPr) continue;
+
+              await github.graphql(
+                `mutation($id: ID!) {
+                  dequeuePullRequest(input: { id: $id }) {
+                    mergeQueueEntry { id }
+                  }
+                }`,
+                { id: queued.id },
+              );
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: queued.number,
+                body: `🚨 Removed from the merge queue by an emergency merge of #${emergencyPr}. \`${branch}\` has moved on. Re-queue once your branch is up to date.`,
+              });
+              ejected.push({
+                number: queued.number,
+                title: queued.title,
+                url: queued.url,
+                login: queued.author?.login ?? null,
+              });
+            }
+
+            core.setOutput('ejected', JSON.stringify(ejected));
+            core.info(
+              ejected.length
+                ? `Ejected ${ejected.length} PR(s): ${ejected.map((p) => '#' + p.number).join(', ')}`
+                : 'No other PRs were in the merge queue',
+            );
+
+      - name: Comment result
+        if: always()
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const prNumber = context.payload.issue.number;
+            const outcome = '${{ steps.merge.outputs.outcome }}';
+            if (outcome === 'already_merged') {
+              core.info('PR was already merged by another run — skipping comment');
+              return;
+            }
+            const success = '${{ job.status }}' === 'success';
+            const body = success
+              ? '🚀 Shipped! PR merged successfully.'
+              : '❌ Ship failed. Check the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.';
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body,
+            });
+
+      - name: Notify Slack
+        if: steps.merge.outputs.outcome == 'merged'
+        uses: actions/github-script@v9
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.E2E_SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL: C093CJXJXPT
+          EJECTED: ${{ steps.eject.outputs.ejected }}
+        with:
+          script: |
+            const SLACK_IDS = {
+              birkjernstrom: 'U06QG8MBZ9V',
+              emilwidlund: 'U06QN4F6MU5',
+              frankie567: 'U06QWNPA23V',
+              joebon: 'U0ASK3ZH276',
+              maximevast: 'U0B7LAE2CLU',
+              pieterbeulque: 'U09F35ZP6PM',
+              psincraian: 'U0940A8FY5P',
+              sebastianekstrom: 'U09TG87EE5A',
+              strandhvilliam: 'U0B88EUP3F0',
+              victoriabolin: 'U0A4FJW2JEP',
+              yopi: 'U09LR0C0R61',
+            };
+            const mention = (login) => {
+              if (!login) return '`unknown`';
+              const id = SLACK_IDS[login.toLowerCase()];
+              return id ? `<@${id}>` : `\`@${login}\``;
+            };
+
+            const author = context.payload.comment.user.login;
+            const prUrl = context.payload.issue.pull_request.html_url;
+            const prNumber = context.payload.issue.number;
+            const prTitle = context.payload.issue.title;
+
+            let text = `:rotating_light: *Emergency merge* by *${author}*\n<${prUrl}|#${prNumber}: ${prTitle}>`;
+
+            const ejected = JSON.parse(process.env.EJECTED || '[]');
+            if (ejected.length) {
+              const lines = ejected.map(
+                (p) => `• <${p.url}|#${p.number}: ${p.title}> — ${mention(p.login)}`,
+              );
+              text += `\n\n*Ejected from the merge queue. Please re-queue with your merge:*\n${lines.join('\n')}`;
+            }
+
+            const response = await fetch('https://slack.com/api/chat.postMessage', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+                Authorization: `Bearer ${process.env.SLACK_BOT_TOKEN}`,
+              },
+              body: JSON.stringify({
+                channel: process.env.SLACK_CHANNEL,
+                text: `Emergency merge by ${author}`,
+                blocks: [{ type: 'section', text: { type: 'mrkdwn', text } }],
+              }),
+            });
+
+            const result = await response.json();
+            if (!result.ok) {
+              core.setFailed(`Slack notification failed: ${result.error}`);
+            }

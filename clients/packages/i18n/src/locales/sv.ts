@@ -1,0 +1,321 @@
+export default {
+  checkout: {
+    footer: {
+      poweredBy: 'Drivs av',
+      merchantOfRecord:
+        'Denna beställning behandlas av vår online-återförsäljare & Merchant of Record, Polar, som också hanterar beställningsrelaterade frågor och returer.',
+      mandateSubscriptionTrial:
+        'Genom att klicka på "{buttonLabel}" godkänner du att Polar Software, Inc., vår online-återförsäljare och registrerade säljare, debiterar din valda betalningsmetod med beloppet som visas ovan i slutet av din provperiod och vid varje efterföljande faktureringsdatum tills du avslutar prenumerationen, samt godkänner våra {buyerTermsLink}. Du kan när som helst avsluta prenumerationen innan provperioden löper ut för att undvika att bli debiterad.',
+      mandateSubscription:
+        'Genom att klicka på "{buttonLabel}" godkänner du att Polar Software, Inc., vår online-återförsäljare och registrerade säljare, omedelbart debiterar din valda betalningsmetod med beloppet som visas ovan och debiterar samma belopp vid varje efterföljande faktureringsdatum tills du avslutar prenumerationen, samt godkänner våra {buyerTermsLink}.',
+      buyerTermsLink: 'Köpvillkor',
+      mandateOneTime:
+        'Genom att klicka på "{buttonLabel}" godkänner du att Polar Software, Inc., vår onlineåterförsäljare och registrerade handlare, debiterar din valda betalningsmetod med beloppet som visas ovan, samt accepterar {buyerTermsLink}. Detta är en engångsavgift.',
+      mandateSubscriptionTrialDiscounted:
+        'Genom att klicka på "{buttonLabel}" ger du Polar Software, Inc., vår återförsäljare online och merchant of record, tillstånd att debitera din valda betalningsmetod det rabatterade belopp som visas ovan när din provperiod är slut, och ordinarie pris på varje faktureringsdatum efter att din rabattperiod har upphört, tills du avbryter, och godkänner {buyerTermsLink}. Du kan när som helst avbryta före provperiodens slut för att undvika debitering.',
+      mandateSubscriptionDiscounted:
+        'Genom att klicka på "{buttonLabel}" ger du Polar Software, Inc., vår återförsäljare online och merchant of record, tillstånd att omedelbart debitera din valda betalningsmetod det rabatterade belopp som visas ovan, och ordinarie pris på varje faktureringsdatum efter att din rabattperiod har upphört, tills du avbryter, och godkänner {buyerTermsLink}.',
+    },
+    form: {
+      email: 'Email',
+      cardholderName: 'Kortinnehavare',
+      purchasingAsBusiness: 'Jag köper som företag',
+      businessName: 'Företagsnamn',
+      billingAddress: {
+        label: 'Faktureringsadress',
+        postalCode: 'Postnummer',
+        city: 'Stad',
+        country: 'Land',
+        state: 'Delstat',
+        province: 'Län',
+        stateProvince: 'Delstat / Län',
+        line1: 'Gatuadress',
+        line2: 'Lägenhetsnummer',
+      },
+      taxId: 'Momsregistreringsnummer',
+      discountCode: 'Rabattkod',
+      optional: 'Valfritt',
+      apply: 'Lägg till',
+      fieldRequired: 'Detta fält är obligatoriskt',
+      billingDetails: 'Företagsuppgifter',
+      addDiscountCode: 'Lägg till rabattkod',
+    },
+    pricing: {
+      subtotal: 'Delsumma',
+      taxableAmount: 'Momspliktigt belopp',
+      taxes: 'Moms',
+      free: 'Gratis',
+      payWhatYouWant: 'Betala vad du vill',
+      total: 'Totalt',
+      additionalMeteredUsage: 'Ytterligare mätbaserad användning',
+      dueToday: 'Att betala idag',
+      discount: {
+        until: 'T.o.m. {date}',
+      },
+      everyInterval: {
+        day: {
+          '=1': 'Dagligen',
+          other: 'Var #:e dag',
+          '=2': 'Varannan dag',
+          _mode: 'plural',
+        },
+        week: {
+          '=1': 'Veckovis',
+          other: 'Var #:e vecka',
+          '=2': 'Varannan vecka',
+          _mode: 'plural',
+        },
+        month: {
+          '=1': 'Månadsvis',
+          other: 'Var #:e månad',
+          '=2': 'Varannan månad',
+          _mode: 'plural',
+        },
+        year: {
+          '=1': 'Årsvis',
+          other: 'Var #:e år',
+          '=2': 'Vartannat år',
+          _mode: 'plural',
+        },
+      },
+      perSeat: 'per plats',
+      seats: {
+        label: 'Platser',
+        numberOfSeats: 'Antal platser',
+        count: {
+          '=1': '# plats',
+          other: '# platser',
+          _mode: 'plural',
+        },
+        range: '{min} - {max} platser',
+        minimum: 'Minst {min} platser',
+        maximum: 'Högst {max} platser',
+        updateFailed: 'Det gick inte att uppdatera platserna',
+        included: {
+          '=1': 'En plats ingår',
+          other: '# platser ingår',
+          _mode: 'plural',
+        },
+      },
+      inclTax: 'Moms (ingår)',
+      basePrice: 'Grundavgift',
+      perUnit: 'per {unitLabel}',
+      units: {
+        label: '{unitLabelPlural}',
+        numberOfUnits: 'Antal {unitLabelPlural}',
+        count: {
+          '=1': '# {unitLabel}',
+          other: '# {unitLabelPlural}',
+          _mode: 'plural',
+        },
+        updateFailed: 'Det gick inte att uppdatera antalet',
+      },
+      meteredChargesMayApply: 'Ytterligare rörliga avgifter kan tillkomma',
+      meteredIncluded: '{units} ingår',
+      meterUnits: {
+        token: 'tokens',
+        scalar: 'enheter',
+      },
+      firstPayment: 'Första betalning',
+      totalAfterTrial: 'Totalt efter provperiod',
+      tiers: {
+        from: 'Från',
+        range: '{from}–{to}',
+        andAbove: '{from}+',
+        volumeExplainer:
+          'All användning debiteras med priset för det intervall det hamnar i',
+      },
+    },
+    trial: {
+      hero: {
+        free: {
+          day: {
+            '=1': '# dag gratis',
+            other: '# dagar gratis',
+            _mode: 'plural',
+          },
+          month: {
+            '=1': '# månad gratis',
+            other: '# månader gratis',
+            _mode: 'plural',
+          },
+          year: {
+            '=1': '# år gratis',
+            other: '# år gratis',
+            _mode: 'plural',
+          },
+        },
+        intervalSuffix: {
+          day: '/dag',
+          week: '/vecka',
+          month: '/månad',
+          year: '/år',
+        },
+        then: 'Därefter',
+        startingDate: 'från {date}',
+        freeUntil: 'Gratis till {date}',
+      },
+    },
+    pwywForm: {
+      label: 'Ange pris',
+      minimum: 'Minst {amount}',
+      amountMinimum: 'Beloppet måste vara minst {min}',
+      amountFreeOrMinimum: 'Beloppet måste vara {zero} eller minst {min}',
+    },
+    productSwitcher: {
+      billedRecurring: 'Faktureras {frequency}',
+      oneTimePurchase: 'Engångsköp',
+      fromPrefix: 'Från',
+    },
+    benefits: {
+      granting: 'Tilldelar förmåner...',
+      requestNewInvite: 'Begär ny inbjudan',
+      retryIn: {
+        '=1': 'Försök igen om # sekund',
+        other: 'Försök igen om # sekunder',
+        _mode: 'plural',
+      },
+      connectNewAccount: 'Anslut nytt konto',
+      requestMyInvite: 'Begär min inbjudan',
+      github: {
+        connect: 'Anslut GitHub-konto',
+        goTo: 'Gå till {repository}',
+        selectAccount: 'Välj ett GitHub-konto',
+      },
+      discord: {
+        connect: 'Anslut Discord-konto',
+        open: 'Öppna Discord',
+        selectAccount: 'Välj ett Discord-konto',
+      },
+      licenseKey: {
+        copy: 'Kopiera',
+        copiedToClipboard: 'Kopierat',
+        copiedToClipboardDescription: 'Licensnyckeln är kopierad',
+        loading: 'Laddar...',
+        status: 'Status',
+        statusGranted: 'Tilldelad',
+        statusRevoked: 'Återkallad',
+        statusDisabled: 'Inaktiverad',
+        usage: 'Användning',
+        validations: 'Valideringar',
+        validatedAt: 'Validerad den',
+        neverValidated: 'Aldrig validerad',
+        expiryDate: 'Utgångsdatum',
+        noExpiry: 'Inget utgångsdatum',
+        activations: 'Aktiveringar',
+        activationDeleted: 'Licensnyckelaktivering borttagen',
+        activationDeletedDescription: 'Aktivering borttagen',
+        activationDeactivationFailed: 'Avaktivering misslyckades',
+      },
+      slackSharedChannel: {
+        connected: 'Ansluten till din Slack-arbetsyta.',
+        connectedChannel:
+          'Ansluten till din Slack-arbetsyta i kanalen {channel}.',
+        inviteSent: 'Inbjudan skickad till {email}.',
+        channel: 'Kanal: {channel}.',
+        openLinkToAccept: 'Öppna länken för att acceptera i Slack.',
+        acceptFromEmail:
+          'Acceptera den från inbjudningsmejlet eller dina Slack Connect-förfrågningar.',
+        openInvite: 'Öppna Slack-inbjudan',
+        provisioning:
+          'Konfigurerar din Slack-kanal för {email}... Du bör få en inbjudan i inkorgen inom kort.',
+        setupFailed:
+          'Vi kunde inte konfigurera din Slack-kanal med {email}. Kontrollera mejladressen och försök igen, eller kontakta säljaren om det fortsätter att misslyckas.',
+        enterEmail:
+          'Ange e-postadressen till en administratör i din Slack-arbetsyta. Personen får en Slack Connect-inbjudan till en privat kanal.',
+        emailPlaceholder: 'slack-admin@yourcompany.com',
+        tryAgain: 'Försök igen',
+        requestInvite: 'Begär Slack-inbjudan',
+      },
+    },
+    confirmation: {
+      confirmPayment: 'Bekräfta betalning',
+      processingTitle: 'Vi behandlar din beställning',
+      failedTitle: 'Ett problem uppstod vid behandlingen av din beställning',
+      processingDescription: 'Vänta medan vi bekräftar din betalning.',
+      failedDescription: 'Försök igen eller kontakta supporten.',
+      successTitle: 'Tack för din order!',
+      successDescription: 'Du har nu tillgång till {product}.',
+    },
+    loading: {
+      processingOrder: 'Behandlar beställning...',
+      processingPayment: 'Behandlar betalning',
+      paymentSuccessful: 'Betalning lyckades! Förbereder dina produkter...',
+      confirmationTokenFailed:
+        'Kunde inte skapa bekräftelsetoken, försök igen senare.',
+      paymentNotCompleted: 'Betalningen genomfördes inte. Försök igen.',
+    },
+    cta: {
+      startTrial: 'Starta testperiod',
+      subscribeNow: 'Prenumerera nu',
+      payNow: 'Betala nu',
+      getFree: 'Skaffa gratis',
+      paymentsUnavailable: 'Betalningar är för närvarande otillgängliga',
+    },
+    productDescription: {
+      readMore: 'Läs mer',
+    },
+    trialUnavailable: {
+      title: 'Ingen gratis provperiod för det här köpet',
+      description:
+        'Du har redan använt en gratis provperiod för den här produkten, så du debiteras idag. Fortsätt nedan för att slutföra köpet.',
+    },
+    orderSummary: 'Ordersammanfattning',
+  },
+  intervals: {
+    short: {
+      day: {
+        '=1': 'd',
+        other: '# d',
+        _mode: 'plural',
+      },
+      week: {
+        '=1': 'v',
+        other: '# v',
+        _mode: 'plural',
+      },
+      month: {
+        '=1': 'mån',
+        other: '# mån',
+        _mode: 'plural',
+      },
+      year: {
+        '=1': 'år',
+        other: '# år',
+        _mode: 'plural',
+      },
+    },
+  },
+  benefitTypes: {
+    custom: 'Anpassad',
+    license_keys: 'Licensnycklar',
+    github_repository: 'Åtkomst till GitHub-repository',
+    discord: 'Discord-inbjudan',
+    downloadables: 'Filnedladdningar',
+    meter_credit: 'Mätarkrediter',
+    feature_flag: 'Feature flag',
+    slack_shared_channel: 'Delad Slack-kanal',
+  },
+  ordinal: {
+    zero: ':e',
+    one: ':a',
+    two: ':a',
+    few: ':e',
+    many: ':e',
+    other: ':e',
+  },
+  embedPaymentMethod: {
+    title: 'Lägg till betalningsmetod',
+    close: 'Stäng',
+    submit: 'Lägg till betalningsmetod',
+    processing: 'Lägger till betalningsmetod…',
+    fallbackError: 'Något gick fel. Försök igen.',
+    errors: {
+      invalidRequest: 'Saknar obligatoriska parametrar.',
+      unauthorized: 'Sessionen har gått ut.',
+      processingFailed:
+        'Det gick inte att behandla betalningsmetoden. Försök igen.',
+      unknown: 'Något gick fel.',
+    },
+  },
+} as const
