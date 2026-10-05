@@ -21,14 +21,17 @@ from .urlkey import url_key
 log = structlog.get_logger()
 
 URL_KEY = "news:cluster:url:{sha}"
-LSH_KEY = "news:cluster:lsh:{band}:{sig}"
-SIG_KEY = "news:cluster:sig:{cluster_id}"
+LSH_KEY = f"news:cluster:lsh{minhash.SCHEME}:{{band}}:{{sig}}"
+SIG_KEY = f"news:cluster:sig{minhash.SCHEME}:{{cluster_id}}"
 COUNT_KEY = "news:cluster:pc:{cluster_id}"
 PENDING_KEY = "news:cluster:pending"
 BORDERLINE_KEY = "news:cluster:borderline"
 LOOKUP_TTL_SECONDS = 7 * 24 * 3600
-JOIN_THRESHOLD = 0.8
-BORDERLINE_THRESHOLD = 0.6
+# Measured on cached cards (see minhash.py): rewrites of one story sit at
+# 0.6 and above, different stories on one topic at 0.35 and below. The band
+# between goes to the resolver.
+JOIN_THRESHOLD = 0.6
+BORDERLINE_THRESHOLD = 0.4
 # Items older than this are history, not news to cluster.
 MAX_ITEM_AGE = timedelta(days=7)
 MAX_CANDIDATES = 20

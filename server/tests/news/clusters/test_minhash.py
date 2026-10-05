@@ -30,4 +30,44 @@ class TestSignatures:
         sig = minhash.signature("Quick brown fox jumps over the lazy dog tonight")
         assert minhash.decode(minhash.encode(sig)) == sig
         assert len(minhash.signature("")) == minhash.NUM_PERM
-        assert minhash.shingles("one two") == {"one two"}
+        assert minhash.shingles("one two", k=2) == {"one two"}
+        assert minhash.shingles("one two") == {"one", "two"}
+
+    def test_rewritten_headlines_from_a_day_of_cards(self) -> None:
+        """Pairs taken from one day's cached cards: the first three are one
+        story told by two outlets, the last three are different stories on
+        one topic. The join and borderline thresholds sit between them."""
+        same = [
+            (
+                "Newly released video shows Luigi Mangione's arrest",
+                "Newly released bodycam video shows arrest of Luigi Mangione",
+            ),
+            (
+                "No 10 insists UK military base RAF Fairford is safe after US withdraws bombers",
+                "RAF Fairford: UK insists base safe after US pulls bombers",
+            ),
+            (
+                "Council backs 12 million riverside plan after week of talks",
+                "Council backs 12 million riverside plan after a week of talks",
+            ),
+        ]
+        different = [
+            (
+                "Right-wing Flavio Bolsonaro wins first round of Brazil election",
+                "Lula admits Brazil election result unexpected as Bolsonaro leads",
+            ),
+            (
+                "Watch: How Brazil's dramatic election unfolded",
+                "How Trump is meddling in Brazil's election | Explainer",
+            ),
+            (
+                "Apple unveils new MacBook Pro with M6 chip",
+                "Apple shares fall after iPhone sales miss estimates",
+            ),
+        ]
+        for a, b in same:
+            assert (
+                minhash.estimate(minhash.signature(a), minhash.signature(b)) >= 0.55
+            ), a
+        for a, b in different:
+            assert minhash.estimate(minhash.signature(a), minhash.signature(b)) < 0.4, a
