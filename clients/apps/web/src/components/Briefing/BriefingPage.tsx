@@ -1,6 +1,6 @@
 'use client'
 
-import { profileName } from '@/components/News/BriefingCard'
+import { categoryName, profileName } from '@/components/News/BriefingCard'
 import { CoverageLine, ScoreMark } from '@/components/News/BriefingCard'
 import {
   getMutedWords,
@@ -59,7 +59,7 @@ export const BriefingPage = ({ profile }: { profile: string }) => {
   const lines = useMemo(
     () =>
       groups.flatMap((group) => [
-        group.category,
+        categoryName(group.category),
         ...group.items.map((item) => item.title),
       ]),
     [groups],
@@ -160,7 +160,7 @@ export const BriefingPage = ({ profile }: { profile: string }) => {
           rowGap="s"
         >
           <Text variant="heading-xxs" as="h2" serif>
-            {group.category}
+            {categoryName(group.category)}
           </Text>
           <Box as="ol" flexDirection="column" rowGap="m">
             {group.items.map((item) => (

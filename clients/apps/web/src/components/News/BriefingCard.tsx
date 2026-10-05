@@ -48,6 +48,18 @@ export const profileName = (profile: string, template?: string): string => {
   return names[template ?? profile] ?? names[profile] ?? profile
 }
 
+/** A section's display name: the string for its category id, else the id
+ * made readable. */
+export const categoryName = (id: string): string => {
+  const names = getTranslations().news.briefing.sections as Record<
+    string,
+    string
+  >
+  return (
+    names[id] ?? id.charAt(0).toUpperCase() + id.slice(1).replace(/-/g, ' ')
+  )
+}
+
 export const ScoreMark = ({ score }: { score: number | null | undefined }) => {
   const t = useT()
   const tier = scoreTier(score)
@@ -181,7 +193,9 @@ export const BriefingCard = ({ card, active = true, why }: CardProps) => {
                     flexDirection="column"
                     rowGap="xs"
                   >
-                    <span className="meta-kicker">{group.category}</span>
+                    <span className="meta-kicker">
+                      {categoryName(group.category)}
+                    </span>
                     <Box as="ol" flexDirection="column" rowGap="xs">
                       {group.items.map((item) => (
                         <Box as="li" key={item.clusterId}>

@@ -32,6 +32,18 @@ import { ActivityIndicator, ScrollView } from 'react-native'
 
 const DEFAULT_PROFILE = 'news-junkie'
 
+/** A section's display name: the string for its category id, else the id
+ * made readable. */
+const categoryName = (id: string): string => {
+  const names = getTranslations().news.briefing.sections as Record<
+    string,
+    string
+  >
+  return (
+    names[id] ?? id.charAt(0).toUpperCase() + id.slice(1).replace(/-/g, ' ')
+  )
+}
+
 /** The profile's display name: the Starter it was built from. */
 const profileName = (profile: string, template?: string): string => {
   const names = getTranslations().news.templates.names as Record<string, string>
@@ -105,7 +117,7 @@ export const BriefingScreen = ({
   const lines = useMemo(
     () =>
       groups.flatMap((group) => [
-        group.category,
+        categoryName(group.category),
         ...group.items.map((item) => item.title),
       ]),
     [groups],
@@ -220,7 +232,7 @@ export const BriefingScreen = ({
         {groups.map((group) => (
           <Box key={group.category} gap="spacing-8">
             <Text variant="caption" color="subtext">
-              {group.category.toUpperCase()}
+              {categoryName(group.category).toUpperCase()}
             </Text>
             {group.items.map((item) => {
               const { lead, others } = coverage(item)
