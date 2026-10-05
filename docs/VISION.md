@@ -1,5 +1,5 @@
-<!-- doc-covers: server/outception/news/data/house_launch.json clients/packages/i18n/src/locales/en.ts docs/naming/denylist.txt -->
-<!-- doc-verified: 2579d8a -->
+<!-- doc-covers: server/outception/news/data/house_launch.json docs/naming/denylist.txt clients/apps/web/src/components/Landing/LandingLayout.tsx -->
+<!-- doc-verified: 06ea109 -->
 
 # What Outception is
 

@@ -200,6 +200,35 @@ services:
     expose:
       - "3000"
 
+  # The house decision model, off by default: `--profile engine` starts it,
+  # and OUTCEPTION_ENGINE_URL=http://engine:8080 in .env.prod points the
+  # chains at it. The image and the checkpoint it loads come from the
+  # runbook in docs/ENGINE.md; nothing here downloads a model. The health
+  # codes engine_unreachable and engine_model_missing say when it is not
+  # answering.
+  engine:
+    profiles: [engine]
+    pids_limit: 512
+    security_opt: [no-new-privileges:true]
+    networks: [internal]
+    <<: *logging
+    image: ${ENGINE_IMAGE:-ghcr.io/outception/engine:latest}
+    restart: unless-stopped
+    mem_limit: ${ENGINE_MEMORY:-4g}
+    environment:
+      - ENGINE_API_KEY=${OUTCEPTION_ENGINE_API_KEY:-}
+      - ENGINE_CHECKPOINT=/models/current
+    volumes:
+      - engine_models:/models:ro
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
   caddy:
     pids_limit: 256
     security_opt: [no-new-privileges:true]
@@ -230,6 +259,8 @@ volumes:
   postgres_data:
   redis_data:
   media_data:
+  # Checkpoints for the engine profile; filled by the runbook, never by CI.
+  engine_models:
   caddy_data:
   caddy_config:
 

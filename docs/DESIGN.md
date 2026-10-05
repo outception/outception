@@ -1,5 +1,5 @@
-<!-- doc-covers: clients/packages/news-core/src server/outception/cards server/outception/net/state.py -->
-<!-- doc-verified: 2579d8a -->
+<!-- doc-covers: clients/packages/news-core/src/deck.ts clients/packages/news-core/src/card.ts clients/packages/news-core/src/shareTokens.ts server/outception/cards/deck.py server/outception/net/state.py -->
+<!-- doc-verified: 06ea109 -->
 
 # How the product is shaped
 

@@ -3,11 +3,12 @@
 //   <!-- doc-covers: path other/path -->
 //   <!-- doc-verified: <commit> -->
 //
-// A doc is fresh while nothing under its covered paths changed since the
-// commit it was verified at. --check fails on a stale doc; without it the
-// stale docs are listed. Re-verify by reading the doc against the code and
-// moving the marker to the current commit. Runs under Node 24 with native
-// type stripping:
+// A doc is fresh while nothing under its covered paths changed since it
+// was last verified: the marker's commit, or the doc's own last commit when
+// that is later (a doc edited beside the code it covers was read against
+// it). --check fails on a stale doc; without it the stale docs are listed.
+// Re-verify by reading the doc against the code and moving the marker.
+// Runs under Node 24 with native type stripping:
 //
 //   node scripts/check-doc-freshness.mts [--check]
 
@@ -20,6 +21,15 @@ const check = process.argv.includes('--check')
 
 const git = (...args: string[]): string =>
   execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim()
+
+const isAncestor = (older: string, newer: string): boolean => {
+  try {
+    git('merge-base', '--is-ancestor', older, newer)
+    return true
+  } catch {
+    return false
+  }
+}
 
 const docs = (dir: string, out: string[] = []): string[] => {
   for (const name of readdirSync(dir)) {
@@ -55,7 +65,10 @@ for (const spec of specs) {
   let changed: string[]
   try {
     git('cat-file', '-e', `${spec.verified}^{commit}`)
-    changed = git('diff', '--name-only', spec.verified, 'HEAD', '--', ...spec.covers)
+    // The later of the marker and the doc's own last commit.
+    const docCommit = git('log', '-1', '--format=%H', '--', spec.file)
+    const since = docCommit && isAncestor(spec.verified, docCommit) ? docCommit : spec.verified
+    changed = git('diff', '--name-only', since, 'HEAD', '--', ...spec.covers)
       .split('\n')
       .filter(Boolean)
   } catch {

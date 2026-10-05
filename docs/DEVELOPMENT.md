@@ -1,5 +1,5 @@
-<!-- doc-covers: dev/cli server/pyproject.toml clients/package.json -->
-<!-- doc-verified: 2579d8a -->
+<!-- doc-covers: dev/cli dev/setup-environment server/pyproject.toml -->
+<!-- doc-verified: 06ea109 -->
 
 # Development
 

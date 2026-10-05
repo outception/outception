@@ -70,6 +70,9 @@ jobs:
       - name: Evals gate (the scrubber)
         working-directory: ./server
         run: uv run python -m evals.run --suite scrub
+      - name: Public API reference
+        working-directory: ./server
+        run: uv run python -m scripts.api_docs --check
 
   migrations:
     name: "Server: Migrations"

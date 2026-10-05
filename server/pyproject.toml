@@ -90,7 +90,8 @@ test_fast = { cmd = "OUTCEPTION_ENV=testing python -m pytest -n auto -p no:sugar
 lint = { cmd = "ruff format . && ruff check --fix . && task lint_ast", help = "run linters with autofix" }
 lint_check = { cmd = "ruff format --check . && ruff check . && task lint_ast", help = "run ruff linter" }
 lint_ast = { cmd = "python -m scripts.linters", help = "run all custom AST lint rules" }
-lint_names = { cmd = "python -m scripts.linters.names", help = "report third-party names outside the allowlisted paths" }
+lint_names = { cmd = "python -m scripts.linters.names --strict", help = "fail on a third party named outside the allowlisted paths" }
+api_docs = { cmd = "python -m scripts.api_docs", help = "regenerate the public API schema and reference under docs/" }
 lint_subquery = { cmd = "python -m scripts.linters --only subquery", help = "flag .subquery() calls that don't narrow columns" }
 lint_types = { cmd = "mypy --num-workers 2 outception scripts tests", help = "run mypy type verify" }
 db_migrate = { cmd = "python -m scripts.db upgrade", help = "run alembic upgrade" }
