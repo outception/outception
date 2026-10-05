@@ -34,17 +34,17 @@ export const palette = stylex.defineVars({
   gray950: 'oklch(0.13 0.028 261.692)',
 
   // Dark-mode neutrals (the dark ramp).
-  polar50: 'hsl(0, 0%, 85%)',
-  polar100: 'hsl(0, 0%, 79%)',
-  polar200: 'hsl(0, 0%, 68%)',
-  polar300: 'hsl(0, 0%, 62%)',
-  polar400: 'hsl(0, 0%, 52%)',
-  polar500: 'hsl(0, 0%, 46%)',
-  polar600: 'hsl(0, 0%, 16%)',
-  polar700: 'hsl(0, 0%, 13%)',
-  polar800: 'hsl(0, 0%, 9.5%)',
-  polar900: 'hsl(0, 0%, 6.5%)',
-  polar950: 'hsl(0, 0%, 3.5%)',
+  ink50: 'hsl(0, 0%, 85%)',
+  ink100: 'hsl(0, 0%, 79%)',
+  ink200: 'hsl(0, 0%, 68%)',
+  ink300: 'hsl(0, 0%, 62%)',
+  ink400: 'hsl(0, 0%, 52%)',
+  ink500: 'hsl(0, 0%, 46%)',
+  ink600: 'hsl(0, 0%, 16%)',
+  ink700: 'hsl(0, 0%, 13%)',
+  ink800: 'hsl(0, 0%, 9.5%)',
+  ink900: 'hsl(0, 0%, 6.5%)',
+  ink950: 'hsl(0, 0%, 3.5%)',
 
   // Emerald — success.
   emerald50: 'oklch(0.979 0.021 166.113)',

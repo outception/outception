@@ -23,9 +23,9 @@ import {
 // ──────────────────────────────────────────────────────────────────────────────
 
 export const backgroundColors = stylex.defineVars({
-  'background-primary': `light-dark(${palette.white}, ${palette.polar950})`,
-  'background-secondary': `light-dark(${palette.gray50}, ${palette.polar900})`,
-  'background-card': `light-dark(${palette.gray100}, ${palette.polar800})`,
+  'background-primary': `light-dark(${palette.white}, ${palette.ink950})`,
+  'background-secondary': `light-dark(${palette.gray50}, ${palette.ink900})`,
+  'background-card': `light-dark(${palette.gray100}, ${palette.ink800})`,
   'background-inverse': `light-dark(${palette.gray900}, ${palette.white})`,
   'background-accent': `light-dark(${palette.indigo50}, ${palette.indigo950})`,
   'background-warning': `light-dark(${palette.amber50}, ${palette.amber950})`,
@@ -35,9 +35,9 @@ export const backgroundColors = stylex.defineVars({
 
 export const textColors = stylex.defineVars({
   'text-primary': `light-dark(${palette.black}, ${palette.white})`,
-  'text-secondary': `light-dark(${palette.gray500}, ${palette.polar400})`,
-  'text-tertiary': `light-dark(${palette.gray400}, ${palette.polar500})`,
-  'text-disabled': `light-dark(${palette.gray300}, ${palette.polar600})`,
+  'text-secondary': `light-dark(${palette.gray500}, ${palette.ink400})`,
+  'text-tertiary': `light-dark(${palette.gray400}, ${palette.ink500})`,
+  'text-disabled': `light-dark(${palette.gray300}, ${palette.ink600})`,
   'text-success': `light-dark(${palette.emerald500}, ${palette.emerald500})`,
   'text-danger': `light-dark(${palette.red500}, ${palette.red500})`,
   'text-warning': `light-dark(${palette.amber500}, ${palette.amber500})`,
@@ -45,8 +45,8 @@ export const textColors = stylex.defineVars({
 } as const)
 
 export const borderColors = stylex.defineVars({
-  'border-primary': `light-dark(${palette.gray200}, ${palette.polar700})`,
-  'border-secondary': `light-dark(${palette.gray100}, ${palette.polar800})`,
+  'border-primary': `light-dark(${palette.gray200}, ${palette.ink700})`,
+  'border-secondary': `light-dark(${palette.gray100}, ${palette.ink800})`,
   'border-warning': `light-dark(${palette.amber300}, ${palette.amber700})`,
 } as const)
 
