@@ -23,7 +23,7 @@ The settings that break the product when wrong:
 | --- | --- |
 | `OUTCEPTION_ENV=production` | Turns the production guards on; the app refuses to boot while `OUTCEPTION_SECRET` is the development default. |
 | `OUTCEPTION_SECRET` | Keys every token hash. Strong, unique, never rotated casually. |
-| `OUTCEPTION_LOCAL_JWKS`, `OUTCEPTION_LOCAL_JWK_KID` | The signing keypair, a file mounted read-only from `deploy/secrets/jwks.json`, and the key id it was generated with. The app refuses to boot on the public development key set. It carries over unchanged at the swap. |
+| `OUTCEPTION_LOCAL_JWKS`, `OUTCEPTION_LOCAL_JWK_KID` | The signing keypair, a file mounted read-only from `deploy/secrets/jwks.json`, and the key id it was generated with. The deploy mints one with that key id when the file is missing; the app refuses to boot on the public development key set. It carries over unchanged at the swap. |
 | `OUTCEPTION_POSTGRES_*`, `OUTCEPTION_REDIS_*` | The database and the broker, on the internal network. |
 | `OUTCEPTION_BASE_URL`, `OUTCEPTION_FRONTEND_BASE_URL` | The public API and web URLs, used in links and redirects. |
 | `OUTCEPTION_ALLOWED_HOSTS`, `OUTCEPTION_CORS_ORIGINS` | The API and web hosts; the web origin that may send credentials. |

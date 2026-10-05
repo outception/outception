@@ -261,8 +261,8 @@ jobs:
             # the path is not a readable key carrying the kid the app resolves
             # at startup. Runs as root in a container; the key stays readable
             # only to the unprivileged uid the app runs as.
-            kid="$(sed -n 's/^OUTCEPTION_CURRENT_JWK_KID=//p' .env.prod | tail -1 | tr -d "\"'")"
-            : "${kid:=outception_dev}"
+            kid="$(sed -n 's/^OUTCEPTION_LOCAL_JWK_KID=//p' .env.prod | tail -1 | tr -d "\"'")"
+            : "${kid:=outception_prod}"
             case "$kid" in *[!A-Za-z0-9_-]*)
               echo "::error::Refusing to mint a JWKS for kid $kid"; exit 1;;
             esac
