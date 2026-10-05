@@ -35,6 +35,12 @@ The settings that break the product when wrong:
 | `OUTCEPTION_WEB_PUSH_VAPID_PUBLIC_KEY`, `OUTCEPTION_WEB_PUSH_VAPID_PRIVATE_KEY`, `OUTCEPTION_WEB_PUSH_SUBJECT` | The morning briefing push on the web. Generate the pair once with `vapid --gen` from the server env and keep it; the subject is a `mailto:` address. Unset, the notify switch is hidden. |
 | `LLM_*`, `DECISION_CHAIN_*`, `ENGINE_URL` | The governor's lanes, caps and chains; every key stays in the provider modules and the env, nowhere else. |
 
+Every typed setting in the examples carries its default, so a `.env.prod`
+copied from `deploy/.env.prod.example` and filled with the secrets alone
+boots; a `KEY=` line means the default, never an empty string.
+`python -m scripts.env_examples --check` keeps the examples that way and
+`tests/test_env_examples.py` loads each one into the settings.
+
 Migrations run in the one-shot `migrate` service before the API and the
 worker start.
 

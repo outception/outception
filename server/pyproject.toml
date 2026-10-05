@@ -99,6 +99,7 @@ db_migrate = { cmd = "python -m scripts.db upgrade", help = "run alembic upgrade
 db_recreate = { cmd = "python -m scripts.db recreate", help = "drop and recreate database" }
 db_reparent = { cmd = "python -m scripts.db reparent", help = "try to auto-fix conflicting migrations" }
 check_migrations = { cmd = "python -m scripts.check_migrations", help = "check new migrations have a single head and a later filename" }
+env_examples = { cmd = "python -m scripts.env_examples --check", help = "check the production env examples carry every typed default" }
 generate_dev_jwks = { cmd = "python -m outception.kit.jwk outception_dev > ./.jwks.json", help = "generate a development JWKS file" }
 generate_openapi = { cmd = "python -m scripts.generate_openapi", help = "print the OpenAPI document" }
 clean = { cmd = "find * -name '*.pyc' -delete && find * -name '__pycache__' -delete", help = "clean up .pyc and __pycache__" }

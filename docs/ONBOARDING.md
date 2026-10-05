@@ -1,5 +1,5 @@
 <!-- doc-covers: docs/DEVELOPMENT.md AGENTS.md -->
-<!-- doc-verified: 06ea109 -->
+<!-- doc-verified: b7a5131 -->
 
 # First day
 

@@ -452,6 +452,10 @@ class Settings(BaseSettings):
     API_MAX_REQUEST_BODY_SIZE: int = 10 * 1024 * 1024
 
     model_config = SettingsConfigDict(
+        # A `KEY=` line in an env file means "the default", never an empty
+        # string: a production env copied from the example and filled with
+        # the secrets alone must still boot.
+        env_ignore_empty=True,
         env_prefix="outception_",
         env_file_encoding="utf-8",
         case_sensitive=False,

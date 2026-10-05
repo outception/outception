@@ -93,9 +93,14 @@ __pypackages__/
 # SageMath parsed files
 *.sage.py
 
-# Environments
+# Environments: the files with values stay out; the examples and the
+# testing env are the contract and travel with the tree.
 .env
 .env.*
+!.env.example
+!.env.prod.example
+!.env.testing
+!.env.test
 .venv
 env/
 venv/
