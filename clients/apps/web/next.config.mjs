@@ -1,6 +1,6 @@
 /* global process */
 import path from 'node:path'
-import { withSentryConfig } from '@sentry/nextjs'
+import { withSentryConfig } from '@sentry/nextjs/config'
 
 // Mirrors src/utils/features.ts (next.config cannot import from src/); a
 // test keeps the two equal. With accounts off this must be false, or a
@@ -16,13 +16,19 @@ const defaultFrontendHostname = process.env.NEXT_PUBLIC_FRONTEND_BASE_URL
   ? new URL(process.env.NEXT_PUBLIC_FRONTEND_BASE_URL).hostname
   : 'outception.com'
 
+// Image hosts, by where the wall gets them: the API for product logos and
+// media; account avatars (social login, gravatar); the catalog's publisher
+// logos (a script CDN, the wiki uploads and commons, the favicon service,
+// the flag CDN); and the hosts the table providers pass through from their
+// upstreams (coin logos, finance logos, sports crests). A browser walk over
+// the deck and the pages records no violation against this list.
 const baseCSP = `
     default-src 'self';
     connect-src 'self' ${process.env.NEXT_PUBLIC_API_URL};
     frame-src 'self';
     script-src 'self' ${ENVIRONMENT === 'development' ? "'unsafe-eval'" : ''} 'unsafe-inline';
     style-src 'self' 'unsafe-inline';
-    img-src 'self' blob: data: ${process.env.NEXT_PUBLIC_API_URL} https://www.gravatar.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://upload.wikimedia.org https://commons.wikimedia.org https://cdn.jsdelivr.net https://flagcdn.com https://icons.duckduckgo.com https://*.gstatic.com https://static.finnhub.io https://static2.finnhub.io https://coin-images.coingecko.com https://assets.coingecko.com https://crests.football-data.org https://a.espncdn.com https://cdn.cloudflare.steamstatic.com;
+    img-src 'self' blob: data: ${process.env.NEXT_PUBLIC_API_URL} https://www.gravatar.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://upload.wikimedia.org https://commons.wikimedia.org https://cdn.jsdelivr.net https://flagcdn.com https://*.gstatic.com https://static.finnhub.io https://static2.finnhub.io https://coin-images.coingecko.com https://assets.coingecko.com https://crests.football-data.org https://a.espncdn.com;
     font-src 'self';
     object-src 'none';
     base-uri 'self';
@@ -282,12 +288,6 @@ const createConfig = async () => {
 
     // Automatically tree-shake Sentry logger statements to reduce bundle size
     disableLogger: true,
-
-    // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
-    // See the following for more information:
-    // https://docs.sentry.io/product/crons/
-    // https://vercel.com/docs/cron-jobs
-    automaticVercelMonitors: true,
   })
 
   return conf
