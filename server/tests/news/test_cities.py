@@ -39,7 +39,11 @@ class TestResolveEndpoint:
         fetch = mocker.patch("outception.news.cities.fetch_json", AsyncMock())
         body = (await client.get("/v1/news/cities", params={"q": "Dublin"})).json()
         assert body["cardId"] == "city-ireland-dublin"
-        assert body["place"] is None
+        # The place comes from the catalog: a name and the coordinates the
+        # nearest-card lookup keeps, so the weather tool needs no geocoder.
+        assert body["place"]["name"]
+        assert 50 < body["place"]["latitude"] < 56
+        assert -8 < body["place"]["longitude"] < -5
         fetch.assert_not_called()
 
     async def test_geocodes_and_lands_on_the_nearest_card(

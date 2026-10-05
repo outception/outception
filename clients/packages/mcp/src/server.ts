@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { ApiError, createApi, type ApiOptions } from './api'
 import { defaultSkillsDir } from './skills'
-import { TOOLS, type Tool } from './tools'
+import { TOOLS, parseArguments, strictSchema, type Tool } from './tools'
 
 export interface ServerOptions extends ApiOptions {
   skillsDir?: string
@@ -21,12 +21,15 @@ export const createServer = (options: ServerOptions): McpServer => {
       tool.name,
       {
         description: tool.description,
-        inputSchema: tool.schema as never,
+        // The strict schema goes to the protocol layer too: it validates
+        // before the handler runs and would otherwise strip what it does
+        // not know.
+        inputSchema: strictSchema(tool) as never,
         annotations: { readOnlyHint: true, openWorldHint: true },
       },
       (async (input: unknown) => {
         try {
-          const result = await tool.run(api, tool.schema.parse(input), env)
+          const result = await tool.run(api, parseArguments(tool, input), env)
           return { content: [{ type: 'text', text: result.text }] }
         } catch (error) {
           const message =

@@ -106,6 +106,11 @@ describe('tools', () => {
       { id: 'bbc-world', name: 'BBC', type: 'hottest' },
     ],
     '/v1/news/weather': { location: 'Dublin', current: {}, daily: [] },
+    '/v1/news/cities': {
+      query: 'Dublin',
+      place: { name: 'Dublin', latitude: 53.35, longitude: -6.26 },
+      cardId: 'city-ireland-dublin',
+    },
   }
   const { fetch, calls } = fakeFetch(routes)
   const api = createApi({ baseUrl: 'http://127.0.0.1:8000', fetch })
@@ -194,5 +199,21 @@ describe('tools', () => {
     )
     expect(one.text).toContain('# Body')
     expect(loadSkills('/nonexistent')).toEqual([])
+  })
+
+  it('resolves a city through the catalog and refuses unknown arguments', async () => {
+    const { parseArguments } = await import('./tools')
+    const weather = toolByName('get_weather')!
+    const out = await weather.run(api, { city: 'Dublin' }, env)
+    expect(
+      (JSON.parse(out.text.split('\n')[1]!) as { location: string }).location,
+    ).toBe('Dublin')
+    const weatherCall = calls.find((c) => c.includes('/v1/news/weather'))
+    expect(weatherCall).toContain('latitude=53.35')
+    expect(weatherCall).toContain('longitude=-6.26')
+    expect(() => parseArguments(weather, { town: 'Dublin' })).toThrow()
+    expect(parseArguments(weather, { city: ' Dublin ' })).toEqual({
+      city: 'Dublin',
+    })
   })
 })

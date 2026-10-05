@@ -35,6 +35,20 @@ export interface ToolEnv {
   skillsDir: string
 }
 
+/** The arguments a call may carry: exactly what the tool declares. An
+ * argument no tool knows is refused, never dropped, so a `city` handed to
+ * a tool that takes a country cannot answer for the default place as if
+ * it had understood. */
+export const strictSchema = <Input>(tool: Tool<Input>): z.ZodType<Input> =>
+  (tool.schema instanceof z.ZodObject
+    ? tool.schema.strict()
+    : tool.schema) as z.ZodType<Input>
+
+export const parseArguments = <Input>(
+  tool: Tool<Input>,
+  input: unknown,
+): Input => strictSchema(tool).parse(input)
+
 const json = (value: unknown): ToolResult => ({
   text: `${UNTRUSTED_NOTE}\n${JSON.stringify(value)}`,
 })
@@ -207,24 +221,36 @@ const getTable: Tool<{ id: string; limit?: number }> = {
 }
 
 const getWeather: Tool<{
+  city?: string
   country?: string
   latitude?: number
   longitude?: number
 }> = {
   name: 'get_weather',
   description:
-    'Current conditions and a short forecast for a country (its capital, ISO alpha-2) or a coordinate pair.',
+    'Current conditions and a short forecast for a city (typed name, resolved through the catalog), a country (its capital, ISO alpha-2) or a coordinate pair.',
   schema: z.object({
+    city: z.string().trim().min(2).max(80).optional(),
     country: z.string().regex(COUNTRY).optional(),
     latitude: z.number().min(-90).max(90).optional(),
     longitude: z.number().min(-180).max(180).optional(),
   }),
   async run(api, input) {
+    let { latitude, longitude } = input
+    if (input.city) {
+      const found = (await api.get('/v1/news/cities', { q: input.city })) as {
+        place?: { latitude: number; longitude: number } | null
+      }
+      if (!found.place)
+        return { text: `No city found for ${JSON.stringify(input.city)}.` }
+      latitude = found.place.latitude
+      longitude = found.place.longitude
+    }
     return json(
       await api.get('/v1/news/weather', {
         country: input.country?.toUpperCase(),
-        latitude: input.latitude,
-        longitude: input.longitude,
+        latitude,
+        longitude,
       }),
     )
   },

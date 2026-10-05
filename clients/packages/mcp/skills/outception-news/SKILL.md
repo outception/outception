@@ -34,7 +34,8 @@ and bounded; nothing you do through them writes anywhere.
 3. `search_headlines` finds live headlines by words.
 4. `list_tables` then `get_table` for markets, standings and live signals.
 5. `list_profiles` then `get_briefing` for a ranked briefing.
-6. `get_weather` for a country or a coordinate pair.
+6. `get_weather` for a city by name, a country or a coordinate pair. An
+   argument a tool does not declare is refused, never dropped.
 
 ## Answering
 

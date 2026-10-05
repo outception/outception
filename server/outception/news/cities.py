@@ -156,10 +156,23 @@ async def geocode(redis: Redis, query: str) -> Place | None:
     return place
 
 
+def catalog_place(card_id: str) -> Place | None:
+    """The place a city card stands for, from the catalog alone: its name
+    and the coordinates the nearest-card lookup already keeps. A card
+    without coordinates has no place to give."""
+    row = catalog_registry().rows.get(card_id)
+    coordinates = _coordinates().get(card_id)
+    if row is None or coordinates is None:
+        return None
+    return Place(name=row.name, latitude=coordinates[0], longitude=coordinates[1])
+
+
 async def resolve_city(redis: Redis, query: str) -> CityResolution:
     direct = match_city_card(query)
     if direct is not None:
-        return CityResolution(query=query, place=None, card_id=direct)
+        # A known city answers from the catalog, place included, so a caller
+        # after its coordinates (the weather tool) needs no second step.
+        return CityResolution(query=query, place=catalog_place(direct), card_id=direct)
     place = await geocode(redis, query)
     if place is None:
         return CityResolution(query=query, place=None, card_id=None)
