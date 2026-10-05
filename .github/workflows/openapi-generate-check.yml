@@ -137,7 +137,7 @@ jobs:
               echo '## Generated OpenAPI Client'
               if [[ "$client_stale" == "true" ]]; then
                 echo ''
-                echo '⚠️ **`clients/packages/client/src/v1.ts` is out of date.**'
+                echo '**`clients/packages/client/src/v1.ts` is out of date.**'
                 echo ''
                 echo 'The OpenAPI schema has changed but the generated client has not been regenerated. Please run:'
                 echo ''
@@ -157,7 +157,7 @@ jobs:
               fi
               if [[ "$emails_stale" == "true" ]]; then
                 echo ''
-                echo '⚠️ **`server/emails/src/types/openapi.ts` is out of date.**'
+                echo '**`server/emails/src/types/openapi.ts` is out of date.**'
                 echo ''
                 echo 'The email schemas have changed but the generated types have not been regenerated. Please run:'
                 echo ''

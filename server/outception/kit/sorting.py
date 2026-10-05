@@ -47,7 +47,7 @@ def SortingGetter[PE: StrEnum](
     sort_property_enum: type[PE], default_sorting: list[str]
 ) -> _SortingGetter[PE]:
     """
-    Here comes some blood magic 🧙‍♂️
+    Here comes some blood magic
 
     Generate a version of `_SortingGetter` with an overriden `__call__` signature.
 

@@ -2,7 +2,7 @@
 
 Thank you for your interest in contributing to Outception! This document provides guidelines and information for contributing to our open-source project.
 
-## 🚨 Important: Issue Assignment Required
+## Important: Issue Assignment Required
 
 **Before opening a Pull Request**, unless it's a **minor fix** (see definition below), **an issue must exist and you must be assigned to it**. This ensures that:
 
@@ -22,7 +22,7 @@ Thank you for your interest in contributing to Outception! This document provide
 
 Minor fixes are small, self-evident changes that don't require discussion or planning:
 
-✅ **Allowed without an issue**:
+yes **Allowed without an issue**:
 
 - Fixing typos in documentation, comments, or error messages
 - Correcting broken links in README or documentation
@@ -30,7 +30,7 @@ Minor fixes are small, self-evident changes that don't require discussion or pla
 - Updating outdated version numbers in documentation
 - Small grammar or spelling corrections
 
-❌ **Requires an issue**:
+no **Requires an issue**:
 
 - Any code logic changes, no matter how small
 - Adding new dependencies or packages
@@ -43,26 +43,26 @@ Minor fixes are small, self-evident changes that don't require discussion or pla
 
 **When in doubt, create an issue first.** It's better to over-communicate than to have your PR rejected.
 
-## 🤖 AI/LLM Usage Policy
+## AI/LLM Usage Policy
 
 We welcome the use of AI tools and Large Language Models to assist with development. However, **all code must be tested and executed in your local environment** before submission.
 
 ### Requirements:
 
-- ✅ Test your changes locally using our development environment
-- ✅ Run existing tests to ensure nothing breaks
-- ✅ Add new tests for new functionality
-- ✅ Verify the application runs correctly with your changes
-- ❌ **Do not submit "vibe-coded" contributions** that haven't been executed
+- yes Test your changes locally using our development environment
+- yes Run existing tests to ensure nothing breaks
+- yes Add new tests for new functionality
+- yes Verify the application runs correctly with your changes
+- no **Do not submit "vibe-coded" contributions** that haven't been executed
 
 > [!WARNING]
 > Pull requests that show evidence of being AI-generated without proper local testing will be immediately closed.
 
-## 🏗️ Development Setup
+## Development Setup
 
 Before contributing, set up your local development environment following the instructions in [`DEVELOPMENT.md`](./DEVELOPMENT.md).
 
-## 🎨 Code Style and Standards
+## Code Style and Standards
 
 ### General Guidelines
 
@@ -86,7 +86,7 @@ Before contributing, set up your local development environment following the ins
 - **Components**: Prefer Orbit components from `@outception-sh/orbit`; use `@outception-sh/ui` only when no Orbit equivalent exists
 - **Styling**: Use `<Box />` from `@outception-sh/orbit/Box` with design tokens (Tailwind is deprecated for layout/spacing/color)
 
-## 🔍 Code Review Process
+## Code Review Process
 
 1. **Automated checks** must pass (linting, tests, type checking)
 2. **Manual review** by maintainers focuses on:
@@ -97,7 +97,7 @@ Before contributing, set up your local development environment following the ins
 3. **Address feedback** promptly and thoroughly
 4. **Squash commits** before merge if requested
 
-## 🚫 What We Don't Accept
+## What We Don't Accept
 
 - Pull requests without associated issues (except minor fixes as defined above)
 - Code that hasn't been tested locally
@@ -106,17 +106,17 @@ Before contributing, set up your local development environment following the ins
 - Contributions that significantly deviate from project goals
 - Large refactoring without prior discussion
 
-## 🎯 Types of Contributions
+## Types of Contributions
 
 We welcome various types of contributions:
 
-- **🐛 Bug fixes** - Fix existing issues
-- **✨ Features** - Add new functionality (discuss first)
-- **📝 Documentation** - Improve guides, API docs, or code comments
-- **🧪 Tests** - Improve test coverage
-- **🔧 Developer Experience** - Improve tooling, setup, or workflows
+- ** Bug fixes** - Fix existing issues
+- ** Features** - Add new functionality (discuss first)
+- ** Documentation** - Improve guides, API docs, or code comments
+- ** Tests** - Improve test coverage
+- ** Developer Experience** - Improve tooling, setup, or workflows
 
-## 📄 License
+## License
 
 By contributing to Outception, you agree that your contributions will be licensed under the same license as the project.
 

@@ -1,4 +1,4 @@
-# Emails 📬
+# Emails 
 
 This package contains all the email templates used by the server, implemented through [`react-email`](https://react.email).
 

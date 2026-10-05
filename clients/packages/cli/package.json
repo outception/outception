@@ -1,0 +1,39 @@
+{
+  "name": "@outception-com/cli",
+  "version": "0.1.0",
+  "description": "Installs the Outception tools and skills into the coding agents on this machine",
+  "author": "Outception",
+  "license": "Apache-2.0",
+  "type": "module",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/outception/outception.git",
+    "directory": "clients/packages/cli"
+  },
+  "bin": {
+    "outception": "./dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rm -rf dist && tsup",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@outception-com/mcp": "workspace:*"
+  },
+  "devDependencies": {
+    "@outception-com/typescript-config": "workspace:*",
+    "@types/node": "^24.3.0",
+    "@typescript/native": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

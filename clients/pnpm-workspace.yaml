@@ -18,6 +18,8 @@ allowBuilds:
 
 minimumReleaseAge: 1440
 minimumReleaseAgeExclude:
+  # The agent tools SDK ships often; its current release is what the server needs.
+  - '@modelcontextprotocol/sdk@1.32.1'
   - 'expo@57.0.25'
   - '@expo/ui@57.0.20'
   - 'expo-auth-session@57.0.13'

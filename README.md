@@ -55,9 +55,9 @@ Turn usage into revenue. Outception is the financial layer for a new generation 
 
 ## Roadmap, Issues & Feature Requests
 
-**💬 Feature requests & bugs** can be reported through the "Feedback" button found in the sidebar, bottom left of your Outception dashboard.
+** Feature requests & bugs** can be reported through the "Feedback" button found in the sidebar, bottom left of your Outception dashboard.
 
-**🔓 Found a security vulnerability?** We greatly appreciate responsible and private disclosures. See [Security](./SECURITY.md)
+** Found a security vulnerability?** We greatly appreciate responsible and private disclosures. See [Security](./SECURITY.md)
 
 ### Outception API & SDK
 
@@ -78,9 +78,9 @@ Our [`DEVELOPMENT.md`](./DEVELOPMENT.md) file contains everything you need to kn
   <img src="https://contrib.rocks/image?repo=outceptionsource/outception" />
 </a>
 
-<sub>♥️🙏 To our `pyproject.toml` friends: [FastAPI](https://github.com/tiangolo/fastapi), [Pydantic](https://github.com/pydantic/pydantic), [Dramatiq](https://github.com/Bogdanp/dramatiq), [SQLAlchemy](https://github.com/sqlalchemy/sqlalchemy), [Githubkit](https://github.com/yanyongyu/githubkit), [sse-starlette](https://github.com/sysid/sse-starlette), [Uvicorn](https://github.com/encode/uvicorn), [httpx-oauth](https://github.com/frankie567/httpx-oauth), [jinja](https://github.com/pallets/jinja), [blinker](https://github.com/pallets-eco/blinker), [pyjwt](https://github.com/jpadilla/pyjwt), [Sentry](https://github.com/getsentry/sentry) + more</sub><br />
-<sub>♥️🙏 To our `package.json` friends: [Next.js](https://nextjs.org/), [TanStack Query](https://github.com/TanStack/query), [tailwindcss](https://github.com/tailwindlabs/tailwindcss), [openapi-typescript-codegen](https://github.com/ferdikoomen/openapi-typescript-codegen), [axios](https://github.com/axios/axios), [radix-ui](https://github.com/radix-ui/primitives), [cmdk](https://github.com/pacocoursey/cmdk), [framer-motion](https://github.com/framer/motion) + more</sub><br />
-<sub>♥️🙏 To [IPinfo](https://ipinfo.io) that provides IP address data to help us geolocate customers during checkout.</sub>
+<sub> To our `pyproject.toml` friends: [FastAPI](https://github.com/tiangolo/fastapi), [Pydantic](https://github.com/pydantic/pydantic), [Dramatiq](https://github.com/Bogdanp/dramatiq), [SQLAlchemy](https://github.com/sqlalchemy/sqlalchemy), [Githubkit](https://github.com/yanyongyu/githubkit), [sse-starlette](https://github.com/sysid/sse-starlette), [Uvicorn](https://github.com/encode/uvicorn), [httpx-oauth](https://github.com/frankie567/httpx-oauth), [jinja](https://github.com/pallets/jinja), [blinker](https://github.com/pallets-eco/blinker), [pyjwt](https://github.com/jpadilla/pyjwt), [Sentry](https://github.com/getsentry/sentry) + more</sub><br />
+<sub> To our `package.json` friends: [Next.js](https://nextjs.org/), [TanStack Query](https://github.com/TanStack/query), [tailwindcss](https://github.com/tailwindlabs/tailwindcss), [openapi-typescript-codegen](https://github.com/ferdikoomen/openapi-typescript-codegen), [axios](https://github.com/axios/axios), [radix-ui](https://github.com/radix-ui/primitives), [cmdk](https://github.com/pacocoursey/cmdk), [framer-motion](https://github.com/framer/motion) + more</sub><br />
+<sub> To [IPinfo](https://ipinfo.io) that provides IP address data to help us geolocate customers during checkout.</sub>
 
 ## License
 

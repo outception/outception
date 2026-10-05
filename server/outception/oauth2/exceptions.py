@@ -26,7 +26,7 @@ class InsufficientScopeError(_InvalidTokenError):
     https://tools.ietf.org/html/rfc6750#section-3.1
 
     We don't use the one provided by Authlib because it doesn't have
-    the logic to handle the headers attribute, contrary to `InvalidTokenError` 🤷‍♂️
+    the logic to handle the headers attribute, contrary to `InvalidTokenError`
     """
 
     error = "insufficient_scope"

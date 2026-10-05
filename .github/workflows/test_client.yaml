@@ -35,7 +35,7 @@ jobs:
               - '.github/workflows/test_client.yaml'
 
   build:
-    name: "Client: Tests 🎨"
+    name: "Client: Tests "
     needs: changes
     if: needs.changes.outputs.clients == 'true'
     timeout-minutes: 15
@@ -61,38 +61,47 @@ jobs:
           cache: "pnpm"
           cache-dependency-path: "clients/pnpm-lock.yaml"
 
-      - name: 📦 Install dependencies
+      - name: Install dependencies
         run: pnpm install
 
-      - name: 💅 Format check
+      - name: Format check
         run: pnpm run format:check
 
-      - name: 💅 Lint
+      - name: Lint
         run: pnpm run lint
 
-      - name: 🌍 Check i18n keys
+      - name: Check i18n keys
         run: pnpm --filter @outception-com/i18n check-keys
 
-      - name: 🧭 Check names
+      - name: Check names
         run: pnpm exec tsx scripts/check-names.ts --strict
 
-      - name: 👀 Typecheck
+      - name: Typecheck
         run: pnpm run typecheck
 
-      - name: "🧪 Test: App"
+      - name: "Test: App"
         run: pnpm --filter @outception-com/app test
 
-      - name: "🧪 Test: Web"
+      - name: "Test: Web"
         run: pnpm --filter web test
 
-      - name: "🧪 Test: @outception-com/orbit"
+      - name: "Test: @outception-com/orbit"
         run: pnpm --filter @outception-com/orbit test
 
-      - name: "🧪 Test: @outception-com/news-core"
+      - name: "Test: @outception-com/news-core"
         run: pnpm --filter @outception-com/news-core test
 
-      - name: 🛠️ Build
+      - name: "Test: @outception-com/mcp"
+        run: pnpm --filter @outception-com/mcp test
+
+      - name: "Test: @outception-com/cli"
+        run: pnpm --filter @outception-com/cli test
+
+      - name: Skills in sync
+        run: pnpm exec tsx scripts/sync-skills.ts --check
+
+      - name: Build
         run: pnpm build
 
-      - name: ⚖️ Performance budget
+      - name: Performance budget
         run: pnpm exec tsx scripts/check-budget.ts

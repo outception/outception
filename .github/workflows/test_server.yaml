@@ -64,9 +64,12 @@ jobs:
       - name: Env contract
         working-directory: ./server
         run: uv run python -m scripts.check_env_vars
-      - name: Naming (reporting)
+      - name: Naming
         working-directory: ./server
         run: uv run python -m scripts.linters.names --strict
+      - name: Evals gate (the scrubber)
+        working-directory: ./server
+        run: uv run python -m evals.run --suite scrub
 
   migrations:
     name: "Server: Migrations"

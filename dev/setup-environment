@@ -395,13 +395,13 @@ if __name__ == "__main__":
     ) as spinner:
         # Ensure central secrets file exists
         if _ensure_secrets_file():
-            spinner.write(f"📝 Created {SECRETS_FILE_PATH}")
+            spinner.write(f"Created {SECRETS_FILE_PATH}")
             spinner.write("   Edit this file with your credentials (Stripe, etc.)")
 
         # Load existing secrets info
         central_secrets = _load_central_secrets()
         if central_secrets:
-            spinner.write(f"📂 Loading secrets from {SECRETS_FILE_PATH}")
+            spinner.write(f"Loading secrets from {SECRETS_FILE_PATH}")
 
         github_app = None
         if options.setup_github_app:
@@ -417,7 +417,7 @@ if __name__ == "__main__":
             github_app = _register_github_app(code)
             # Save GitHub App credentials to central secrets for future worktrees
             _save_github_app_to_secrets(github_app)
-            spinner.write(f"✅ GitHub App credentials saved to {SECRETS_FILE_PATH}")
+            spinner.write(f"yes GitHub App credentials saved to {SECRETS_FILE_PATH}")
 
         spinner.text = "Writing environment files..."
         _write_server_env_file(github_app, options.database_name)

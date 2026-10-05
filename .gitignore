@@ -170,3 +170,6 @@ clients/apps/web/src/app/(main)/onboarding/validate-description/acceptable-use-p
 screenshots/runs/
 
 sdk/code-samples/
+
+# Eval reports are run output
+server/evals/*.report.json

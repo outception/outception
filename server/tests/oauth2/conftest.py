@@ -1,5 +1,5 @@
 """
-🚨 The following fixtures are intended to test OAuth2 features.
+The following fixtures are intended to test OAuth2 features.
 
 It's a bit tricky since we need to handle a synchronous database session.
 
@@ -68,13 +68,13 @@ def save_fixture(sync_session: Session) -> SaveFixture:
 
     This is necessary because the OAuth2 features rely on the synchronous session.
 
-    🚨 As such, objects won't be present in the async session. Code that works with
+    As such, objects won't be present in the async session. Code that works with
     the async session won't be able to see the objects saved by this fixture.
 
-    🧠 You might be tempted to save the object in the async session as well.
+    You might be tempted to save the object in the async session as well.
     This **won't** work. Underneath, there are two different connections
     and transactions to the database; so you'll end up with conflicts or locks.
-    😢 Time lost on this: 4 hours.
+    Time lost on this: 4 hours.
     """
 
     async def _save_fixture(model: Model) -> None:

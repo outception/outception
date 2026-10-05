@@ -52,7 +52,7 @@ runs:
         get_http_code="${get_response: -3}"
 
         if [[ "$get_http_code" -lt 200 || "$get_http_code" -ge 300 ]]; then
-          echo "❌ Failed to fetch ruleset (HTTP $get_http_code)"
+          echo "no Failed to fetch ruleset (HTTP $get_http_code)"
           cat ruleset_response.json
           exit 1
         fi
@@ -63,7 +63,7 @@ runs:
           '.result.rules[] | select(.id == $rule_id) | .enabled = $enabled' ruleset_response.json)
 
         if [[ -z "$rule_data" || "$rule_data" == "null" ]]; then
-          echo "❌ ${{ inputs.rule_name }} rule not found in ruleset"
+          echo "no ${{ inputs.rule_name }} rule not found in ruleset"
           exit 1
         fi
 
@@ -79,9 +79,9 @@ runs:
         http_code="${response: -3}"
 
         if [[ "$http_code" -ge 200 && "$http_code" -lt 300 ]]; then
-          echo "✅ Successfully ${{ env.ACTION }}d ${{ inputs.rule_name }} maintenance rule"
+          echo "yes Successfully ${{ env.ACTION }}d ${{ inputs.rule_name }} maintenance rule"
         else
-          echo "❌ Failed to ${{ env.ACTION }} ${{ inputs.rule_name }} maintenance rule (HTTP $http_code)"
+          echo "no Failed to ${{ env.ACTION }} ${{ inputs.rule_name }} maintenance rule (HTTP $http_code)"
           cat rule_response.json
           exit 1
         fi

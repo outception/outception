@@ -241,7 +241,7 @@ class S3Service:
 
     def get_public_url(self, path: str) -> str:
         # This is apparently the *only* way to get a public URL with boto3,
-        # apart from building a URL manually 🙄
+        # apart from building a URL manually
         # Ref: https://stackoverflow.com/a/48197923
         return self._unsigned_presign_client.generate_presigned_url(
             "get_object", ExpiresIn=0, Params={"Bucket": self.bucket, "Key": path}

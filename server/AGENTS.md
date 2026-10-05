@@ -365,8 +365,8 @@ from outception.organization_review.appeal_case import (
 ### Creating ORM objects — pass objects, not ids
 Set the related ORM object, not its foreign-key id: it's type-safe and populates the relationship in-session.
 ```python
-SupportCaseMessage(case=case, author_user=user)  # ✅
-SupportCaseMessage(case_id=case.id, author_user_id=user.id)  # ❌
+SupportCaseMessage(case=case, author_user=user)  # yes
+SupportCaseMessage(case_id=case.id, author_user_id=user.id)  # no
 ```
 Add the `relationship()` to the model if it doesn't exist yet.
 

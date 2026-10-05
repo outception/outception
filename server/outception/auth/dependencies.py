@@ -114,7 +114,7 @@ def Authenticator(
     required_scopes: set[Scope] | None = None,
 ) -> _Authenticator:
     """
-    Here comes some blood magic 🧙‍♂️
+    Here comes some blood magic
 
     Generate a version of `_Authenticator` with an overriden `__call__` signature.
 

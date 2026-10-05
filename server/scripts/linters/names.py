@@ -72,6 +72,8 @@ ALLOWED_PATHS: tuple[str, ...] = (
     "clients/apps/web/next.config.mjs",
     # The crawler manifest names crawlers by their user agents.
     "clients/apps/web/src/app/robots.ts",
+    # The installer has to know where each coding agent keeps its config.
+    "clients/packages/cli/src/targets.ts",
 )
 SKIP_DIRS = frozenset(
     {

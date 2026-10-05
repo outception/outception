@@ -22,6 +22,8 @@ const allowed = [
   'apps/web/next.config.mjs',
   // The crawler manifest names crawlers by their user agents.
   'apps/web/src/app/robots.ts',
+  // The installer has to know where each coding agent keeps its config.
+  'packages/cli/src/targets.ts',
 ]
 const skipDirs = new Set([
   'node_modules',
