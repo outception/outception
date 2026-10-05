@@ -97,9 +97,6 @@ jobs:
       - name: "Test: @outception-com/cli"
         run: pnpm --filter @outception-com/cli test
 
-      - name: Skills in sync
-        run: pnpm exec tsx scripts/sync-skills.ts --check
-
       - name: Docs are fresh
         working-directory: .
         run: node scripts/check-doc-freshness.mts --check

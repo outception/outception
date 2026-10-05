@@ -36,18 +36,12 @@ export const loadSkills = (dir: string): Skill[] => {
   return out
 }
 
-/** Where the skills live: the operator's choice, the copy bundled with the
- * package, or the repository's `skills/` when running from the tree. */
+/** Where the skills live: the operator's choice, or the folder shipped with
+ * the package (the one copy in the tree). */
 export const defaultSkillsDir = (
   env: NodeJS.ProcessEnv = process.env,
 ): string => {
   if (env.OUTCEPTION_SKILLS_DIR) return env.OUTCEPTION_SKILLS_DIR
   const here = dirname(fileURLToPath(import.meta.url))
-  for (const candidate of [
-    resolve(here, '..', 'skills'),
-    resolve(here, '..', '..', '..', '..', 'skills'),
-  ]) {
-    if (existsSync(candidate)) return candidate
-  }
   return resolve(here, '..', 'skills')
 }

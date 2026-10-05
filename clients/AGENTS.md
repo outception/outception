@@ -27,7 +27,7 @@ Notes that save time:
 - Unit tests need neither a running backend nor `.env.local`; `apps/web/vitest.config.ts`
   injects the `NEXT_PUBLIC_*` values itself.
 - Other gates: `pnpm exec tsx scripts/check-names.ts --strict`, `scripts/check-boundaries.ts`
-  (in `pnpm lint`), `scripts/check-budget.ts` after a web build, `scripts/sync-skills.ts --check`.
+  (in `pnpm lint`), `scripts/check-budget.ts` after a web build.
 - `pnpm generate` shells into the server's Python env to run `scripts.generate_openapi`, so it
   needs the import-blocking backend artifact — the email-renderer binary. You rarely need it:
   the generated `packages/client/src/v1.ts` is committed.

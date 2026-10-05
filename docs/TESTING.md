@@ -4,7 +4,7 @@
 # Testing
 
 Every gate below runs in CI on every pull request. Run them locally before
-pushing; the staged-file hooks (`lefthook.yml`) run the fast ones on commit.
+pushing; the staged-file hooks (`.lefthook.yml`) run the fast ones on commit.
 
 ## Server (`server/`)
 

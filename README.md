@@ -26,8 +26,8 @@ keeps are in [docs/VISION.md](docs/VISION.md).
 Start with [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md): the dev CLI brings
 up the database, the cache, the API, the worker and the web app, and runs the
 tests. Every gate the CI runs is listed there. Contributions follow
-[CONTRIBUTING.md](CONTRIBUTING.md); security reports follow
-[SECURITY.md](SECURITY.md).
+[CONTRIBUTING.md](.github/CONTRIBUTING.md); security reports follow
+[SECURITY.md](.github/SECURITY.md).
 
 Deploying is [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) and the host runbook
 in `deploy/README.md`.

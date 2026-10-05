@@ -189,3 +189,10 @@ server/media/
 # Deploy-time private material: the signing key pair and the filled-in env.
 deploy/secrets/
 deploy/.env.prod
+
+# Editor folders and files stay local
+.vscode/
+.zed/
+.idea/
+*.code-workspace
+pyrightconfig.json
