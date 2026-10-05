@@ -1,4 +1,3 @@
-import threading
 import time
 
 import logfire
@@ -15,7 +14,7 @@ from outception.redis import SyncRedis, create_sync_redis
 from outception.sentry import configure_sentry
 
 from ._broker import scheduler_middleware
-from ._health import _run_exposition_server, set_heartbeat_checker
+from ._health import set_heartbeat_checker
 
 configure_sentry()
 configure_logfire("worker")
@@ -75,9 +74,12 @@ def _is_scheduler_healthy() -> bool:
 
 
 def start() -> None:
+    # The heartbeat the API reads lives in Redis (publish_heartbeat); the
+    # worker's own health server is forked once by HealthMiddleware in this
+    # same process group, so the scheduler must not bind a second one on the
+    # same port. (A second binder lost the race and logged "address already
+    # in use" at every boot.)
     set_heartbeat_checker(_is_scheduler_healthy)
-    health_thread = threading.Thread(target=_run_exposition_server, daemon=True)
-    health_thread.start()
 
     scheduler = LogfireBlockingScheduler(create_sync_redis("worker"))
 
