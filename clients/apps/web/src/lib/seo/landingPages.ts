@@ -15,11 +15,11 @@ type LandingPage = {
 }
 
 const OUTCEPTION_FACTS = [
-  'Around 8,000 followable sources across ~200 countries - national papers, local outlets, niche sites, YouTube channels, deal communities, and more.',
+  'Over ten thousand followable sources across nearly two hundred countries: national papers, local outlets, niche sites, video channels, deal communities, and more.',
   'No account needed: the wall works the moment it loads, and your cards are saved on your device.',
-  'No algorithm: you choose sources, and headlines appear in the order they happen.',
-  'Headlines are shown verbatim - no AI rewriting or summaries - and every tap opens the story on the publisher’s own site.',
-  'Free, supported by a single small banner ad. Reading history is never tracked or sold.',
+  'No algorithm: you choose sources, and headlines appear in the order they happen. A daily briefing exists only if you pick one.',
+  'Headlines are shown verbatim. Tap one for a short summary drawn from the article, and every tap through opens the story on the publisher’s own site.',
+  'Free. No ad network and no tracking profile; one products card a day, chosen by hand. Reading history never leaves your device.',
 ]
 
 export const LANDING_PAGES: LandingPage[] = [
@@ -27,7 +27,7 @@ export const LANDING_PAGES: LandingPage[] = [
     slug: 'google-news-alternative',
     title: 'A Google News alternative without the algorithm',
     description:
-      'Outception is a free Google News alternative where you pick the sources and nothing re-ranks your feed. No account, no AI summaries, ~8,000 sources worldwide.',
+      'Outception is a free Google News alternative where you pick the sources and nothing re-ranks your feed. No account, over ten thousand sources worldwide.',
     h1: 'Looking for a Google News alternative?',
     intro: [
       'Google News is convenient, but it decides what you see: an algorithm ranks stories from your history, resurfaces topics you clicked once, and mixes in outlets you never chose. If you want the convenience without the ranking, that’s exactly what Outception is for.',
@@ -55,7 +55,7 @@ export const LANDING_PAGES: LandingPage[] = [
     slug: 'feedly-alternative',
     title: 'A Feedly alternative with zero setup',
     description:
-      'Outception is a free Feedly alternative with ~8,000 feeds already found, verified and categorized. No OPML, no account, no paywalled basics.',
+      'Outception is a free Feedly alternative with over ten thousand feeds already found, verified and categorized. No OPML, no account, no paywalled basics.',
     h1: 'Looking for a Feedly alternative?',
     intro: [
       'Feedly is a capable RSS reader, but it starts empty: finding feeds is your job, several basics sit behind the paid plan, and everything needs an account. Outception starts full.',
@@ -64,7 +64,7 @@ export const LANDING_PAGES: LandingPage[] = [
       {
         heading: 'How Outception is different',
         body: [
-          'Every feed is already found: ~8,000 sources verified live before being added, organized by topic and country - including the awkward ones like YouTube channels, per-country news editions, and city-level feeds.',
+          'Every feed is already found: over ten thousand sources verified live before being added, organized by topic and country - including the awkward ones like YouTube channels, per-country news editions, and city-level feeds.',
           ...OUTCEPTION_FACTS.slice(1),
         ],
       },
@@ -80,7 +80,7 @@ export const LANDING_PAGES: LandingPage[] = [
     slug: 'smartnews-alternative',
     title: 'A SmartNews alternative with one ad, not twenty',
     description:
-      'Outception is a free SmartNews alternative: your sources, chronological headlines, and a single banner ad. No video ads, no interstitials, no account.',
+      'Outception is a free SmartNews alternative: your sources, chronological headlines, and no ad network. No video ads, no interstitials, no account.',
     h1: 'Looking for a SmartNews alternative?',
     intro: [
       'SmartNews readers tend to leave for one reason: the ads grew until they buried the news. Outception is built on the opposite promise - one small banner, forever, and nothing else.',
@@ -89,7 +89,7 @@ export const LANDING_PAGES: LandingPage[] = [
       {
         heading: 'How Outception is different',
         body: [
-          'One fixed banner ad - no full-screen ads, no autoplaying video, no ads dressed as headlines. The ad model is part of the product promise, not a dial that creeps up.',
+          'No ad network at all: no full-screen ads, no autoplaying video, no ads dressed as headlines. One products card a day, chosen by hand, is the whole commercial surface, and that is part of the product promise.',
           ...OUTCEPTION_FACTS.slice(0, 4),
         ],
       },
@@ -108,7 +108,7 @@ export const LANDING_PAGES: LandingPage[] = [
       'Outception is a free alternative for former Artifact users: dense headlines, taps open the publisher’s site, no account required - but curated by you, not a model.',
     h1: 'Missing Artifact?',
     intro: [
-      'Artifact was beloved and still closed - great product, too few people found it. Outception shares much of what its users grieve: information-dense headlines, links that open on the publisher’s own site in your browser, and no forced account. The philosophical difference: where Artifact ranked stories with AI, Outception doesn’t rank at all.',
+      'Artifact was beloved and still closed - great product, too few people found it. Outception shares much of what its users grieve: information-dense headlines, links that open on the publisher’s own site in your browser, and no forced account. The philosophical difference: where Artifact ranked stories for you, Outception doesn’t rank at all.',
     ],
     sections: [
       {
@@ -117,7 +117,7 @@ export const LANDING_PAGES: LandingPage[] = [
           'Dense, fast headline reading rather than image-heavy cards.',
           'Every tap opens the publisher’s site - your browser, your ad-blockers, your cookies.',
           'Works fully logged out; nothing is locked behind sign-up.',
-          'Topic following - follow F1, anime, AI, your city, or any of ~8,000 sources directly.',
+          'Topic following: follow motorsport, anime, space, your city, or any of over ten thousand sources directly.',
         ],
       },
       {
@@ -159,7 +159,7 @@ export const LANDING_PAGES: LandingPage[] = [
     slug: 'rss-reader-without-setup',
     title: 'An RSS reader without the setup',
     description:
-      'All the control of RSS with none of the feed-hunting: ~8,000 verified feeds pre-organized by topic and country. Free, works logged out.',
+      'All the control of RSS with none of the feed-hunting: over ten thousand verified feeds pre-organized by topic and country. Free, works logged out.',
     h1: 'RSS without the homework',
     intro: [
       'The best answer to algorithmic feeds has always been RSS: your sources, chronological, no middleman. The reason most people never use it is the setup - finding feed URLs, testing them, categorizing them, pruning the dead ones. Outception did that part already.',
@@ -168,7 +168,7 @@ export const LANDING_PAGES: LandingPage[] = [
       {
         heading: 'What “pre-wired” means',
         body: [
-          '~8,000 feeds found, fetched and verified before ever being listed - including the painful ones: YouTube channels, per-country editions, city feeds, deal communities, flight-deal sites.',
+          'over ten thousand feeds found, fetched and verified before ever being listed - including the painful ones: YouTube channels, per-country editions, city feeds, deal communities, flight-deal sites.',
           'Organized by topic and country with search, so following a source is one tap, not a hunt.',
           'Dead feeds are culled; broken ones never make the roster.',
           ...OUTCEPTION_FACTS.slice(1, 4),

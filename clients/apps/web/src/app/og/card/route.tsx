@@ -29,6 +29,9 @@ export function GET(request: Request) {
   )
   // 3/6 digits only: alpha suffixes below concatenate '55'/'22', which on a
   // 4/8-digit input produced an invalid 10-digit color and errored the render.
+  // `variant=set` draws two sheets behind the card: a deck, for the pages
+  // that show several cards at once.
+  const isSet = searchParams.get('variant') === 'set'
   const accent = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(
     searchParams.get('color') || '',
   )
@@ -47,8 +50,26 @@ export function GET(request: Request) {
         backgroundImage: `radial-gradient(900px 520px at 82% 8%, ${accent}55, transparent 60%), radial-gradient(760px 520px at 0% 108%, ${accent}22, transparent 58%)`,
         padding: '72px',
         fontFamily: 'sans-serif',
+        position: 'relative',
       }}
     >
+      {isSet
+        ? [36, 18].map((offset) => (
+            <div
+              key={offset}
+              style={{
+                position: 'absolute',
+                top: 48 + offset,
+                left: 48 + offset,
+                right: 48 - offset,
+                bottom: 48 - offset,
+                borderRadius: '28px',
+                border: '2px solid #ffffff22',
+                backgroundColor: '#111114',
+              }}
+            />
+          ))
+        : null}
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={gemDataUri} width={64} height={64} alt="" />

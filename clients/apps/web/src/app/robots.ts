@@ -6,7 +6,7 @@ import { MetadataRoute } from 'next'
 // hardcoding production, or preview deploys advertise the live sitemap.
 const DISALLOW = ['/account/', '/auth/', '/verify-email/', '/launches/mine']
 
-// The crawlers that feed AI answer engines, allowed by NAME: a bare wildcard
+// The crawlers that feed answer engines, allowed by NAME: a bare wildcard
 // is technically enough, but several readiness graders (and some of the bots
 // themselves) treat an explicit entry as the real signal of consent.
 const AI_CRAWLERS = [

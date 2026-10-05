@@ -39,6 +39,8 @@ type NavItem = 'stack' | 'cards' | 'briefing' | 'settings'
 /** The briefing the pill opens: the first profile the reader follows, else
  * the house default. */
 const DEFAULT_BRIEFING_PROFILE = 'news-junkie'
+/** Where readers talk about the product: the repository's discussions. */
+const DISCUSSIONS_URL = 'https://github.com/outception/outception/discussions'
 
 /** The reading switches beside the looks: hide what was read, one row per
  * story or every outlet, and the way to tell us something. */
@@ -89,6 +91,18 @@ const ReadingControls = ({ open }: { open: boolean }) => {
         {t('news.controls.autoplay')}
       </button>
       <TellUsSheet trigger="pill" />
+      <Link href="/changelog" className="ghost-pill" tabIndex={open ? 0 : -1}>
+        {t('news.controls.changelog')}
+      </Link>
+      <a
+        href={DISCUSSIONS_URL}
+        className="ghost-pill"
+        target="_blank"
+        rel="noopener noreferrer"
+        tabIndex={open ? 0 : -1}
+      >
+        {t('news.controls.discuss')}
+      </a>
     </span>
   )
 }

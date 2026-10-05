@@ -74,7 +74,7 @@ const CaughtUpNote = ({ count }: { count: number }) => {
 /** Ranked list for "hottest" sources - numbered rows separated by hairline
  * rules. The top story runs at hero scale in the display face; the rest stay
  * numbered. */
-/** Plain left-clicks expand the AI summary inline under the headline;
+/** Plain left-clicks expand the summary inline under the headline;
  * modified clicks (new tab / middle click) keep the browser default, and the
  * right-click menu's "Open article" is untouched. Links that can't be
  * summarized (Google News redirects, videos) open the article directly -

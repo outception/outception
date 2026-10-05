@@ -32,7 +32,7 @@ const baseMetadata: Metadata = {
   // brand name.
   title: { absolute: 'Outception' },
   description:
-    'A live wall of headline cards from hundreds of sources, across every topic.',
+    'A live wall of headline cards from over ten thousand sources, across every topic.',
   openGraph: {
     siteName: 'Outception',
     type: 'website',
@@ -111,25 +111,27 @@ export default function Page() {
     <>
       {/* Server-rendered and invisible on screen: the wall is a client app,
           so without this block the raw HTML carried ~49 characters and no
-          H1 - unreadable to AI indexes and crawlers that skip JavaScript.
+          H1 - unreadable to answer engines and crawlers that skip JavaScript.
           Mirrors the JSON-LD in the landing layout. */}
       <div className="sr-only">
         <h1>
-          Outception: a calm news wall of headlines from hundreds of sources
+          Outception: a calm news wall of headlines from over ten thousand
+          sources
         </h1>
         <p>
           Outception is a free news reader for people who want the day at a
           glance without an algorithm deciding for them. It shows a wall of
-          cards, one per source, with live headlines from hundreds of trusted
-          outlets across news, sports, finance, tech, science and entertainment.
-          You pick the sources, swipe through the cards, tap any headline for an
-          AI summary in your language, and reach the end. Built in games and
-          daily puzzles live between the cards. It is free on the web, on iPhone
-          and on Android, supported by one small ad. Outception is an
-          alternative to Google News and Feedly: it replaces the ranked,
-          personalized feed with a fixed wall of exactly the sources you chose.
-          Readers who want an algorithm to sort the day for them will be happier
-          with those apps.
+          cards, one per publisher, with live headlines from over ten thousand
+          outlets across news, sports, finance, tech, science and entertainment,
+          plus live tables and a daily briefing you choose. You pick the
+          publishers, swipe through the cards, tap any headline for a short
+          summary, and reach the end. It is free on the web, on iPhone and on
+          Android, with no ad network and no tracking profile; one products card
+          a day, chosen by hand, is the only commercial surface. Outception is
+          an alternative to Google News and Feedly: it replaces the ranked,
+          personalized feed with a fixed wall of exactly the publishers you
+          chose. Readers who want an algorithm to sort the day for them will be
+          happier with those apps.
         </p>
       </div>
       <NewsWall />

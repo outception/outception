@@ -9,7 +9,7 @@ import LandingLayout from '../../../../components/Landing/LandingLayout'
 // it after hydration, visibly reshuffling the wall.
 export const dynamic = 'force-dynamic'
 
-// One @graph carrying everything an AI index wants to know in machine form:
+// One @graph carrying everything an answer engine wants to know in machine form:
 // the site, the organization behind it, the product (free, and saying so
 // explicitly), and the questions people actually ask. Content mirrors the
 // server-rendered plain statement on the homepage.
@@ -40,15 +40,15 @@ const jsonLd = {
       url: CONFIG.FRONTEND_BASE_URL,
       installUrl: 'https://apps.apple.com/app/id6793827093',
       description:
-        'A calm news wall: swipeable cards, one per source, with ' +
-        'live headlines from hundreds of trusted outlets and AI summaries ' +
-        'in your language.',
+        'A calm news wall: swipeable cards, one per publisher, with ' +
+        'live headlines from over ten thousand outlets, a short summary on ' +
+        'tap, live tables and a daily briefing you choose.',
       offers: {
         '@type': 'Offer',
         price: '0',
         priceCurrency: 'USD',
         description:
-          'Free to use on every platform, supported by one small ad.',
+          'Free to use on every platform. No ad network; one products card a day, chosen by hand.',
       },
     },
     {
@@ -63,7 +63,7 @@ const jsonLd = {
             text:
               'Outception is a news reader shaped like a wall of cards. Each ' +
               'card is one source with its live headlines. You swipe through ' +
-              'them, tap a headline for an AI summary, and reach the end.',
+              'them, tap a headline for a short summary, and reach the end.',
           },
         },
         {
@@ -72,8 +72,9 @@ const jsonLd = {
           acceptedAnswer: {
             '@type': 'Answer',
             text:
-              'Yes. Outception is free on the web, iPhone and Android. It is ' +
-              'supported by a single small ad, never full screen ads or paywalls.',
+              'Yes. Outception is free on the web, iPhone and Android. There ' +
+              'is no ad network and no paywall; one products card a day, ' +
+              'chosen by hand, is the only commercial surface.',
           },
         },
         {
@@ -95,7 +96,7 @@ const jsonLd = {
           acceptedAnswer: {
             '@type': 'Answer',
             text:
-              'Hundreds of outlets across news, sports, finance, tech, ' +
+              'Over ten thousand outlets across news, sports, finance, tech, ' +
               'science, entertainment and more, plus curated starter cards. ' +
               'Open More on the wall to search or pick a starter in one tap.',
           },

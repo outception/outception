@@ -17,7 +17,7 @@ import { FeedCard } from './FeedCard'
  * when you pull a card halfway out to look at it.
  *
  * Every card is REAL - the same component the wall uses, so the one you pull
- * out has live headlines, working links and the AI summary on tap. This is
+ * out has live headlines, working links and the summary on tap. This is
  * CSS 3D on actual elements: nothing here is painted into a texture, so the
  * text stays sharp, selectable and readable by a screen reader at any size.
  */

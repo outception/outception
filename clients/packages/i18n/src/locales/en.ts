@@ -204,7 +204,7 @@ export default {
       kicker: 'Daily deal',
     },
     summary: {
-      title: 'AI summary',
+      title: 'Summary',
       loading: 'Summarizing…',
       readFull: 'Full article',
       slow: 'Taking longer than usual. Open the article instead.',
@@ -214,7 +214,7 @@ export default {
       failed:
         'No summary is available for this article. You can read it at the source below.',
       byline:
-        'Summarized by AI. It can miss nuance, so check the source for the full story.',
+        'A short summary drawn from the article. It can miss nuance, so check the source for the full story.',
     },
     stores: {
       available: 'Available now on',
@@ -334,6 +334,29 @@ export default {
       everyOutlet: 'Every outlet',
       oneRowPerStory: 'One row per story',
       autoplay: 'Auto-play',
+      changelog: 'What changed',
+      discuss: 'Discuss',
+    },
+    crawler: {
+      countryTitle: 'News in {country} today',
+      countryIntro:
+        'The headlines on the {country} edition of the wall right now, straight from the publishers. Open the wall to swipe through them.',
+      cityTitle: '{city} news today',
+      cityIntro:
+        'Local headlines for {city} as the wall shows them right now, straight from the publishers.',
+      starterTitle: 'The {name} starter',
+      starterIntro:
+        'The publishers the {name} starter follows, with their headlines right now. One tap on the wall follows them all.',
+      open: 'Open on the wall',
+      openCard: 'Open this card on the wall',
+      updated: 'Updated',
+      moreSources: '{count} more publishers in this starter',
+    },
+    changelog: {
+      title: 'What changed',
+      intro:
+        'Release notes, newest first. The repository carries the full history.',
+      back: 'Back to the wall',
     },
     autoplay: {
       play: 'Play the wall',
