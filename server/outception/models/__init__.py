@@ -19,6 +19,7 @@ from .oauth2_client import OAuth2Client
 from .oauth2_grant import OAuth2Grant
 from .oauth2_state import OAuth2State
 from .oauth2_token import OAuth2Token
+from .push_subscription import PushSubscription
 from .reader_pref import ReaderPref
 from .totp_enrollment import TOTPEnrollment
 from .user import OAuthAccount, User
@@ -48,6 +49,7 @@ __all__ = [
     "OAuth2State",
     "OAuth2Token",
     "OAuthAccount",
+    "PushSubscription",
     "ReaderPref",
     "TOTPEnrollment",
     "TimestampedModel",

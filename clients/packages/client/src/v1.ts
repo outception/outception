@@ -516,6 +516,32 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/v1/news/briefing/{profile}/subscribe': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Subscribe Push
+     * @description Ask for one push a day with this profile's briefing. No account; the
+     *     endpoint or device token is the only identity. Sending it again
+     *     refreshes the row.
+     */
+    post: operations['news:briefing:subscribe_push']
+    /**
+     * Unsubscribe Push
+     * @description Stop the morning push for this device and profile.
+     */
+    delete: operations['news:briefing:unsubscribe_push']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/v1/news/sources': {
     parameters: {
       query?: never
@@ -1269,6 +1295,8 @@ export interface components {
     BriefingProfilesResponse: {
       /** Profiles */
       profiles: components['schemas']['BriefingProfile'][]
+      /** Pushpublickey */
+      pushPublicKey?: string | null
     }
     /** BriefingPublisher */
     BriefingPublisher: {
@@ -2252,6 +2280,33 @@ export interface components {
       latitude: number
       /** Longitude */
       longitude: number
+    }
+    /** PushKeys */
+    PushKeys: {
+      /** P256Dh */
+      p256dh: string
+      /** Auth */
+      auth: string
+    }
+    /**
+     * PushSubscribe
+     * @description One device asking for the morning briefing. `endpoint` is the push
+     *     service URL on the web and the device token in the app.
+     */
+    PushSubscribe: {
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: 'web' | 'app'
+      /** Endpoint */
+      endpoint: string
+      keys?: components['schemas']['PushKeys'] | null
+    }
+    /** PushUnsubscribe */
+    PushUnsubscribe: {
+      /** Endpoint */
+      endpoint: string
     }
     /** RevokeTokenResponse */
     RevokeTokenResponse: Record<string, never>
@@ -3992,6 +4047,72 @@ export interface operations {
       }
     }
   }
+  'news:briefing:subscribe_push': {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        profile: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PushSubscribe']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  'news:briefing:unsubscribe_push': {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        profile: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PushUnsubscribe']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
   'news:list_sources': {
     parameters: {
       query?: {
@@ -5213,6 +5334,9 @@ export const oAuth2ClientConfigurationUpdateGrant_typesValues: ReadonlyArray<
 export const oAuthPlatformValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OAuthPlatform']
 > = ['google', 'apple', 'microsoft']
+export const pushSubscribeKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['PushSubscribe']['kind']
+> = ['web', 'app']
 export const scopeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Scope']
 > = ['openid', 'profile', 'email', 'user:read', 'user:write']

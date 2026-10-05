@@ -24,6 +24,7 @@ DENYLIST = REPO / "docs" / "naming" / "denylist.txt"
 ALLOWED_PATHS: tuple[str, ...] = (
     "server/outception/news/summaries/providers/",
     "server/outception/news/heatmap/providers/",
+    "server/outception/news/briefing/providers/",
     "server/outception/news/heatmap/specs.py",
     "server/outception/config.py",
     "server/.env.prod.example",
@@ -49,6 +50,7 @@ ALLOWED_PATHS: tuple[str, ...] = (
     "server/outception/news/data/",
     # The tests of the allowlisted modules name what those modules name.
     "server/tests/news/summaries/",
+    "server/tests/news/briefing/test_push.py",
     "server/tests/news/test_summary.py",
     "server/tests/auth/test_turnstile.py",
     "server/tests/integrations/",

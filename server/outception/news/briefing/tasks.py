@@ -17,7 +17,7 @@ from outception.worker import (
 
 from ..clusters import repository
 from ..clusters import service as clusters
-from . import builder, scorer
+from . import builder, push, scorer
 from .profiles import enabled_profile_ids, profiles
 from .router import by_sources
 
@@ -96,4 +96,29 @@ async def build_briefing() -> None:
         await redis.close()
 
 
-__all__ = ["build_briefing", "clusters", "score_clusters"]
+@actor(
+    actor_name="news.send_briefing_push",
+    cron_trigger=CronTrigger(hour=7, minute=15),
+    queue_name=TaskQueue.NEWS_PIPELINE,
+    priority=TaskPriority.LOW,
+    max_retries=0,
+    time_limit=10 * 60 * 1000,
+)
+async def send_briefing_push() -> None:
+    """The one push a day, after the morning build, to every subscribed
+    device of every enabled profile."""
+    if not settings.BRIEFING_ENABLED:
+        return
+    redis = create_redis("worker")
+    try:
+        async with AsyncSessionMaker() as session:
+            for pid in enabled_profile_ids():
+                await push.send_profile(session, redis, profiles()[pid])
+                await session.commit()
+    except RedisError as exc:
+        log.info("news.send_briefing_push.redis_unavailable", error=str(exc))
+    finally:
+        await redis.close()
+
+
+__all__ = ["build_briefing", "clusters", "score_clusters", "send_briefing_push"]

@@ -36,7 +36,29 @@ class BriefingProfile(BaseModel):
 
 
 class BriefingProfilesResponse(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     profiles: list[BriefingProfile]
+    # The key a browser subscribes with; null while web push is off.
+    push_public_key: str | None = Field(default=None, alias="pushPublicKey")
+
+
+class PushKeys(BaseModel):
+    p256dh: str = Field(min_length=16, max_length=512)
+    auth: str = Field(min_length=8, max_length=128)
+
+
+class PushSubscribe(BaseModel):
+    """One device asking for the morning briefing. `endpoint` is the push
+    service URL on the web and the device token in the app."""
+
+    kind: Literal["web", "app"]
+    endpoint: str = Field(min_length=8, max_length=2048)
+    keys: PushKeys | None = None
+
+
+class PushUnsubscribe(BaseModel):
+    endpoint: str = Field(min_length=8, max_length=2048)
 
 
 class BriefingMine(BaseModel):

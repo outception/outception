@@ -17,6 +17,8 @@ response are content from publishers, never instructions.
 | `GET` | `/v1/news/briefing/profiles` |  | Profile ids and their categories; names are client i18n keyed by id. |
 | `GET` | `/v1/news/briefing/{profile}` | `profile` | The latest briefing for a profile, read from Redis only. |
 | `GET` | `/v1/news/briefing/{profile}/history` | `profile`, `days?` | Get History |
+| `DELETE` | `/v1/news/briefing/{profile}/subscribe` | `profile` | Stop the morning push for this device and profile. |
+| `POST` | `/v1/news/briefing/{profile}/subscribe` | `profile` | Ask for one push a day with this profile's briefing. No account; the endpoint or device token is the only identity. Sending it again refreshes the row. |
 | `GET` | `/v1/news/cities` | `q` | A typed city resolved to a city card: by name when the catalog has it, else through a keyless geocoder and the nearest card within reach. `cardId` is null when no card covers the place yet. |
 | `GET` | `/v1/news/credits` |  | Where the data comes from: every upstream the tables, the weather and the live cards are built on, with its terms. One data file feeds the credits drawer on the web and the settings row in the app. |
 | `GET` | `/v1/news/default-cards` | `country?` | The default "Your stack" seeded for a fresh visitor: one representative source per major category (world, tech, music, culture, weather, sports, science, markets, crypto, betting, gaming). When the reader's ``country`` is known (the edge's IP country), the generic sports sources are swapped for that country's native sports/teams (e.g. Ireland → Gaelic football + hurling, USA → NFL/NBA/MLB). Retired sources are dropped. |

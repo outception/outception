@@ -180,6 +180,11 @@ _BASE_RULES: dict[str, Sequence[Rule]] = {
         Rule(group=RateLimitGroup.elevated, second=20, zone="cards"),
         Rule(group=RateLimitGroup.pending_auth, minute=120, zone="cards"),
     ],
+    "^/v1/news/briefing/[^/]+/subscribe": [
+        Rule(hour=20, block_time=3600, zone="push"),
+        Rule(group=RateLimitGroup.web, hour=20, block_time=3600, zone="push"),
+        Rule(group=RateLimitGroup.pending_auth, hour=20, block_time=3600, zone="push"),
+    ],
     "^/v1/news/briefing/": [
         Rule(minute=60, zone="briefing"),
         Rule(group=RateLimitGroup.web, minute=120, zone="briefing"),

@@ -478,3 +478,25 @@ async def poll_live_signals() -> None:
     finally:
         await _close_quietly(redis)
     log.info("news.poll_live_signals", refreshed=refreshed, failed=failed)
+
+
+@actor(
+    actor_name="news.source_health",
+    cron_trigger=CronTrigger(day_of_week="mon", hour=6, minute=0),
+    queue_name=TaskQueue.NEWS_PIPELINE,
+    priority=TaskPriority.LOW,
+    max_retries=0,
+)
+async def source_health_report() -> None:
+    """Once a week: which sources have served nothing for six days, mailed
+    to the digest address as rows to add to `disabled.json`."""
+    from . import source_health
+
+    redis = create_redis("worker")
+    try:
+        proposed = await source_health.send_report(redis)
+        log.info("news.source_health", proposed=proposed)
+    except RedisError as exc:
+        log.info("news.source_health.redis_unavailable", error=str(exc))
+    finally:
+        await redis.close()

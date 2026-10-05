@@ -29,13 +29,16 @@ PREF_KEY = "briefing_profiles"
 
 
 def profile_list() -> BriefingProfilesResponse:
+    from . import push
+
     return BriefingProfilesResponse(
+        push_public_key=push.public_key(),
         profiles=[
             BriefingProfile(
                 id=p.id, template=p.template, categories=list(p.category_ids)
             )
             for p in profiles().values()
-        ]
+        ],
     )
 
 

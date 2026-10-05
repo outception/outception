@@ -333,6 +333,17 @@
             },
             "title": "Profiles",
             "type": "array"
+          },
+          "pushPublicKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pushpublickey"
           }
         },
         "required": [
@@ -1712,6 +1723,78 @@
         "title": "Place",
         "type": "object"
       },
+      "PushKeys": {
+        "properties": {
+          "auth": {
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Auth",
+            "type": "string"
+          },
+          "p256dh": {
+            "maxLength": 512,
+            "minLength": 16,
+            "title": "P256Dh",
+            "type": "string"
+          }
+        },
+        "required": [
+          "p256dh",
+          "auth"
+        ],
+        "title": "PushKeys",
+        "type": "object"
+      },
+      "PushSubscribe": {
+        "description": "One device asking for the morning briefing. `endpoint` is the push\nservice URL on the web and the device token in the app.",
+        "properties": {
+          "endpoint": {
+            "maxLength": 2048,
+            "minLength": 8,
+            "title": "Endpoint",
+            "type": "string"
+          },
+          "keys": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PushKeys"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "kind": {
+            "enum": [
+              "web",
+              "app"
+            ],
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "endpoint"
+        ],
+        "title": "PushSubscribe",
+        "type": "object"
+      },
+      "PushUnsubscribe": {
+        "properties": {
+          "endpoint": {
+            "maxLength": 2048,
+            "minLength": 8,
+            "title": "Endpoint",
+            "type": "string"
+          }
+        },
+        "required": [
+          "endpoint"
+        ],
+        "title": "PushUnsubscribe",
+        "type": "object"
+      },
       "RefreshTokenRequest": {
         "properties": {
           "client_id": {
@@ -2853,6 +2936,104 @@
         ],
         "x-speakeasy-group": "briefing",
         "x-speakeasy-name-override": "get_history"
+      }
+    },
+    "/v1/news/briefing/{profile}/subscribe": {
+      "delete": {
+        "description": "Stop the morning push for this device and profile.",
+        "operationId": "news:briefing:unsubscribe_push",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "profile",
+            "required": true,
+            "schema": {
+              "title": "Profile",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushUnsubscribe"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unsubscribe Push",
+        "tags": [
+          "news",
+          "briefing",
+          "public"
+        ],
+        "x-speakeasy-group": "briefing",
+        "x-speakeasy-name-override": "unsubscribe_push"
+      },
+      "post": {
+        "description": "Ask for one push a day with this profile's briefing. No account; the\nendpoint or device token is the only identity. Sending it again\nrefreshes the row.",
+        "operationId": "news:briefing:subscribe_push",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "profile",
+            "required": true,
+            "schema": {
+              "title": "Profile",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushSubscribe"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Subscribe Push",
+        "tags": [
+          "news",
+          "briefing",
+          "public"
+        ],
+        "x-speakeasy-group": "briefing",
+        "x-speakeasy-name-override": "subscribe_push"
       }
     },
     "/v1/news/cities": {

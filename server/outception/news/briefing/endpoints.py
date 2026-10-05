@@ -10,13 +10,15 @@ from outception.postgres import AsyncSession, get_db_session
 from outception.redis import Redis, get_redis
 from outception.routing import APIRouter
 
-from . import service
+from . import push, service
 from .profiles import Profile
 from .schemas import (
     BriefingHistoryResponse,
     BriefingMine,
     BriefingProfilesResponse,
     BriefingResponse,
+    PushSubscribe,
+    PushUnsubscribe,
 )
 
 router = APIRouter(prefix="/briefing", tags=["briefing"])
@@ -98,3 +100,27 @@ async def get_history(
     response.headers["Cache-Control"] = "public, max-age=300, s-maxage=900"
     response.headers["Vary"] = "Origin"
     return await service.history(session, _profile(profile), days)
+
+
+@router.post("/{profile}/subscribe", status_code=204, tags=[APITag.public])
+async def subscribe_push(
+    profile: str,
+    body: PushSubscribe,
+    session: AsyncSession = Depends(get_db_session),
+) -> Response:
+    """Ask for one push a day with this profile's briefing. No account; the
+    endpoint or device token is the only identity. Sending it again
+    refreshes the row."""
+    await push.subscribe(session, _profile(profile), body)
+    return Response(status_code=204, headers={"Cache-Control": "no-store"})
+
+
+@router.delete("/{profile}/subscribe", status_code=204, tags=[APITag.public])
+async def unsubscribe_push(
+    profile: str,
+    body: PushUnsubscribe,
+    session: AsyncSession = Depends(get_db_session),
+) -> Response:
+    """Stop the morning push for this device and profile."""
+    await push.unsubscribe(session, _profile(profile), body.endpoint)
+    return Response(status_code=204, headers={"Cache-Control": "no-store"})
