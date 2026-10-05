@@ -252,6 +252,12 @@ jobs:
               printf '%s\n' "$app_db" > .swap-source-db
               if ! compose exec -T db psql -U "$db_user" -d postgres -tAc \
                    "SELECT 1 FROM pg_database WHERE datname='outception_rebuild'" | grep -q 1; then
+                # The host's C library moved on since the cluster was created, so the
+                # template's recorded collation version no longer matches and creating
+                # from it is refused; refreshing the record on the template (which holds
+                # no user data) is the documented remedy. The live database is untouched.
+                compose exec -T db psql -U "$db_user" -d postgres -c \
+                  "ALTER DATABASE template1 REFRESH COLLATION VERSION"
                 compose exec -T db psql -U "$db_user" -d postgres -c "CREATE DATABASE outception_rebuild"
               fi
               env_set OUTCEPTION_POSTGRES_DATABASE outception_rebuild
