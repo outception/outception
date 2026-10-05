@@ -2,7 +2,7 @@
 
 import { useCard } from '@/hooks/queries/news'
 import { useT } from '@/providers/translate'
-import { launchesPath } from '@outception-com/news-core'
+import { flagOn, launchesPath } from '@outception-com/news-core'
 import type { NewsItem } from '@/utils/news'
 import {
   collapseStories,
@@ -78,8 +78,8 @@ export const FeedCard = ({
   )
   const payloadItems = data && isFeedCard(data) ? data.payload.items : undefined
   const flags = useFlags()
-  const hidingRead = flags.includes(FLAGS.hideRead)
-  const everyOutlet = flags.includes(FLAGS.showEveryOutlet)
+  const hidingRead = flagOn(flags, FLAGS.hideRead)
+  const everyOutlet = flagOn(flags, FLAGS.showEveryOutlet)
   const readItems = useReadItems()
   // Memoised: every swipe re-renders all mounted cards (their depth changes),
   // and a fresh array here would re-render every headline row with them.

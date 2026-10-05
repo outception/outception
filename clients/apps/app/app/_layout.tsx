@@ -15,6 +15,8 @@ import { OutceptionQueryClientProvider } from '@/providers/OutceptionQueryClient
 import { SessionProvider } from '@/providers/SessionProvider'
 import DeepLinkProvider from '@/providers/DeepLinkProvider'
 import { useShareLinkListener } from '@/hooks/useShareLinkListener'
+import { useAppOpenTracking } from '@/hooks/useAppOpenTracking'
+import { useNotificationTaps } from '@/hooks/useNotificationTaps'
 import { hydratePrefs } from '@/utils/prefs'
 import { Geist_400Regular, Geist_500Medium } from '@expo-google-fonts/geist'
 import {
@@ -99,6 +101,11 @@ onlineManager.setEventListener((setOnline) => {
 /** Mounted under the navigator so the listener can route. */
 const ShareLinks = () => {
   useShareLinkListener()
+  // A tapped morning push opens its briefing; the store review counter
+  // lives here too, where every open passes (the signed-in layout
+  // redirects away while accounts are off).
+  useNotificationTaps()
+  useAppOpenTracking()
   return null
 }
 

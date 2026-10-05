@@ -105,6 +105,28 @@ export const newsApi = (outception: Client) => ({
   search: (q: string) =>
     unwrap(outception.GET('/v1/news/search', { params: { query: { q } } })),
   briefingProfiles: () => unwrap(outception.GET('/v1/news/briefing/profiles')),
+  briefingHistory: (profile: string, days = 2) =>
+    unwrap(
+      outception.GET('/v1/news/briefing/{profile}/history', {
+        params: { path: { profile }, query: { days } },
+      }),
+    ),
+  // One push a morning with the profile's briefing; the device token is the
+  // only identity, there is no account.
+  subscribePush: (profile: string, token: string) =>
+    unwrap(
+      outception.POST('/v1/news/briefing/{profile}/subscribe', {
+        params: { path: { profile } },
+        body: { kind: 'app', endpoint: token },
+      }),
+    ),
+  unsubscribePush: (profile: string, token: string) =>
+    unwrap(
+      outception.DELETE('/v1/news/briefing/{profile}/subscribe', {
+        params: { path: { profile } },
+        body: { endpoint: token },
+      }),
+    ),
   briefing: (profile: string) =>
     unwrap(
       outception.GET('/v1/news/briefing/{profile}', {

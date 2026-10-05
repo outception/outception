@@ -85,6 +85,36 @@ export const newsApi = {
     unwrap(
       api.GET('/v1/news/briefing/{profile}', { params: { path: { profile } } }),
     ),
+  // The last days of a briefing, newest first, for "since yesterday".
+  briefingHistory: (profile: string, days = 2) =>
+    unwrap(
+      api.GET('/v1/news/briefing/{profile}/history', {
+        params: { path: { profile }, query: { days } },
+      }),
+    ),
+  // One push a morning with the profile's briefing; the endpoint is the only
+  // identity, there is no account.
+  subscribePush: (
+    profile: string,
+    body: {
+      kind: 'web'
+      endpoint: string
+      keys: { p256dh: string; auth: string }
+    },
+  ) =>
+    unwrap(
+      api.POST('/v1/news/briefing/{profile}/subscribe', {
+        params: { path: { profile } },
+        body,
+      }),
+    ),
+  unsubscribePush: (profile: string, endpoint: string) =>
+    unwrap(
+      api.DELETE('/v1/news/briefing/{profile}/subscribe', {
+        params: { path: { profile } },
+        body: { endpoint },
+      }),
+    ),
   story: (id: string) =>
     unwrap(
       api.GET('/v1/news/story/{story_id}', {

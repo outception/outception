@@ -2,19 +2,32 @@ import { Box } from '@/components/Shared/Box'
 import { Text } from '@/components/Shared/Text'
 import { Touchable } from '@/components/Shared/Touchable'
 import { useTheme } from '@/design-system/useTheme'
-import { useBriefing, useBriefingProfiles } from '@/hooks/outception/news'
+import {
+  useBriefing,
+  useBriefingHistory,
+  useBriefingProfiles,
+} from '@/hooks/outception/news'
+import { usePushSubscription } from '@/hooks/usePushSubscription'
+import {
+  getSpeakingSnapshot,
+  speakHeadlines,
+  stopSpeaking,
+} from '@/utils/listen'
 import { useT } from '@/providers/translate'
 import { openExternalUrl } from '@/utils/news'
 import { getMutedWords, subscribeMutedWords } from '@/utils/prefs'
 import { getTranslations } from '@outception-com/i18n'
 import {
+  briefingDayOf,
   coverage,
+  dayBefore,
+  diffBriefings,
   filterBriefing,
   groupByCategory,
   scoreTier,
   timeAgo,
 } from '@outception-com/news-core'
-import { useMemo, useSyncExternalStore } from 'react'
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { ActivityIndicator, ScrollView } from 'react-native'
 
 const DEFAULT_PROFILE = 'news-junkie'
@@ -24,6 +37,35 @@ const profileName = (profile: string, template?: string): string => {
   const names = getTranslations().news.templates.names as Record<string, string>
   return names[template ?? profile] ?? names[profile] ?? profile
 }
+
+/** One switch in the tools row above the briefing. */
+const Pill = ({
+  active,
+  disabled,
+  label,
+  onPress,
+}: {
+  active: boolean
+  disabled?: boolean
+  label: string
+  onPress: () => void
+}) => (
+  <Touchable onPress={onPress} disabled={disabled}>
+    <Box
+      paddingVertical="spacing-4"
+      paddingHorizontal="spacing-12"
+      borderRadius="border-radius-8"
+      backgroundColor={active ? 'card' : undefined}
+      borderWidth={1}
+      borderColor="border"
+      opacity={disabled ? 0.5 : 1}
+    >
+      <Text variant="caption" color={active ? 'text' : 'subtext'}>
+        {label}
+      </Text>
+    </Box>
+  </Touchable>
+)
 
 /** The whole briefing for one profile: every section in full, the coverage
  * line and the why line under each story, and the other profiles to switch
@@ -46,10 +88,31 @@ export const BriefingScreen = ({
     getMutedWords,
     getMutedWords,
   )
-  const groups = useMemo(
-    () => (data ? groupByCategory(filterBriefing(data.items, mutedWords)) : []),
-    [data, mutedWords],
+  // "Since yesterday": today's stories against the previous day's build,
+  // fetched only when the reader asks.
+  const [sinceYesterday, setSinceYesterday] = useState(false)
+  const { data: history } = useBriefingHistory(active, sinceYesterday)
+  const diff = useMemo(() => {
+    if (!data || !history) return null
+    const yesterday = dayBefore(history.days, briefingDayOf(data.builtAt))
+    return { yesterday, ...diffBriefings(data.items, yesterday?.items ?? null) }
+  }, [data, history])
+  const groups = useMemo(() => {
+    if (!data) return []
+    const items = sinceYesterday && diff ? diff.fresh : data.items
+    return groupByCategory(filterBriefing(items, mutedWords))
+  }, [data, diff, mutedWords, sinceYesterday])
+  const lines = useMemo(
+    () =>
+      groups.flatMap((group) => [
+        group.category,
+        ...group.items.map((item) => item.title),
+      ]),
+    [groups],
   )
+  const [speaking, setSpeaking] = useState(false)
+  useEffect(() => () => stopSpeaking(), [])
+  const push = usePushSubscription(active)
   return (
     <ScrollView
       contentContainerStyle={{ paddingBottom: theme.spacing['spacing-48'] }}
@@ -93,10 +156,62 @@ export const BriefingScreen = ({
           </Box>
         ) : null}
 
+        {data ? (
+          <Box flexDirection="row" flexWrap="wrap" gap="spacing-8">
+            <Pill
+              active={sinceYesterday}
+              label={
+                sinceYesterday
+                  ? t('news.briefing.everything')
+                  : t('news.briefing.sinceYesterday')
+              }
+              onPress={() => setSinceYesterday((was) => !was)}
+            />
+            {lines.length > 0 ? (
+              <Pill
+                active={speaking}
+                label={
+                  speaking
+                    ? t('news.briefing.stopListening')
+                    : t('news.briefing.listen')
+                }
+                onPress={() => {
+                  if (getSpeakingSnapshot()) {
+                    stopSpeaking()
+                    setSpeaking(false)
+                  } else {
+                    speakHeadlines(lines, 'en')
+                    setSpeaking(true)
+                  }
+                }}
+              />
+            ) : null}
+            <Pill
+              active={push.chosen}
+              disabled={push.busy}
+              label={
+                push.chosen
+                  ? t('news.briefing.notifyOn')
+                  : t('news.briefing.notify')
+              }
+              onPress={() => void push.toggle()}
+            />
+          </Box>
+        ) : null}
+        {sinceYesterday && diff ? (
+          <Text variant="caption" color="subtext">
+            {diff.yesterday === null
+              ? t('news.briefing.firstDay')
+              : diff.fresh.length === 0
+                ? t('news.briefing.nothingNew')
+                : t('news.briefing.freshCount', { count: diff.fresh.length })}
+          </Text>
+        ) : null}
+
         {isLoading ? (
           <ActivityIndicator size="large" color={theme.colors.subtext} />
         ) : null}
-        {isError || (!isLoading && groups.length === 0) ? (
+        {isError || (!isLoading && !sinceYesterday && groups.length === 0) ? (
           <Text variant="body" color="subtext">
             {t('news.briefing.empty')}
           </Text>

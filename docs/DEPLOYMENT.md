@@ -32,6 +32,7 @@ The settings that break the product when wrong:
 | `OUTCEPTION_ADMIN_EMAILS`, `NEXT_PUBLIC_ADMIN_EMAILS` | Who may open the Products of the day review page; the two must agree. |
 | `OUTCEPTION_MEDIA_DIR` | Product logos for the daily card, on the `media_data` volume. |
 | `OUTCEPTION_EMAIL_*` | SMTP for the one-time codes and the submitter's reply; the deploy fills it from repository secrets. |
+| `OUTCEPTION_WEB_PUSH_VAPID_PUBLIC_KEY`, `OUTCEPTION_WEB_PUSH_VAPID_PRIVATE_KEY`, `OUTCEPTION_WEB_PUSH_SUBJECT` | The morning briefing push on the web. Generate the pair once with `vapid --gen` from the server env and keep it; the subject is a `mailto:` address. Unset, the notify switch is hidden. |
 | `LLM_*`, `DECISION_CHAIN_*`, `ENGINE_URL` | The governor's lanes, caps and chains; every key stays in the provider modules and the env, nowhere else. |
 
 Migrations run in the one-shot `migrate` service before the API and the

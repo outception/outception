@@ -60,3 +60,37 @@ describe('stories', () => {
     expect(hideRead(items, (id) => id === '1').length).toBe(3)
   })
 })
+
+describe('flag defaults', () => {
+  it('auto-play is on until declined, and the decline survives', async () => {
+    const { FLAG_DEFAULTS, flagOn, offMark, setFlag, toggleFlagOn } =
+      await import('./lists')
+    const storage = createMemoryStorage()
+    const store = createFlagStore(storage)
+    expect(FLAG_DEFAULTS[FLAGS.autoplay]).toBe(true)
+    expect(flagOn(store.get(), FLAGS.autoplay)).toBe(true)
+    expect(flagOn(store.get(), FLAGS.hideRead)).toBe(false)
+    toggleFlagOn(store, FLAGS.autoplay)
+    expect(flagOn(store.get(), FLAGS.autoplay)).toBe(false)
+    expect(store.get()).toEqual([offMark(FLAGS.autoplay)])
+    setFlag(store, FLAGS.autoplay, true)
+    expect(store.get()).toEqual([FLAGS.autoplay])
+    // A reader who switched it on before the default changed stays on.
+    setFlag(store, FLAGS.hideRead, true)
+    expect(flagOn(store.get(), FLAGS.hideRead)).toBe(true)
+  })
+})
+
+describe('rankByCoverage', () => {
+  it('lifts the widest-reported cards and keeps the rest in place', async () => {
+    const { rankByCoverage } = await import('./stories')
+    const coverage: Record<string, number> = { b: 4, d: 2 }
+    expect(rankByCoverage(['a', 'b', 'c', 'd'], (id) => coverage[id])).toEqual([
+      'b',
+      'd',
+      'a',
+      'c',
+    ])
+    expect(rankByCoverage([], () => 1)).toEqual([])
+  })
+})

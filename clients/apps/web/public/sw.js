@@ -52,3 +52,43 @@ self.addEventListener('fetch', (event) => {
     )
   }
 })
+
+/* The morning briefing push: one notification a day per chosen briefing,
+ * carrying the lead story. The payload is JSON from our own server; a push
+ * without a readable payload shows nothing. */
+self.addEventListener('push', (event) => {
+  let data = null
+  try {
+    data = event.data ? event.data.json() : null
+  } catch {
+    data = null
+  }
+  if (!data || !data.title) return
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body || '',
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      tag: data.profile ? `briefing-${data.profile}` : 'briefing',
+      data: { url: data.url || '/' },
+    }),
+  )
+})
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const url = new URL(
+    (event.notification.data && event.notification.data.url) || '/',
+    self.location.origin,
+  ).href
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then((windows) => {
+        for (const client of windows) {
+          if (client.url === url && 'focus' in client) return client.focus()
+        }
+        return self.clients.openWindow(url)
+      }),
+  )
+})

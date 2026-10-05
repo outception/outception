@@ -1,5 +1,5 @@
 <!-- doc-covers: .github/workflows/test_server.yaml .github/workflows/test_client.yaml server/pyproject.toml -->
-<!-- doc-verified: 06ea109 -->
+<!-- doc-verified: 48e98d8 -->
 
 # Testing
 

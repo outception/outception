@@ -88,3 +88,54 @@ export const coverage = (
   lead: item.leadSourceName,
   others: Math.max(0, item.publisherCount - 1),
 })
+
+/** The day a briefing was built for, as the history route keys it. */
+export const briefingDayOf = (builtAt: number): string =>
+  new Date(builtAt).toISOString().slice(0, 10)
+
+export interface BriefingDayLike<T> {
+  builtFor: string
+  items: readonly T[]
+}
+
+/** The most recent history day strictly before `today`; null on the first
+ * day. History arrives newest first but is not trusted to. */
+export const dayBefore = <T>(
+  days: readonly BriefingDayLike<T>[],
+  today: string,
+): BriefingDayLike<T> | null => {
+  let best: BriefingDayLike<T> | null = null
+  for (const day of days) {
+    if (day.builtFor >= today) continue
+    if (best === null || day.builtFor > best.builtFor) best = day
+  }
+  return best
+}
+
+export interface BriefingDiff<T> {
+  /** Stories that were not in yesterday's briefing, in today's order. */
+  fresh: T[]
+  /** Stories carried over from yesterday, in today's order. */
+  carried: T[]
+  /** How many of yesterday's stories dropped out. */
+  gone: number
+}
+
+/** "What changed since yesterday": today's items against the previous
+ * day's, by story. Without a previous day every story is fresh. */
+export const diffBriefings = <T extends { clusterId: string }>(
+  today: readonly T[],
+  yesterday: readonly { clusterId: string }[] | null,
+): BriefingDiff<T> => {
+  const before = new Set((yesterday ?? []).map((item) => item.clusterId))
+  const fresh: T[] = []
+  const carried: T[] = []
+  for (const item of today) {
+    if (before.has(item.clusterId)) carried.push(item)
+    else fresh.push(item)
+  }
+  const now = new Set(today.map((item) => item.clusterId))
+  let gone = 0
+  for (const id of before) if (!now.has(id)) gone += 1
+  return { fresh, carried, gone }
+}

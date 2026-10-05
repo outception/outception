@@ -40,6 +40,9 @@ const plugins = [
     },
   ],
   'expo-quick-actions',
+  // The morning briefing push; no sound, no badge, one a day per chosen
+  // briefing.
+  ['expo-notifications', { icon: './assets/images/icon.png' }],
 ]
 
 module.exports = {

@@ -25,12 +25,16 @@ import {
   parseShareLink,
   restoreFromLink,
   shouldOfferStarters,
+  isCountryCardId,
+  rankByCoverage,
+  type Card,
   type ShareLinkState,
 } from '@outception-com/news-core'
 import { Button } from '@outception-com/orbit/Button'
 import { Spinner } from '@outception-com/orbit/Spinner'
 import { Text } from '@outception-com/orbit/Text'
 import { Box } from '@outception-com/orbit/Box'
+import { useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'next/navigation'
 import {
   useCallback,
@@ -70,6 +74,23 @@ const countryName = (code: string): string => {
  * deck is seeded with the reader's country default, so the wall is never
  * blank. The pills, the "Cards" palette and the edition fan live in the top
  * bar (see LandingLayout). */
+/** The composed deck with its pinned head kept (the shared card, the
+ * country card, the briefings) and the rest ordered by coverage. */
+const rankDeck = (
+  deck: string[],
+  sharedCardId: string | null | undefined,
+  coverageOf: (id: string) => number,
+): string[] => {
+  const pinned = (id: string) =>
+    id === sharedCardId || isBriefingCardId(id) || isCountryCardId(id)
+  let head = 0
+  while (head < deck.length && pinned(deck[head] as string)) head += 1
+  return [
+    ...deck.slice(0, head),
+    ...rankByCoverage(deck.slice(head), coverageOf),
+  ]
+}
+
 export const NewsWall = ({ focusTopic }: { focusTopic?: string } = {}) => {
   const { focused, hidden, isFailed, setSearchOpen, setDeck } = useNewsColumn()
   const t = useT()
@@ -141,18 +162,49 @@ export const NewsWall = ({ focusTopic }: { focusTopic?: string } = {}) => {
   // One composer for the wall, the hand and the app: the followed set wins
   // (in follow order), a fresh visitor's empty set falls back to the seed, a
   // shared card leads, and the briefing cards follow it.
+  const queryClient = useQueryClient()
+  // Coverage as the wall knew it on arrival: the best outlet count among a
+  // card's cached rows. Read once, so cards never jump while the reader
+  // swipes; the next visit sees the new order.
+  const coverageAtMount = useRef<Map<string, number> | null>(null)
+  const coverageOf = useCallback(
+    (id: string): number => {
+      if (coverageAtMount.current === null) coverageAtMount.current = new Map()
+      const known = coverageAtMount.current.get(id)
+      if (known !== undefined) return known
+      const cached = queryClient.getQueryData<Card>(['news', 'card', id, null])
+      const rows =
+        cached?.kind === 'feed'
+          ? ((
+              cached.payload as { items?: { publisherCount?: number | null }[] }
+            ).items ?? [])
+          : []
+      const best = rows.reduce(
+        (max, row) => Math.max(max, row.publisherCount ?? 0),
+        0,
+      )
+      coverageAtMount.current.set(id, best)
+      return best
+    },
+    [queryClient],
+  )
   const ids = useMemo(
     () =>
-      composeDeck({
-        followed: viewingShared ? sharedDeck : focused,
-        seed: defaultCardIds ?? [],
-        cleared: viewingShared ? true : cardsCleared,
-        hidden: viewingShared ? EMPTY : hidden,
-        sharedCard: sharedCardId,
-        countryCard: country ? countryCardId(country) : null,
-        briefingProfiles: viewingShared ? EMPTY : profiles,
-      }),
+      rankDeck(
+        composeDeck({
+          followed: viewingShared ? sharedDeck : focused,
+          seed: defaultCardIds ?? [],
+          cleared: viewingShared ? true : cardsCleared,
+          hidden: viewingShared ? EMPTY : hidden,
+          sharedCard: sharedCardId,
+          countryCard: country ? countryCardId(country) : null,
+          briefingProfiles: viewingShared ? EMPTY : profiles,
+        }),
+        sharedCardId,
+        coverageOf,
+      ),
     [
+      coverageOf,
       viewingShared,
       sharedDeck,
       focused,

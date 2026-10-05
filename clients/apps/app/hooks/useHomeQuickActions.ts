@@ -3,7 +3,7 @@ import * as QuickActions from 'expo-quick-actions'
 import { useQuickActionCallback } from 'expo-quick-actions/hooks'
 import { getTranslations } from '@outception-com/i18n'
 
-export type QuickActionTarget = 'cards' | 'sources' | 'search'
+export type QuickActionTarget = 'cards' | 'sources' | 'search' | 'briefing'
 
 /** Home-screen quick actions (long-press the app icon): jump straight to the
  * card set, the sources browser, or headline search - a native launcher capability
@@ -33,6 +33,12 @@ export const useHomeQuickActions = (
         icon: 'search',
         params: { target: 'search' },
       },
+      {
+        id: 'briefing',
+        title: tr.news.quickActions.briefing,
+        icon: 'symbol:newspaper',
+        params: { target: 'briefing' },
+      },
     ])
   }, [])
 
@@ -47,7 +53,12 @@ export const useHomeQuickActions = (
 
   const handle = useCallback((action: QuickActions.Action) => {
     const target = action.params?.target
-    if (target === 'cards' || target === 'sources' || target === 'search') {
+    if (
+      target === 'cards' ||
+      target === 'sources' ||
+      target === 'search' ||
+      target === 'briefing'
+    ) {
       onSelectRef.current(target)
     }
   }, [])

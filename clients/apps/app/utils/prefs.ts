@@ -11,6 +11,7 @@ import {
   createFlagStore,
   createMutedWordsStore,
   createPrefsStore,
+  createPushStore,
   createReadStore,
   type FocusRequest,
 } from '@outception-com/news-core'
@@ -22,6 +23,7 @@ const store = createPrefsStore(storage)
 export const mutedWords = createMutedWordsStore(storage)
 export const flags = createFlagStore(storage)
 export const readItems = createReadStore(storage)
+export const pushProfiles = createPushStore(storage)
 
 const HYDRATED_KEYS = [
   PREF_KEYS.focused,
@@ -32,6 +34,7 @@ const HYDRATED_KEYS = [
   PREF_KEYS.mutedWords,
   PREF_KEYS.flags,
   PREF_KEYS.readItems,
+  PREF_KEYS.pushProfiles,
   PREF_KEYS.firstVisit,
   PREF_KEYS.cardPositions,
   PREF_KEYS.edition,
@@ -45,6 +48,7 @@ export const hydratePrefs = (): Promise<void> =>
     mutedWords.refresh()
     flags.refresh()
     readItems.refresh()
+    pushProfiles.refresh()
   })
 
 export const subscribeFocused = store.subscribe

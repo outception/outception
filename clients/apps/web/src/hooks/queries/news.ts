@@ -228,6 +228,17 @@ export const useBriefing = (profile: string | null) =>
     retry: defaultRetry,
   })
 
+/** The previous days of a briefing, only when the reader asks what
+ * changed. */
+export const useBriefingHistory = (profile: string | null, enabled: boolean) =>
+  useQuery({
+    queryKey: ['news', 'briefing', profile, 'history'],
+    queryFn: () => newsApi.briefingHistory(profile as string, 2),
+    enabled: !!profile && enabled,
+    staleTime: 900_000,
+    retry: defaultRetry,
+  })
+
 export const useStory = (id: string | null) =>
   useQuery({
     queryKey: ['news', 'story', id],

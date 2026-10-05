@@ -114,8 +114,45 @@ export const FLAGS = Object.freeze({
 
 export type Flag = (typeof FLAGS)[keyof typeof FLAGS]
 
+/** What a switch does when the reader has not touched it. Auto-play is on:
+ * the wall plays itself until the reader pauses it, and the play control
+ * stays in reach. */
+export const FLAG_DEFAULTS: Readonly<Record<Flag, boolean>> = Object.freeze({
+  [FLAGS.hideRead]: false,
+  [FLAGS.showEveryOutlet]: false,
+  [FLAGS.autoplay]: true,
+})
+
+/** A switch the reader turned off is stored as `off:<flag>`, so a default
+ * that is on can be declined and the choice survives a default change. */
+export const offMark = (flag: Flag): string => `off:${flag}`
+
+/** Whether a switch is on: the reader's choice first, the default after. */
+export const flagOn = (flags: readonly string[], flag: Flag): boolean => {
+  if (flags.includes(offMark(flag))) return false
+  if (flags.includes(flag)) return true
+  return FLAG_DEFAULTS[flag]
+}
+
+export const setFlag = (store: ListStore, flag: Flag, on: boolean): void => {
+  if (on) {
+    store.remove(offMark(flag))
+    store.add(flag)
+  } else {
+    store.remove(flag)
+    store.add(offMark(flag))
+  }
+}
+
+export const toggleFlagOn = (store: ListStore, flag: Flag): void =>
+  setFlag(store, flag, !flagOn(store.get(), flag))
+
 export const createFlagStore = (storage: PrefsStorage): ListStore =>
   createListStore(storage, PREF_KEYS.flags, { max: 32 })
+
+/** The briefing profiles this device asked a morning push for. */
+export const createPushStore = (storage: PrefsStorage): ListStore =>
+  createListStore(storage, PREF_KEYS.pushProfiles, { max: 16 })
 
 export const createReadStore = (storage: PrefsStorage): ListStore =>
   createListStore(storage, PREF_KEYS.readItems, { max: 500 })

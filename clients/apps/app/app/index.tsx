@@ -70,6 +70,10 @@ export default function Home() {
     setWelcomeOpen(false)
   }
   useHomeQuickActions((target) => {
+    if (target === 'briefing') {
+      router.push('/briefing')
+      return
+    }
     if (target === 'cards') {
       closeSources()
       return

@@ -27,6 +27,7 @@ import {
 import { TellUsSheet } from '@/components/Landing/TellUsSheet'
 import { useNewsColumn } from './NewsColumnContext'
 import { FLAGS, toggleFlag, useFlags } from './readerStores'
+import { flagOn } from '@outception-com/news-core'
 import {
   getBriefingProfilesSnapshot,
   getBriefingProfilesServerSnapshot,
@@ -47,9 +48,9 @@ const DISCUSSIONS_URL = 'https://github.com/outception/outception/discussions'
 const ReadingControls = ({ open }: { open: boolean }) => {
   const t = useT()
   const flags = useFlags()
-  const hideRead = flags.includes(FLAGS.hideRead)
-  const everyOutlet = flags.includes(FLAGS.showEveryOutlet)
-  const autoplay = flags.includes(FLAGS.autoplay)
+  const hideRead = flagOn(flags, FLAGS.hideRead)
+  const everyOutlet = flagOn(flags, FLAGS.showEveryOutlet)
+  const autoplay = flagOn(flags, FLAGS.autoplay)
   return (
     <span
       className="nav-pill-looks nav-pill-controls"

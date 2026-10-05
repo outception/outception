@@ -1,6 +1,5 @@
 import { ErrorFallback } from '@/components/Errors/Fallback'
 import { useTheme } from '@/design-system/useTheme'
-import { useAppOpenTracking } from '@/hooks/useAppOpenTracking'
 import { useSession } from '@/providers/SessionProvider'
 import { ToastProvider } from '@/providers/ToastProvider'
 import { UserProvider } from '@/providers/UserProvider'
@@ -42,8 +41,6 @@ const RootLayout = () => {
   const theme = useTheme()
   const { session } = useSession()
   const scheme = useColorScheme()
-
-  useAppOpenTracking()
 
   if (!ACCOUNTS_ENABLED || !session) {
     return <Redirect href="/" />

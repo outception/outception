@@ -7,10 +7,18 @@ import {
   getMutedWordsServerSnapshot,
   subscribeMutedWords,
 } from '@/components/News/mutedWords'
-import { useBriefing, useBriefingProfiles } from '@/hooks/queries/news'
+import {
+  useBriefing,
+  useBriefingHistory,
+  useBriefingProfiles,
+} from '@/hooks/queries/news'
+import { BriefingTools, ListenButton, NotifyButton } from './BriefingTools'
 import { useT } from '@/providers/translate'
 import {
+  briefingDayOf,
   briefingPath,
+  dayBefore,
+  diffBriefings,
   filterBriefing,
   groupByCategory,
   safeExternalHref,
@@ -19,7 +27,7 @@ import { Box } from '@outception-com/orbit/Box'
 import { Text } from '@outception-com/orbit/Text'
 import OutceptionTimeAgo from '@outception-com/ui/components/atoms/OutceptionTimeAgo'
 import Link from 'next/link'
-import { useMemo, useSyncExternalStore } from 'react'
+import { useMemo, useState, useSyncExternalStore } from 'react'
 
 /** The whole briefing for one profile: every section in full, the why line
  * under each story, and the other profiles to switch to. */
@@ -33,9 +41,28 @@ export const BriefingPage = ({ profile }: { profile: string }) => {
     getMutedWords,
     getMutedWordsServerSnapshot,
   )
-  const groups = useMemo(
-    () => (data ? groupByCategory(filterBriefing(data.items, mutedWords)) : []),
-    [data, mutedWords],
+  // "Since yesterday": today's stories against the previous day's build,
+  // fetched only when the reader asks.
+  const [sinceYesterday, setSinceYesterday] = useState(false)
+  const { data: history } = useBriefingHistory(profile, sinceYesterday)
+  const diff = useMemo(() => {
+    if (!data || !history) return null
+    const yesterday = dayBefore(history.days, briefingDayOf(data.builtAt))
+    return { yesterday, ...diffBriefings(data.items, yesterday?.items ?? null) }
+  }, [data, history])
+  const shown = useMemo(() => {
+    if (!data) return []
+    const items = sinceYesterday && diff ? diff.fresh : data.items
+    return filterBriefing(items, mutedWords)
+  }, [data, diff, mutedWords, sinceYesterday])
+  const groups = useMemo(() => groupByCategory(shown), [shown])
+  const lines = useMemo(
+    () =>
+      groups.flatMap((group) => [
+        group.category,
+        ...group.items.map((item) => item.title),
+      ]),
+    [groups],
   )
   return (
     <Box
@@ -93,7 +120,35 @@ export const BriefingPage = ({ profile }: { profile: string }) => {
         </Box>
       ) : null}
 
-      {!isLoading && groups.length === 0 ? (
+      {data ? (
+        <BriefingTools>
+          <button
+            type="button"
+            className="ghost-pill"
+            aria-pressed={sinceYesterday}
+            data-active={sinceYesterday}
+            onClick={() => setSinceYesterday((was) => !was)}
+          >
+            {sinceYesterday
+              ? t('news.briefing.everything')
+              : t('news.briefing.sinceYesterday')}
+          </button>
+          <ListenButton lines={lines} />
+          <NotifyButton profile={profile} publicKey={profiles?.pushPublicKey} />
+        </BriefingTools>
+      ) : null}
+
+      {sinceYesterday && diff ? (
+        <Text variant="caption" color="muted">
+          {diff.yesterday === null
+            ? t('news.briefing.firstDay')
+            : diff.fresh.length === 0
+              ? t('news.briefing.nothingNew')
+              : t('news.briefing.freshCount', { count: diff.fresh.length })}
+        </Text>
+      ) : null}
+
+      {!isLoading && !sinceYesterday && groups.length === 0 ? (
         <Text color="muted">{t('news.briefing.empty')}</Text>
       ) : null}
 

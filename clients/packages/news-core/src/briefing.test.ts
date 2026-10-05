@@ -65,3 +65,31 @@ describe('briefing', () => {
     ).toEqual([])
   })
 })
+
+describe('since yesterday', () => {
+  it('finds the previous day and splits fresh from carried', async () => {
+    const { briefingDayOf, dayBefore, diffBriefings } =
+      await import('./briefing')
+    const today = briefingDayOf(Date.UTC(2026, 9, 6, 7))
+    expect(today).toBe('2026-10-06')
+    const days = [
+      { builtFor: '2026-10-06', items: [{ clusterId: 'x' }] },
+      { builtFor: '2026-10-04', items: [{ clusterId: 'old' }] },
+      {
+        builtFor: '2026-10-05',
+        items: [{ clusterId: 'a' }, { clusterId: 'b' }],
+      },
+    ]
+    const yesterday = dayBefore(days, today)
+    expect(yesterday?.builtFor).toBe('2026-10-05')
+    const diff = diffBriefings(
+      [{ clusterId: 'b' }, { clusterId: 'c' }],
+      yesterday?.items ?? null,
+    )
+    expect(diff.fresh.map((i) => i.clusterId)).toEqual(['c'])
+    expect(diff.carried.map((i) => i.clusterId)).toEqual(['b'])
+    expect(diff.gone).toBe(1)
+    expect(dayBefore(days, '2026-10-04')).toBeNull()
+    expect(diffBriefings([{ clusterId: 'z' }], null).fresh).toHaveLength(1)
+  })
+})

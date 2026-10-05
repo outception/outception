@@ -22,6 +22,7 @@ export const PREF_KEYS = Object.freeze({
   look: 'news.wallLook',
   readItems: 'news.readItems',
   flags: 'news.flags',
+  pushProfiles: 'news.pushProfiles',
 })
 
 /** Synchronous key-value storage. The web passes `localStorage`; the app

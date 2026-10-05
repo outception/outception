@@ -188,6 +188,21 @@ export const useBriefingProfiles = () => {
   })
 }
 
+/** The previous days of a briefing, only when the reader asks what
+ * changed. */
+export const useBriefingHistory = (
+  profile: string | undefined,
+  enabled: boolean,
+) => {
+  const { outception } = useOutceptionClient()
+  return useQuery({
+    queryKey: ['news', 'briefing', profile, 'history'],
+    queryFn: () => newsApi(outception).briefingHistory(profile ?? '', 2),
+    enabled: !!profile && enabled,
+    staleTime: 900_000,
+  })
+}
+
 export const useBriefing = (profile: string | undefined) => {
   const { outception } = useOutceptionClient()
   return useQuery({
