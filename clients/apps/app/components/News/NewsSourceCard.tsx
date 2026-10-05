@@ -15,7 +15,13 @@ import { FollowButton } from './FollowButton'
 import { ShareButton } from './ShareButton'
 import { NewsListHot, NewsListTimeline } from './NewsCardList'
 import { showHeadlineActions } from './headlineActions'
-import { getMutedWords, isMuted, subscribeMutedWords } from '@/utils/prefs'
+import {
+  flags,
+  getMutedWords,
+  readItems,
+  subscribeMutedWords,
+} from '@/utils/prefs'
+import { FLAGS, feedRows, flagOn } from '@outception-com/news-core'
 import { useClipPartialRows } from './useClipPartialRows'
 import { KICKER_STYLE } from './newsStyles'
 import { SourceAccentTab } from './SourceAccentTab'
@@ -89,9 +95,19 @@ export const NewsSourceCard = memo(function NewsSourceCard({
     getMutedWords,
     getMutedWords,
   )
-  const items = (data?.items ?? [])
-    .filter((it) => !isMuted(it.title, mutedWords))
-    .slice(0, MAX_ITEMS)
+  const flagList = useSyncExternalStore(flags.subscribe, flags.get, flags.get)
+  const readList = useSyncExternalStore(
+    readItems.subscribe,
+    readItems.get,
+    readItems.get,
+  )
+  const items = feedRows({
+    items: data?.items ?? [],
+    mutedWords,
+    everyOutlet: flagOn(flagList, FLAGS.showEveryOutlet),
+    hidingRead: flagOn(flagList, FLAGS.hideRead),
+    read: new Set(readList),
+  }).slice(0, MAX_ITEMS)
   const onItemLongPress = (item: (typeof items)[number]) =>
     showHeadlineActions(item, source, items)
   const now = useMinuteNow(Boolean(elevated))

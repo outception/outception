@@ -4,6 +4,8 @@
  * first (highest-ranked) and carrying the outlet count.
  */
 
+import { filterMuted } from './mutedWords'
+
 export interface Clustered {
   id: string
   clusterId?: string | null
@@ -65,3 +67,29 @@ export const liftCoverage = <T extends Clustered>(items: readonly T[]): T[] =>
       return cb - ca || a.index - b.index
     })
     .map((entry) => entry.item)
+
+export interface FeedRowsInput<T> {
+  items: readonly T[]
+  mutedWords: readonly string[]
+  /** Every outlet's copy instead of one row per story. */
+  everyOutlet: boolean
+  /** Drop what the reader already opened. */
+  hidingRead: boolean
+  read: ReadonlySet<string> | ((id: string) => boolean)
+}
+
+/** The rows a feed card shows, the same on every client: muted words
+ * out, one row per story with the widely carried ones first unless the
+ * reader asked for every outlet, read rows out when asked. */
+export const feedRows = <T extends Clustered & { title: string }>({
+  items,
+  mutedWords,
+  everyOutlet,
+  hidingRead,
+  read,
+}: FeedRowsInput<T>): T[] => {
+  let rows: T[] = [...filterMuted(items, mutedWords, (item) => item.title)]
+  if (!everyOutlet) rows = liftCoverage(collapseStories(rows))
+  if (hidingRead) rows = hideRead(rows, read)
+  return rows
+}

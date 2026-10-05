@@ -8,8 +8,9 @@ import {
   isSummarizable,
   openExternalUrl,
   timeAgo,
-  type NewsItem,
+  type CardItem as NewsItem,
 } from '@/utils/news'
+import { hasCoverage } from '@outception-com/news-core'
 import { InlineSummary } from './InlineSummary'
 import { KICKER_STYLE } from './newsStyles'
 import type { useClipPartialRows } from './useClipPartialRows'
@@ -100,6 +101,18 @@ const ExtraInfo = ({ item }: { item: NewsItem }) => {
 /** The trailing `info` string appended inline after a headline (the common
  * aggregator case), falling back to the icon form like the web's ExtraInfo -
  * icon-only sources otherwise show nothing where web shows the favicon. */
+/** The coverage line under a clustered row: how many outlets carry the
+ * story, as the web wall shows it. */
+const CoverageInfo = ({ item }: { item: NewsItem }) => {
+  const t = useT()
+  if (!hasCoverage(item)) return null
+  return (
+    <Text variant="caption" color="subtext">
+      {t('news.card.outlets', { count: item.publisherCount ?? 0 })}
+    </Text>
+  )
+}
+
 const InlineInfo = ({ item }: { item: NewsItem }) =>
   item.extra?.info ? (
     <Text variant="caption" color="subtext">
@@ -157,6 +170,7 @@ export const NewsListHot = ({
                     {item.title}
                     <InlineInfo item={item} />
                   </Text>
+                  <CoverageInfo item={item} />
                 </Box>
               ) : (
                 <Box
@@ -188,6 +202,7 @@ export const NewsListHot = ({
                       {item.title}
                       <InlineInfo item={item} />
                     </Text>
+                    <CoverageInfo item={item} />
                   </Box>
                 </Box>
               )}

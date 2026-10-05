@@ -12,6 +12,19 @@ import { WEB_URL } from '@/utils/env'
 export type NewsSourceMeta = schemas['SourceMeta']
 export type NewsSourceResponse = schemas['SourceResponse']
 export type NewsItem = schemas['NewsItem']
+
+type CardItem = schemas['CardItem']
+type SignalState = schemas['SignalState']
+
+/** The feed as the card reads it: the legacy shape plus the signal state
+ * and the cluster fields on every row. */
+export interface FeedView {
+  status: 'success' | 'cache'
+  id: string
+  updatedTime: number
+  state: SignalState
+  items: CardItem[]
+}
 export type NewsSearchResult = schemas['NewsSearchResponse']
 export type NewsHeatmapTile = schemas['HeatmapTile']
 export type NewsHeatmapResponse = schemas['HeatmapResponse']
@@ -100,6 +113,14 @@ export const newsApi = (outception: Client) => ({
     unwrap(
       outception.GET('/v1/news/{source_id}', {
         params: { path: { source_id: id }, query: { latest: true } },
+      }),
+    ),
+  // One card contract, as the web wall reads it: the envelope with the
+  // signal state and, on feed rows, what clustering adds.
+  card: (id: string) =>
+    unwrap(
+      outception.GET('/v1/cards/{card_id}', {
+        params: { path: { card_id: id }, query: { latest: true } },
       }),
     ),
   search: (q: string) =>

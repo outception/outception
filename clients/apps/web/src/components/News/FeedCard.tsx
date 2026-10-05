@@ -5,12 +5,9 @@ import { useT } from '@/providers/translate'
 import { flagOn, launchesPath } from '@outception-com/news-core'
 import type { NewsItem } from '@/utils/news'
 import {
-  collapseStories,
-  liftCoverage,
-  hideRead,
+  feedRows,
   isCountryCardId,
   isFeedCard,
-  isMuted,
   stateFromFetch,
 } from '@outception-com/news-core'
 import { Box } from '@outception-com/orbit/Box'
@@ -84,14 +81,17 @@ export const FeedCard = ({
   const readItems = useReadItems()
   // Memoised: every swipe re-renders all mounted cards (their depth changes),
   // and a fresh array here would re-render every headline row with them.
-  const items = useMemo(() => {
-    let rows = (payloadItems ?? []).filter(
-      (it) => !isMuted(it.title, mutedWords),
-    )
-    if (!everyOutlet) rows = liftCoverage(collapseStories(rows))
-    if (hidingRead) rows = hideRead(rows, new Set(readItems))
-    return rows.slice(0, MAX_ITEMS)
-  }, [payloadItems, mutedWords, everyOutlet, hidingRead, readItems])
+  const items = useMemo(
+    () =>
+      feedRows({
+        items: payloadItems ?? [],
+        mutedWords,
+        everyOutlet,
+        hidingRead,
+        read: new Set(readItems),
+      }).slice(0, MAX_ITEMS),
+    [payloadItems, mutedWords, everyOutlet, hidingRead, readItems],
+  )
   const { menuElement, openMenu } = useHeadlineMenu()
   const name = source?.name ?? card.id
   const onItemMenu = useCallback(

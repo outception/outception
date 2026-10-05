@@ -118,3 +118,27 @@ describe('liftCoverage', () => {
     ])
   })
 })
+
+describe('feedRows', () => {
+  it('mutes, collapses, lifts and hides read in one pass', async () => {
+    const { feedRows } = await import('./stories')
+    const items = [
+      { id: '1', title: 'Rates held', clusterId: 'r', publisherCount: 1 },
+      { id: '2', title: 'Cup upset', clusterId: 'c', publisherCount: 3 },
+      { id: '3', title: 'Rates held again', clusterId: 'r', publisherCount: 1 },
+      { id: '4', title: 'Muted thing', publisherCount: 1 },
+      { id: '5', title: 'Read already' },
+    ]
+    const base = { items, mutedWords: ['muted'], read: new Set(['5']) }
+    expect(
+      feedRows({ ...base, everyOutlet: false, hidingRead: true }).map(
+        (r) => r.id,
+      ),
+    ).toEqual(['2', '1'])
+    expect(
+      feedRows({ ...base, everyOutlet: true, hidingRead: false }).map(
+        (r) => r.id,
+      ),
+    ).toEqual(['1', '2', '3', '5'])
+  })
+})

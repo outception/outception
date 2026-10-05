@@ -2,7 +2,7 @@ import { useOutceptionClient } from '@/providers/OutceptionClientProvider'
 import { newsApi } from '@/utils/news'
 import { PERSISTED_GC_TIME } from '@/utils/queryPersist'
 import { deviceCountry } from '@/utils/weather'
-import type { NewsSourceMeta } from '@/utils/news'
+import type { FeedView, NewsSourceMeta } from '@/utils/news'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef } from 'react'
 
@@ -149,7 +149,20 @@ export const useNewsSource = (id: string | undefined, active = true) => {
   }, [active, id, queryClient])
   return useQuery({
     queryKey: ['news', 'source', id],
-    queryFn: () => newsApi(outception).source(id ?? ''),
+    // The card envelope, read the way the web wall reads it, in the shape
+    // this screen always had: the rows carry the cluster fields and the
+    // envelope's state stands in for the legacy status.
+    queryFn: async (): Promise<FeedView> => {
+      const card = await newsApi(outception).card(id ?? '')
+      const items = card.payload.kind === 'feed' ? card.payload.items : []
+      return {
+        status: card.state === 'nominal' ? 'success' : 'cache',
+        id: card.id,
+        updatedTime: card.updatedAt,
+        state: card.state,
+        items,
+      }
+    },
     enabled: !!id,
     // Poll the visible card ~every minute so the wall stays live; combined with
     // the 2 min server freshness window this lands a fresh fetch roughly every
