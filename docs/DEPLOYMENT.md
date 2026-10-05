@@ -1,5 +1,5 @@
 <!-- doc-covers: deploy server/.env.prod.example .github/workflows/deploy.yml -->
-<!-- doc-verified: 2579d8a -->
+<!-- doc-verified: 0b14d1b -->
 
 # Deployment
 
@@ -19,21 +19,21 @@ fill it; the filled file never enters the tree.
 
 The settings that break the product when wrong:
 
-| Setting | Why |
-| --- | --- |
-| `OUTCEPTION_ENV=production` | Turns the production guards on; the app refuses to boot while `OUTCEPTION_SECRET` is the development default. |
-| `OUTCEPTION_SECRET` | Keys every token hash. Strong, unique, never rotated casually. |
-| `OUTCEPTION_LOCAL_JWKS`, `OUTCEPTION_LOCAL_JWK_KID` | The signing keypair, a file mounted read-only from `deploy/secrets/jwks.json`, and the key id it was generated with. The deploy mints one with that key id when the file is missing; the app refuses to boot on the public development key set. It carries over unchanged at the swap. |
-| `OUTCEPTION_POSTGRES_*`, `OUTCEPTION_REDIS_*` | The database and the broker, on the internal network. |
-| `OUTCEPTION_BASE_URL`, `OUTCEPTION_FRONTEND_BASE_URL` | The public API and web URLs, used in links and redirects. |
-| `OUTCEPTION_ALLOWED_HOSTS`, `OUTCEPTION_CORS_ORIGINS` | The API and web hosts; the web origin that may send credentials. |
-| `OUTCEPTION_TRUSTED_PROXY_IPS`, `OUTCEPTION_TRUSTED_CLIENT_IP_HEADERS` | The edge tier the API trusts for the client address; set to the internal network, never the public internet. |
-| `OUTCEPTION_ACCOUNTS_ENABLED` | Off in production until accounts are switched on; readers never need one. |
-| `OUTCEPTION_ADMIN_EMAILS`, `NEXT_PUBLIC_ADMIN_EMAILS` | Who may open the Products of the day review page; the two must agree. |
-| `OUTCEPTION_MEDIA_DIR` | Product logos for the daily card, on the `media_data` volume. |
-| `OUTCEPTION_EMAIL_*` | SMTP for the one-time codes and the submitter's reply; the deploy fills it from repository secrets. |
-| `OUTCEPTION_WEB_PUSH_VAPID_PUBLIC_KEY`, `OUTCEPTION_WEB_PUSH_VAPID_PRIVATE_KEY`, `OUTCEPTION_WEB_PUSH_SUBJECT` | The morning briefing push on the web. Generate the pair once with `vapid --gen` from the server env and keep it; the subject is a `mailto:` address. Unset, the notify switch is hidden. |
-| `LLM_*`, `DECISION_CHAIN_*`, `ENGINE_URL` | The governor's lanes, caps and chains; every key stays in the provider modules and the env, nowhere else. |
+| Setting                                                                                                        | Why                                                                                                                                                                                                                                                                                    |
+| -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OUTCEPTION_ENV=production`                                                                                    | Turns the production guards on; the app refuses to boot while `OUTCEPTION_SECRET` is the development default.                                                                                                                                                                          |
+| `OUTCEPTION_SECRET`                                                                                            | Keys every token hash. Strong, unique, never rotated casually.                                                                                                                                                                                                                         |
+| `OUTCEPTION_LOCAL_JWKS`, `OUTCEPTION_LOCAL_JWK_KID`                                                            | The signing keypair, a file mounted read-only from `deploy/secrets/jwks.json`, and the key id it was generated with. The deploy mints one with that key id when the file is missing; the app refuses to boot on the public development key set. It carries over unchanged at the swap. |
+| `OUTCEPTION_POSTGRES_*`, `OUTCEPTION_REDIS_*`                                                                  | The database and the broker, on the internal network.                                                                                                                                                                                                                                  |
+| `OUTCEPTION_BASE_URL`, `OUTCEPTION_FRONTEND_BASE_URL`                                                          | The public API and web URLs, used in links and redirects.                                                                                                                                                                                                                              |
+| `OUTCEPTION_ALLOWED_HOSTS`, `OUTCEPTION_CORS_ORIGINS`                                                          | The API and web hosts; the web origin that may send credentials.                                                                                                                                                                                                                       |
+| `OUTCEPTION_TRUSTED_PROXY_IPS`, `OUTCEPTION_TRUSTED_CLIENT_IP_HEADERS`                                         | The edge tier the API trusts for the client address; set to the internal network, never the public internet.                                                                                                                                                                           |
+| `OUTCEPTION_ACCOUNTS_ENABLED`                                                                                  | Off in production until accounts are switched on; readers never need one.                                                                                                                                                                                                              |
+| `OUTCEPTION_ADMIN_EMAILS`, `NEXT_PUBLIC_ADMIN_EMAILS`                                                          | Who may open the Products of the day review page; the two must agree.                                                                                                                                                                                                                  |
+| `OUTCEPTION_MEDIA_DIR`                                                                                         | Product logos for the daily card, on the `media_data` volume.                                                                                                                                                                                                                          |
+| `OUTCEPTION_EMAIL_*`                                                                                           | SMTP for the one-time codes and the submitter's reply; the deploy fills it from repository secrets.                                                                                                                                                                                    |
+| `OUTCEPTION_WEB_PUSH_VAPID_PUBLIC_KEY`, `OUTCEPTION_WEB_PUSH_VAPID_PRIVATE_KEY`, `OUTCEPTION_WEB_PUSH_SUBJECT` | The morning briefing push on the web. Generate the pair once with `vapid --gen` from the server env and keep it; the subject is a `mailto:` address. Unset, the notify switch is hidden.                                                                                               |
+| `LLM_*`, `DECISION_CHAIN_*`, `ENGINE_URL`                                                                      | The governor's lanes, caps and chains; every key stays in the provider modules and the env, nowhere else.                                                                                                                                                                              |
 
 Every typed setting in the examples carries its default, so a `.env.prod`
 copied from `deploy/.env.prod.example` and filled with the secrets alone
@@ -72,6 +72,16 @@ requires a named reviewer: that is the publication boundary, and
 checks the host out at the exact commit, pulls, brings the stack up,
 health-gates `/healthz` and a CORS preflight, and rolls back the running
 services on failure. Nothing in CI submits to a store.
+
+The first deploy after the swap also carries the host over from the live
+tree, once, before the stack comes up: it keeps a copy of the env file as
+`.env.prod.pre-swap`, creates the `outception_rebuild` database next to
+the live one and points the app at it, carries the signing key over under
+`OUTCEPTION_LOCAL_JWKS` and `OUTCEPTION_LOCAL_JWK_KID` with the live key
+id, and turns accounts off. After the health gate it runs the live data
+import (`scripts.import_live_data --source-database <live db> --commit`)
+and leaves a marker so it never runs twice. The live database is never
+written, so the rollback in `SWAP.md` is the old stack against it.
 
 ## Verification before a swap
 

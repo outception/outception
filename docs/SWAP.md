@@ -29,17 +29,25 @@ is read once, by the import, and kept as the rollback.
 ## The window
 
 5. Wait for the other session to report idle in `.agents-sync.md`.
-6. `mv live live-backup-<date> && mv rebuilt live`. Carry over the server
-   env, the testing env, the keypair, the production env, the web env files,
-   the app env, the sync file and the plan files. Point the remote at the
-   repository and push.
-7. Deploy through the deploy workflow; the migrate service brings the
-   schema to head; then the import with `--commit` against the production
-   database; then the verification items.
+6. Tag the live tree's last commit on the repository
+   (`git tag live-<date> b176b6f && git push outception live-<date>`), then
+   `mv live live-backup-<date> && mv rebuilt live`. Carry over the server
+   env, the testing env, the keypair, the production env, the web env
+   files, the app env, the sync file and the plan files. Point the remote
+   at the repository and push the rebuilt history to `main`.
+7. The deploy workflow does the rest on the host, once and idempotently:
+   it copies `.env.prod` to `.env.prod.pre-swap`, creates the database
+   `outception_rebuild` beside the live one, points the app at it, carries
+   the signing key over under `OUTCEPTION_LOCAL_JWKS` and
+   `OUTCEPTION_LOCAL_JWK_KID`, sets accounts off, pulls, migrates, brings
+   the stack up, passes the health gate, then imports the readers from
+   the live database through `scripts.import_live_data --source-database`
+   and leaves `.swap-import-done`. Then the verification items.
 
 ## Rollback
 
-Stop the new compose stack and start the old one from the backup directory
-against the untouched old database and cache. The old database is never
-migrated or written by the new tree. Keep the backup until two clean weeks
-have passed.
+Restore the env (`mv .env.prod.pre-swap .env.prod`), check out the
+`live-<date>` tag in the backup tree, and bring the old compose stack up
+from there against the live database, which the new tree never wrote:
+its schema lives in `outception_rebuild`. Keep the backup, the tag and
+the rebuilt database until two clean weeks have passed.

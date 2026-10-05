@@ -19,6 +19,7 @@ import sys
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from typing import Any
+from urllib.parse import urlsplit, urlunsplit
 
 import psycopg2
 import psycopg2.extras
@@ -269,11 +270,26 @@ def check_legacy_hash(sample: str | None) -> str:
     )
 
 
+def plain_dsn(dsn: str) -> str:
+    """The DSN with any SQLAlchemy driver suffix dropped from its scheme.
+
+    The settings hand out ``postgresql+psycopg2://``; libpq wants ``postgresql://``.
+    """
+    parsed = urlsplit(dsn)
+    return urlunsplit(parsed._replace(scheme=parsed.scheme.split("+", 1)[0]))
+
+
+def sibling_dsn(target_dsn: str, database: str) -> str:
+    """The target's DSN pointed at another database on the same server."""
+    parsed = urlsplit(plain_dsn(target_dsn))
+    return urlunsplit(parsed._replace(path=f"/{database}"))
+
+
 def run(source_dsn: str, target_dsn: str, commit: bool) -> dict[str, Any]:
     report: dict[str, Any] = {"mode": "commit" if commit else "dry-run", "tables": {}}
-    source = psycopg2.connect(source_dsn)
+    source = psycopg2.connect(plain_dsn(source_dsn))
     source.set_session(readonly=True, autocommit=False)
-    target = psycopg2.connect(target_dsn) if commit else None
+    target = psycopg2.connect(plain_dsn(target_dsn)) if commit else None
     try:
         sample_hash: str | None = None
         for table in TABLES:
@@ -327,8 +343,12 @@ def run(source_dsn: str, target_dsn: str, commit: bool) -> dict[str, Any]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument(
-        "--source", required=True, help="the live database DSN (read only)"
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument("--source", help="the live database DSN (read only)")
+    source.add_argument(
+        "--source-database",
+        help="the live database's name on the same server as the target, read "
+        "with the target's user and password (what the deploy passes)",
     )
     parser.add_argument(
         "--target",
@@ -339,7 +359,8 @@ def main(argv: list[str] | None = None) -> int:
         "--commit", action="store_true", help="write; the default is a dry run"
     )
     args = parser.parse_args(argv)
-    report = run(args.source, args.target, args.commit)
+    source_dsn = args.source or sibling_dsn(args.target, args.source_database)
+    report = run(source_dsn, args.target, args.commit)
     print(json.dumps(report, indent=2, default=str))
     return 0
 

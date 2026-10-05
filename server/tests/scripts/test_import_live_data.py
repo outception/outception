@@ -2,7 +2,13 @@ import pytest
 
 from outception.kit.crypto import get_token_hash_candidates
 from outception.models import Model
-from scripts.import_live_data import TABLES, check_legacy_hash, map_row
+from scripts.import_live_data import (
+    TABLES,
+    check_legacy_hash,
+    map_row,
+    plain_dsn,
+    sibling_dsn,
+)
 
 
 class TestMaps:
@@ -88,3 +94,33 @@ class TestLegacyHash:
         assert "not a legacy digest" in check_legacy_hash(
             "short"
         ) or "warning" in check_legacy_hash("short")
+
+
+class TestPlainDsn:
+    def test_drops_the_driver_suffix(self) -> None:
+        assert (
+            plain_dsn("postgresql+psycopg2://u:p@db:5432/outception")
+            == "postgresql://u:p@db:5432/outception"
+        )
+
+    def test_leaves_a_plain_dsn_alone(self) -> None:
+        assert plain_dsn("postgresql://u:p@db/x") == "postgresql://u:p@db/x"
+
+
+class TestSiblingDsn:
+    def test_normalises_the_driver_too(self) -> None:
+        assert (
+            sibling_dsn(
+                "postgresql+psycopg2://u:p@db:5432/outception_rebuild", "outception"
+            )
+            == "postgresql://u:p@db:5432/outception"
+        )
+
+    def test_swaps_the_database_and_keeps_the_rest(self) -> None:
+        assert (
+            sibling_dsn(
+                "postgresql://u:p%40w@db:5432/outception_rebuild?sslmode=disable",
+                "outception",
+            )
+            == "postgresql://u:p%40w@db:5432/outception?sslmode=disable"
+        )

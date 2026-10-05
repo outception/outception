@@ -234,6 +234,37 @@ jobs:
 
             export IMAGE_TAG="$GITHUB_SHA"
             compose() { docker compose --env-file .env.prod -f docker-compose.prod.yml "$@"; }
+            env_set() {
+              if grep -q "^$1=" .env.prod; then sed -i "s|^$1=.*|$1=$2|" .env.prod
+              else printf '%s=%s\n' "$1" "$2" >> .env.prod; fi
+            }
+
+            # 1. The swap from the live tree, once, and harmless after: the
+            #    rebuilt app keeps its own database beside the live one (the
+            #    live one stays untouched for the rollback), the signing key
+            #    carries over under the settings this tree reads, and
+            #    accounts start off. The env is copied first so the rollback
+            #    can restore it.
+            db_user="$(sed -n 's/^OUTCEPTION_POSTGRES_USER=//p' .env.prod | tail -1 | tr -d "\"'")"
+            app_db="$(sed -n 's/^OUTCEPTION_POSTGRES_DATABASE=//p' .env.prod | tail -1 | tr -d "\"'")"
+            if [ "$app_db" != "outception_rebuild" ]; then
+              [ -f .env.prod.pre-swap ] || cp .env.prod .env.prod.pre-swap
+              printf '%s\n' "$app_db" > .swap-source-db
+              if ! compose exec -T db psql -U "$db_user" -d postgres -tAc \
+                   "SELECT 1 FROM pg_database WHERE datname='outception_rebuild'" | grep -q 1; then
+                compose exec -T db psql -U "$db_user" -d postgres -c "CREATE DATABASE outception_rebuild"
+              fi
+              env_set OUTCEPTION_POSTGRES_DATABASE outception_rebuild
+              if grep -q '^OUTCEPTION_POSTGRES_READ_DATABASE=' .env.prod; then
+                env_set OUTCEPTION_POSTGRES_READ_DATABASE outception_rebuild
+              fi
+            fi
+            if ! grep -q '^OUTCEPTION_LOCAL_JWKS=' .env.prod; then
+              old_kid="$(sed -n 's/^OUTCEPTION_CURRENT_JWK_KID=//p' .env.prod | tail -1 | tr -d "\"'")"
+              env_set OUTCEPTION_LOCAL_JWKS /run/secrets/jwks.json
+              env_set OUTCEPTION_LOCAL_JWK_KID "${old_kid:-outception_dev}"
+            fi
+            env_set OUTCEPTION_ACCOUNTS_ENABLED false
 
             # 2. Remember the running API image so the deploy can roll back.
             prev_cid="$(compose ps -q api 2>/dev/null || true)"
@@ -319,6 +350,16 @@ jobs:
                 compose up -d --no-deps api worker web
               fi
               exit 1
+            fi
+
+            # 5. The readers, once: after the first healthy boot beside the
+            #    live database, carry users, logins, clients, tokens and the
+            #    two-factor rows across. Conflicts are ignored, so a rerun
+            #    adds nothing; the marker keeps it from running again.
+            if [ -f .swap-source-db ] && [ ! -f .swap-import-done ]; then
+              compose run --rm --no-deps -T api uv run python -m scripts.import_live_data \
+                --source-database "$(cat .swap-source-db)" --commit
+              touch .swap-import-done
             fi
 
             # Previous deploys' images are tagged by commit, so a plain prune

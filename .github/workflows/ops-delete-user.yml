@@ -36,6 +36,7 @@ jobs:
             # The db container carries the database name and user from
             # .env.prod; every row that belongs to the reader cascades, and a
             # client they registered stays, unowned.
+            app_db="$(sed -n 's/^OUTCEPTION_POSTGRES_DATABASE=//p' .env.prod | tail -1 | tr -d "\"'")"
             docker compose --env-file .env.prod -f docker-compose.prod.yml exec -T db \
-              sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v email="$0" \
-                -c "DELETE FROM users WHERE email = :'"'"'email'"'"';"' "$EMAIL"
+              sh -c 'psql -U "$POSTGRES_USER" -d "$1" -v email="$0" \
+                -c "DELETE FROM users WHERE email = :'"'"'email'"'"';"' "$EMAIL" "$app_db"
