@@ -1,0 +1,1518 @@
+{
+  "data": {
+    "base": [
+      {
+        "id": "bbc-world"
+      },
+      {
+        "id": "youtube-guardian"
+      },
+      {
+        "id": "nytimes"
+      },
+      {
+        "id": "youtube-cnn"
+      },
+      {
+        "id": "thehill"
+      },
+      {
+        "id": "propublica",
+        "injectAfter": [
+          "sci-scientificprogress",
+          "youtube-veritasium",
+          "sci-spacediscoveries",
+          "sci-medicalprogress",
+          "sci-fusionprogress",
+          "sci-airbornewindenergy",
+          "live-quakes",
+          "live-launches",
+          "country:top_city",
+          "live-iss",
+          "country:transit",
+          "country:property",
+          "country:business"
+        ]
+      },
+      {
+        "id": "marketwatch"
+      },
+      {
+        "id": "heatmap-tech"
+      },
+      {
+        "id": "coindesk"
+      },
+      {
+        "id": "heatmap-crypto",
+        "injectAfter": [
+          "country:podcast|podcast-tedtalksdaily",
+          "country:english_podcast"
+        ]
+      },
+      {
+        "id": "visualcapitalist"
+      },
+      {
+        "id": "live-storms",
+        "season": [
+          6,
+          11
+        ],
+        "countries": [
+          "BM",
+          "BS",
+          "BZ",
+          "CR",
+          "CU",
+          "DO",
+          "GT",
+          "HN",
+          "HT",
+          "JM",
+          "MX",
+          "NI",
+          "PA",
+          "PR",
+          "SV",
+          "US"
+        ]
+      },
+      {
+        "id": "live-wildfires",
+        "countries": [
+          "US"
+        ]
+      },
+      {
+        "id": "nythealth",
+        "injectAfter": [
+          "country:health"
+        ]
+      },
+      {
+        "id": "theverge"
+      },
+      {
+        "id": "youtube-mkbhd"
+      },
+      {
+        "id": "openai"
+      },
+      {
+        "id": "products-of-the-day"
+      },
+      {
+        "id": "variety"
+      },
+      {
+        "id": "youtube-mrbeast",
+        "injectAfter": [
+          "country:events"
+        ]
+      },
+      {
+        "id": "movie-new"
+      },
+      {
+        "id": "tv-new"
+      },
+      {
+        "id": "anime-new"
+      },
+      {
+        "id": "music-new"
+      },
+      {
+        "id": "game-new"
+      },
+      {
+        "id": "book-new"
+      },
+      {
+        "id": "tech-new",
+        "injectAfter": [
+          "country:deals",
+          "country:english"
+        ]
+      },
+      {
+        "id": "car-new"
+      },
+      {
+        "id": "youtube-carwow"
+      },
+      {
+        "id": "podcast-new"
+      },
+      {
+        "id": "life-recipes"
+      },
+      {
+        "id": "youtube-markwiens"
+      },
+      {
+        "id": "life-budgettravel"
+      },
+      {
+        "id": "youtube-yestheory",
+        "injectAfter": [
+          "country:travel"
+        ]
+      },
+      {
+        "id": "life-fashion"
+      },
+      {
+        "id": "life-history"
+      },
+      {
+        "id": "youtube-vox"
+      },
+      {
+        "id": "quotes"
+      },
+      {
+        "id": "life-lifehacks"
+      },
+      {
+        "id": "bbcsport",
+        "swap": "sports"
+      },
+      {
+        "id": "heatmap-ucl",
+        "swap": "sport_tables"
+      },
+      {
+        "id": "legalsportsreport"
+      },
+      {
+        "id": "weather"
+      }
+    ],
+    "countryTables": {
+      "IE": {
+        "business": [
+          "business-ie"
+        ],
+        "deals": [
+          "deals-ie"
+        ],
+        "english": [
+          "kickstarter"
+        ],
+        "english_podcast": [
+          "podcast-tedtalksdaily"
+        ],
+        "events": [
+          "events-ie"
+        ],
+        "health": [
+          "health-ie"
+        ],
+        "podcast": [
+          "podcast-thediaryofaceo"
+        ],
+        "property": [
+          "property-ie"
+        ],
+        "sport_tables": [
+          "heatmap-premier-league"
+        ],
+        "sports": [
+          "sport-gaelic-football",
+          "sport-hurling",
+          "team-gaafootball-dublin",
+          "sport-premier-league"
+        ],
+        "top_city": [
+          "city-ireland-dublin"
+        ],
+        "transit": [
+          "transit-dublin"
+        ]
+      },
+      "US": {
+        "business": [
+          "business-us"
+        ],
+        "deals": [
+          "slickdeals"
+        ],
+        "english": [
+          "kickstarter"
+        ],
+        "english_podcast": [
+          "podcast-tedtalksdaily"
+        ],
+        "events": [
+          "events-us"
+        ],
+        "health": [
+          "health-us"
+        ],
+        "podcast": [
+          "podcast-thejoeroganexperience"
+        ],
+        "property": [
+          "realtornews"
+        ],
+        "sport_tables": [
+          "heatmap-nfl",
+          "heatmap-nba"
+        ],
+        "sports": [
+          "sport-nfl",
+          "sport-nba",
+          "sport-mlb",
+          "sport-nhl"
+        ],
+        "top_city": [
+          "city-unitedstates-newyork"
+        ],
+        "transit": [
+          "transit-newyork"
+        ],
+        "travel": [
+          "theflightdeal"
+        ]
+      },
+      "GB": {
+        "business": [
+          "business-gb"
+        ],
+        "deals": [
+          "hotukdeals"
+        ],
+        "english": [
+          "kickstarter"
+        ],
+        "english_podcast": [
+          "podcast-tedtalksdaily"
+        ],
+        "events": [
+          "events-gb"
+        ],
+        "health": [
+          "health-gb"
+        ],
+        "podcast": [
+          "podcast-thediaryofaceo"
+        ],
+        "property": [
+          "propertyindustryeye"
+        ],
+        "sport_tables": [
+          "heatmap-premier-league"
+        ],
+        "sports": [
+          "sport-premier-league",
+          "sport-champions-league",
+          "team-rugby-leinsterrugby",
+          "sport-six-nations"
+        ],
+        "top_city": [
+          "city-unitedkingdom-london"
+        ],
+        "transit": [
+          "transit-london"
+        ],
+        "travel": [
+          "headforpoints"
+        ]
+      },
+      "DE": {
+        "business": [
+          "business-de"
+        ],
+        "deals": [
+          "mydealz"
+        ],
+        "events": [
+          "events-de"
+        ],
+        "health": [
+          "health-de"
+        ],
+        "property": [
+          "property-de"
+        ],
+        "sport_tables": [
+          "heatmap-bundesliga"
+        ],
+        "sports": [
+          "sport-bundesliga",
+          "team-soccer-bayernmunich",
+          "team-soccer-borussiadortmund",
+          "sport-champions-league"
+        ],
+        "top_city": [
+          "city-germany-berlin"
+        ],
+        "travel": [
+          "urlaubspiraten"
+        ]
+      },
+      "IN": {
+        "business": [
+          "business-in"
+        ],
+        "deals": [
+          "deals-in"
+        ],
+        "english": [
+          "kickstarter"
+        ],
+        "english_podcast": [
+          "podcast-tedtalksdaily"
+        ],
+        "events": [
+          "events-in"
+        ],
+        "health": [
+          "health-in"
+        ],
+        "podcast": [
+          "podcast-onpurposejayshetty"
+        ],
+        "property": [
+          "squareyards"
+        ],
+        "sport_tables": [
+          "heatmap-cricket"
+        ],
+        "sports": [
+          "sport-ipl",
+          "team-cricket-mumbaiindians",
+          "team-cricket-indianationalcricketteam",
+          "sport-test-cricket"
+        ],
+        "top_city": [
+          "city-india-mumbai"
+        ],
+        "travel": [
+          "livefromalounge"
+        ]
+      }
+    },
+    "briefingProfileByCountry": {},
+    "defaultBriefingProfile": "news-junkie"
+  },
+  "cases": [
+    {
+      "name": "no country, january",
+      "input": {
+        "country": null,
+        "month": 1,
+        "known": [
+          "bbc-world",
+          "youtube-guardian",
+          "nytimes",
+          "youtube-cnn",
+          "thehill",
+          "propublica",
+          "sci-scientificprogress",
+          "youtube-veritasium",
+          "sci-spacediscoveries",
+          "sci-medicalprogress",
+          "sci-fusionprogress",
+          "sci-airbornewindenergy",
+          "marketwatch",
+          "coindesk",
+          "heatmap-crypto",
+          "podcast-tedtalksdaily",
+          "visualcapitalist",
+          "nythealth",
+          "theverge",
+          "youtube-mkbhd",
+          "openai",
+          "products-of-the-day",
+          "variety",
+          "youtube-mrbeast",
+          "movie-new",
+          "tv-new",
+          "anime-new",
+          "music-new",
+          "game-new",
+          "book-new",
+          "tech-new",
+          "car-new",
+          "youtube-carwow",
+          "podcast-new",
+          "life-recipes",
+          "youtube-markwiens",
+          "life-budgettravel",
+          "youtube-yestheory",
+          "life-fashion",
+          "life-history",
+          "youtube-vox",
+          "quotes",
+          "life-lifehacks",
+          "bbcsport",
+          "heatmap-ucl",
+          "legalsportsreport"
+        ],
+        "disabled": [],
+        "fallback": [],
+        "sharedCard": null,
+        "briefingEnabled": false
+      },
+      "unknownEmitted": [
+        "live-quakes",
+        "live-launches",
+        "live-iss",
+        "heatmap-tech",
+        "weather"
+      ],
+      "expected": [
+        "bbc-world",
+        "youtube-guardian",
+        "nytimes",
+        "youtube-cnn",
+        "thehill",
+        "propublica",
+        "sci-scientificprogress",
+        "youtube-veritasium",
+        "sci-spacediscoveries",
+        "sci-medicalprogress",
+        "sci-fusionprogress",
+        "sci-airbornewindenergy",
+        "marketwatch",
+        "coindesk",
+        "heatmap-crypto",
+        "podcast-tedtalksdaily",
+        "visualcapitalist",
+        "nythealth",
+        "theverge",
+        "youtube-mkbhd",
+        "openai",
+        "products-of-the-day",
+        "variety",
+        "youtube-mrbeast",
+        "movie-new",
+        "tv-new",
+        "anime-new",
+        "music-new",
+        "game-new",
+        "book-new",
+        "tech-new",
+        "car-new",
+        "youtube-carwow",
+        "podcast-new",
+        "life-recipes",
+        "youtube-markwiens",
+        "life-budgettravel",
+        "youtube-yestheory",
+        "life-fashion",
+        "life-history",
+        "youtube-vox",
+        "quotes",
+        "life-lifehacks",
+        "bbcsport",
+        "heatmap-ucl",
+        "legalsportsreport",
+        "weather"
+      ]
+    },
+    {
+      "name": "ireland, march",
+      "input": {
+        "country": "IE",
+        "month": 3,
+        "known": [
+          "gnews-ie",
+          "bbc-world",
+          "youtube-guardian",
+          "nytimes",
+          "youtube-cnn",
+          "thehill",
+          "propublica",
+          "sci-scientificprogress",
+          "youtube-veritasium",
+          "sci-spacediscoveries",
+          "sci-medicalprogress",
+          "sci-fusionprogress",
+          "sci-airbornewindenergy",
+          "city-ireland-dublin",
+          "property-ie",
+          "business-ie",
+          "marketwatch",
+          "coindesk",
+          "heatmap-crypto",
+          "podcast-thediaryofaceo",
+          "podcast-tedtalksdaily",
+          "visualcapitalist",
+          "nythealth",
+          "health-ie",
+          "theverge",
+          "youtube-mkbhd",
+          "openai",
+          "products-of-the-day",
+          "variety",
+          "youtube-mrbeast",
+          "events-ie",
+          "movie-new",
+          "tv-new",
+          "anime-new",
+          "music-new",
+          "game-new",
+          "book-new",
+          "tech-new",
+          "deals-ie",
+          "kickstarter",
+          "car-new",
+          "youtube-carwow",
+          "podcast-new",
+          "life-recipes",
+          "youtube-markwiens",
+          "life-budgettravel",
+          "youtube-yestheory",
+          "life-fashion",
+          "life-history",
+          "youtube-vox",
+          "quotes",
+          "life-lifehacks",
+          "sport-gaelic-football",
+          "sport-hurling",
+          "team-gaafootball-dublin",
+          "sport-premier-league",
+          "heatmap-premier-league",
+          "legalsportsreport"
+        ],
+        "disabled": [],
+        "fallback": [],
+        "sharedCard": null,
+        "briefingEnabled": false
+      },
+      "unknownEmitted": [
+        "live-quakes",
+        "live-launches",
+        "live-iss",
+        "transit-dublin",
+        "heatmap-tech",
+        "weather"
+      ],
+      "expected": [
+        "gnews-ie",
+        "bbc-world",
+        "youtube-guardian",
+        "nytimes",
+        "youtube-cnn",
+        "thehill",
+        "propublica",
+        "sci-scientificprogress",
+        "youtube-veritasium",
+        "sci-spacediscoveries",
+        "sci-medicalprogress",
+        "sci-fusionprogress",
+        "sci-airbornewindenergy",
+        "city-ireland-dublin",
+        "property-ie",
+        "business-ie",
+        "marketwatch",
+        "coindesk",
+        "heatmap-crypto",
+        "podcast-thediaryofaceo",
+        "podcast-tedtalksdaily",
+        "visualcapitalist",
+        "nythealth",
+        "health-ie",
+        "theverge",
+        "youtube-mkbhd",
+        "openai",
+        "products-of-the-day",
+        "variety",
+        "youtube-mrbeast",
+        "events-ie",
+        "movie-new",
+        "tv-new",
+        "anime-new",
+        "music-new",
+        "game-new",
+        "book-new",
+        "tech-new",
+        "deals-ie",
+        "kickstarter",
+        "car-new",
+        "youtube-carwow",
+        "podcast-new",
+        "life-recipes",
+        "youtube-markwiens",
+        "life-budgettravel",
+        "youtube-yestheory",
+        "life-fashion",
+        "life-history",
+        "youtube-vox",
+        "quotes",
+        "life-lifehacks",
+        "sport-gaelic-football",
+        "sport-hurling",
+        "team-gaafootball-dublin",
+        "sport-premier-league",
+        "heatmap-premier-league",
+        "legalsportsreport",
+        "weather"
+      ]
+    },
+    {
+      "name": "ireland, shared card and briefing",
+      "input": {
+        "country": "IE",
+        "month": 3,
+        "known": [
+          "thehill",
+          "gnews-ie",
+          "bbc-world",
+          "youtube-guardian",
+          "nytimes",
+          "youtube-cnn",
+          "propublica",
+          "sci-scientificprogress",
+          "youtube-veritasium",
+          "sci-spacediscoveries",
+          "sci-medicalprogress",
+          "sci-fusionprogress",
+          "sci-airbornewindenergy",
+          "city-ireland-dublin",
+          "property-ie",
+          "business-ie",
+          "marketwatch",
+          "coindesk",
+          "heatmap-crypto",
+          "podcast-thediaryofaceo",
+          "podcast-tedtalksdaily",
+          "visualcapitalist",
+          "nythealth",
+          "health-ie",
+          "theverge",
+          "youtube-mkbhd",
+          "openai",
+          "products-of-the-day",
+          "variety",
+          "youtube-mrbeast",
+          "events-ie",
+          "movie-new",
+          "tv-new",
+          "anime-new",
+          "music-new",
+          "game-new",
+          "book-new",
+          "tech-new",
+          "deals-ie",
+          "kickstarter",
+          "car-new",
+          "youtube-carwow",
+          "podcast-new",
+          "life-recipes",
+          "youtube-markwiens",
+          "life-budgettravel",
+          "youtube-yestheory",
+          "life-fashion",
+          "life-history",
+          "youtube-vox",
+          "quotes",
+          "life-lifehacks",
+          "sport-gaelic-football",
+          "sport-hurling",
+          "team-gaafootball-dublin",
+          "sport-premier-league",
+          "heatmap-premier-league",
+          "legalsportsreport"
+        ],
+        "disabled": [],
+        "fallback": [],
+        "sharedCard": "thehill",
+        "briefingEnabled": true
+      },
+      "unknownEmitted": [
+        "briefing:news-junkie",
+        "live-quakes",
+        "live-launches",
+        "live-iss",
+        "transit-dublin",
+        "heatmap-tech",
+        "weather"
+      ],
+      "expected": [
+        "thehill",
+        "gnews-ie",
+        "briefing:news-junkie",
+        "bbc-world",
+        "youtube-guardian",
+        "nytimes",
+        "youtube-cnn",
+        "propublica",
+        "sci-scientificprogress",
+        "youtube-veritasium",
+        "sci-spacediscoveries",
+        "sci-medicalprogress",
+        "sci-fusionprogress",
+        "sci-airbornewindenergy",
+        "city-ireland-dublin",
+        "property-ie",
+        "business-ie",
+        "marketwatch",
+        "coindesk",
+        "heatmap-crypto",
+        "podcast-thediaryofaceo",
+        "podcast-tedtalksdaily",
+        "visualcapitalist",
+        "nythealth",
+        "health-ie",
+        "theverge",
+        "youtube-mkbhd",
+        "openai",
+        "products-of-the-day",
+        "variety",
+        "youtube-mrbeast",
+        "events-ie",
+        "movie-new",
+        "tv-new",
+        "anime-new",
+        "music-new",
+        "game-new",
+        "book-new",
+        "tech-new",
+        "deals-ie",
+        "kickstarter",
+        "car-new",
+        "youtube-carwow",
+        "podcast-new",
+        "life-recipes",
+        "youtube-markwiens",
+        "life-budgettravel",
+        "youtube-yestheory",
+        "life-fashion",
+        "life-history",
+        "youtube-vox",
+        "quotes",
+        "life-lifehacks",
+        "sport-gaelic-football",
+        "sport-hurling",
+        "team-gaafootball-dublin",
+        "sport-premier-league",
+        "heatmap-premier-league",
+        "legalsportsreport",
+        "weather"
+      ]
+    },
+    {
+      "name": "united states, hurricane season",
+      "input": {
+        "country": "US",
+        "month": 8,
+        "known": [
+          "gnews-us",
+          "bbc-world",
+          "youtube-guardian",
+          "nytimes",
+          "youtube-cnn",
+          "thehill",
+          "propublica",
+          "sci-scientificprogress",
+          "youtube-veritasium",
+          "sci-spacediscoveries",
+          "sci-medicalprogress",
+          "sci-fusionprogress",
+          "sci-airbornewindenergy",
+          "city-unitedstates-newyork",
+          "realtornews",
+          "business-us",
+          "marketwatch",
+          "coindesk",
+          "heatmap-crypto",
+          "podcast-thejoeroganexperience",
+          "podcast-tedtalksdaily",
+          "visualcapitalist",
+          "nythealth",
+          "health-us",
+          "theverge",
+          "youtube-mkbhd",
+          "openai",
+          "products-of-the-day",
+          "variety",
+          "youtube-mrbeast",
+          "events-us",
+          "movie-new",
+          "tv-new",
+          "anime-new",
+          "music-new",
+          "game-new",
+          "book-new",
+          "tech-new",
+          "slickdeals",
+          "kickstarter",
+          "car-new",
+          "youtube-carwow",
+          "podcast-new",
+          "life-recipes",
+          "youtube-markwiens",
+          "life-budgettravel",
+          "youtube-yestheory",
+          "theflightdeal",
+          "life-fashion",
+          "life-history",
+          "youtube-vox",
+          "quotes",
+          "life-lifehacks",
+          "sport-nfl",
+          "sport-nba",
+          "sport-mlb",
+          "sport-nhl",
+          "heatmap-nfl",
+          "heatmap-nba",
+          "legalsportsreport"
+        ],
+        "disabled": [],
+        "fallback": [],
+        "sharedCard": null,
+        "briefingEnabled": true
+      },
+      "unknownEmitted": [
+        "briefing:news-junkie",
+        "live-quakes",
+        "live-launches",
+        "live-iss",
+        "transit-newyork",
+        "heatmap-tech",
+        "live-storms",
+        "live-wildfires",
+        "weather"
+      ],
+      "expected": [
+        "gnews-us",
+        "briefing:news-junkie",
+        "bbc-world",
+        "youtube-guardian",
+        "nytimes",
+        "youtube-cnn",
+        "thehill",
+        "propublica",
+        "sci-scientificprogress",
+        "youtube-veritasium",
+        "sci-spacediscoveries",
+        "sci-medicalprogress",
+        "sci-fusionprogress",
+        "sci-airbornewindenergy",
+        "city-unitedstates-newyork",
+        "realtornews",
+        "business-us",
+        "marketwatch",
+        "coindesk",
+        "heatmap-crypto",
+        "podcast-thejoeroganexperience",
+        "podcast-tedtalksdaily",
+        "visualcapitalist",
+        "nythealth",
+        "health-us",
+        "theverge",
+        "youtube-mkbhd",
+        "openai",
+        "products-of-the-day",
+        "variety",
+        "youtube-mrbeast",
+        "events-us",
+        "movie-new",
+        "tv-new",
+        "anime-new",
+        "music-new",
+        "game-new",
+        "book-new",
+        "tech-new",
+        "slickdeals",
+        "kickstarter",
+        "car-new",
+        "youtube-carwow",
+        "podcast-new",
+        "life-recipes",
+        "youtube-markwiens",
+        "life-budgettravel",
+        "youtube-yestheory",
+        "theflightdeal",
+        "life-fashion",
+        "life-history",
+        "youtube-vox",
+        "quotes",
+        "life-lifehacks",
+        "sport-nfl",
+        "sport-nba",
+        "sport-mlb",
+        "sport-nhl",
+        "heatmap-nfl",
+        "heatmap-nba",
+        "legalsportsreport",
+        "weather"
+      ]
+    },
+    {
+      "name": "united states, out of season",
+      "input": {
+        "country": "US",
+        "month": 2,
+        "known": [
+          "gnews-us",
+          "bbc-world",
+          "youtube-guardian",
+          "nytimes",
+          "youtube-cnn",
+          "thehill",
+          "propublica",
+          "sci-scientificprogress",
+          "youtube-veritasium",
+          "sci-spacediscoveries",
+          "sci-medicalprogress",
+          "sci-fusionprogress",
+          "sci-airbornewindenergy",
+          "city-unitedstates-newyork",
+          "realtornews",
+          "business-us",
+          "marketwatch",
+          "coindesk",
+          "heatmap-crypto",
+          "podcast-thejoeroganexperience",
+          "podcast-tedtalksdaily",
+          "visualcapitalist",
+          "nythealth",
+          "health-us",
+          "theverge",
+          "youtube-mkbhd",
+          "openai",
+          "products-of-the-day",
+          "variety",
+          "youtube-mrbeast",
+          "events-us",
+          "movie-new",
+          "tv-new",
+          "anime-new",
+          "music-new",
+          "game-new",
+          "book-new",
+          "tech-new",
+          "slickdeals",
+          "kickstarter",
+          "car-new",
+          "youtube-carwow",
+          "podcast-new",
+          "life-recipes",
+          "youtube-markwiens",
+          "life-budgettravel",
+          "youtube-yestheory",
+          "theflightdeal",
+          "life-fashion",
+          "life-history",
+          "youtube-vox",
+          "quotes",
+          "life-lifehacks",
+          "sport-nfl",
+          "sport-nba",
+          "sport-mlb",
+          "sport-nhl",
+          "heatmap-nfl",
+          "heatmap-nba",
+          "legalsportsreport"
+        ],
+        "disabled": [],
+        "fallback": [],
+        "sharedCard": null,
+        "briefingEnabled": false
+      },
+      "unknownEmitted": [
+        "live-quakes",
+        "live-launches",
+        "live-iss",
+        "transit-newyork",
+        "heatmap-tech",
+        "live-wildfires",
+        "weather"
+      ],
+      "expected": [
+        "gnews-us",
+        "bbc-world",
+        "youtube-guardian",
+        "nytimes",
+        "youtube-cnn",
+        "thehill",
+        "propublica",
+        "sci-scientificprogress",
+        "youtube-veritasium",
+        "sci-spacediscoveries",
+        "sci-medicalprogress",
+        "sci-fusionprogress",
+        "sci-airbornewindenergy",
+        "city-unitedstates-newyork",
+        "realtornews",
+        "business-us",
+        "marketwatch",
+        "coindesk",
+        "heatmap-crypto",
+        "podcast-thejoeroganexperience",
+        "podcast-tedtalksdaily",
+        "visualcapitalist",
+        "nythealth",
+        "health-us",
+        "theverge",
+        "youtube-mkbhd",
+        "openai",
+        "products-of-the-day",
+        "variety",
+        "youtube-mrbeast",
+        "events-us",
+        "movie-new",
+        "tv-new",
+        "anime-new",
+        "music-new",
+        "game-new",
+        "book-new",
+        "tech-new",
+        "slickdeals",
+        "kickstarter",
+        "car-new",
+        "youtube-carwow",
+        "podcast-new",
+        "life-recipes",
+        "youtube-markwiens",
+        "life-budgettravel",
+        "youtube-yestheory",
+        "theflightdeal",
+        "life-fashion",
+        "life-history",
+        "youtube-vox",
+        "quotes",
+        "life-lifehacks",
+        "sport-nfl",
+        "sport-nba",
+        "sport-mlb",
+        "sport-nhl",
+        "heatmap-nfl",
+        "heatmap-nba",
+        "legalsportsreport",
+        "weather"
+      ]
+    },
+    {
+      "name": "great britain, with disabled and fallback",
+      "input": {
+        "country": "GB",
+        "month": 6,
+        "known": [
+          "gnews-gb",
+          "bbc-world",
+          "youtube-guardian",
+          "nytimes",
+          "youtube-cnn",
+          "thehill",
+          "propublica",
+          "sci-scientificprogress",
+          "youtube-veritasium",
+          "sci-spacediscoveries",
+          "sci-medicalprogress",
+          "sci-fusionprogress",
+          "sci-airbornewindenergy",
+          "city-unitedkingdom-london",
+          "propertyindustryeye",
+          "business-gb",
+          "marketwatch",
+          "coindesk",
+          "heatmap-crypto",
+          "podcast-thediaryofaceo",
+          "podcast-tedtalksdaily",
+          "visualcapitalist",
+          "nythealth",
+          "health-gb",
+          "theverge",
+          "youtube-mkbhd",
+          "openai",
+          "products-of-the-day",
+          "variety",
+          "youtube-mrbeast",
+          "events-gb",
+          "movie-new",
+          "tv-new",
+          "anime-new",
+          "music-new",
+          "game-new",
+          "book-new",
+          "tech-new",
+          "hotukdeals",
+          "kickstarter",
+          "car-new",
+          "youtube-carwow",
+          "podcast-new",
+          "life-recipes",
+          "youtube-markwiens",
+          "life-budgettravel",
+          "youtube-yestheory",
+          "headforpoints",
+          "life-fashion",
+          "life-history",
+          "youtube-vox",
+          "quotes",
+          "life-lifehacks",
+          "sport-premier-league",
+          "sport-champions-league",
+          "team-rugby-leinsterrugby",
+          "sport-six-nations",
+          "heatmap-premier-league",
+          "legalsportsreport"
+        ],
+        "disabled": [
+          "bbc-world"
+        ],
+        "fallback": [
+          "marketwatch"
+        ],
+        "sharedCard": null,
+        "briefingEnabled": false
+      },
+      "unknownEmitted": [
+        "live-quakes",
+        "live-launches",
+        "live-iss",
+        "transit-london",
+        "heatmap-tech",
+        "weather"
+      ],
+      "expected": [
+        "gnews-gb",
+        "youtube-guardian",
+        "nytimes",
+        "youtube-cnn",
+        "thehill",
+        "propublica",
+        "sci-scientificprogress",
+        "youtube-veritasium",
+        "sci-spacediscoveries",
+        "sci-medicalprogress",
+        "sci-fusionprogress",
+        "sci-airbornewindenergy",
+        "city-unitedkingdom-london",
+        "propertyindustryeye",
+        "business-gb",
+        "coindesk",
+        "heatmap-crypto",
+        "podcast-thediaryofaceo",
+        "podcast-tedtalksdaily",
+        "visualcapitalist",
+        "nythealth",
+        "health-gb",
+        "theverge",
+        "youtube-mkbhd",
+        "openai",
+        "products-of-the-day",
+        "variety",
+        "youtube-mrbeast",
+        "events-gb",
+        "movie-new",
+        "tv-new",
+        "anime-new",
+        "music-new",
+        "game-new",
+        "book-new",
+        "tech-new",
+        "hotukdeals",
+        "kickstarter",
+        "car-new",
+        "youtube-carwow",
+        "podcast-new",
+        "life-recipes",
+        "youtube-markwiens",
+        "life-budgettravel",
+        "youtube-yestheory",
+        "headforpoints",
+        "life-fashion",
+        "life-history",
+        "youtube-vox",
+        "quotes",
+        "life-lifehacks",
+        "sport-premier-league",
+        "sport-champions-league",
+        "team-rugby-leinsterrugby",
+        "sport-six-nations",
+        "heatmap-premier-league",
+        "legalsportsreport",
+        "weather"
+      ]
+    },
+    {
+      "name": "germany, december",
+      "input": {
+        "country": "DE",
+        "month": 12,
+        "known": [
+          "bbc-world",
+          "gnews-de",
+          "youtube-guardian",
+          "nytimes",
+          "youtube-cnn",
+          "thehill",
+          "propublica",
+          "sci-scientificprogress",
+          "youtube-veritasium",
+          "sci-spacediscoveries",
+          "sci-medicalprogress",
+          "sci-fusionprogress",
+          "sci-airbornewindenergy",
+          "city-germany-berlin",
+          "property-de",
+          "business-de",
+          "marketwatch",
+          "coindesk",
+          "heatmap-crypto",
+          "podcast-tedtalksdaily",
+          "visualcapitalist",
+          "nythealth",
+          "health-de",
+          "theverge",
+          "youtube-mkbhd",
+          "openai",
+          "products-of-the-day",
+          "variety",
+          "youtube-mrbeast",
+          "events-de",
+          "movie-new",
+          "tv-new",
+          "anime-new",
+          "music-new",
+          "game-new",
+          "book-new",
+          "tech-new",
+          "mydealz",
+          "car-new",
+          "youtube-carwow",
+          "podcast-new",
+          "life-recipes",
+          "youtube-markwiens",
+          "life-budgettravel",
+          "youtube-yestheory",
+          "urlaubspiraten",
+          "life-fashion",
+          "life-history",
+          "youtube-vox",
+          "quotes",
+          "life-lifehacks",
+          "sport-bundesliga",
+          "team-soccer-bayernmunich",
+          "team-soccer-borussiadortmund",
+          "sport-champions-league",
+          "heatmap-bundesliga",
+          "legalsportsreport"
+        ],
+        "disabled": [
+          "nytimes"
+        ],
+        "fallback": [],
+        "sharedCard": "bbc-world",
+        "briefingEnabled": true
+      },
+      "unknownEmitted": [
+        "briefing:news-junkie",
+        "live-quakes",
+        "live-launches",
+        "live-iss",
+        "heatmap-tech",
+        "weather"
+      ],
+      "expected": [
+        "bbc-world",
+        "gnews-de",
+        "briefing:news-junkie",
+        "youtube-guardian",
+        "youtube-cnn",
+        "thehill",
+        "propublica",
+        "sci-scientificprogress",
+        "youtube-veritasium",
+        "sci-spacediscoveries",
+        "sci-medicalprogress",
+        "sci-fusionprogress",
+        "sci-airbornewindenergy",
+        "city-germany-berlin",
+        "property-de",
+        "business-de",
+        "marketwatch",
+        "coindesk",
+        "heatmap-crypto",
+        "podcast-tedtalksdaily",
+        "visualcapitalist",
+        "nythealth",
+        "health-de",
+        "theverge",
+        "youtube-mkbhd",
+        "openai",
+        "products-of-the-day",
+        "variety",
+        "youtube-mrbeast",
+        "events-de",
+        "movie-new",
+        "tv-new",
+        "anime-new",
+        "music-new",
+        "game-new",
+        "book-new",
+        "tech-new",
+        "mydealz",
+        "car-new",
+        "youtube-carwow",
+        "podcast-new",
+        "life-recipes",
+        "youtube-markwiens",
+        "life-budgettravel",
+        "youtube-yestheory",
+        "urlaubspiraten",
+        "life-fashion",
+        "life-history",
+        "youtube-vox",
+        "quotes",
+        "life-lifehacks",
+        "sport-bundesliga",
+        "team-soccer-bayernmunich",
+        "team-soccer-borussiadortmund",
+        "sport-champions-league",
+        "heatmap-bundesliga",
+        "legalsportsreport",
+        "weather"
+      ]
+    },
+    {
+      "name": "india, july",
+      "input": {
+        "country": "IN",
+        "month": 7,
+        "known": [
+          "gnews-in",
+          "bbc-world",
+          "youtube-guardian",
+          "nytimes",
+          "youtube-cnn",
+          "thehill",
+          "propublica",
+          "sci-scientificprogress",
+          "youtube-veritasium",
+          "sci-spacediscoveries",
+          "sci-medicalprogress",
+          "sci-fusionprogress",
+          "sci-airbornewindenergy",
+          "city-india-mumbai",
+          "squareyards",
+          "business-in",
+          "marketwatch",
+          "coindesk",
+          "heatmap-crypto",
+          "podcast-onpurposejayshetty",
+          "podcast-tedtalksdaily",
+          "visualcapitalist",
+          "nythealth",
+          "health-in",
+          "theverge",
+          "youtube-mkbhd",
+          "openai",
+          "products-of-the-day",
+          "variety",
+          "youtube-mrbeast",
+          "events-in",
+          "movie-new",
+          "tv-new",
+          "anime-new",
+          "music-new",
+          "game-new",
+          "book-new",
+          "tech-new",
+          "deals-in",
+          "kickstarter",
+          "car-new",
+          "youtube-carwow",
+          "podcast-new",
+          "life-recipes",
+          "youtube-markwiens",
+          "life-budgettravel",
+          "youtube-yestheory",
+          "livefromalounge",
+          "life-fashion",
+          "life-history",
+          "youtube-vox",
+          "quotes",
+          "life-lifehacks",
+          "sport-ipl",
+          "team-cricket-mumbaiindians",
+          "team-cricket-indianationalcricketteam",
+          "sport-test-cricket",
+          "legalsportsreport"
+        ],
+        "disabled": [],
+        "fallback": [
+          "coindesk"
+        ],
+        "sharedCard": null,
+        "briefingEnabled": false
+      },
+      "unknownEmitted": [
+        "live-quakes",
+        "live-launches",
+        "live-iss",
+        "heatmap-tech",
+        "heatmap-cricket",
+        "weather"
+      ],
+      "expected": [
+        "gnews-in",
+        "bbc-world",
+        "youtube-guardian",
+        "nytimes",
+        "youtube-cnn",
+        "thehill",
+        "propublica",
+        "sci-scientificprogress",
+        "youtube-veritasium",
+        "sci-spacediscoveries",
+        "sci-medicalprogress",
+        "sci-fusionprogress",
+        "sci-airbornewindenergy",
+        "city-india-mumbai",
+        "squareyards",
+        "business-in",
+        "marketwatch",
+        "heatmap-crypto",
+        "podcast-onpurposejayshetty",
+        "podcast-tedtalksdaily",
+        "visualcapitalist",
+        "nythealth",
+        "health-in",
+        "theverge",
+        "youtube-mkbhd",
+        "openai",
+        "products-of-the-day",
+        "variety",
+        "youtube-mrbeast",
+        "events-in",
+        "movie-new",
+        "tv-new",
+        "anime-new",
+        "music-new",
+        "game-new",
+        "book-new",
+        "tech-new",
+        "deals-in",
+        "kickstarter",
+        "car-new",
+        "youtube-carwow",
+        "podcast-new",
+        "life-recipes",
+        "youtube-markwiens",
+        "life-budgettravel",
+        "youtube-yestheory",
+        "livefromalounge",
+        "life-fashion",
+        "life-history",
+        "youtube-vox",
+        "quotes",
+        "life-lifehacks",
+        "sport-ipl",
+        "team-cricket-mumbaiindians",
+        "team-cricket-indianationalcricketteam",
+        "sport-test-cricket",
+        "legalsportsreport",
+        "weather"
+      ]
+    }
+  ]
+}

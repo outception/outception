@@ -131,3 +131,49 @@ def test_always_warm_ids() -> None:
         "b",
         "d",
     ]
+
+
+def test_shared_fixture_parity() -> None:
+    """The composer reproduces every case of the fixture the client composer
+    is tested against, so both produce the same deck for the same inputs."""
+    import json
+    from pathlib import Path
+
+    fixture = json.loads(
+        (Path(__file__).parent / "fixtures" / "compose.json").read_text()
+    )
+    raw = fixture["data"]
+    data = DeckData(
+        base=tuple(
+            DeckEntry(
+                entry["id"],
+                inject_after=tuple(entry.get("injectAfter", ())),
+                swap=entry.get("swap"),
+                enabled=entry.get("enabled", True),
+                season=tuple(entry["season"]) if entry.get("season") else None,
+                countries=(
+                    frozenset(entry["countries"]) if entry.get("countries") else None
+                ),
+            )
+            for entry in raw["base"]
+        ),
+        country_tables={
+            country: {name: tuple(ids) for name, ids in tables.items()}
+            for country, tables in raw["countryTables"].items()
+        },
+        briefing_profile_by_country=raw["briefingProfileByCountry"],
+        default_briefing_profile=raw["defaultBriefingProfile"],
+    )
+    assert len(fixture["cases"]) >= 8
+    for case in fixture["cases"]:
+        spec = case["input"]
+        inp = DeckInput(
+            country=spec["country"],
+            month=spec["month"],
+            known=set(spec["known"]).__contains__,
+            disabled=set(spec["disabled"]).__contains__,
+            fallback=set(spec["fallback"]).__contains__,
+            shared_card=spec["sharedCard"],
+            briefing_enabled=spec["briefingEnabled"],
+        )
+        assert compose_default_deck(data, inp) == case["expected"], case["name"]

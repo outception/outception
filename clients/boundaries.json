@@ -1,0 +1,55 @@
+{
+  "rules": [
+    {
+      "scope": "packages/news-core/src",
+      "why": "news-core is the domain layer; it renders nowhere and runs in node",
+      "forbidImports": [
+        "react",
+        "react-dom",
+        "react-native",
+        "next",
+        "expo",
+        "@outception-com/orbit",
+        "@outception-com/ui",
+        "@outception-com/i18n",
+        "@react-native-async-storage/async-storage"
+      ],
+      "forbidGlobals": [
+        "window",
+        "document",
+        "localStorage",
+        "sessionStorage",
+        "navigator",
+        "setTimeout",
+        "setInterval",
+        "requestAnimationFrame"
+      ]
+    },
+    {
+      "scope": "apps/web/src",
+      "why": "the web never reaches into the app",
+      "forbidImports": [
+        "react-native",
+        "expo",
+        "@outception-com/app",
+        "../../app/",
+        "apps/app"
+      ]
+    },
+    {
+      "scope": "apps/app",
+      "why": "the app never reaches into the web",
+      "forbidImports": ["next", "@outception-com/web", "../web/", "apps/web"]
+    }
+  ],
+  "duplicates": {
+    "why": "every reducer and helper lives once, in news-core",
+    "forbidFiles": [
+      "apps/web/src/components/News/squarify.ts",
+      "apps/app/components/News/squarify.ts",
+      "apps/app/utils/mutedWords.ts",
+      "apps/app/utils/focusedSources.ts",
+      "apps/app/utils/hiddenSources.ts"
+    ]
+  }
+}

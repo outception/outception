@@ -43,6 +43,7 @@ ALLOWED_PATHS: tuple[str, ...] = (
     "server/scripts/linters/",
     "server/scripts/check_env_vars.py",
     "server/tests/news/fixtures/parity/",
+    "server/tests/cards/fixtures/",
     # Publishers and data sources are content, and the catalog is where they
     # are named.
     "server/outception/news/data/",

@@ -14,11 +14,17 @@ import { useEffect, useMemo, useSyncExternalStore } from 'react'
 import { useNewsColumn } from './NewsColumnContext'
 import { NewsCards } from './NewsCards'
 import {
+  browserStorage,
   getCardsClearedServerSnapshot,
   getCardsClearedSnapshot,
   setSeedCards,
   subscribe,
 } from './newsPrefsStore'
+import {
+  composeDeck,
+  markStartersOffered,
+  shouldOfferStarters,
+} from '@outception-com/news-core'
 import { NewsSearchDialog } from './NewsSearchDialog'
 
 /** The public news wall body: a swipe card set of either your followed sources
@@ -26,10 +32,6 @@ import { NewsSearchDialog } from './NewsSearchDialog'
  * with the reader's country news (geo default), so the wall is never blank.
  * The tabs, "Cards" palette and theme-toggle logo live in the top navbar (see
  * LandingLayout). */
-// Guards the one-time Starters welcome; versioned so a future onboarding
-// revamp can re-show it deliberately.
-const FIRST_VISIT_KEY = 'news:first-visit:v1'
-
 export const NewsWall = ({ focusTopic }: { focusTopic?: string } = {}) => {
   const { focused, hidden, isFailed, setSearchOpen } = useNewsColumn()
   const t = useT()
@@ -48,27 +50,16 @@ export const NewsWall = ({ focusTopic }: { focusTopic?: string } = {}) => {
 
   // First visit ever: open the source palette (it lands on the Starters
   // gallery) so a new reader picks a curated card set in one tap instead of
-  // discovering Sources later. Once only - the flag is set immediately, so
-  // closing it never nags again - and never over a shared-card or topic
-  // deep link, where the reader came for a specific card.
+  // discovering Sources later. Once only, and never over a shared card or
+  // topic deep link, where the reader came for a specific card.
   useEffect(() => {
-    if (sharedCardId || focusTopic) return
-    const openWelcome = () => {
-      try {
-        localStorage.setItem(FIRST_VISIT_KEY, '1')
-        if (localStorage.getItem('news.focusedSources') === null) {
-          setSearchOpen(true)
-        }
-      } catch {
-        // Storage blocked (private mode): skip the tour rather than loop it.
-      }
-    }
-    try {
-      if (localStorage.getItem(FIRST_VISIT_KEY)) return
-      openWelcome()
-    } catch {
-      // Storage blocked (private mode): skip the tour rather than loop it.
-    }
+    const offer = shouldOfferStarters({
+      storage: browserStorage,
+      deepLink: Boolean(sharedCardId || focusTopic),
+    })
+    if (!offer) return
+    markStartersOffered(browserStorage)
+    setSearchOpen(true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -103,21 +94,32 @@ export const NewsWall = ({ focusTopic }: { focusTopic?: string } = {}) => {
 
   const visible: NewsSourceMeta[] = useMemo(() => {
     const byId = new Map((metas ?? []).map((s) => [s.id, s]))
-    const hiddenSet = new Set(hidden)
-    // The followed set wins (in follow order); an empty followed set falls
-    // back to the seeded default card set (see cardIds above).
-    const cards = cardIds
+    // One composer for the wall, the hand and the app: the followed set wins
+    // (in follow order), a fresh visitor's empty set falls back to the seed,
+    // and a shared card leads even when the recipient doesn't follow it.
+    const ids = composeDeck({
+      followed: focused,
+      seed: defaultCardIds ?? [],
+      cleared: cardsCleared,
+      hidden,
+      dropped: (id) => {
+        const meta = byId.get(id)
+        return !meta || Boolean(meta.redirect) || isFailed(id)
+      },
+      sharedCard: sharedCardId,
+    })
+    return ids
       .map((id) => byId.get(id))
       .filter((s): s is NewsSourceMeta => s !== undefined)
-      .filter((s) => !s.redirect && !isFailed(s.id) && !hiddenSet.has(s.id))
-    // A shared card link surfaces its source at the FRONT of the wall even if
-    // the recipient doesn't follow it, so they land on exactly what was shared.
-    if (sharedCardId && !cards.some((s) => s.id === sharedCardId)) {
-      const shared = byId.get(sharedCardId)
-      if (shared) return [shared, ...cards]
-    }
-    return cards
-  }, [metas, cardIds, hidden, isFailed, sharedCardId])
+  }, [
+    metas,
+    focused,
+    defaultCardIds,
+    cardsCleared,
+    hidden,
+    isFailed,
+    sharedCardId,
+  ])
 
   return (
     <Box

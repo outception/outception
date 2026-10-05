@@ -15,7 +15,7 @@ import { FollowButton } from './FollowButton'
 import { ShareButton } from './ShareButton'
 import { SourceBadge } from './SourceBadge'
 import { useNewsColumn } from './NewsColumnContext'
-import { squarify } from './squarify'
+import { squarify } from '@outception-com/news-core'
 
 /** Every tile uses the finviz/TradingView language - solid green for gains,
  * red for losses, brighter with magnitude, neutral slate at exactly 0.

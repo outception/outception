@@ -19,6 +19,7 @@
     "@mui/icons-material": "^7.3.11",
     "@outception-com/client": "workspace:*",
     "@outception-com/i18n": "workspace:*",
+    "@outception-com/news-core": "workspace:*",
     "@outception-com/orbit": "workspace:*",
     "@outception-com/ui": "workspace:*",
     "@radix-ui/react-toast": "catalog:",

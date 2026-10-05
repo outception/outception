@@ -5,7 +5,7 @@
     "build": "turbo run build",
     "dev": "turbo watch dev",
     "dev-web": "turbo run dev --filter=web",
-    "lint": "oxlint .",
+    "lint": "oxlint . && tsx scripts/check-boundaries.ts",
     "lint:fix": "oxlint --fix .",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",

@@ -1,8 +1,8 @@
-/** Squarified treemap layout (Bruls, Huizing & van Wijk): lays weighted tiles
- * into a rectangle keeping aspect ratios near 1 so labels stay readable.
- * Pure math shared by the heatmap card; mirrors the mobile util of the same name. */
+/** Squarified treemap layout (Bruls, Huizing and van Wijk): lays weighted
+ * tiles into a rectangle keeping aspect ratios near 1 so labels stay
+ * readable. Pure math shared by the table card on both clients. */
 
-interface TreemapRect {
+export interface TreemapRect {
   x: number
   y: number
   width: number
@@ -10,23 +10,26 @@ interface TreemapRect {
 }
 
 /** Positions for `weights` (descending order recommended) inside a
- * `width` × `height` box. Returns one rect per weight, same order. */
+ * `width` by `height` box. Returns one rect per weight, same order. */
 export const squarify = (
-  weights: number[],
+  weights: readonly number[],
   width: number,
   height: number,
 ): TreemapRect[] => {
   // Sanitize first: a non-finite or non-positive weight would produce NaN
-  // rects (0/0 in `worst`/`layoutRow`) that slip past `<= 1` render guards and
-  // crash RN's native layout. Treat them as zero-area tiles.
+  // rects (0/0 in `worst` or `layoutRow`) that slip past render guards and
+  // crash native layout. Treat them as zero-area tiles.
   const safe = weights.map((w) => (Number.isFinite(w) && w > 0 ? w : 0))
   const total = safe.reduce((sum, w) => sum + w, 0)
   if (total <= 0 || width <= 0 || height <= 0) {
     return weights.map(() => ({ x: 0, y: 0, width: 0, height: 0 }))
   }
+  // Only positive weights take part in the layout; the rest get empty
+  // rects in place, so the output always has one rect per weight.
+  const live = safe.map((w, i) => ({ w, i })).filter(({ w }) => w > 0)
   // Scale weights so their sum equals the box area.
-  const scaled = safe.map((w) => (w / total) * width * height)
-  const rects: TreemapRect[] = []
+  const scaled = live.map(({ w }) => (w / total) * width * height)
+  const placed: TreemapRect[] = []
   let x = 0
   let y = 0
   let w = width
@@ -50,7 +53,7 @@ export const squarify = (
     let offset = 0
     for (const area of finalRow) {
       const length = area / thickness
-      rects.push(
+      placed.push(
         horizontal
           ? { x: x + offset, y, width: length, height: thickness }
           : { x, y: y + offset, width: thickness, height: length },
@@ -67,7 +70,7 @@ export const squarify = (
   }
 
   while (index < scaled.length) {
-    const area = scaled[index]
+    const area = scaled[index] ?? 0
     const side = Math.min(w, h)
     if (row.length === 0 || worst([...row, area], side) <= worst(row, side)) {
       row.push(area)
@@ -78,5 +81,14 @@ export const squarify = (
     }
   }
   if (row.length > 0) layoutRow(row)
+  const rects: TreemapRect[] = weights.map(() => ({
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+  }))
+  live.forEach(({ i }, k) => {
+    rects[i] = placed[k] ?? { x: 0, y: 0, width: 0, height: 0 }
+  })
   return rects
 }

@@ -1,57 +1,24 @@
 import { api } from '@/utils/client'
-import { schemas, unwrap } from '@outception-com/client'
+import { unwrap } from '@outception-com/client'
+import type { NewsSort } from '@outception-com/news-core'
 
-export type NewsSourceMeta = schemas['SourceMeta']
-export type NewsItem = schemas['NewsItem']
-export type NewsHeatmapTile = schemas['HeatmapTile']
-export type NewsTemplate = schemas['NewsTemplate']
+export type {
+  HeatmapTile as NewsHeatmapTile,
+  NewsItem,
+  NewsSort,
+  NewsTemplate,
+  SourceMeta as NewsSourceMeta,
+} from '@outception-com/news-core'
+export { isSummarizable, safeExternalHref } from '@outception-com/news-core'
 
-export type NewsSort = 'hot' | 'new' | 'top' | 'rising'
-
-/**
- * Defense-in-depth for news links: items come from untrusted external feeds, so
- * only ever put an http(s) URL in an href. Returns undefined for anything else
- * (the anchor renders without an href, so a `javascript:`/`data:` URL can't be
- * clicked). The backend also neutralizes these, so this is a second line.
- */
-export const safeExternalHref = (url: string | null | undefined) => {
-  if (!url) return undefined
-  try {
-    const { protocol } = new URL(url)
-    return protocol === 'http:' || protocol === 'https:' ? url : undefined
-  } catch {
-    return undefined
-  }
-}
-
-/** Hosts whose pages are never the article (YouTube pages are a player), so
- * the summary endpoint refuses them (mirrors the server's list). A tap on those
- * opens the link. Google News links are resolved server-side, so they try. */
-const UNSUMMARIZABLE_HOSTS = new Set([
-  'youtube.com',
-  'www.youtube.com',
-  'm.youtube.com',
-  'youtu.be',
-])
-
-export const isSummarizable = (url: string | null | undefined) => {
-  if (!url) return false
-  try {
-    const { protocol, hostname } = new URL(url)
-    if (protocol !== 'http:' && protocol !== 'https:') return false
-    return !UNSUMMARIZABLE_HOSTS.has(hostname)
-  } catch {
-    return false
-  }
-}
+type NewsSourceMeta = import('@outception-com/news-core').SourceMeta
 
 export const newsApi = {
   sources: () => unwrap(api.GET('/v1/news/sources')),
-  // Metadata for a specific id set (the wall's card set). Hand-rolled fetch: the
-  // `ids` filter isn't in the generated client. Falls back to the full roster
-  // so the wall degrades to slower, never to blank. Credentialed like the
-  // generated client so it rides the same preconnected socket pool - browsers
-  // keep anonymous and credentialed cross-origin connections apart.
+  // Metadata for a specific id set (the wall's card set). Hand-rolled fetch:
+  // the `ids` filter isn't in the generated client. Falls back to the full
+  // roster so the wall degrades to slower, never to blank. Credentialed like
+  // the generated client so it rides the same preconnected socket pool.
   sourceMetas: async (ids: readonly string[]): Promise<NewsSourceMeta[]> => {
     try {
       const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/v1/news/sources`)
@@ -63,12 +30,11 @@ export const newsApi = {
       return unwrap(api.GET('/v1/news/sources'))
     }
   },
-  // Starter templates: persona bundles, country-resolved server-side.
+  // Starters: persona bundles, country-resolved server-side.
   templates: () => unwrap(api.GET('/v1/news/templates')),
-  // Source ids to seed an empty "Your stack". Passing the reader's country
-  // tailors the sports slice to that country's native sports/teams (e.g.
-  // Ireland → Gaelic football + hurling). Hand-rolled fetch: this endpoint
-  // isn't in the generated client.
+  // Card ids to seed an empty card set. Passing the reader's country tailors
+  // the sports slice to that country's native sports and teams. Hand-rolled
+  // fetch: this endpoint isn't in the generated client.
   defaultCards: async (country?: string): Promise<string[]> => {
     try {
       const url = new URL(
@@ -87,7 +53,7 @@ export const newsApi = {
         params: { path: { source_id: id }, query: { latest, sort } },
       }),
     ),
-  // Tiles for a `type: "heatmap"` roster source (see HeatmapCard).
+  // Tiles for a `type: "heatmap"` catalog entry (see HeatmapCard).
   heatmap: (id: string) =>
     unwrap(
       api.GET('/v1/news/heatmap/{heatmap_id}', {
