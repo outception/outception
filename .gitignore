@@ -101,6 +101,7 @@ __pypackages__/
 !.env.prod.example
 !.env.testing
 !.env.test
+!.env.docker.template
 .venv
 env/
 venv/

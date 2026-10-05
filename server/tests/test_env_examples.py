@@ -19,7 +19,9 @@ EXAMPLES = [
 @pytest.mark.parametrize(
     "example", EXAMPLES, ids=[str(p.relative_to(SERVER.parent)) for p in EXAMPLES]
 )
-def test_example_loads(example: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_example_loads(
+    example: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     # Only the file: a value in the test process environment must not mask
     # a broken line in the example.
     for key in list(__import__("os").environ):
@@ -30,6 +32,11 @@ def test_example_loads(example: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv(
         "OUTCEPTION_SECRET", "a-strong-unique-value-for-the-test-" + "x" * 32
     )
+    # The dev example points at the built email renderer, which a fresh
+    # checkout and CI do not have; the file only has to exist.
+    renderer = tmp_path / "renderer"
+    renderer.touch()
+    monkeypatch.setenv("OUTCEPTION_EMAIL_RENDERER_BINARY_PATH", str(renderer))
     settings = Settings(_env_file=example)
     assert isinstance(settings.ADMIN_EMAILS, list)
     assert isinstance(settings.BRIEFING_PROFILES, list)
