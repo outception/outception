@@ -1,5 +1,5 @@
 <!-- doc-covers: server/scripts/import_live_data.py -->
-<!-- doc-verified: 39cce39 -->
+<!-- doc-verified: e1b0ad6 -->
 
 # The swap
 
@@ -31,10 +31,14 @@ is read once, by the import, and kept as the rollback.
 5. Wait for the other session to report idle in `.agents-sync.md`.
 6. Tag the live tree's last commit on the repository
    (`git tag live-<date> b176b6f && git push outception live-<date>`), then
-   `mv live live-backup-<date> && mv rebuilt live`. Carry over the server
-   env, the testing env, the keypair, the production env, the web env
-   files, the app env, the sync file and the plan files. Point the remote
-   at the repository and push the rebuilt history to `main`.
+   `mv live live-backup-<date> && mv rebuilt live`. Then
+   `scripts/swap-carry-over.sh live-backup-<date> live --commit`, which
+   copies the four git-excluded files the rebuilt tree lacks (the
+   development key set, the app's env and its store credentials) and never
+   overwrites: the rebuilt tree keeps its own server, web and production
+   env files, since every key only the live tree's files carry belongs to
+   a removed feature. Push the rebuilt history to `main` (the histories
+   are unrelated, so this is a force push; the tag keeps the old one).
 7. The deploy workflow does the rest on the host, once and idempotently:
    it copies `.env.prod` to `.env.prod.pre-swap`, creates the database
    `outception_rebuild` beside the live one, points the app at it, carries
