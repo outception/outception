@@ -21,8 +21,8 @@ jobs:
       server: ${{ steps.filter.outputs.server }}
       migrations: ${{ steps.filter.outputs.migrations }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
@@ -42,12 +42,12 @@ jobs:
     env:
       OUTCEPTION_EMAIL_RENDERER_BINARY_PATH: /tmp/email-renderer
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
           cache-dependency-glob: server/uv.lock
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version-file: server/.python-version
       - name: Install
@@ -84,14 +84,14 @@ jobs:
     env:
       OUTCEPTION_EMAIL_RENDERER_BINARY_PATH: /tmp/email-renderer
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
           cache-dependency-glob: server/uv.lock
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version-file: server/.python-version
       - name: Install
@@ -135,25 +135,25 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
           cache-dependency-glob: server/uv.lock
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version-file: server/.python-version
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           package_json_file: server/emails/package.json
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
           cache-dependency-path: server/emails/pnpm-lock.yaml
       - name: Cache the email renderer
         id: emails
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: server/emails/bin
           key: emails-${{ runner.os }}-${{ hashFiles('server/emails/**', '!server/emails/node_modules/**', '!server/emails/bin/**') }}
