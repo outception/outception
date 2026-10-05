@@ -1,5 +1,5 @@
 <!-- doc-covers: deploy server/.env.prod.example .github/workflows/deploy.yml -->
-<!-- doc-verified: b0aa85a -->
+<!-- doc-verified: d712c96 -->
 
 # Deployment
 
