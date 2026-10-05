@@ -54,8 +54,10 @@ class OAuth2Client(RateLimitGroupMixin, RecordModel, OAuth2ClientMixin):
     )
     first_party: Mapped[bool] = mapped_column(nullable=False, default=False)
 
+    # The reader who registered the client. A deleted reader leaves the
+    # client in place, unowned: the first-party client has no owner at all.
     user_id: Mapped[UUID | None] = mapped_column(
-        Uuid, ForeignKey("users.id"), nullable=True, index=True
+        Uuid, ForeignKey("users.id", ondelete="set null"), nullable=True, index=True
     )
 
     @declared_attr

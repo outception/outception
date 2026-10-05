@@ -33,6 +33,9 @@ jobs:
             cd "$DEPLOY_PATH"
             # :'email' safely quotes the value inside SQL (no injection). Local
             # socket auth in the db container needs no password.
+            # The db container carries the database name and user from
+            # .env.prod; every row that belongs to the reader cascades, and a
+            # client they registered stays, unowned.
             docker compose --env-file .env.prod -f docker-compose.prod.yml exec -T db \
-              psql -U outception -d outception -v email="$EMAIL" \
-              -c "DELETE FROM users WHERE email = :'email';"
+              sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v email="$0" \
+                -c "DELETE FROM users WHERE email = :'"'"'email'"'"';"' "$EMAIL"
