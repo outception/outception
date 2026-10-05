@@ -6,7 +6,7 @@ working tree clean before and after. Nothing was written into the live tree:
 the capture ran in an external venv (`UV_PROJECT_ENVIRONMENT=<scratchpad>/l-venv
 uv sync --project <live>/server --frozen`) with `PYTHONDONTWRITEBYTECODE=1`.
 
-These files are the M2 parity gate (PLATFORM_PLAN.md section 3.1): the rebuilt
+These files are the M2 parity gate (plans/PLATFORM_PLAN.md section 3.1, kept outside the repository): the rebuilt
 deck composer, Starters, catalog loader and OpenAPI must reproduce them.
 
 | File | What | Consumer |
@@ -43,7 +43,7 @@ its removal is a decided, non-additive change the diff gate must allow by name.
 
 No visitor analytics exist in either tree, so the list is the thirty
 countries with the widest country-table coverage, which also covers every
-country named in the verification list of PLATFORM_PLAN.md section 10:
+country named in the verification list of plans/PLATFORM_PLAN.md section 10:
 
 US, GB, IE, CA, AU, NZ, IN, NG, ZA, SG, PH, DE, FR, ES, IT, NL, SE, NO, PL,
 PT, CH, AT, BE, BR, MX, AR, JP, KR, ID, TR, plus the unknown-country case.

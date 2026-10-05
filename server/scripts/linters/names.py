@@ -116,14 +116,11 @@ SKIP_SUFFIXES = frozenset(
     }
 )
 SKIP_NAMES = frozenset({"pnpm-lock.yaml", "package-lock.json", "yarn.lock", "uv.lock"})
-# The planning documents are git-excluded and may name anything; that is
-# why they are excluded. The upstream skills directory goes with the client
-# prune.
+# The planning documents under plans/ and the session log are git-excluded
+# and may name anything; that is why they are skipped.
 SKIP_RELATIVE = (
-    "START_HERE.md",
+    "plans/",
     ".agents-sync.md",
-    "NEWS_GLOBE_PLAN.md",
-    "IMPROVEMENT_PROPOSALS.md",
     ".agents/",
 )
 
@@ -174,7 +171,7 @@ def scan(
     hits: list[tuple[str, int, str]] = []
     for path in iter_files(root, paths):
         relative = path.relative_to(root).as_posix()
-        if is_allowed(relative) or relative.endswith("_PLAN.md"):
+        if is_allowed(relative):
             continue
         if any(relative == skip or relative.startswith(skip) for skip in SKIP_RELATIVE):
             continue
