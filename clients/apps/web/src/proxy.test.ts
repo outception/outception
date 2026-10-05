@@ -60,7 +60,7 @@ describe('proxy matcher configuration', () => {
     ).toBe(false)
   })
 
-  it('should NOT run for PostHog ingest', () => {
+  it('should NOT run for the old analytics ingest path', () => {
     expect(
       unstable_doesMiddlewareMatch({
         config,

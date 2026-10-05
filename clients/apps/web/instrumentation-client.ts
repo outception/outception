@@ -42,7 +42,7 @@ Sentry.init({
   denyUrls: [/extensions\//i, /^chrome:\/\//i, /^moz-extension:\/\//i],
 
   beforeSend: (event) => {
-    // Do not flag PostHog errors
+    // The old analytics ingest paths: never report them
     if (
       event.request?.url?.includes('/ingest/flags') ||
       event.request?.url?.includes('/ingest/batch')

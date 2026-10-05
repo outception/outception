@@ -5,7 +5,7 @@ export const getServerURL = (path?: string): string => {
     return `${process.env.NEXT_PUBLIC_API_URL}${path}`
   }
   // In server context (SSR), use OUTCEPTION_API_URL if available (Docker dev only),
-  // otherwise fall back to NEXT_PUBLIC_API_URL (Vercel/production)
+  // otherwise fall back to NEXT_PUBLIC_API_URL (production)
   const baseURL =
     process.env.OUTCEPTION_API_URL || process.env.NEXT_PUBLIC_API_URL
   return `${baseURL}${path}`

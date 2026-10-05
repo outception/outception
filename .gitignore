@@ -149,15 +149,10 @@ server/emails/.npmrc
 # Docker dev environment
 dev/docker/.env.docker
 
-# Tinybird
-server/.tinyb
-.tinyb
-
 .turbo
-.claude/worktrees
-# Per-worktree Claude Code preview config (ports differ per instance).
+# Per-worktree editor preview config (ports differ per instance).
 # Generate with `dev docker launch-json`.
-.claude/launch.json
+.editor/
 .superset/
 
 # Eval artifacts (generated, may contain PII)
@@ -169,7 +164,6 @@ server/cases_schema.json
 clients/apps/web/src/app/(main)/onboarding/validate-description/acceptable-use-policy.mdx
 
 .worktrees/
-.vercel
 
 # `dev snap` run output (screenshots, diff heatmaps, report.html, job.json) — local
 # artifacts; the committed dev/snap-timings.json is the only shared bit.

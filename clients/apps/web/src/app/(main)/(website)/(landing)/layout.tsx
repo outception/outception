@@ -3,7 +3,7 @@ import { PropsWithChildren } from 'react'
 import LandingLayout from '../../../../components/Landing/LandingLayout'
 
 // Rendered per request (not static) so the server can read the reader's
-// country - from Cloudflare's header, or the cookie the proxy mirrors it
+// country - from the edge header, or the cookie the proxy mirrors it
 // into - and seed their national cards and local weather on first paint.
 // Static, the shell would paint a default set and the client would correct
 // it after hydration, visibly reshuffling the wall.

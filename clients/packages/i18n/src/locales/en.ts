@@ -652,18 +652,18 @@ export default {
       },
       analytics: {
         title: 'Analytics',
-        body: 'To understand how Outception is used and improve it, we use product-analytics and error-monitoring tools that may set identifiers and process usage and device data on our behalf: PostHog and Sentry.',
+        body: 'Outception keeps no analytics profile. One error-monitoring tool, Sentry, may process device data on our behalf when something breaks, so we can fix it.',
       },
       why: {
         title: 'Why we process your data',
         consentLabel: 'Consent',
-        consent: 'for analytics and precise location.',
+        consent: 'for precise location, when you grant it.',
         legitimateLabel: 'Legitimate interests',
         legitimate: 'to keep the service secure, functional, and free.',
       },
       sharing: {
         title: 'Sharing your data',
-        body: 'We do not sell your personal data. We share it only with the service providers that make Outception work - our EU hosting provider, Google (analytics), PostHog, and Sentry - each acting under contract. When you tap a headline you leave Outception for the publisher’s own site, which has its own privacy practices we don’t control.',
+        body: 'We do not sell your personal data. We share it only with the service providers that make Outception work - our EU hosting provider and Sentry, each acting under contract. When you tap a headline you leave Outception for the publisher’s own site, which has its own privacy practices we don’t control.',
       },
       retention: {
         title: 'Retention & your rights',

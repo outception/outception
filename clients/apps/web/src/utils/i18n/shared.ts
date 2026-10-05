@@ -1,4 +1,4 @@
-// Cookie the middleware sets from Cloudflare's CF-IPCountry, so client
+// Cookie the middleware sets from the edge's CF-IPCountry header, so client
 // components can resolve the reader's country (and flag) after hydration.
 export const GEO_COUNTRY_COOKIE = 'oc-geo-country'
 
@@ -15,7 +15,7 @@ function readCookie(name: string): string | null {
   }
 }
 
-/** The reader's detected country (Cloudflare CF-IPCountry, mirrored into the
+/** The reader's detected country (the edge's CF-IPCountry, mirrored into the
  * geo cookie by the proxy) as an ISO-3166 alpha-2 code, for seeding their
  * national cards and showing their country's flag. Client-only - returns null
  * during SSR or without the cookie. */

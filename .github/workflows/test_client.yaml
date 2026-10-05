@@ -74,7 +74,7 @@ jobs:
         run: pnpm --filter @outception-com/i18n check-keys
 
       - name: 🧭 Check names
-        run: pnpm exec tsx scripts/check-names.ts
+        run: pnpm exec tsx scripts/check-names.ts --strict
 
       - name: 👀 Typecheck
         run: pnpm run typecheck

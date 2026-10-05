@@ -49,8 +49,6 @@ outception/
 │   ├── generator/              # Internal SDK code generator
 │   ├── python/                 # Generated Python SDK
 │   └── overlays/               # OpenAPI Overlay tweaks for Speakeasy-generated SDKs
-├── .agents/                # Agent Skills (Cursor, Claude, Codex)
-└── .claude/                # Claude Code config (settings, hooks). skills/ → ../.agents/skills
 ```
 
 The TypeScript API client is generated from the backend's OpenAPI schema. After changing the
@@ -89,7 +87,7 @@ pnpm install && pnpm dev
 - `OUTCEPTION_STRIPE_WEBHOOK_SECRET`
 - `OUTCEPTION_STRIPE_CONNECT_WEBHOOK_SECRET`
 
-**Fresh worktrees** (`.claude/worktrees/`) don't carry `.env` or built artifacts. Before running
+**Fresh worktrees** don't carry `.env` or built artifacts. Before running
 tests in a new worktree, from the repo root:
 ```bash
 ./dev/setup-environment       # generates server/.env and clients/apps/web/.env.local
@@ -165,11 +163,6 @@ Treat **Accepted** ADRs as binding:
 - **ADR-0012:** AI API prompts send only the fields the feature needs. Do not
   dump a whole org, customer, or payment object into a model call.
 
-## Skills
-
-Reusable workflows live in `.agents/skills/`. `.claude/skills` is a symlink to that
-directory. Invoke as `/name` in Cursor and Claude Code, or `$name` in Codex.
-
 - `outception-code-review` — Outception-specific review of the branch diff. Bugs, security, and simplification are `/code-review`, `/security-review`, and `/simplify`.
 - `open-pr` — draft PR after lint, type-check, `test_fast`, `outception-code-review`, and cubic CLI (`CUBIC_API_KEY`). Do not mark ready unless asked.
 
@@ -203,29 +196,6 @@ Add new operations and webhooks to the matching groups in `docs/docs.json`; that
 - **Redis**: cache and job queue.
 - **PostgreSQL**: primary database.
 
-## Claude Code on the web
-
-`.claude/hooks/session-start.sh` runs as a `SessionStart` hook and leaves the container ready to
-run tests and linters. It mirrors `.github/workflows/test_server.yaml` rather than `dev up`,
-because `dev up` targets interactive local development: it aborts if the Tinybird CLI install
-fails, curl-installs nvm, calls `systemctl start docker`, prompts for GitHub/Stripe, and — worst
-for an agent — swallows a failed email-renderer build, the artifact that blocks config import.
-
-It is idempotent, skips work already done, and reports failed steps in its output rather than
-aborting. It fires on session start and resume, not on every compaction. Read the script for
-what it does; its log is `outception-session-start.log` in `$TMPDIR` (`/tmp` unless overridden).
-
-Deliberately excluded, none of it needed for tests or linters: `dev seed`, `dev start`/tmux,
-Stripe keys or CLI, GitHub App setup, the Tinybird CLI, `dev docker`, and the web build. Redis is
-replaced by `FakeAsyncRedis` in tests, Stripe objects are fakes, and Tinybird tests self-skip.
-`fonts-noto-cjk` is also left out — install it only if a PDF or invoice test fails on glyphs.
-
-Two things to know when running tests here:
-
-- An unscoped `pnpm test` runs 19 turbo tasks at concurrency 10 on 4 CPUs and produces spurious
-  `Test timed out in 5000ms` failures in `packages/checkout` and `apps/web` that pass in
-  isolation. Scope with `--filter`, or pass `--concurrency=2`.
-- `packages/cli` tests need `bun`.
 
 ## Cursor Cloud specific instructions
 
@@ -240,7 +210,7 @@ Standard lint/test commands live in `server/AGENTS.md` and `clients/AGENTS.md`.
 # Once per VM boot (Docker isn't managed by systemd here):
 sudo dockerd > /tmp/dockerd.log 2>&1 &
 
-dev up --skip-integrations   # deps, infra (incl. Tinybird), migrations, builds
+dev up --skip-integrations   # deps, infra, migrations, builds
 dev seed                     # sample orgs/products + admin@outception.sh (NOT part of `dev up`)
 dev start                    # api + worker + web (+ stripe) in tmux session `outception`
 # Stop with:  dev stop

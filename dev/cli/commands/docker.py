@@ -479,7 +479,6 @@ def _drop_instance_data(instance: int) -> bool:
     ):
         ok = False
 
-
     return ok
 
 
@@ -552,7 +551,9 @@ def _print_access_info(ctx: typer.Context, instance: int) -> None:
         "[bold]Shared infra:[/bold] (no host ports — reach via `dev docker exec <service>`)"
     )
     console.print(f"  Project: {SHARED_PROJECT_NAME}  Network: {SHARED_NETWORK_NAME}")
-    console.print(f"  psql:    dev docker exec db psql -U outception -d {db_name(instance)}")
+    console.print(
+        f"  psql:    dev docker exec db psql -U outception -d {db_name(instance)}"
+    )
     console.print(f"  redis:   dev docker exec redis redis-cli -n {redis_db(instance)}")
     console.print()
     console.print("[bold]Commands:[/bold]")
@@ -970,7 +971,7 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
     ) -> None:
         """Print this instance's resolved ports and resource names.
 
-        Machine-readable with --json, so tooling (e.g. .claude/launch.json) can
+        Machine-readable with --json, so tooling (e.g. .editor/launch.json) can
         discover the per-instance ports instead of hardcoding the port scheme.
         """
         instance = ctx.obj["instance"]
@@ -995,11 +996,8 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
         console.print(f"  API:  {info['api_url']}")
         console.print(f"  Web:  {info['web_url']}")
         console.print(f"  Docs: http://localhost:{info['docs_port']} (native)")
-        console.print(
-            f"  Database: {info['database']}  Redis DB: {info['redis_db']}"
-        )
-        console.print(
-        )
+        console.print(f"  Database: {info['database']}  Redis DB: {info['redis_db']}")
+        console.print()
 
     @docker_app.command("launch-json")
     def docker_launch_json(
@@ -1009,10 +1007,10 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
             typer.Option("--stdout", help="Print instead of writing the file"),
         ] = False,
     ) -> None:
-        """Generate .claude/launch.json for this worktree's instance.
+        """Generate .editor/launch.json for this worktree's instance.
 
         Ports are per-worktree, so a hardcoded (or committed) launch.json points
-        Claude Code's preview at the wrong port in every other worktree. Generate
+        the editor's preview at the wrong port in every other worktree. Generate
         it here instead, and regenerate after `dev docker set-instance`. dev
         docker publishes fixed host ports and ignores $PORT, so autoPort is false.
         """
@@ -1056,7 +1054,7 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
             # already ends with "\n".
             sys.stdout.write(content)
             return
-        target = ROOT_DIR / ".claude" / "launch.json"
+        target = ROOT_DIR / ".editor" / "launch.json"
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(content)
         console.print(
@@ -1149,11 +1147,11 @@ def register(app: typer.Typer, prompt_setup: callable) -> None:
             else:
                 status = "[dim]○ stopped[/dim]"
 
-            display_path = (
-                path.replace(home, "~", 1) if path.startswith(home) else path
-            )
+            display_path = path.replace(home, "~", 1) if path.startswith(home) else path
             if path == current_path:
-                display_path = f"[bold cyan]{display_path}[/bold cyan] [dim](this worktree)[/dim]"
+                display_path = (
+                    f"[bold cyan]{display_path}[/bold cyan] [dim](this worktree)[/dim]"
+                )
             elif not path_exists:
                 display_path = f"[red]{display_path}[/red]"
 

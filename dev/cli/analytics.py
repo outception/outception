@@ -5,7 +5,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-ANALYTICS_URL = "https://outception-dev-analytics.vercel.app/api/track"
+# Off unless DEV_CLI_ANALYTICS_URL names an endpoint: the dev CLI reports
+# nothing anywhere by default.
+ANALYTICS_URL = ""
 EVENT = "dev_cli_command"
 COMPLETED_EVENT = "dev_cli_command_completed"
 UP_STEP_EVENT = "dev_cli_up_step"
@@ -35,6 +37,8 @@ def _redact(token: str) -> str:
 
 
 def _disabled() -> bool:
+    if not _endpoint():
+        return True
     return bool(
         os.environ.get("DEV_CLI_NO_ANALYTICS") or os.environ.get("DO_NOT_TRACK")
     )
@@ -62,12 +66,8 @@ def parse_invocation(argv: list[str]) -> tuple[str, list[str], str]:
     else:
         command = _redact(leading[0])
 
-    flag_names = (
-        arg.split("=", 1)[0] for arg in args if arg.startswith("-")
-    )
-    flags = sorted(
-        {_redact(name) for name in flag_names if _FLAG_NAME.match(name)}
-    )
+    flag_names = (arg.split("=", 1)[0] for arg in args if arg.startswith("-"))
+    flags = sorted({_redact(name) for name in flag_names if _FLAG_NAME.match(name)})
     invocation = " ".join([command, *flags])
     return command, flags, invocation
 

@@ -66,6 +66,12 @@ ALLOWED_PATHS: tuple[str, ...] = (
     "docs/naming/",
     ".github/",
     "clients/scripts/check-names.ts",
+    # The licence text carries the original copyright notice as the law asks.
+    "LICENSE",
+    # The web build config carries the content security policy's host list.
+    "clients/apps/web/next.config.mjs",
+    # The crawler manifest names crawlers by their user agents.
+    "clients/apps/web/src/app/robots.ts",
 )
 SKIP_DIRS = frozenset(
     {
@@ -73,6 +79,10 @@ SKIP_DIRS = frozenset(
         "node_modules",
         ".venv",
         "__pycache__",
+        ".pytest_cache",
+        ".claude",
+        ".agents",
+        ".editor",
         ".next",
         "dist",
         "build",

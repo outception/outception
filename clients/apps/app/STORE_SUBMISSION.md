@@ -118,7 +118,7 @@ so the wording has one home. Apple's character limits are noted per field.
 
 - Tracking: no. No ads, no advertising identifiers.
 - Data sold: no.
-- Processors: PostHog (analytics), Sentry (diagnostics).
+- Processors: Sentry (diagnostics).
 
 ## Assets
 

@@ -92,9 +92,9 @@ export async function proxy(request: NextRequest) {
   // landing shell can resolve the country locale in the browser (see
   // resolveClientLocale). Runs per request even for static pages because
   // middleware always executes.
-  // Real visitors: Cloudflare's CF-IPCountry (the deployment sits behind
-  // Cloudflare, which injects this header on every proxied request). Locally
-  // (no Cloudflare) a `?geo=XX` query param simulates a country so the flag +
+  // Real visitors: the edge's CF-IPCountry header (the deployment sits
+  // behind the edge proxy, which injects it on every request). Locally
+  // (no edge) a `?geo=XX` query param simulates a country so the flag +
   // weather can be tested; it's inert in production because CF-IPCountry is
   // always present there and takes precedence.
   const geoOverride = request.nextUrl.searchParams.get('geo')
@@ -121,7 +121,7 @@ export const config = {
      * Match all request paths except for the ones starting with:
      * - api (API routes)
      * - fonts (static font files)
-     * - ingest (Posthog)
+     * - ingest (the old analytics path)
      * - monitoring (Sentry)
      * - assets (static asset files)
      * - _next (Next.js internals: static files, image optimization, data)

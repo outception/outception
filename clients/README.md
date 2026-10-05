@@ -1,4 +1,4 @@
-# Polar Clients
+# Outception clients
 
 ## What's inside?
 
@@ -6,12 +6,13 @@ This [Turborepo](https://turbo.build/) includes the following packages/apps:
 
 ### Apps and Packages
 
-- `apps/web`: [polar.sh](https://polar.sh) – [Next.js](https://nextjs.org/) app
+- `apps/web`: the web app, built with [Next.js](https://nextjs.org/)
 - `apps/app`: iOS and Android app built with [Expo](https://expo.dev/) and React Native
-- `apps/orbit`: Documentation and component showcase for the Orbit design system
 - `packages/ui`: Shared resources
 - `packages/client`: Internal API client generated from OpenAPI spec
-- `packages/orbit`: Polar's design system containing components and design tokens
+- `packages/orbit`: the Orbit design system, components and design tokens
+- `packages/news-core`: the client domain layer shared by the web and the app
+- `packages/i18n`: the UI strings
 
 Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
 

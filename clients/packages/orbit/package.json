@@ -1,7 +1,7 @@
 {
   "name": "@outception-com/orbit",
   "version": "0.1.0",
-  "description": "Orbit — Design system for Polar",
+  "description": "Orbit, the Outception design system",
   "author": "Outception",
   "license": "Apache-2.0",
   "type": "module",

@@ -1,7 +1,7 @@
 {
   "name": "@outception-com/ui",
   "version": "0.1.2",
-  "description": "Polar UI Components — This is a private library for the Polar project. You probably shouldn't use it directly in your own projects.",
+  "description": "Shared UI components for the Outception clients",
   "author": "Outception",
   "license": "Apache-2.0",
   "repository": {
@@ -50,7 +50,6 @@
     "react-day-picker": "^9.14.0",
     "react-hook-form": "catalog:",
     "react-timeago": "catalog:",
-    "recharts": "catalog:",
     "tailwind-merge": "catalog:"
   },
   "devDependencies": {

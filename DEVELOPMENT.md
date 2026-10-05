@@ -334,7 +334,7 @@ every migration; refresh it with `OUTCEPTION_ENV=testing uv run task db_migrate`
 migration.
 
 Redis, Stripe credentials and a GitHub App are not required: tests substitute a fake Redis and
-construct Stripe objects locally. Tinybird tests skip themselves if Tinybird isn't running.
+construct Stripe objects locally.
 PostgreSQL is required, and the file/order/receipt tests need MinIO with its buckets created.
 
 ### Frontend

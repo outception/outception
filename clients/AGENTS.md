@@ -64,8 +64,7 @@ clients/
 │   │       ├── molecules/      # Composite components (Banner)
 │   │       └── ui/             # shadcn/ui base components
 │   ├── client/                 # Generated API client
-│   ├── checkout/               # Checkout package
-│   └── orbit/                  # Polar's design system containing components, design tokens, etc.
+│   └── orbit/                  # Orbit design system: components and design tokens
 ```
 
 ## UI Authoring Rule (READ FIRST)
@@ -550,7 +549,7 @@ These patterns exist throughout the codebase but **must not be used in new code*
 
 - `<div className="…">` for layout/spacing/color
 - `dark:` variants — Orbit color tokens auto-resolve
-- Hard-coded color names like `bg-blue-500`, `text-gray-500`, `dark:bg-polar-800`
+- Hard-coded color names like `bg-blue-500`, `text-gray-500`, `dark:bg-outception-800`
 - `rounded-xl`, `shadow-lg`, `p-4`, `gap-2` etc. — use Box props with tokens
 
 When editing a legacy file, migrate the file (or the immediate component) to Box rather

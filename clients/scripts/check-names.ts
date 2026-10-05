@@ -14,7 +14,15 @@ const denylist = readFileSync(join(repo, 'docs/naming/denylist.txt'), 'utf8')
   .map((line) => line.split('#')[0].trim())
   .filter(Boolean)
 
-const allowed = ['scripts/check-names.ts', 'pnpm-lock.yaml', 'package.json']
+const allowed = [
+  'scripts/check-names.ts',
+  'pnpm-lock.yaml',
+  'package.json',
+  // The web build config carries the content security policy's host list.
+  'apps/web/next.config.mjs',
+  // The crawler manifest names crawlers by their user agents.
+  'apps/web/src/app/robots.ts',
+]
 const skipDirs = new Set([
   'node_modules',
   '.next',
@@ -25,6 +33,10 @@ const skipDirs = new Set([
   'coverage',
   'ios',
   'android',
+  // Agent tool configuration stays local and untracked.
+  '.claude',
+  '.agents',
+  '.editor',
 ])
 const skipSuffixes = [
   '.png',

@@ -66,7 +66,7 @@ jobs:
         run: uv run python -m scripts.check_env_vars
       - name: Naming (reporting)
         working-directory: ./server
-        run: uv run python -m scripts.linters.names
+        run: uv run python -m scripts.linters.names --strict
 
   migrations:
     name: "Server: Migrations"

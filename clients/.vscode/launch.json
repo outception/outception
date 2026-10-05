@@ -3,7 +3,7 @@
   "configurations": [
     {
       "command": "pnpm dev",
-      "name": "Polar (clients)",
+      "name": "Outception (clients)",
       "request": "launch",
       "type": "node-terminal"
     }
