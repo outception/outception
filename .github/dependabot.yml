@@ -38,28 +38,11 @@ updates:
         dependency-type: "development"
         patterns:
           - "*"
-  - package-ecosystem: "uv"
-    directory: "/lambda/image-resizer"
-    schedule:
-      interval: "weekly"
-    cooldown:
-      default-days: 7
-    groups:
-      image-resizer-production:
-        dependency-type: "production"
-        patterns:
-          - "*"
-      image-resizer-development:
-        dependency-type: "development"
-        patterns:
-          - "*"
   - package-ecosystem: "npm"
     directories:
       - "/clients"
       - "/clients/apps/*"
-      - "/clients/adapters/*"
       - "/clients/packages/*"
-      - "/clients/examples/*"
       - "/clients/scripts/*"
     schedule:
       interval: "weekly"
@@ -111,26 +94,6 @@ updates:
         patterns:
           - "*"
       docs-development:
-        dependency-type: "development"
-        patterns:
-          - "*"
-    ignore:
-      - dependency-name: "@types/node"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "typescript"
-        update-types: ["version-update:semver-major"]
-  - package-ecosystem: "npm"
-    directory: "/handbook"
-    schedule:
-      interval: "weekly"
-    cooldown:
-      default-days: 7
-    groups:
-      handbook-production:
-        dependency-type: "production"
-        patterns:
-          - "*"
-      handbook-development:
         dependency-type: "development"
         patterns:
           - "*"
