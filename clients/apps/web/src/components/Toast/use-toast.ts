@@ -1,4 +1,3 @@
-// Inspired by react-hot-toast library
 import * as Sentry from '@sentry/nextjs'
 import * as React from 'react'
 
@@ -7,10 +6,10 @@ import { ToastActionElement, type ToastProps } from '.'
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
 
-type ToasterToast = Omit<ToastProps, 'title' | 'description'> & {
+type ToasterToast = ToastProps & {
   id: string
-  title?: string
-  description?: string
+  title?: React.ReactNode
+  description?: React.ReactNode
   action?: ToastActionElement
 }
 
@@ -134,7 +133,8 @@ function dispatch(action: Action) {
   })
 }
 
-type Toast = Omit<ToasterToast, 'id'>
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+interface Toast extends Omit<ToasterToast, 'id'> {}
 
 function toast({ ...props }: Toast) {
   const id = genId()

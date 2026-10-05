@@ -12,12 +12,6 @@ const stylexBabelPlugin = [
   },
 ]
 
-const CHECKOUT_FILES = [
-  'src/components/Checkout/**',
-  'src/hooks/checkout.ts',
-  'src/utils/checkout.ts',
-]
-
 export default defineConfig({
   plugins: [
     tsconfigPaths({ projects: ['tsconfig.json'] }),
@@ -25,24 +19,11 @@ export default defineConfig({
   ],
   test: {
     environment: 'jsdom',
-    setupFiles: ['./vitest.setup.ts'],
     fsModuleCache: true,
-    exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**'],
+    exclude: ['**/node_modules/**', '**/dist/**'],
     env: {
-      NEXT_PUBLIC_API_URL: 'http://api.polar.test',
-      NEXT_PUBLIC_FRONTEND_BASE_URL: 'https://polar.sh',
-      NEXT_PUBLIC_SANDBOX_FRONTEND_BASE_URL: 'https://sandbox.polar.sh',
-    },
-    coverage: {
-      provider: 'v8',
-      include: CHECKOUT_FILES,
-      reporter: ['text-summary'],
-      thresholds: {
-        lines: 80,
-        statements: 80,
-        functions: 80,
-        branches: 80,
-      },
+      NEXT_PUBLIC_API_URL: 'http://api.outception.test',
+      NEXT_PUBLIC_FRONTEND_BASE_URL: 'https://outception.com',
     },
   },
 })

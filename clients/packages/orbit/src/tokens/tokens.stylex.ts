@@ -1,5 +1,5 @@
 // ─── Public Token Barrel ──────────────────────────────────────────────────────
-// The single entry behind `@polar-sh/orbit/theme`. It aggregates the two token
+// The single entry behind `@outception-com/orbit/theme`. It aggregates the two token
 // tiers and defines nothing of its own:
 //   • value.stylex.ts     — Tier 1 primitives (literal values)
 //   • semantics.stylex.ts — Tier 2 semantic colors + typography (reference primitives)

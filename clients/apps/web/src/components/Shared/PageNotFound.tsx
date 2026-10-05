@@ -1,56 +1,43 @@
 'use client'
 
+import { PaperBackground } from '@/components/Layout/PaperBackground'
+import { Box } from '@outception-com/orbit/Box'
+import { Text } from '@outception-com/orbit/Text'
 import Link from 'next/link'
-import LogoType from '../Brand/logos/LogoType'
+import LogoIcon from '../Brand/logos/LogoIcon'
 
+/** 404 page. Uses the same themed newsprint backdrop as the wall
+ * (`PaperBackground` → the active edition's `.paper-page` gradient), so it
+ * follows the reader's edition and tone - light/dark green on the default
+ * Phosphor edition - instead of a fixed colour. */
 const PageNotFound = () => {
   return (
-    <div className="dark:bg-polar-950 flex h-screen w-full flex-col items-center justify-center gap-y-12 bg-gray-50 px-12 text-center">
-      <div className="flex flex-col items-center justify-center gap-y-1">
-        <h1 className="text-2xl font-medium text-black dark:text-white">
-          Page not found
-        </h1>
-        <p className="dark:text-polar-400 -mb-1 max-w-md text-center text-base text-balance text-gray-600">
-          Sorry, but the page you&rsquo;re looking for doesn&rsquo;t exist or
-          has been moved.
-        </p>
-      </div>
-      <ul className="dark:text-polar-400 dark:bg-polar-800 flex max-w-md items-center gap-x-2 rounded-lg bg-white p-1.5 px-3 text-center text-sm leading-normal text-balance text-gray-600">
-        <li>
-          <Link
-            href="/"
-            className="dark:hover:text-polar-300 block p-1 hover:text-gray-700 hover:underline"
-            prefetch={false}
-          >
-            Homepage
+    <>
+      <PaperBackground />
+      <Box
+        minHeight="100vh"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+        paddingHorizontal="xl"
+        textAlign="center"
+      >
+        <div className="paper-panel flex max-w-lg flex-col items-center gap-y-8 rounded-2xl px-12 py-14">
+          <Box flexDirection="column" alignItems="center" rowGap="xs">
+            <Text variant="heading-m" as="h1">
+              Page not found
+            </Text>
+            <Text variant="body" color="muted">
+              Sorry, but the page you&rsquo;re looking for doesn&rsquo;t exist
+              or has been moved.
+            </Text>
+          </Box>
+          <Link href="/" aria-label="Outception home" prefetch={false}>
+            <LogoIcon className="text-black dark:text-white" size={32} />
           </Link>
-        </li>
-        <li className="dark:text-polar-500 user-select-none text-gray-400">
-          ·
-        </li>
-        <li>
-          <a
-            href="https://polar.sh/docs"
-            className="dark:hover:text-polar-300 block p-1 hover:text-gray-700 hover:underline"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </li>
-        <li className="dark:text-polar-500 user-select-none text-gray-400">
-          ·
-        </li>
-        <li>
-          <a
-            href="mailto:support@polar.sh"
-            className="dark:hover:text-polar-300 block p-1 hover:text-gray-700 hover:underline"
-          >
-            Support
-          </a>
-        </li>
-      </ul>
-      <LogoType className="h-5 text-black dark:text-white" />
-    </div>
+        </div>
+      </Box>
+    </>
   )
 }
 

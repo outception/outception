@@ -1,21 +1,19 @@
 'use client'
 
 import { useAuthSessionStart, useEmailOTPRequest } from '@/hooks'
-import { usePostHog, type EventName } from '@/hooks/posthog'
-import { TURNSTILE_SCRIPT_URL, useTurnstile } from '@/hooks/useTurnstile'
+import { useT } from '@/providers/translate'
 import { setValidationErrors } from '@/utils/api/errors'
-import { isValidationError, schemas } from '@polar-sh/client'
-import { Button } from '@polar-sh/orbit'
-import { Input } from '@polar-sh/orbit'
+import { isValidationError, schemas } from '@outception-com/client'
+import { Button } from '@outception-com/orbit/Button'
+import { Input } from '@outception-com/orbit/Input'
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormMessage,
-} from '@polar-sh/ui/components/ui/form'
+} from '@outception-com/ui/components/ui/form'
 import { useRouter } from 'next/navigation'
-import Script from 'next/script'
 import { useState } from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
 
@@ -24,8 +22,6 @@ interface EmailOTPFormProps {
   returnTo?: string
   signup?: boolean
 }
-
-const TURNSTILE_ACTION = 'turnstile-spin-v2'
 
 const EmailOTPForm = ({
   authenticationSession,
@@ -39,51 +35,20 @@ const EmailOTPForm = ({
   })
   const { control, handleSubmit, setError } = form
   const [loading, setLoading] = useState(false)
-  const {
-    containerRef: turnstileContainerRef,
-    render: renderTurnstile,
-    execute: executeTurnstile,
-    getToken: getTurnstileToken,
-    reset: resetTurnstile,
-  } = useTurnstile(TURNSTILE_ACTION)
   const authSessionStart = useAuthSessionStart()
   const emailOTPRequest = useEmailOTPRequest()
-  const posthog = usePostHog()
   const router = useRouter()
+  const t = useT()
 
   const onSubmit: SubmitHandler<{ email: string }> = async ({ email }) => {
     setLoading(true)
     try {
-      const turnstileToken = await getTurnstileToken()
-      if (!turnstileToken) {
-        setError('email', {
-          message: 'Verification failed. Please try again.',
-        })
-        return
-      }
-
-      let eventName: EventName = 'global:user:login:submit'
-      if (signup) {
-        eventName = 'global:user:signup:submit'
-      }
-
-      posthog.capture(eventName, {
-        method: 'email_otp',
-      })
-
       if (!authenticationSession) {
         await authSessionStart.mutateAsync(returnTo)
       }
 
-      const { error } = await emailOTPRequest.mutateAsync({
-        email,
-        turnstileToken,
-      })
+      const { error } = await emailOTPRequest.mutateAsync(email)
       if (error) {
-        if ('error' in error && error.error === 'SSORequired') {
-          window.location.assign(error.redirect_url)
-          return
-        }
         if (isValidationError(error.detail)) {
           setValidationErrors(error.detail, setError)
         } else if (error.detail) {
@@ -99,63 +64,50 @@ const EmailOTPForm = ({
       router.push(`/auth/email-otp?${urlSearchParams.toString()}`)
     } catch {
       setError('email', {
-        message: 'An unexpected error occurred. Please try again.',
+        message: t('auth.unexpectedError'),
       })
     } finally {
-      resetTurnstile()
       setLoading(false)
     }
   }
 
   return (
-    <>
-      <Script
-        src={TURNSTILE_SCRIPT_URL}
-        strategy="afterInteractive"
-        onLoad={renderTurnstile}
-        onReady={renderTurnstile}
-      />
-      <Form {...form}>
-        <form
-          className="flex w-full flex-col"
-          onSubmit={handleSubmit(onSubmit)}
-        >
-          <FormField
-            control={control}
-            name="email"
-            render={({ field }) => {
-              return (
-                <FormItem className="mb-2">
-                  <FormControl>
+    <Form {...form}>
+      <form className="flex w-full flex-col" onSubmit={handleSubmit(onSubmit)}>
+        <FormField
+          control={control}
+          name="email"
+          render={({ field }) => {
+            return (
+              <FormItem>
+                <FormControl className="w-full">
+                  <div className="flex w-full flex-col gap-2">
                     <Input
                       type="email"
                       required
-                      placeholder="Email"
+                      placeholder={t('auth.emailPlaceholder')}
                       autoComplete="off"
                       data-1p-ignore
                       {...field}
-                      onFocus={executeTurnstile}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )
-            }}
-          />
-          <div ref={turnstileContainerRef} />
-
-          <Button
-            type="submit"
-            variant="secondary"
-            fullWidth
-            loading={loading}
-            disabled={loading}
-          >
-            {signup ? 'Sign up with email' : 'Sign in with email'}
-          </Button>
-        </form>
-      </Form>
-    </>
+                    <Button
+                      type="submit"
+                      variant="secondary"
+                      fullWidth
+                      loading={loading}
+                      disabled={loading}
+                    >
+                      {signup ? t('auth.emailSignup') : t('auth.email')}
+                    </Button>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )
+          }}
+        />
+      </form>
+    </Form>
   )
 }
 

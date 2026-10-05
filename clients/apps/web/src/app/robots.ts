@@ -1,42 +1,37 @@
 import { CONFIG } from '@/utils/config'
 import { MetadataRoute } from 'next'
 
+// /handbook is login-gated, so crawlers only get a redirect - saying so
+// saves the crawl budget. The sitemap follows the deployment rather than
+// hardcoding production, or preview deploys advertise the live sitemap.
+const DISALLOW = ['/account/', '/auth/', '/verify-email/', '/launches/mine']
+
+// The crawlers that feed AI answer engines, allowed by NAME: a bare wildcard
+// is technically enough, but several readiness graders (and some of the bots
+// themselves) treat an explicit entry as the real signal of consent.
+const AI_CRAWLERS = [
+  'GPTBot',
+  'ChatGPT-User',
+  'OAI-SearchBot',
+  'ClaudeBot',
+  'anthropic-ai',
+  'PerplexityBot',
+  'Google-Extended',
+  'Applebot-Extended',
+  'CCBot',
+  'meta-externalagent',
+]
+
 export default function robots(): MetadataRoute.Robots {
-  if (CONFIG.IS_SANDBOX) {
-    return {
-      rules: {
-        userAgent: '*',
-        disallow: '/',
-      },
-    }
-  }
-
-  const disallow = ['/dashboard/', '/auth/', '/verify-email/']
-
   return {
     rules: [
-      {
-        userAgent: '*',
+      { userAgent: '*', allow: '/', disallow: DISALLOW },
+      ...AI_CRAWLERS.map((userAgent) => ({
+        userAgent,
         allow: '/',
-        disallow,
-      },
-      {
-        userAgent: [
-          'OAI-SearchBot',
-          'ChatGPT-User',
-          'GPTBot',
-          'PerplexityBot',
-          'Perplexity-User',
-          'ClaudeBot',
-          'Claude-Web',
-          'anthropic-ai',
-          'Google-Extended',
-          'Applebot-Extended',
-        ],
-        allow: '/',
-        disallow,
-      },
+        disallow: DISALLOW,
+      })),
     ],
-    sitemap: 'https://polar.sh/sitemap.xml',
+    sitemap: `${CONFIG.FRONTEND_BASE_URL}/sitemap.xml`,
   }
 }

@@ -1,27 +1,17 @@
 import { getPublicServerURL } from '@/utils/api'
-import { CONFIG } from '@/utils/config'
-import { Client, operations, schemas } from '@polar-sh/client'
+import { Client, schemas } from '@outception-com/client'
 import { redirect } from 'next/navigation'
 
-export type LoginMethod =
-  | 'email_otp'
-  | 'totp'
-  | 'backup_codes'
-  | 'apple'
-  | 'github'
-  | 'google'
-  | 'sso'
-
-export const getGitHubAuthorizeLoginURL = (): string => {
-  return `${getPublicServerURL()}/v1/auth/github/authorize`
+export const getMicrosoftAuthorizeLoginURL = (): string => {
+  return `${getPublicServerURL()}/v1/auth/microsoft/authorize`
 }
 
-export const getGitHubAuthorizeLinkURL = (return_to?: string): string => {
+export const getMicrosoftAuthorizeLinkURL = (return_to?: string): string => {
   const searchParams = new URLSearchParams()
   if (return_to) {
     searchParams.set('return_to', return_to)
   }
-  return `${getPublicServerURL()}/v1/auth/github/link/authorize?${searchParams}`
+  return `${getPublicServerURL()}/v1/auth/microsoft/link/authorize?${searchParams}`
 }
 
 export const getGoogleAuthorizeLoginURL = (): string => {
@@ -38,56 +28,6 @@ export const getGoogleAuthorizeLinkURL = (return_to?: string): string => {
 
 export const getAppleAuthorizeURL = (): string => {
   return `${getPublicServerURL()}/v1/auth/apple/authorize`
-}
-
-export const getSSOAuthorizeLoginURL = (
-  organizationSlug: string,
-  connectionId: string,
-): string => {
-  return `${getPublicServerURL()}/v1/auth/${organizationSlug}/sso/${connectionId}/authorize`
-}
-
-export const getOrgAuthenticationSessionCompleteURL = (
-  organizationSlug: string,
-): string => {
-  return `${getPublicServerURL()}/v1/auth/${organizationSlug}/complete`
-}
-
-export const getSSOCallbackURL = (organizationSlug: string): string => {
-  return `${getPublicServerURL()}/v1/auth/${organizationSlug}/sso/callback`
-}
-
-export const getSSOLoginURL = (organizationSlug: string): string => {
-  return `${CONFIG.FRONTEND_BASE_URL}/auth/sso/${organizationSlug}`
-}
-
-export const getSSOJwksURL = (): string => {
-  return `${getPublicServerURL()}/.well-known/jwks.json`
-}
-
-export const getBotDiscordAuthorizeURL = (
-  params: NonNullable<
-    operations['integrations_discord:integrations.discord.bot_authorize']['parameters']['query']
-  >,
-): string => {
-  const searchParams = new URLSearchParams()
-  if (params.return_to) {
-    searchParams.set('return_to', params.return_to)
-  }
-  searchParams.set('organization_id', params.organization_id)
-  return `${getPublicServerURL()}/v1/integrations/discord/bot/authorize?${searchParams}`
-}
-
-export const getGitHubRepositoryBenefitAuthorizeURL = (
-  params: NonNullable<
-    operations['integrations_github_repository_benefit:integrations.github_repository_benefit.user_authorize']['parameters']['query']
-  >,
-): string => {
-  const searchParams = new URLSearchParams()
-  if (params.return_to) {
-    searchParams.set('return_to', params.return_to)
-  }
-  return `${getPublicServerURL()}/v1/integrations/github_repository_benefit/user/authorize?${searchParams}`
 }
 
 export const checkAuthenticationSession = async (
@@ -133,6 +73,11 @@ export const checkAuthenticationSession = async (
   return authenticationSession
 }
 
+/** A login method the session can still use: the type of one of its
+ * available factors. */
+export type Factor =
+  schemas['AuthenticationSession']['available_factors'][number]['type']
+
 export const getAuthenticationSessionRedirectPath = (
   authenticationSession: schemas['AuthenticationSession'] | null,
 ): '/auth/totp' | '/auth/backup-codes' | null => {
@@ -140,17 +85,13 @@ export const getAuthenticationSessionRedirectPath = (
     return null
   }
 
-  if (
-    authenticationSession.available_factors.some(
-      (factor) => factor.type === 'totp',
-    )
-  ) {
+  if (authenticationSession.available_factors.some((f) => f.type === 'totp')) {
     return '/auth/totp'
   }
 
   if (
     authenticationSession.available_factors.some(
-      (factor) => factor.type === 'backup_codes',
+      (f) => f.type === 'backup_codes',
     )
   ) {
     return '/auth/backup-codes'

@@ -1,6 +1,6 @@
 import { usePolarClient } from '@/providers/PolarClientProvider'
 import { queryClient } from '@/utils/query'
-import { ClientResponseError, schemas, unwrap } from '@polar-sh/client'
+import { ClientResponseError, schemas, unwrap } from '@outception-com/client'
 import { defaultRetry } from './retry'
 import {
   skipToken,

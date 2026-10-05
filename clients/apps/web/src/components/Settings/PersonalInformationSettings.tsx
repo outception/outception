@@ -3,17 +3,17 @@
 import { useAuth } from '@/hooks'
 import { useUpdateUser } from '@/hooks/queries'
 import { useMonthDigitTypeahead } from '@/hooks/useMonthDigitTypeahead'
-import { enums, schemas } from '@polar-sh/client'
-import { Button } from '@polar-sh/orbit'
-import CountryPicker from '@polar-sh/ui/components/atoms/CountryPicker'
-import { Input } from '@polar-sh/orbit'
+import { useT } from '@/providers/translate'
+import { schemas } from '@outception-com/client'
+import { Button } from '@outception-com/orbit/Button'
+import { Input } from '@outception-com/orbit/Input'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@polar-sh/orbit'
+} from '@outception-com/orbit/Select'
 import {
   Form,
   FormControl,
@@ -21,25 +21,10 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@polar-sh/ui/components/ui/form'
+} from '@outception-com/ui/components/ui/form'
 import { useCallback, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from '../Toast/use-toast'
-
-const MONTH_NAMES = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-] as const
 
 interface FormSchema {
   firstName: string
@@ -66,6 +51,7 @@ function buildDateOfBirth(year: string, month: string, day: string) {
 const PersonalInformationSettings = () => {
   const { currentUser, reloadUser } = useAuth()
   const updateUser = useUpdateUser()
+  const t = useT()
 
   const parsedDob = parseDateOfBirth(currentUser?.date_of_birth)
 
@@ -104,7 +90,7 @@ const PersonalInformationSettings = () => {
   )
   const months = Array.from({ length: 12 }, (_, i) => ({
     value: String(i + 1).padStart(2, '0'),
-    label: MONTH_NAMES[i],
+    label: new Date(2000, i, 1).toLocaleString('en', { month: 'long' }),
   }))
   const days = Array.from({ length: 31 }, (_, i) =>
     String(i + 1).padStart(2, '0'),
@@ -129,8 +115,8 @@ const PersonalInformationSettings = () => {
 
       if (error) {
         toast({
-          title: 'Update Failed',
-          description: 'An error occurred while updating your information.',
+          title: t('account.personal.updateFailed'),
+          description: t('account.personal.updateFailedDesc'),
         })
         return
       }
@@ -138,18 +124,18 @@ const PersonalInformationSettings = () => {
       await reloadUser()
 
       toast({
-        title: 'Updated',
-        description: 'Your personal information has been saved.',
+        title: t('account.personal.updated'),
+        description: t('account.personal.updatedDesc'),
       })
     },
-    [updateUser, reloadUser],
+    [updateUser, reloadUser, t],
   )
 
   return (
     <Form {...form}>
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="dark:ring-polar-700 flex w-full flex-col gap-y-6 overflow-hidden rounded-2xl bg-transparent p-5 ring-1 ring-gray-200 dark:ring-1"
+        className="dark:ring-outception-700 flex w-full flex-col gap-y-6 overflow-hidden rounded-2xl bg-transparent p-5 ring-1 ring-gray-200 dark:ring-1"
       >
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <FormField
@@ -157,7 +143,7 @@ const PersonalInformationSettings = () => {
             name="firstName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>First Name</FormLabel>
+                <FormLabel>{t('account.personal.firstName')}</FormLabel>
                 <FormControl>
                   <Input {...field} placeholder="Jane" />
                 </FormControl>
@@ -170,7 +156,7 @@ const PersonalInformationSettings = () => {
             name="lastName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Last Name</FormLabel>
+                <FormLabel>{t('account.personal.lastName')}</FormLabel>
                 <FormControl>
                   <Input {...field} placeholder="Doe" />
                 </FormControl>
@@ -180,27 +166,8 @@ const PersonalInformationSettings = () => {
           />
         </div>
 
-        <FormField
-          control={control}
-          name="country"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Country of Residence</FormLabel>
-              <FormControl>
-                <CountryPicker
-                  allowedCountries={enums.addressInputCountryValues}
-                  value={field.value || undefined}
-                  onChange={field.onChange}
-                  placeholder="Select country"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
         <div className="flex flex-col gap-y-2">
-          <FormLabel>Date of Birth</FormLabel>
+          <FormLabel>{t('account.personal.dob')}</FormLabel>
           <div className="grid grid-cols-3 gap-4">
             <FormField
               control={control}
@@ -212,7 +179,9 @@ const PersonalInformationSettings = () => {
                       <SelectTrigger
                         onKeyDown={(e) => handleMonthDigit(e, field.onChange)}
                       >
-                        <SelectValue placeholder="Month" />
+                        <SelectValue
+                          placeholder={t('account.personal.month')}
+                        />
                       </SelectTrigger>
                       <SelectContent>
                         {months.map((m) => (
@@ -235,7 +204,7 @@ const PersonalInformationSettings = () => {
                   <FormControl>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Day" />
+                        <SelectValue placeholder={t('account.personal.day')} />
                       </SelectTrigger>
                       <SelectContent>
                         {days.map((d) => (
@@ -258,7 +227,7 @@ const PersonalInformationSettings = () => {
                   <FormControl>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Year" />
+                        <SelectValue placeholder={t('account.personal.year')} />
                       </SelectTrigger>
                       <SelectContent>
                         {years.map((y) => (
@@ -278,7 +247,9 @@ const PersonalInformationSettings = () => {
 
         <div className="flex justify-end">
           <Button type="submit" disabled={updateUser.isPending}>
-            {updateUser.isPending ? 'Saving...' : 'Save'}
+            {updateUser.isPending
+              ? t('account.personal.saving')
+              : t('account.personal.save')}
           </Button>
         </div>
       </form>

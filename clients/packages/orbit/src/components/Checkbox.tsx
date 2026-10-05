@@ -29,7 +29,7 @@ const Checkbox = ({
         'ring-offset-background focus-visible:ring-ring peer h-4 w-4 shrink-0 rounded-xs border focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
         emphasized
           ? 'border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground'
-          : 'dark:border-polar-600 border-gray-300 data-[state=checked]:border-black data-[state=checked]:bg-black data-[state=checked]:text-white dark:data-[state=checked]:border-white dark:data-[state=checked]:bg-white dark:data-[state=checked]:text-black',
+          : 'dark:border-outception-600 border-gray-300 data-[state=checked]:border-black data-[state=checked]:bg-black data-[state=checked]:text-white dark:data-[state=checked]:border-white dark:data-[state=checked]:bg-white dark:data-[state=checked]:text-black',
         className,
       )}
       {...props}

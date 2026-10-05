@@ -23,7 +23,7 @@ export const SectionDescription = ({
     <div className="flex w-full flex-col gap-1">
       <h2 className="text-lg font-medium">{title}</h2>
       {description && (
-        <p className="dark:text-polar-500 text-balance text-gray-500">
+        <p className="dark:text-outception-500 text-balance text-gray-500">
           {description}
         </p>
       )}

@@ -3,7 +3,7 @@
   "extends": ["../../packages/oxlint-config/oxlint-next.json"],
   "jsPlugins": [
     {
-      "name": "polar",
+      "name": "outception",
       "specifier": "./oxlint-plugins/index.mjs"
     }
   ],
@@ -20,10 +20,11 @@
     "e2e/**",
     "playwright-report/**",
     "babel.config.js",
-    "scripts/**"
+    "scripts/**",
+    "public/**"
   ],
   "rules": {
-    "polar/no-unsanitized-toast-detail": "error"
+    "outception/no-unsanitized-toast-detail": "error"
   },
   "overrides": [
     {
@@ -55,13 +56,13 @@
         "react/no-danger": "error",
         "react/self-closing-comp": "warn",
         "react/jsx-no-useless-fragment": "warn",
-        "polar/no-classname-box": "error",
-        "polar/no-classname-text": "error",
-        "polar/no-style-box": "error",
-        "polar/no-style-text": "error",
-        "polar/no-next-image": "error",
-        "polar/no-external-link-component": "error",
-        "polar/require-external-link-rel": "error"
+        "outception/no-classname-box": "error",
+        "outception/no-classname-text": "error",
+        "outception/no-style-box": "error",
+        "outception/no-style-text": "error",
+        "outception/no-next-image": "error",
+        "outception/no-external-link-component": "error",
+        "outception/require-external-link-rel": "error"
       }
     },
     {
@@ -70,14 +71,14 @@
         "src/app/**/portal/**/*.{ts,tsx}"
       ],
       "rules": {
-        "polar/no-merchant-queries-in-customer-portal": "error",
-        "polar/no-merchant-api-calls-in-customer-portal": "error"
+        "outception/no-merchant-queries-in-customer-portal": "error",
+        "outception/no-merchant-api-calls-in-customer-portal": "error"
       }
     },
     {
       "files": ["src/app/**/portal/**/page.tsx"],
       "rules": {
-        "polar/require-customer-portal-page": "error"
+        "outception/require-customer-portal-page": "error"
       }
     },
     {
@@ -89,7 +90,7 @@
         "src/app/**/portal/claim/page.tsx"
       ],
       "rules": {
-        "polar/require-customer-portal-page": "off"
+        "outception/require-customer-portal-page": "off"
       }
     },
     {
@@ -98,7 +99,7 @@
         "src/components/Onboarding/**/*.tsx"
       ],
       "rules": {
-        "polar/no-raw-html-layout": "error"
+        "outception/no-raw-html-layout": "error"
       }
     }
   ]

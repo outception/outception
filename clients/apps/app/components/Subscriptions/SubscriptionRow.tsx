@@ -1,7 +1,7 @@
 import { Box } from '@/components/Shared/Box'
 import { Touchable } from '@/components/Shared/Touchable'
 import { useTheme } from '@/design-system/useTheme'
-import { schemas } from '@polar-sh/client'
+import { schemas } from '@outception-com/client'
 import { Link } from 'expo-router'
 import React from 'react'
 import { StyleProp, TextStyle } from 'react-native'

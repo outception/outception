@@ -7,8 +7,8 @@ import {
   useTOTPDelete,
 } from '@/hooks'
 import { extractApiErrorMessage } from '@/utils/api/errors'
-import { Button } from '@polar-sh/orbit'
-import { ListGroup } from '@polar-sh/orbit'
+import { Button } from '@outception-com/orbit/Button'
+import { ListGroup } from '@outception-com/orbit/ListGroup'
 import { ConfirmModal } from '@/components/Modal/ConfirmModal'
 import { useModal } from '@/components/Modal/useModal'
 import { useState } from 'react'
@@ -17,6 +17,7 @@ import BackupCodesModal from './BackupCodesModal'
 import BackupCodesRegenerateModal from './BackupCodesRegenerateModal'
 import { toast } from '../Toast/use-toast'
 import { KeyRoundIcon, ShieldCheckIcon } from 'lucide-react'
+import { useT } from '@/providers/translate'
 
 const AuthenticationMethod = ({
   icon,
@@ -35,7 +36,7 @@ const AuthenticationMethod = ({
         <div className="self-start">{icon}</div>
         <div className="grow">
           <div className="font-medium">{title}</div>
-          <div className="dark:text-polar-500 text-sm text-gray-500">
+          <div className="dark:text-outception-500 text-sm text-gray-500">
             {subtitle}
           </div>
         </div>
@@ -46,6 +47,7 @@ const AuthenticationMethod = ({
 }
 
 const TwoFactorSettings = () => {
+  const t = useT()
   const totpStatus = useTOTPStatus()
   const totpDelete = useTOTPDelete()
   const backupCodesStatus = useBackupCodesStatus()
@@ -81,7 +83,7 @@ const TwoFactorSettings = () => {
     const { error } = await totpDelete.mutateAsync()
     if (error) {
       toast({
-        title: 'Error',
+        title: t('account.twoFactor.error'),
         description: extractApiErrorMessage(error),
         variant: 'error',
       })
@@ -89,7 +91,7 @@ const TwoFactorSettings = () => {
     }
     await totpStatus.refetch()
     hideDeleteConfirmModal()
-    toast({ title: 'Two-factor authentication disabled' })
+    toast({ title: t('account.twoFactor.disabled') })
   }
 
   return (
@@ -98,11 +100,11 @@ const TwoFactorSettings = () => {
         <ListGroup.Item>
           <AuthenticationMethod
             icon={<ShieldCheckIcon />}
-            title="Authenticator App"
+            title={t('account.twoFactor.authenticatorApp')}
             subtitle={
               totpStatus.data?.enabled
-                ? "You're using an authenticator app to sign in securely."
-                : 'Add an extra layer of security when you sign in.'
+                ? t('account.twoFactor.authenticatorOn')
+                : t('account.twoFactor.authenticatorOff')
             }
             action={
               totpStatus.data?.enabled ? (
@@ -111,10 +113,12 @@ const TwoFactorSettings = () => {
                   onClick={showDeleteConfirmModal}
                   loading={totpDelete.isPending}
                 >
-                  Disable
+                  {t('account.twoFactor.disable')}
                 </Button>
               ) : (
-                <Button onClick={showTOTPModal}>Set Up</Button>
+                <Button onClick={showTOTPModal}>
+                  {t('account.twoFactor.setUp')}
+                </Button>
               )
             }
           />
@@ -124,11 +128,15 @@ const TwoFactorSettings = () => {
           <ListGroup.Item>
             <AuthenticationMethod
               icon={<KeyRoundIcon />}
-              title="Backup Codes"
+              title={t('account.twoFactor.backupCodes')}
               subtitle={
                 backupCodesStatus.data
-                  ? `${backupCodesStatus.data.codes - backupCodesStatus.data.used_codes} remaining`
-                  : 'Generate backup codes for emergency access.'
+                  ? t('account.twoFactor.remaining', {
+                      count:
+                        backupCodesStatus.data.codes -
+                        backupCodesStatus.data.used_codes,
+                    })
+                  : t('account.twoFactor.backupCodesHint')
               }
               action={
                 backupCodesStatus.data?.codes &&
@@ -138,7 +146,7 @@ const TwoFactorSettings = () => {
                     onClick={showBackupCodesRegenerateModal}
                     loading={backupCodesEnroll.isPending}
                   >
-                    Regenerate
+                    {t('account.twoFactor.regenerate')}
                   </Button>
                 ) : (
                   <Button
@@ -161,7 +169,7 @@ const TwoFactorSettings = () => {
                     }}
                     loading={backupCodesEnroll.isPending}
                   >
-                    Generate
+                    {t('account.twoFactor.generate')}
                   </Button>
                 )
               }
@@ -196,10 +204,10 @@ const TwoFactorSettings = () => {
       <ConfirmModal
         isShown={isDeleteConfirmShown}
         hide={hideDeleteConfirmModal}
-        title="Disable Authenticator App?"
-        description="You'll no longer be asked for a code when you sign in, and your backup codes will stop working. You can turn it back on anytime."
+        title={t('account.twoFactor.disableTitle')}
+        description={t('account.twoFactor.disableDesc')}
         destructive
-        destructiveText="Disable"
+        destructiveText={t('account.twoFactor.disable')}
         onConfirm={handleDeleteTOTP}
       />
 

@@ -3,25 +3,24 @@
 import {
   useAuth,
   useDisconnectOAuthAccount,
-  useGitHubAccount,
+  useMicrosoftAccount,
   useGoogleAccount,
 } from '@/hooks'
-import { extractApiErrorMessage } from '@/utils/api/errors'
 import {
-  getGitHubAuthorizeLinkURL,
+  getMicrosoftAuthorizeLinkURL,
   getGoogleAuthorizeLinkURL,
 } from '@/utils/auth'
 import AlternateEmailOutlined from '@mui/icons-material/AlternateEmailOutlined'
-import GitHub from '@mui/icons-material/GitHub'
+import Microsoft from '@mui/icons-material/Microsoft'
 import Google from '@mui/icons-material/Google'
-import { schemas } from '@polar-sh/client'
-import { Button } from '@polar-sh/orbit'
-import { ListGroup } from '@polar-sh/orbit'
+import { schemas } from '@outception-com/client'
+import { Button } from '@outception-com/orbit/Button'
+import { ListGroup } from '@outception-com/orbit/ListGroup'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
-import EmailUpdateForm from '../Form/EmailUpdateForm'
-import { toast } from '../Toast/use-toast'
+import { useEffect, useRef } from 'react'
 import { twMerge } from 'tailwind-merge'
+import { useT } from '@/providers/translate'
+import { toast } from '@/components/Toast/use-toast'
 
 const AuthenticationMethod = ({
   icon,
@@ -49,7 +48,7 @@ const AuthenticationMethod = ({
         {!hideTitle && (
           <div className="grow">
             <div className="font-medium">{title}</div>
-            <div className="dark:text-polar-500 text-sm text-gray-500">
+            <div className="dark:text-outception-500 text-sm text-gray-500">
               {subtitle}
             </div>
           </div>
@@ -63,7 +62,7 @@ const AuthenticationMethod = ({
   )
 }
 
-const GitHubAuthenticationMethod = ({
+const MicrosoftAuthenticationMethod = ({
   oauthAccount,
   returnTo,
   onDisconnect,
@@ -76,22 +75,23 @@ const GitHubAuthenticationMethod = ({
   isDisconnecting: boolean
   error?: string
 }) => {
-  const authorizeURL = getGitHubAuthorizeLinkURL(returnTo)
+  const t = useT()
+  const authorizeURL = getMicrosoftAuthorizeLinkURL(returnTo)
 
   return (
     <AuthenticationMethod
-      icon={<GitHub />}
+      icon={<Microsoft />}
       title={
         oauthAccount
           ? oauthAccount.account_username
             ? `${oauthAccount.account_username} (${oauthAccount.account_email})`
             : oauthAccount.account_email
-          : 'Connect GitHub'
+          : t('account.authMethods.connectMicrosoft')
       }
       subtitle={
         oauthAccount
-          ? 'You can sign in with your GitHub account.'
-          : 'Sync your profile and get a better experience.'
+          ? t('account.authMethods.microsoftConnected')
+          : t('account.authMethods.microsoftConnect')
       }
       action={
         oauthAccount ? (
@@ -100,11 +100,11 @@ const GitHubAuthenticationMethod = ({
             onClick={onDisconnect}
             loading={isDisconnecting}
           >
-            Disconnect
+            {t('account.authMethods.disconnect')}
           </Button>
         ) : (
           <Button asChild>
-            <a href={authorizeURL}>Connect</a>
+            <a href={authorizeURL}>{t('account.authMethods.connect')}</a>
           </Button>
         )
       }
@@ -126,16 +126,21 @@ const GoogleAuthenticationMethod = ({
   isDisconnecting: boolean
   error?: string
 }) => {
+  const t = useT()
   const authorizeURL = getGoogleAuthorizeLinkURL(returnTo)
 
   return (
     <AuthenticationMethod
       icon={<Google />}
-      title={oauthAccount ? oauthAccount.account_email : 'Connect Google'}
+      title={
+        oauthAccount
+          ? oauthAccount.account_email
+          : t('account.authMethods.connectGoogle')
+      }
       subtitle={
         oauthAccount
-          ? 'You can sign in with your Google account.'
-          : 'Link your Google account for faster login.'
+          ? t('account.authMethods.googleConnected')
+          : t('account.authMethods.googleConnect')
       }
       action={
         oauthAccount ? (
@@ -144,11 +149,11 @@ const GoogleAuthenticationMethod = ({
             onClick={onDisconnect}
             loading={isDisconnecting}
           >
-            Disconnect
+            {t('account.authMethods.disconnect')}
           </Button>
         ) : (
           <Button asChild>
-            <a href={authorizeURL}>Connect</a>
+            <a href={authorizeURL}>{t('account.authMethods.connect')}</a>
           </Button>
         )
       }
@@ -158,48 +163,27 @@ const GoogleAuthenticationMethod = ({
 }
 
 const AuthenticationSettings = () => {
-  const { currentUser, reloadUser } = useAuth()
+  const t = useT()
+  const { currentUser } = useAuth()
   const pathname = usePathname()
-  const githubAccount = useGitHubAccount()
+  const microsoftAccount = useMicrosoftAccount()
   const googleAccount = useGoogleAccount()
   const disconnectOAuth = useDisconnectOAuthAccount()
   const listGroupRef = useRef<HTMLDivElement>(null)
 
-  const handleDisconnect = async (platform: schemas['OAuthPlatform']) => {
-    try {
-      const { error } = await disconnectOAuth.mutateAsync(platform)
-      if (error) {
+  const disconnect = (platform: 'microsoft' | 'google') =>
+    disconnectOAuth.mutate(platform, {
+      onError: () =>
         toast({
-          title: 'Error',
-          description: extractApiErrorMessage(error),
+          title: t('account.authMethods.disconnectError'),
           variant: 'error',
-        })
-      }
-    } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to disconnect account. Please try again.',
-        variant: 'error',
-      })
-    }
-  }
+        }),
+    })
 
   const searchParams = useSearchParams()
-  const [updateEmailStage, setUpdateEmailStage] = useState<
-    'off' | 'form' | 'request' | 'verified'
-  >((searchParams.get('update_email') as 'verified' | null) || 'off')
-  const userReloaded = useRef(false)
-
   const oauthLinkError =
     searchParams.get('type') === 'oauth_link_error' && searchParams.get('error')
   const oauthLinkFactor = searchParams.get('factor')
-
-  useEffect(() => {
-    if (!userReloaded.current && updateEmailStage === 'verified') {
-      reloadUser()
-      userReloaded.current = true
-    }
-  }, [updateEmailStage, reloadUser])
 
   useEffect(() => {
     if (oauthLinkError && listGroupRef.current) {
@@ -212,49 +196,17 @@ const AuthenticationSettings = () => {
     }
   }, [oauthLinkError])
 
-  const updateEmailContent: Record<
-    'off' | 'form' | 'request' | 'verified',
-    React.ReactNode
-  > = {
-    off: (
-      <div className="flex flex-row items-center gap-4">
-        {currentUser && (
-          <Button onClick={() => setUpdateEmailStage('form')}>
-            Change Email
-          </Button>
-        )}
-      </div>
-    ),
-    form: (
-      <EmailUpdateForm
-        onEmailUpdateRequest={() => setUpdateEmailStage('request')}
-        onCancel={() => setUpdateEmailStage('off')}
-        returnTo={`${pathname}?update_email=verified`}
-      />
-    ),
-    request: (
-      <div className="dark:text-polar-300 dark:bg-polar-600 flex h-10 items-center justify-center rounded-lg bg-gray-100 text-center text-sm text-gray-500">
-        A verification email was sent to this address.
-      </div>
-    ),
-    verified: (
-      <div className="flex h-10 items-center justify-center rounded-lg bg-green-50 text-center text-sm text-green-700 dark:bg-green-950 dark:text-green-500">
-        Your email has been updated!
-      </div>
-    ),
-  }
-
   return (
     <div ref={listGroupRef}>
       <ListGroup>
         <ListGroup.Item>
-          <GitHubAuthenticationMethod
-            oauthAccount={githubAccount}
+          <MicrosoftAuthenticationMethod
+            oauthAccount={microsoftAccount}
             returnTo={pathname || '/start'}
-            onDisconnect={() => handleDisconnect('github')}
+            onDisconnect={() => disconnect('microsoft')}
             isDisconnecting={disconnectOAuth.isPending}
             error={
-              oauthLinkError && oauthLinkFactor === 'github'
+              oauthLinkError && oauthLinkFactor === 'microsoft'
                 ? oauthLinkError
                 : undefined
             }
@@ -265,7 +217,7 @@ const AuthenticationSettings = () => {
           <GoogleAuthenticationMethod
             oauthAccount={googleAccount}
             returnTo={pathname || '/start'}
-            onDisconnect={() => handleDisconnect('google')}
+            onDisconnect={() => disconnect('google')}
             isDisconnecting={disconnectOAuth.isPending}
             error={
               oauthLinkError && oauthLinkFactor === 'google'
@@ -279,9 +231,8 @@ const AuthenticationSettings = () => {
           <AuthenticationMethod
             icon={<AlternateEmailOutlined />}
             title={currentUser?.email}
-            subtitle="You can sign in with OTP codes sent to your email."
-            action={updateEmailContent[updateEmailStage]}
-            hideTitle={updateEmailStage !== 'off'}
+            subtitle={t('account.authMethods.emailHint')}
+            action={null}
           />
         </ListGroup.Item>
       </ListGroup>

@@ -2,7 +2,7 @@ import {
   ClientResponseError,
   NotFoundResponseError,
   UnauthorizedResponseError,
-} from '@polar-sh/client'
+} from '@outception-com/client'
 
 const authenticatingRetry = (
   failureCount: number,

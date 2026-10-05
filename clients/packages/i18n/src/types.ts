@@ -5,17 +5,13 @@ export type Translations = typeof en
 type LeafPaths<T> = T extends object
   ? '_mode' extends keyof T
     ? never
-    : '_llmContext' extends keyof T
-      ? never
-      : {
-          [K in keyof T & string]: '_mode' extends keyof T[K]
-            ? K
-            : '_llmContext' extends keyof T[K]
-              ? K
-              : T[K] extends object
-                ? `${K}.${LeafPaths<T[K]>}`
-                : K
-        }[keyof T & string]
+    : {
+        [K in keyof T & string]: '_mode' extends keyof T[K]
+          ? K
+          : T[K] extends object
+            ? `${K}.${LeafPaths<T[K]>}`
+            : K
+      }[keyof T & string]
   : never
 
 export type TranslationKey = LeafPaths<Translations>
@@ -38,69 +34,15 @@ type ExtractPlaceholders<S extends string> =
     ? Key | ExtractPlaceholders<Rest>
     : never
 
-type UnionToIntersection<U> = (
-  U extends unknown ? (k: U) => void : never
-) extends (k: infer I) => void
-  ? I
-  : never
-
-type StringShape<S extends string> =
-  ExtractPlaceholders<S> extends never
-    ? string
-    : UnionToIntersection<
-        ExtractPlaceholders<S> extends infer P extends string
-          ? `${string}{${P}}${string}`
-          : never
-      >
-
-type PluralShape<T> = {
-  [K in keyof T]: K extends '_mode'
-    ? T[K]
-    : T[K] extends string
-      ? StringShape<T[K]>
-      : T[K]
-}
-
-type AnnotatedEntryShape<T extends { value: string }> =
-  | StringShape<T['value']>
-  | { value: StringShape<T['value']>; _llmContext: string }
-
-export type LocaleShape<T> = {
-  [K in keyof T]: T[K] extends { _mode: string }
-    ? PluralShape<T[K]>
-    : T[K] extends { value: string; _llmContext: string }
-      ? AnnotatedEntryShape<T[K]>
-      : T[K] extends string
-        ? StringShape<T[K]>
-        : T[K] extends object
-          ? LocaleShape<T[K]>
-          : T[K]
-}
-
-// A locale shape where every nested key is optional, except plural objects
-// and annotated entries which remain atomic (all-or-nothing). This lets non-
-// English locale files lag behind en.ts without breaking type checking — the
-// CI translation job fills the gaps on every PR, and at runtime missing keys
-// fall back to English via getTranslations' deep merge.
-export type DeepPartialLocale<T> = T extends { _mode: string }
-  ? T
-  : T extends { value: string }
-    ? T
-    : T extends object
-      ? { [K in keyof T]?: DeepPartialLocale<T[K]> }
-      : T
-
 // Get all required interpolation keys for a translation key
 // Plurals always require 'count' + any {placeholders} in the templates
 type InterpolationKeys<K extends TranslationKey> =
   ValueAtPath<Translations, K> extends infer V
     ? '_mode' extends keyof V
       ? 'count' | ExtractPlaceholders<V[Exclude<keyof V, '_mode'>] & string>
-      : V extends { value: infer S extends string }
-        ? ExtractPlaceholders<S>
-        : V extends string
-          ? ExtractPlaceholders<V>
-          : never
+      : V extends string
+        ? ExtractPlaceholders<V>
+        : never
     : never
 
 type InterpolationValue = string | number | { toString(): string }

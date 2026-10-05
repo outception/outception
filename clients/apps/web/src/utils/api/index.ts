@@ -4,9 +4,10 @@ export const getServerURL = (path?: string): string => {
   if (typeof window !== 'undefined') {
     return `${process.env.NEXT_PUBLIC_API_URL}${path}`
   }
-  // In server context (SSR), use POLAR_API_URL if available (Docker dev only),
+  // In server context (SSR), use OUTCEPTION_API_URL if available (Docker dev only),
   // otherwise fall back to NEXT_PUBLIC_API_URL (Vercel/production)
-  const baseURL = process.env.POLAR_API_URL || process.env.NEXT_PUBLIC_API_URL
+  const baseURL =
+    process.env.OUTCEPTION_API_URL || process.env.NEXT_PUBLIC_API_URL
   return `${baseURL}${path}`
 }
 

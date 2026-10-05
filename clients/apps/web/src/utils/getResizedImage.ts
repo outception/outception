@@ -1,5 +1,5 @@
-const S3_HOST = 'polar-public-files.s3.amazonaws.com'
-const CDN_HOST = 'uploads.polar.sh'
+const S3_HOST = 'outception-public-files.s3.amazonaws.com'
+const CDN_HOST = 'uploads.outception.com'
 
 // Must match the backend defined list in lambda/image-resizer/handler.py
 const SUPPORTED_WIDTHS = [
@@ -23,8 +23,7 @@ export function getResizedImage(
   const hostname = getHostname(url)
   if (hostname !== S3_HOST) return url
 
-  // We naively assume that all screens are 2x retina. Not always true, but since this can be used
-  // in an SSR/email environment we do this for simplicity and to leverage caching.
+  // Assume 2x displays: this also runs in SSR and email where the real DPR is unknown.
   const retinaWidth = approximateWidth * 2
   const width =
     SUPPORTED_WIDTHS.find((w) => w >= retinaWidth) ??

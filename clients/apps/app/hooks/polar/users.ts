@@ -1,6 +1,6 @@
 import { API_VERSION } from '@/providers/PolarClientProvider'
 import { useSession } from '@/providers/SessionProvider'
-import { schemas } from '@polar-sh/client'
+import { schemas } from '@outception-com/client'
 import { useMutation, UseMutationResult } from '@tanstack/react-query'
 
 export const useDeleteUser = (): UseMutationResult<

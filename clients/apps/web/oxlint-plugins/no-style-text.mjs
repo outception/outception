@@ -1,11 +1,14 @@
-const ORBIT_TEXT_SOURCES = new Set(['@polar-sh/orbit', '@polar-sh/orbit/Text'])
+const ORBIT_TEXT_SOURCES = new Set([
+  '@outception-com/orbit',
+  '@outception-com/orbit/Text',
+])
 
 const noStyleText = {
   meta: {
     type: 'problem',
     docs: {
       description:
-        'Disallow the `style` prop on `<Text />` from `@polar-sh/orbit`',
+        'Disallow the `style` prop on `<Text />` from `@outception-com/orbit`',
     },
     schema: [],
     messages: {

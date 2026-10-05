@@ -1,5 +1,5 @@
 import { usePolarClient } from '@/providers/PolarClientProvider'
-import { schemas, unwrap } from '@polar-sh/client'
+import { schemas, unwrap } from '@outception-com/client'
 import {
   skipToken,
   useMutation,

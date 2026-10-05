@@ -35,7 +35,7 @@ const SelectTrigger = ({
   <SelectTriggerPrimitive
     ref={ref}
     className={twMerge(
-      'dark:bg-polar-800 dark:hover:bg-polar-700 dark:hover:border-polar-700 dark:border-polar-700 flex cursor-pointer flex-row gap-x-2 rounded-xl border border-gray-200 bg-white px-3 shadow-xs transition-colors hover:border-gray-300 dark:text-white text-black',
+      'dark:bg-outception-800 dark:hover:bg-outception-700 dark:hover:border-outception-700 dark:border-outception-700 flex cursor-pointer flex-row gap-x-2 rounded-xl border border-gray-200 bg-white px-3 shadow-xs transition-colors hover:border-gray-300 dark:text-white text-black',
       className,
     )}
     {...props}
@@ -55,7 +55,10 @@ const SelectContent = ({
   <SelectContentPrimitive
     ref={ref}
     position={position}
-    className={twMerge('dark:bg-polar-800 rounded-xl border-none', className)}
+    className={twMerge(
+      'dark:bg-outception-800 rounded-xl border-none',
+      className,
+    )}
     translate="no"
     {...props}
   >

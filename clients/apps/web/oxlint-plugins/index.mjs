@@ -11,9 +11,9 @@ import noStyleText from './no-style-text.mjs'
 import requireCustomerPortalPage from './require-customer-portal-page.mjs'
 import requireExternalLinkRel from './require-external-link-rel.mjs'
 
-const polarPlugin = {
+const outceptionPlugin = {
   meta: {
-    name: 'polar',
+    name: 'outception',
   },
   rules: {
     'no-classname-box': noClassnameBox,
@@ -32,4 +32,4 @@ const polarPlugin = {
   },
 }
 
-export default polarPlugin
+export default outceptionPlugin

@@ -1,6 +1,6 @@
 import { getQueryClient } from '@/utils/api/query'
 import { api } from '@/utils/client'
-import { operations, schemas, unwrap } from '@polar-sh/client'
+import { operations, schemas, unwrap } from '@outception-com/client'
 import { useMutation, useQuery } from '@tanstack/react-query'
 
 export const useOAuth2Clients = (
@@ -10,23 +10,6 @@ export const useOAuth2Clients = (
     queryKey: ['oauth2Clients'],
     queryFn: async () =>
       unwrap(api.GET('/v1/oauth2/', { params: { query: options } })),
-  })
-
-export const useOAuth2ClientSecret = (clientId: string) =>
-  useQuery({
-    queryKey: ['oauth2Clients', clientId, 'secret'],
-    // The caller drives this one with refetch().
-    enabled: false,
-    // Don't keep a client secret in the cache once the modal is gone.
-    gcTime: 0,
-    queryFn: async () => {
-      const client = await unwrap(
-        api.GET('/v1/oauth2/register/{client_id}', {
-          params: { path: { client_id: clientId } },
-        }),
-      )
-      return (client as { client_secret?: string }).client_secret ?? null
-    },
   })
 
 export const useCreateOAuth2Client = () =>

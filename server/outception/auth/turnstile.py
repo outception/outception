@@ -8,7 +8,13 @@ turnstile_client = httpx.AsyncClient(
 )
 
 
-async def verify_turnstile(token: str, remote_ip: str | None) -> None:
+async def verify_turnstile(token: str | None, remote_ip: str | None) -> None:
+    """Reject the request unless the bot check passes. With no secret
+    configured there is no check; with one, a missing token fails."""
+    if not settings.TURNSTILE_SECRET:
+        return
+    if not token:
+        raise NotPermitted("Turnstile verification failed")
     try:
         response = await turnstile_client.post(
             "/siteverify",

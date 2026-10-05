@@ -9,13 +9,12 @@ export default function Error({ error }: { error: Error }) {
     Sentry.captureException(error)
   }, [error])
 
+  // No <html>/<body> here - this boundary renders INSIDE the root layout's
+  // body. Only global-error.tsx owns the document. Nesting them produces a
+  // hydration mismatch on the one page that most needs to render.
   return (
-    <html lang="en" translate="no" className="antialiased">
-      <body>
-        <InternalServerError
-          digest={'digest' in error ? (error.digest as string) : undefined}
-        />
-      </body>
-    </html>
+    <InternalServerError
+      digest={'digest' in error ? (error.digest as string) : undefined}
+    />
   )
 }

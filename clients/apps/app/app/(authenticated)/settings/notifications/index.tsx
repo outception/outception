@@ -14,7 +14,7 @@ import {
 import { useNotifications } from '@/providers/NotificationsProvider'
 import { OrganizationContext } from '@/providers/OrganizationProvider'
 import { useToast } from '@/providers/ToastProvider'
-import { schemas } from '@polar-sh/client'
+import { schemas } from '@outception-com/client'
 import * as Notifications from 'expo-notifications'
 import { Stack } from 'expo-router'
 import { useCallback, useContext, useEffect, useState } from 'react'

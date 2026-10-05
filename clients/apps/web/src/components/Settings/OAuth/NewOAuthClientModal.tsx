@@ -1,15 +1,16 @@
-import { InlineModalHeader } from '@polar-sh/orbit'
+import { InlineModalHeader } from '@outception-com/orbit/InlineModal'
 import { toast } from '@/components/Toast/use-toast'
 import { useCreateOAuth2Client } from '@/hooks/queries/oauth'
 import { extractApiErrorMessage } from '@/utils/api/errors'
-import { schemas } from '@polar-sh/client'
-import { Button } from '@polar-sh/orbit'
-import { Form } from '@polar-sh/ui/components/ui/form'
+import { schemas } from '@outception-com/client'
+import { Button } from '@outception-com/orbit/Button'
+import { Form } from '@outception-com/ui/components/ui/form'
 import { useCallback, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import {
   FieldClientType,
   FieldClientURI,
+  FieldLogo,
   FieldName,
   FieldPrivacy,
   FieldRedirectURIs,
@@ -89,6 +90,7 @@ export const NewOAuthClientModal = ({
             className="max-w-[700px] space-y-8"
           >
             <FieldName />
+            <FieldLogo />
             <FieldClientType />
             <FieldRedirectURIs />
             <FieldScopes />

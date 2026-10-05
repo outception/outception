@@ -1,8 +1,9 @@
 'use client'
 
-import { useLogout } from '@/hooks/auth'
 import { useDeleteUser } from '@/hooks/queries'
-import { Button } from '@polar-sh/orbit'
+import { useT } from '@/providers/translate'
+import { CONFIG } from '@/utils/config'
+import { Button } from '@outception-com/orbit/Button'
 import { useCallback, useState } from 'react'
 import { ConfirmModal } from '../Modal/ConfirmModal'
 import { toast } from '../Toast/use-toast'
@@ -12,7 +13,7 @@ const TOAST_LONG_DURATION = 8000
 
 export default function UserDeleteSettings() {
   const deleteUser = useDeleteUser()
-  const logout = useLogout()
+  const t = useT()
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
   const handleDelete = useCallback(async () => {
@@ -20,8 +21,8 @@ export default function UserDeleteSettings() {
 
     if (error) {
       toast({
-        title: 'Deletion Failed',
-        description: 'An error occurred while trying to delete your account.',
+        title: t('account.danger.deletionFailed'),
+        description: t('account.danger.deletionFailedDesc'),
         variant: 'error',
         duration: TOAST_LONG_DURATION,
       })
@@ -30,38 +31,36 @@ export default function UserDeleteSettings() {
 
     if (data.deleted) {
       toast({
-        title: 'Account Deleted',
-        description: 'Your account has been successfully deleted.',
+        title: t('account.danger.accountDeleted'),
+        description: t('account.danger.accountDeletedDesc'),
         variant: 'success',
         duration: TOAST_LONG_DURATION,
       })
-      logout()
+      window.location.href = `${CONFIG.BASE_URL}/v1/auth/logout`
     } else {
-      const organizations = data.blocking_organizations ?? []
-      const orgNames = organizations.map((o) => o.name).join(', ')
       toast({
-        title: 'Deletion Blocked',
-        description: `You must delete all your organizations before deleting your account.${orgNames ? ` Blocking organizations: ${orgNames}.` : ''}`,
+        title: t('account.danger.deletionBlocked'),
+        description: t('account.danger.deletionBlockedDesc'),
         variant: 'error',
         duration: TOAST_LONG_DURATION,
       })
       setShowDeleteModal(false)
     }
-  }, [deleteUser, logout])
+  }, [deleteUser, t])
 
   return (
     <>
       <SettingsGroup>
         <SettingsGroupItem
-          title="Delete Account"
-          description="Permanently delete your account and all associated data. This action cannot be undone."
+          title={t('account.danger.deleteAccount')}
+          description={t('account.danger.deleteAccountDesc')}
         >
           <Button
             variant="destructive"
             onClick={() => setShowDeleteModal(true)}
             size="sm"
           >
-            Delete
+            {t('account.danger.delete')}
           </Button>
         </SettingsGroupItem>
       </SettingsGroup>
@@ -69,24 +68,21 @@ export default function UserDeleteSettings() {
       <ConfirmModal
         isShown={showDeleteModal}
         hide={() => setShowDeleteModal(false)}
-        title="Delete Account"
-        description="Are you sure you want to delete your account? This action cannot be undone."
+        title={t('account.danger.deleteAccount')}
+        description={t('account.danger.confirmDesc')}
         body={
-          <div className="dark:text-polar-400 text-sm text-gray-600">
-            <p className="mb-2">When you delete your account:</p>
+          <div className="dark:text-outception-400 text-sm text-gray-600">
+            <p className="mb-2">{t('account.danger.whenYouDelete')}</p>
             <ul className="list-inside list-disc space-y-1">
-              <li>Your email and personal data will be anonymized</li>
-              <li>Your OAuth connections will be deleted</li>
-              <li>
-                All your organizations must be deleted before your account can
-                be removed
-              </li>
+              <li>{t('account.danger.bulletEmail')}</li>
+              <li>{t('account.danger.bulletOauth')}</li>
+              <li>{t('account.danger.bulletOrgs')}</li>
             </ul>
           </div>
         }
         onConfirm={handleDelete}
         destructive
-        destructiveText="Delete"
+        destructiveText={t('account.danger.delete')}
       />
     </>
   )

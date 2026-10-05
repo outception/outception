@@ -1,60 +1,35 @@
 'use client'
 
 import Link from 'next/link'
-import LogoType from '../Brand/logos/LogoType'
+import LogoIcon from '../Brand/logos/LogoIcon'
 
 export default function InternalServerError({ digest }: { digest?: string }) {
+  // The wall's own page colour, not a sunset. A crash is the one screen a
+  // reader never chose to see, so it should look like the app they were
+  // already in. The literals are the default edition's page - grey by day, the
+  // same grey inverted by night - and they matter: `global-error` replaces the
+  // whole document, so the edition's tokens may not be there to read.
   return (
-    <div className="dark:bg-polar-950 flex h-screen w-full flex-col items-center justify-center gap-y-12 bg-gray-50 px-12 text-center">
-      <div className="flex flex-col items-center justify-center gap-y-1">
-        <h1 className="text-2xl font-medium text-black dark:text-white">
-          Something went wrong
-        </h1>
-        <p className="dark:text-polar-400 -mb-1 max-w-md text-center text-base text-balance text-gray-600">
-          Sorry, we&rsquo;re having an issue on our end. Please try again later
-          or reach out to support if the issue persists.
-        </p>
+    <div className="flex h-screen w-full flex-col items-center justify-center bg-[var(--color-paper,#eeeeee)] px-12 text-center dark:bg-[var(--color-paper-night,#191617)]">
+      <div className="paper-panel flex max-w-lg flex-col items-center justify-center gap-y-8 rounded-2xl px-12 py-14">
+        <div className="flex flex-col items-center justify-center gap-y-1">
+          <h1 className="text-2xl font-medium text-black dark:text-white">
+            Something went wrong
+          </h1>
+          <p className="dark:text-outception-300 -mb-1 max-w-md text-center text-base text-balance text-gray-700">
+            Sorry, we&rsquo;re having an issue on our end. Please try again
+            later or reach out to support if the issue persists.
+          </p>
+        </div>
+        <Link href="/" aria-label="Outception home" prefetch={false}>
+          <LogoIcon className="text-black dark:text-white" size={32} />
+        </Link>
+        {digest && (
+          <pre className="dark:text-outception-400 font-mono text-xs whitespace-break-spaces text-gray-500">
+            Debugging information: {digest}
+          </pre>
+        )}
       </div>
-      <ul className="dark:text-polar-400 dark:bg-polar-800 flex max-w-md items-center gap-x-2 rounded-lg bg-white p-1.5 px-3 text-center text-sm leading-normal text-balance text-gray-600">
-        <li>
-          <Link
-            href="/"
-            className="dark:hover:text-polar-300 block p-1 hover:text-gray-700 hover:underline"
-            prefetch={false}
-          >
-            Homepage
-          </Link>
-        </li>
-        <li className="dark:text-polar-500 user-select-none text-gray-400">
-          ·
-        </li>
-        <li>
-          <a
-            href="https://polar.sh/docs"
-            className="dark:hover:text-polar-300 block p-1 hover:text-gray-700 hover:underline"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </li>
-        <li className="dark:text-polar-500 user-select-none text-gray-400">
-          ·
-        </li>
-        <li>
-          <a
-            href="mailto:support@polar.sh"
-            className="dark:hover:text-polar-300 block p-1 hover:text-gray-700 hover:underline"
-          >
-            Support
-          </a>
-        </li>
-      </ul>
-      <LogoType className="h-5 text-black dark:text-white" />
-      {digest && (
-        <pre className="dark:text-polar-600 font-mono text-xs whitespace-break-spaces text-gray-400">
-          Debugging information: {digest}
-        </pre>
-      )}
     </div>
   )
 }

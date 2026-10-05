@@ -1,6 +1,6 @@
 import { usePolarClient } from '@/providers/PolarClientProvider'
 import { useSession } from '@/providers/SessionProvider'
-import { schemas, unwrap } from '@polar-sh/client'
+import { schemas, unwrap } from '@outception-com/client'
 import { useQuery } from '@tanstack/react-query'
 import { createContext, PropsWithChildren, useContext } from 'react'
 

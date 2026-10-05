@@ -1,5 +1,5 @@
 import { usePolarClient } from '@/providers/PolarClientProvider'
-import { operations, unwrap } from '@polar-sh/client'
+import { operations, unwrap } from '@outception-com/client'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 
 export const useProduct = (

@@ -33,8 +33,7 @@ export function Toaster() {
         title: error
           ? (error ?? 'Hmm... Something went wrong.')
           : (status ?? 'Alright!'),
-        description:
-          (error ? error_description : status_description) ?? undefined,
+        description: error ? error_description : status_description,
         variant: error ? 'error' : undefined,
         duration: 3000,
       })
@@ -53,7 +52,7 @@ export function Toaster() {
       const redirectPath = `${pathname}?${newSearchParams.toString()}`
       router.replace(redirectPath, { scroll: false })
     }
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentionally only re-run on searchParams changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally only re-run on searchParams changes
   }, [searchParams])
 
   return (

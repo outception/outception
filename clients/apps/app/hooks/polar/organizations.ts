@@ -1,6 +1,6 @@
 import { usePolarClient } from '@/providers/PolarClientProvider'
 import { queryClient } from '@/utils/query'
-import { schemas, unwrap } from '@polar-sh/client'
+import { schemas, unwrap } from '@outception-com/client'
 import * as Sentry from '@sentry/react-native'
 import { useMutation, useQuery } from '@tanstack/react-query'
 

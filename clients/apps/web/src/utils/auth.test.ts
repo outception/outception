@@ -1,4 +1,5 @@
-import type { Client, schemas } from '@polar-sh/client'
+import type { Factor } from '@/utils/auth'
+import type { Client, schemas } from '@outception-com/client'
 import { describe, expect, it, vi } from 'vitest'
 import {
   checkAuthenticationSession,
@@ -20,15 +21,16 @@ const makeApi = (
   }) as unknown as Client
 
 const makeAuthenticationSession = (
-  available_factors: schemas['AuthenticationSession']['available_factors'],
+  available_factors: Factor[],
 ): schemas['AuthenticationSession'] =>
   ({
-    available_factors,
+    identity_id: null,
+    available_factors: available_factors.map((type) => ({ type })),
   }) as schemas['AuthenticationSession']
 
 describe('checkAuthenticationSession', () => {
   it('returns null on 429 instead of throwing', async () => {
-    // The proxy redirects rate-limited users to /auth, which calls this — so a
+    // The proxy redirects rate-limited users to /auth, which calls this - so a
     // 429 here must degrade to the login form, not crash the page.
     await expect(
       checkAuthenticationSession(makeApi(429, false)),
@@ -57,16 +59,14 @@ describe('getAuthenticationSessionRedirectPath', () => {
 
   it('redirects to TOTP when available', () => {
     expect(
-      getAuthenticationSessionRedirectPath(
-        makeAuthenticationSession([{ type: 'totp' }]),
-      ),
+      getAuthenticationSessionRedirectPath(makeAuthenticationSession(['totp'])),
     ).toBe('/auth/totp')
   })
 
   it('redirects to backup codes when that is the only available step-1 factor', () => {
     expect(
       getAuthenticationSessionRedirectPath(
-        makeAuthenticationSession([{ type: 'backup_codes' }]),
+        makeAuthenticationSession(['backup_codes']),
       ),
     ).toBe('/auth/backup-codes')
   })
@@ -74,7 +74,7 @@ describe('getAuthenticationSessionRedirectPath', () => {
   it('prioritizes TOTP when both TOTP and backup codes are available', () => {
     expect(
       getAuthenticationSessionRedirectPath(
-        makeAuthenticationSession([{ type: 'backup_codes' }, { type: 'totp' }]),
+        makeAuthenticationSession(['backup_codes', 'totp']),
       ),
     ).toBe('/auth/totp')
   })

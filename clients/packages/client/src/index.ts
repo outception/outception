@@ -119,7 +119,6 @@ export const isValidationError = (
 
 export type { Middleware } from 'openapi-fetch'
 export * as enums from './enums'
-export { getMetricsRangeDates, type MetricsRange } from './metrics'
 export type { components, operations, paths } from './v1'
 export type schemas = components['schemas']
 export type Client = ReturnType<typeof createClient>

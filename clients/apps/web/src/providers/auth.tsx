@@ -1,15 +1,11 @@
 'use client'
 
-import { schemas } from '@polar-sh/client'
+import { schemas } from '@outception-com/client'
 import React from 'react'
 
-export type AuthContextValue = {
+type AuthContextValue = {
   user?: schemas['UserRead']
-  userOrganizations: schemas['OrganizationWithRole'][]
   setUser: React.Dispatch<React.SetStateAction<schemas['UserRead']>>
-  setUserOrganizations: React.Dispatch<
-    React.SetStateAction<schemas['OrganizationWithRole'][]>
-  >
 }
 
 const stub = (): never => {
@@ -17,23 +13,19 @@ const stub = (): never => {
 }
 
 export const AuthContext = React.createContext<AuthContextValue>(
-  // oxlint-disable-next-line typescript/ban-ts-comment
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   stub,
 )
 
 export const UserContextProvider = ({
   user: _user,
-  userOrganizations: _userOrganizations,
   children,
 }: {
   user: schemas['UserRead'] | undefined
-  userOrganizations: schemas['OrganizationWithRole'][]
   children: React.ReactNode
 }) => {
   const [user, setUser] = React.useState<schemas['UserRead'] | undefined>(_user)
-  const [userOrganizations, setUserOrganizations] =
-    React.useState<schemas['OrganizationWithRole'][]>(_userOrganizations)
 
   const contextValue = React.useMemo(
     () => ({
@@ -41,10 +33,8 @@ export const UserContextProvider = ({
       setUser: setUser as React.Dispatch<
         React.SetStateAction<schemas['UserRead']>
       >,
-      userOrganizations,
-      setUserOrganizations,
     }),
-    [user, userOrganizations, setUser, setUserOrganizations],
+    [user, setUser],
   )
 
   return (

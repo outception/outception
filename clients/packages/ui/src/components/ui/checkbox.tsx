@@ -1,3 +1,3 @@
-// Migrated to @polar-sh/orbit. This re-export remains for cross-package
-// consumers (checkout). Prefer importing from '@polar-sh/orbit'.
-export { Checkbox } from '@polar-sh/orbit/Checkbox'
+// Migrated to @outception-com/orbit. This re-export remains for cross-package
+// consumers (checkout). Prefer importing from '@outception-com/orbit'.
+export { Checkbox } from '@outception-com/orbit/Checkbox'

@@ -1,15 +1,12 @@
 'use client'
 
-import { useLogout } from '@/hooks/auth'
-import { useListOrganizations } from '@/hooks/queries'
 import { CONFIG } from '@/utils/config'
 import { useOutsideClick } from '@/utils/useOutsideClick'
 import Face from '@mui/icons-material/Face'
 import LogoutOutlined from '@mui/icons-material/LogoutOutlined'
-import SpaceDashboardOutlined from '@mui/icons-material/SpaceDashboardOutlined'
-import { schemas } from '@polar-sh/client'
-import { Avatar } from '@polar-sh/orbit'
-import { Separator } from '@polar-sh/ui/components/ui/separator'
+import { schemas } from '@outception-com/client'
+import { Avatar } from '@outception-com/orbit/Avatar'
+import { Separator } from '@outception-com/ui/components/ui/separator'
 import Link from 'next/link'
 import { useRef, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
@@ -34,10 +31,6 @@ const PublicProfileDropdown = ({
 
   const loggedUser = authenticatedUser
 
-  const organizations = useListOrganizations({}, !!loggedUser)
-
-  const logout = useLogout()
-
   if (!loggedUser) {
     return null
   }
@@ -45,7 +38,7 @@ const PublicProfileDropdown = ({
   return (
     <div className={classNames}>
       <div
-        className="dark:border-polar-800 dark:hover:border-polar-700 relative flex shrink-0 cursor-pointer flex-row items-center rounded-full border-2 border-gray-50 shadow-xs transition-colors hover:border-blue-100"
+        className="dark:border-outception-800 dark:hover:border-outception-700 relative flex shrink-0 cursor-pointer flex-row items-center rounded-full border-2 border-gray-50 shadow-xs transition-colors hover:border-blue-100"
         onClick={() => setOpen(true)}
       >
         <Avatar
@@ -59,7 +52,7 @@ const PublicProfileDropdown = ({
         <div
           ref={ref}
           className={twMerge(
-            'dark:bg-polar-900 dark:text-polar-400 dark:border-polar-700 absolute z-50 w-[300px] overflow-hidden rounded-3xl bg-white p-2 shadow-xl dark:border',
+            'dark:bg-outception-900 dark:text-outception-400 dark:border-outception-700 absolute z-50 w-[300px] overflow-hidden rounded-3xl bg-white p-2 shadow-xl dark:border',
             'top-12 right-0',
           )}
         >
@@ -73,16 +66,8 @@ const PublicProfileDropdown = ({
           </Link>
 
           <ul className="mt-2 flex w-full flex-col">
-            {(organizations.data?.items.length ?? 0) > 0 && (
-              <LinkItem
-                href={`${CONFIG.FRONTEND_BASE_URL}/dashboard`}
-                icon={<SpaceDashboardOutlined fontSize="inherit" />}
-              >
-                <span className="mx-2 text-sm">Dashboard</span>
-              </LinkItem>
-            )}
             <LinkItem
-              href={`${CONFIG.FRONTEND_BASE_URL}/dashboard/account`}
+              href={`${CONFIG.FRONTEND_BASE_URL}/account/preferences`}
               icon={<Face fontSize="inherit" />}
             >
               <span className="mx-2 text-sm">Account</span>
@@ -90,18 +75,12 @@ const PublicProfileDropdown = ({
 
             <Separator className="my-2" />
 
-            <ListItem current={false} className="rounded-lg px-4">
-              <button
-                type="button"
-                onClick={logout}
-                className="flex w-full cursor-pointer flex-row items-center gap-x-2 text-left text-sm"
-              >
-                <span className="text-lg">
-                  <LogoutOutlined fontSize="small" />
-                </span>
-                <span className="mx-2 py-2">Log out</span>
-              </button>
-            </ListItem>
+            <LinkItem
+              href={`${CONFIG.BASE_URL}/v1/auth/logout`}
+              icon={<LogoutOutlined fontSize="small" />}
+            >
+              <span className="mx-2 py-2">Log out</span>
+            </LinkItem>
           </ul>
         </div>
       )}

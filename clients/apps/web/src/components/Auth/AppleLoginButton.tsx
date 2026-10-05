@@ -1,10 +1,10 @@
 import { useAuthSessionStart } from '@/hooks'
-import { usePostHog, type EventName } from '@/hooks/posthog'
 import { useToast } from '@/components/Toast/use-toast'
 import Apple from '@mui/icons-material/Apple'
-import { schemas } from '@polar-sh/client'
-import { Button, type ButtonProps } from '@polar-sh/orbit'
+import { schemas } from '@outception-com/client'
+import { Button, type ButtonProps } from '@outception-com/orbit/Button'
 import { getAppleAuthorizeURL } from '@/utils/auth'
+import { useT } from '@/providers/translate'
 
 interface AppleLoginButtonProps {
   authenticationSession: schemas['AuthenticationSession'] | null
@@ -19,27 +19,18 @@ const AppleLoginButton = ({
   signup,
   variant,
 }: AppleLoginButtonProps) => {
-  const posthog = usePostHog()
   const authSessionStart = useAuthSessionStart()
   const { toast } = useToast()
+  const t = useT()
 
   const onClick = async () => {
-    let eventName: EventName = 'global:user:login:submit'
-    if (signup) {
-      eventName = 'global:user:signup:submit'
-    }
-    posthog.capture(eventName, {
-      method: 'apple',
-    })
-
     if (!authenticationSession) {
       try {
         await authSessionStart.mutateAsync(returnTo)
       } catch {
         toast({
-          title: 'Sign in failed',
-          description:
-            'Could not start authentication session. Please try again.',
+          title: t('auth.failedTitle'),
+          description: t('auth.failedBody'),
         })
         return
       }
@@ -49,9 +40,15 @@ const AppleLoginButton = ({
 
   return (
     <a onClick={onClick}>
-      <Button variant={variant} wrapperClassNames="space-x-2" fullWidth>
+      <Button
+        variant={variant}
+        wrapperClassNames="space-x-2 p-2.5 px-5"
+        fullWidth
+      >
         <Apple />
-        <div>{signup ? 'Sign up with Apple' : 'Sign in with Apple'}</div>
+        <div className="w-32 text-left">
+          {signup ? t('auth.appleSignup') : t('auth.apple')}
+        </div>
       </Button>
     </a>
   )

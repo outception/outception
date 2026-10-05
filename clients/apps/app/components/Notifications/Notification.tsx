@@ -10,7 +10,7 @@ import {
   MaintainerSubscriptionRenewalNotificationPayload,
 } from '@/hooks/polar/notifications'
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'
-import { formatCurrency } from '@polar-sh/currency'
+import { formatCurrency } from '@outception-com/currency'
 import { useMemo } from 'react'
 import { StyleProp, ViewStyle } from 'react-native'
 import { Text } from '../Shared/Text'

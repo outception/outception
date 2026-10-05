@@ -3,21 +3,21 @@
 import Link from 'next/link'
 import { useTOTPVerify } from '@/hooks'
 import { setValidationErrors } from '@/utils/api/errors'
-import { CONFIG } from '@/utils/config'
-import { isValidationError } from '@polar-sh/client'
-import { Button } from '@polar-sh/orbit'
+import { isValidationError } from '@outception-com/client'
+import { Button } from '@outception-com/orbit/Button'
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
-} from '@polar-sh/ui/components/atoms/InputOTP'
+} from '@outception-com/ui/components/atoms/InputOTP'
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormMessage,
-} from '@polar-sh/ui/components/ui/form'
+} from '@outception-com/ui/components/ui/form'
+import { useRouter } from 'next/navigation'
 import { useRef, useState } from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
 
@@ -25,6 +25,7 @@ const VerifyPage = () => {
   const form = useForm<{ code: string }>()
   const { control, handleSubmit, setError } = form
   const totpVerify = useTOTPVerify()
+  const router = useRouter()
 
   const [loading, setLoading] = useState(false)
   const submittingRef = useRef(false)
@@ -42,7 +43,7 @@ const VerifyPage = () => {
         }
         return
       }
-      window.location.href = `${CONFIG.FRONTEND_BASE_URL}/auth`
+      router.push('/auth')
     } catch {
       setError('code', {
         message: 'An unexpected error occurred. Please try again.',
@@ -81,7 +82,7 @@ const VerifyPage = () => {
                         <InputOTPSlot
                           key={index}
                           index={index}
-                          className="dark:border-polar-600 h-12 w-12 border-gray-300 text-xl md:h-16 md:w-16 md:text-2xl"
+                          className="dark:border-outception-600 h-12 w-12 border-gray-300 text-xl md:h-16 md:w-16 md:text-2xl"
                         />
                       ))}
                     </InputOTPGroup>
@@ -94,12 +95,11 @@ const VerifyPage = () => {
         />
         <Button type="submit" size="lg" className="w-full" loading={loading}>
           Sign in
-          {CONFIG.IS_SANDBOX && ' to Sandbox'}
         </Button>
         <div className="mt-4 text-center">
           <Link
             href="/auth/backup-codes"
-            className="dark:text-polar-300 text-sm text-gray-600 hover:underline"
+            className="dark:text-outception-300 text-sm text-gray-600 hover:underline"
           >
             Use a backup code instead
           </Link>

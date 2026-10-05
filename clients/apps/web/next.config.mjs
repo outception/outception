@@ -1,56 +1,83 @@
 /* global process */
-import createMDX from '@next/mdx'
+import path from 'node:path'
 import { withSentryConfig } from '@sentry/nextjs'
-import { themeConfig } from './shiki.config.mjs'
-import { docsCSP, ENVIRONMENT, nonEmbeddedCSP, oauth2CSP } from './src/csp.mjs'
 
-const PREVIEW_BUILD = process.env.POLAR_PREVIEW_BUILD === '1'
+const PREVIEW_BUILD = process.env.OUTCEPTION_PREVIEW_BUILD === '1'
 
-// Vercel preview: compute basePath and API URL from PR number + Tailscale hostname
+// Optional PR-preview builds: derive basePath + API URL from the PR number.
+// Inert in production (no-op unless the preview env vars below are set).
 let previewBasePath = ''
 if (
   process.env.VERCEL_GIT_PULL_REQUEST_ID &&
-  process.env.POLAR_PREVIEW_BACKEND_HOST
+  process.env.OUTCEPTION_PREVIEW_BACKEND_HOST
 ) {
   const prNum = parseInt(process.env.VERCEL_GIT_PULL_REQUEST_ID)
   previewBasePath = `/pr-${prNum}`
-  const baseUrl = `https://${process.env.POLAR_PREVIEW_BACKEND_HOST}${previewBasePath}`
+  const baseUrl = `https://${process.env.OUTCEPTION_PREVIEW_BACKEND_HOST}${previewBasePath}`
   process.env.NEXT_PUBLIC_API_URL = baseUrl
   process.env.NEXT_PUBLIC_FRONTEND_BASE_URL = baseUrl
 }
 
-// Vercel services deployments: deployment URLs change with
-// every deployment, so derive base from the deployment's own URL
-const VERCEL_SERVICES =
-  process.env.NEXT_PUBLIC_POLAR_VERCEL_SERVICES_ENABLED === '1'
-if (
-  VERCEL_SERVICES &&
-  !process.env.NEXT_PUBLIC_FRONTEND_BASE_URL &&
-  process.env.VERCEL_URL
-) {
-  process.env.NEXT_PUBLIC_FRONTEND_BASE_URL = `https://${process.env.VERCEL_URL}`
-}
+// Mirrors src/utils/features.ts - next.config can't import from src/.
+const ACCOUNTS_ENABLED = true
 
-const POLAR_AUTH_COOKIE_KEY =
-  process.env.POLAR_AUTH_COOKIE_KEY || 'polar_session'
+const OUTCEPTION_AUTH_COOKIE_KEY =
+  process.env.OUTCEPTION_AUTH_COOKIE_KEY || 'outception_session'
+const ENVIRONMENT =
+  process.env.VERCEL_ENV || process.env.NEXT_PUBLIC_VERCEL_ENV || 'development'
+
 const defaultFrontendHostname = process.env.NEXT_PUBLIC_FRONTEND_BASE_URL
   ? new URL(process.env.NEXT_PUBLIC_FRONTEND_BASE_URL).hostname
-  : 'polar.sh'
+  : 'outception.com'
+
+const S3_PUBLIC_IMAGES_BUCKET_ORIGIN = process.env
+  .S3_PUBLIC_IMAGES_BUCKET_HOSTNAME
+  ? `${process.env.S3_PUBLIC_IMAGES_BUCKET_PROTOCOL || 'https'}://${process.env.S3_PUBLIC_IMAGES_BUCKET_HOSTNAME}${process.env.S3_PUBLIC_IMAGES_BUCKET_PORT ? `:${process.env.S3_PUBLIC_IMAGES_BUCKET_PORT}` : ''}`
+  : ''
+// Unset in most environments; without the guard the template emits the
+// literal "undefined" as a connect-src host.
+const S3_UPLOAD_ORIGINS = (process.env.S3_UPLOAD_ORIGINS ?? '').trim()
+const baseCSP = `
+    default-src 'self';
+    connect-src 'self' ${process.env.NEXT_PUBLIC_API_URL} ${S3_UPLOAD_ORIGINS} https://maps.googleapis.com https://*.google-analytics.com;
+    frame-src 'self';
+    script-src 'self' ${ENVIRONMENT === 'development' ? "'unsafe-eval'" : ''} 'unsafe-inline' https://maps.googleapis.com https://www.googletagmanager.com;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    img-src 'self' blob: data: https://www.gravatar.com https://img.logo.dev https://lh3.googleusercontent.com https://avatars.githubusercontent.com ${S3_PUBLIC_IMAGES_BUCKET_ORIGIN} https://uploads.outception.com https://upload.wikimedia.org https://commons.wikimedia.org https://cdn.jsdelivr.net https://flagcdn.com https://icons.duckduckgo.com https://*.gstatic.com https://static.finnhub.io https://static2.finnhub.io https://coin-images.coingecko.com https://assets.coingecko.com https://crests.football-data.org https://a.espncdn.com https://cdn.cloudflare.steamstatic.com;
+    font-src 'self';
+    object-src 'none';
+    base-uri 'self';
+    ${ENVIRONMENT !== 'development' ? 'upgrade-insecure-requests;' : ''}
+`
+const nonEmbeddedCSP = `
+  ${baseCSP}
+  form-action 'self' ${process.env.NEXT_PUBLIC_API_URL} outception:;
+  frame-ancestors 'none';
+`
+// Don't add form-action to the OAuth2 authorize page, as it blocks the OAuth2 redirection
+// 10-years old debate about whether to block redirects with form-action or not: https://github.com/w3c/webappsec-csp/issues/8
+const oauth2CSP = `
+  ${baseCSP}
+  frame-ancestors 'none';
+`
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  allowedDevOrigins: ['127.0.0.1', '*.taildbff7b.ts.net'],
+  // Emit a self-contained server bundle (.next/standalone) so the app can be
+  // run as a plain Node server (node server.js) in a container, instead of on
+  // Vercel. See the production web Dockerfile.
+  output: 'standalone',
+  // The monorepo root is two levels up; tracing from there bundles the
+  // workspace deps the standalone server needs.
+  outputFileTracingRoot: path.join(import.meta.dirname, '../../'),
+  allowedDevOrigins: ['127.0.0.1'],
   reactStrictMode: true,
-  experimental: {
-    useTypeScriptCli: false,
-  },
-  transpilePackages: ['shiki', '@polar-sh/checkout', '@polar-sh/orbit'],
-  pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
+  transpilePackages: ['@outception-com/orbit'],
 
   ...(previewBasePath && {
     basePath: previewBasePath,
     env: {
-      POLAR_API_URL: `https://${process.env.POLAR_PREVIEW_BACKEND_HOST}:8443${previewBasePath}`,
+      OUTCEPTION_API_URL: `https://${process.env.OUTCEPTION_PREVIEW_BACKEND_HOST}:8443${previewBasePath}`,
     },
   }),
 
@@ -58,15 +85,9 @@ const nextConfig = {
     typescript: { ignoreBuildErrors: true },
   }),
 
-  outputFileTracingIncludes: {
-    '/onboarding/validate-description': [
-      './src/app/(main)/onboarding/validate-description/acceptable-use-policy.mdx',
-    ],
-  },
-
-  // This is required to support PostHog trailing slash API requests
-  skipTrailingSlashRedirect: true,
-
+  // NOTE: the build runs `next build --turbopack`, so this webpack hook is
+  // NOT applied. Kept only for a `next build` without the flag; don't add
+  // load-bearing config here expecting it to take effect.
   webpack: (config, { dev }) => {
     if (config.cache && !dev) {
       config.cache = Object.freeze({
@@ -78,8 +99,6 @@ const nextConfig = {
   },
 
   images: {
-    // Vercel services deployments do not wire the image optimizer yet
-    unoptimized: process.env.NEXT_IMAGE_UNOPTIMIZED === '1',
     remotePatterns: [
       ...(process.env.S3_PUBLIC_IMAGES_BUCKET_HOSTNAME
         ? [
@@ -97,27 +116,18 @@ const nextConfig = {
         port: '',
         pathname: '**',
       },
-      {
-        protocol: 'https',
-        hostname: '7vk6rcnylug0u6hg.public.blob.vercel-storage.com',
-        port: '',
-        pathname: '**',
-      },
     ],
   },
 
   async rewrites() {
-    const apiUrl = process.env.POLAR_API_URL || process.env.NEXT_PUBLIC_API_URL
+    const apiUrl =
+      process.env.OUTCEPTION_API_URL || process.env.NEXT_PUBLIC_API_URL
     return [
       ...(PREVIEW_BUILD && apiUrl
         ? [
             {
               source: '/v1/:path*',
               destination: `${apiUrl}/v1/:path*`,
-            },
-            {
-              source: '/backoffice/:path*',
-              destination: `${apiUrl}/backoffice/:path*`,
             },
             {
               source: '/healthz',
@@ -129,123 +139,69 @@ const nextConfig = {
             },
           ]
         : []),
-      {
-        source: '/ingest/static/:path*',
-        destination: 'https://us-assets.i.posthog.com/static/:path*',
-      },
-      {
-        source: '/ingest/:path*',
-        destination: 'https://us.i.posthog.com/:path*',
-      },
-      {
-        source: '/ingest/decide',
-        destination: 'https://us.i.posthog.com/decide',
-      },
     ]
   },
 
   async redirects() {
     return [
-      // dashboard.polar.sh redirections
+      // dashboard.outception.com redirections
       {
         source: '/',
         destination: '/auth',
         has: [
           {
             type: 'host',
-            value: 'dashboard.polar.sh',
+            value: 'dashboard.outception.com',
           },
         ],
         permanent: false,
       },
       {
         source: '/:path*',
-        destination: 'https://polar.sh/:path*',
+        destination: 'https://outception.com/:path*',
         has: [
           {
             type: 'host',
-            value: 'dashboard.polar.sh',
+            value: 'dashboard.outception.com',
           },
         ],
-        permanent: false,
-      },
-      {
-        source: '/careers',
-        destination: 'https://polar.sh/company',
-        permanent: false,
-      },
-      {
-        source: '/sdk',
-        destination: '/integrate#sdk',
-        permanent: false,
-      },
-      {
-        source: '/api',
-        destination: '/integrate#api',
-        permanent: false,
-      },
-      {
-        source: '/cli',
-        destination: '/integrate#cli',
-        permanent: false,
-      },
-      {
-        source: '/mcp',
-        destination: '/integrate#mcp',
         permanent: false,
       },
       {
         source: '/legal/terms',
-        destination: 'https://polar.sh/legal/master-services-terms',
+        destination: '/terms',
         permanent: false,
       },
       {
         source: '/legal/privacy',
-        destination: 'https://polar.sh/legal/privacy-policy',
+        destination: '/privacy',
         permanent: false,
       },
-      {
-        source: '/llms.txt',
-        destination: 'https://polar.sh/docs/llms.txt',
-        permanent: true,
-        has: [
-          {
-            type: 'host',
-            value: 'polar.sh',
-          },
-        ],
-      },
-      {
-        source: '/llms-full.txt',
-        destination: 'https://polar.sh/docs/llms-full.txt',
-        permanent: true,
-        has: [
-          {
-            type: 'host',
-            value: 'polar.sh',
-          },
-        ],
-      },
-
-      // Logged-in user redirections
-      {
-        source: '/',
-        destination: '/start',
-        has: [
-          {
-            type: 'cookie',
-            key: POLAR_AUTH_COOKIE_KEY,
-          },
-          {
-            type: 'host',
-            value: defaultFrontendHostname,
-          },
-        ],
-        permanent: false,
-      },
+      // Logged-in user redirections. Only while accounts exist: with them off,
+      // /start bounces back to / and anyone still holding a session cookie is
+      // stuck in an infinite redirect and can't reach the site at all.
+      ...(ACCOUNTS_ENABLED
+        ? [
+            {
+              source: '/',
+              destination: '/start',
+              has: [
+                {
+                  type: 'cookie',
+                  key: OUTCEPTION_AUTH_COOKIE_KEY,
+                },
+                {
+                  type: 'host',
+                  value: defaultFrontendHostname,
+                },
+              ],
+              permanent: false,
+            },
+          ]
+        : []),
 
       // Redirect /dashboard to correct domain if on a different domain name
-      // Skip in preview builds — preview env uses a single domain via Caddy proxy
+      // Skip in preview builds - preview env uses a single domain via Caddy proxy
       ...(!previewBasePath
         ? [
             {
@@ -278,63 +234,8 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source: '/finance',
-        destination: '/finance/income',
-        permanent: false,
-      },
-      {
         source: '/dashboard/:organization/overview',
         destination: '/dashboard/:organization',
-        permanent: true,
-      },
-      {
-        source: '/dashboard/:organization/benefits',
-        destination: '/dashboard/:organization/products/benefits',
-        permanent: true,
-      },
-      {
-        source: '/dashboard/:organization/products/overview',
-        destination: '/dashboard/:organization/products',
-        permanent: true,
-      },
-      {
-        source: '/dashboard/:organization/issues',
-        destination: '/dashboard/:organization/issues/overview',
-        permanent: false,
-      },
-      {
-        source: '/dashboard/:organization/promote/issues',
-        destination: '/dashboard/:organization/issues/badge',
-        permanent: false,
-      },
-      {
-        source: '/dashboard/:organization/issues/promote',
-        destination: '/dashboard/:organization/issues/badge',
-        permanent: false,
-      },
-      {
-        source: '/dashboard/:organization/finance',
-        destination: '/dashboard/:organization/finance/income',
-        permanent: false,
-      },
-      {
-        source: '/dashboard/:organization/usage-billing',
-        destination: '/dashboard/:organization/products/meters',
-        permanent: true,
-      },
-      {
-        source: '/dashboard/:organization/usage-billing/meters',
-        destination: '/dashboard/:organization/products/meters',
-        permanent: true,
-      },
-      {
-        source: '/dashboard/:organization/usage-billing/events',
-        destination: '/dashboard/:organization/analytics/events',
-        permanent: true,
-      },
-      {
-        source: '/dashboard/:organization/usage-billing/spans',
-        destination: '/dashboard/:organization/analytics/costs',
         permanent: true,
       },
 
@@ -343,52 +244,6 @@ const nextConfig = {
         source: '/settings',
         destination: '/dashboard/account/preferences',
         permanent: true,
-      },
-
-      // Access tokens redirect
-      {
-        source: '/settings/tokens',
-        destination: '/account/developer',
-        permanent: false,
-      },
-
-      // Old blog redirects
-      {
-        source: '/polarsource/posts',
-        destination: '/blog',
-        permanent: false,
-      },
-      {
-        source: '/polarsource/posts/:path(.*)',
-        destination: '/blog/:path*',
-        permanent: false,
-      },
-
-      // Fallback blog redirect
-      {
-        source: '/:path*',
-        destination: 'https://polar.sh/polarsource',
-        has: [
-          {
-            type: 'host',
-            value: 'blog.polar.sh',
-          },
-        ],
-        permanent: false,
-      },
-
-      // CLI Install Script
-      {
-        source: '/install.sh',
-        destination:
-          'https://raw.githubusercontent.com/polarsource/polar/main/clients/packages/cli/install.sh',
-        permanent: false,
-      },
-      {
-        source: '/install.ps1',
-        destination:
-          'https://raw.githubusercontent.com/polarsource/polar/main/clients/packages/cli/install.ps1',
-        permanent: false,
       },
 
       {
@@ -402,120 +257,95 @@ const nextConfig = {
     const baseHeaders = [
       {
         key: 'Content-Security-Policy',
-        value: nonEmbeddedCSP(),
+        value: nonEmbeddedCSP.replace(/\n/g, ''),
       },
       {
         key: 'Permissions-Policy',
         value:
-          'payment=(), publickey-credentials-get=(), camera=(), microphone=(), geolocation=()',
+          'payment=(), publickey-credentials-get=(), camera=(), microphone=(), geolocation=(self)',
       },
       {
         key: 'X-Frame-Options',
         value: 'DENY',
       },
+      {
+        key: 'X-Content-Type-Options',
+        value: 'nosniff',
+      },
+      {
+        key: 'Referrer-Policy',
+        value: 'strict-origin-when-cross-origin',
+      },
+      // HSTS only in deployed environments (never on plain-http localhost).
+      ...(ENVIRONMENT !== 'development'
+        ? [
+            {
+              key: 'Strict-Transport-Security',
+              value: 'max-age=63072000; includeSubDomains; preload',
+            },
+          ]
+        : []),
     ]
-
-    // Add X-Robots-Tag header for sandbox environment
-    if (ENVIRONMENT === 'sandbox') {
-      baseHeaders.push({
-        key: 'X-Robots-Tag',
-        value: 'noindex, nofollow, noarchive, nosnippet, noimageindex',
-      })
-    }
 
     return [
       {
-        source: '/((?!checkout|embed|oauth2|docs).*)',
+        // Segment-bounded exclusions: bare prefixes also matched any FUTURE
+        // route merely starting with these strings (say /oauth2-help), which
+        // would silently lose every base security header.
+        source: '/((?!(?:oauth2)(?:/|$)).*)',
         headers: baseHeaders,
+      },
+      {
+        // Apple's universal-links manifest has no file extension, so Next
+        // would serve it as octet-stream; Apple's CDN requires JSON.
+        source: '/.well-known/apple-app-site-association',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/json',
+          },
+        ],
+      },
+      {
+        // The service worker and the offline page it serves must revalidate on
+        // every load - a long-cached worker would pin an old offline page (and
+        // an old fetch handler) for days.
+        source: '/:file(sw\\.js|offline\\.html)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, max-age=0, must-revalidate',
+          },
+        ],
       },
       {
         source: '/oauth2/:path*',
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: oauth2CSP(),
+            value: oauth2CSP.replace(/\n/g, ''),
           },
           {
             key: 'Permissions-Policy',
             value:
-              'payment=(), publickey-credentials-get=(), camera=(), microphone=(), geolocation=()',
+              'payment=(), publickey-credentials-get=(), camera=(), microphone=(), geolocation=(self)',
           },
           {
             key: 'X-Frame-Options',
             value: 'DENY',
           },
-          ...(ENVIRONMENT === 'sandbox'
-            ? [
-                {
-                  key: 'X-Robots-Tag',
-                  value:
-                    'noindex, nofollow, noarchive, nosnippet, noimageindex',
-                },
-              ]
-            : []),
-        ],
-      },
-      {
-        source: '/checkout/:path*',
-        headers: [
           {
-            key: 'Permissions-Policy',
-            value: `payment=*, publickey-credentials-get=*, camera=(), microphone=(), geolocation=()`,
-          },
-          ...(ENVIRONMENT === 'sandbox'
-            ? [
-                {
-                  key: 'X-Robots-Tag',
-                  value:
-                    'noindex, nofollow, noarchive, nosnippet, noimageindex',
-                },
-              ]
-            : []),
-        ],
-      },
-      {
-        source: '/embed/:path*',
-        headers: [
-          {
-            key: 'Permissions-Policy',
-            value: `payment=*, publickey-credentials-get=*, camera=(), microphone=(), geolocation=()`,
-          },
-          ...(ENVIRONMENT === 'sandbox'
-            ? [
-                {
-                  key: 'X-Robots-Tag',
-                  value:
-                    'noindex, nofollow, noarchive, nosnippet, noimageindex',
-                },
-              ]
-            : []),
-        ],
-      },
-      {
-        source: '/docs/:path*',
-        headers: [
-          {
-            key: 'Content-Security-Policy',
-            value: docsCSP(),
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
           },
           {
-            key: 'Permissions-Policy',
-            value:
-              'payment=(), publickey-credentials-get=(), camera=(), microphone=(), geolocation=()',
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
           },
           {
-            key: 'X-Frame-Options',
-            value: 'DENY',
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
           },
-          ...(ENVIRONMENT === 'sandbox'
-            ? [
-                {
-                  key: 'X-Robots-Tag',
-                  value:
-                    'noindex, nofollow, noarchive, nosnippet, noimageindex',
-                },
-              ]
-            : []),
         ],
       },
     ]
@@ -523,22 +353,7 @@ const nextConfig = {
 }
 
 const createConfig = async () => {
-  const withMDX = createMDX({
-    options: {
-      remarkPlugins: ['remark-frontmatter', 'remark-gfm'],
-      rehypePlugins: [
-        'rehype-slug',
-        [
-          '@shikijs/rehype',
-          {
-            themes: themeConfig,
-          },
-        ],
-      ],
-    },
-  })
-
-  let conf = withMDX(nextConfig)
+  let conf = nextConfig
 
   // Injected content via Sentry wizard below
 
@@ -546,8 +361,8 @@ const createConfig = async () => {
     // For all available options, see:
     // https://github.com/getsentry/sentry-webpack-plugin#options
 
-    org: 'polar-sh',
-    project: 'dashboard',
+    org: 'outception',
+    project: 'javascript-nextjs',
 
     // Pass the auth token
     authToken: process.env.SENTRY_AUTH_TOKEN,

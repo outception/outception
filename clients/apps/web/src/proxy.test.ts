@@ -1,6 +1,6 @@
 import { unstable_doesMiddlewareMatch } from 'next/experimental/testing/server'
 import { NextRequest } from 'next/server'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { config, proxy } from './proxy'
 
 vi.mock('./utils/client', () => ({
@@ -9,21 +9,13 @@ vi.mock('./utils/client', () => ({
 
 const nextConfig = {}
 
-const getForwardedRequestHeader = (
-  response: Response,
-  header: string,
-): string | null => response.headers.get(`x-middleware-request-${header}`)
-
-const getForwardedRequestHeaderNames = (response: Response): string[] =>
-  response.headers.get('x-middleware-override-headers')?.split(',') ?? []
-
 describe('proxy matcher configuration', () => {
   it('should run for dashboard routes', () => {
     expect(
       unstable_doesMiddlewareMatch({
         config,
         nextConfig,
-        url: '/dashboard',
+        url: '/account/news',
       }),
     ).toBe(true)
   })
@@ -78,44 +70,14 @@ describe('proxy matcher configuration', () => {
     ).toBe(false)
   })
 
-  it('should NOT run for Mintlify docs', () => {
+  it('should run for self-hosted docs', () => {
     expect(
       unstable_doesMiddlewareMatch({
         config,
         nextConfig,
-        url: '/docs/overview',
+        url: '/docs/integrate/authentication',
       }),
-    ).toBe(false)
-  })
-
-  it('should NOT run for nested docs paths', () => {
-    expect(
-      unstable_doesMiddlewareMatch({
-        config,
-        nextConfig,
-        url: '/docs/integrate/mcp',
-      }),
-    ).toBe(false)
-  })
-
-  it('should NOT run for _mintlify routes', () => {
-    expect(
-      unstable_doesMiddlewareMatch({
-        config,
-        nextConfig,
-        url: '/_mintlify/test',
-      }),
-    ).toBe(false)
-  })
-
-  it('should NOT run for mintlify-assets', () => {
-    expect(
-      unstable_doesMiddlewareMatch({
-        config,
-        nextConfig,
-        url: '/mintlify-assets/test',
-      }),
-    ).toBe(false)
+    ).toBe(true)
   })
 
   it('should NOT run for Next.js static files', () => {
@@ -211,18 +173,19 @@ describe('middleware function', () => {
   })
 
   it('should redirect unauthenticated users from protected routes', async () => {
-    const request = new NextRequest('https://example.com/dashboard')
+    const request = new NextRequest('https://example.com/account/news')
 
     const response = await proxy(request)
 
     expect(response.status).toBe(307)
     expect(response.headers.get('location')).toContain('/auth')
-    expect(response.headers.get('location')).toContain('return_to=%2Fdashboard')
+    expect(response.headers.get('location')).toContain(
+      'return_to=%2Faccount%2Fnews',
+    )
   })
 
-  it('should allow authenticated users to access protected routes', async () => {
+  it('should forward the authenticated user to server components', async () => {
     const mockUser = { id: '123', email: 'test@example.com' }
-    const spoofedUser = { id: 'spoofed', email: 'attacker@example.com' }
     createServerSideAPI.mockResolvedValue({
       GET: vi.fn().mockResolvedValue({
         data: mockUser,
@@ -230,19 +193,15 @@ describe('middleware function', () => {
       }),
     })
 
-    const request = new NextRequest('https://example.com/dashboard', {
-      headers: {
-        'x-polar-user': Buffer.from(JSON.stringify(spoofedUser)).toString(
-          'base64',
-        ),
-      },
-    })
-    request.cookies.set('polar_session', 'valid-session-token')
+    const request = new NextRequest('https://example.com/account/news')
+    request.cookies.set('outception_session', 'valid-session-token')
 
     const response = await proxy(request)
 
     expect(response.status).toBe(200)
-    expect(getForwardedRequestHeader(response, 'x-polar-user')).toBe(
+    // NextResponse.next({ request: { headers } }) communicates request-header
+    // overrides to the server via `x-middleware-request-*`.
+    expect(response.headers.get('x-middleware-request-x-outception-user')).toBe(
       Buffer.from(JSON.stringify(mockUser)).toString('base64'),
     )
   })
@@ -253,34 +212,30 @@ describe('middleware function', () => {
     const response = await proxy(request)
 
     expect(response.status).toBe(200)
-    expect(getForwardedRequestHeader(response, 'x-polar-user')).toBeNull()
-    expect(getForwardedRequestHeaderNames(response)).not.toContain(
-      'x-polar-user',
-    )
+    expect(
+      response.headers.get('x-middleware-request-x-outception-user'),
+    ).toBeNull()
   })
 
-  it('should strip spoofed user headers from forwarded routes', async () => {
-    const request = new NextRequest('https://example.com/docs/overview', {
-      headers: {
-        'x-polar-user': Buffer.from(
-          JSON.stringify({ id: 'spoofed', email: 'attacker@example.com' }),
-        ).toString('base64'),
-      },
+  it('should strip a forged x-outception-user header from an unauthenticated request', async () => {
+    const forged = Buffer.from(
+      JSON.stringify({ id: 'attacker', email: 'evil@example.com' }),
+    ).toString('base64')
+    const request = new NextRequest('https://example.com/', {
+      headers: { 'x-outception-user': forged },
     })
 
     const response = await proxy(request)
 
-    expect(response.status).toBe(200)
-    expect(getForwardedRequestHeader(response, 'x-polar-user')).toBeNull()
-    expect(getForwardedRequestHeaderNames(response)).not.toContain(
-      'x-polar-user',
-    )
-    expect(createServerSideAPI).not.toHaveBeenCalled()
+    // The forged value must not survive to the server component.
+    expect(
+      response.headers.get('x-middleware-request-x-outception-user'),
+    ).toBeNull()
   })
 
   it('should redirect to login with query params preserved', async () => {
     const request = new NextRequest(
-      'https://example.com/dashboard?foo=bar&baz=qux',
+      'https://example.com/account/news?foo=bar&baz=qux',
     )
 
     const response = await proxy(request)
@@ -288,7 +243,9 @@ describe('middleware function', () => {
     expect(response.status).toBe(307)
     const location = response.headers.get('location')
     expect(location).toContain('/auth')
-    expect(location).toContain('return_to=%2Fdashboard%3Ffoo%3Dbar%26baz%3Dqux')
+    expect(location).toContain(
+      'return_to=%2Faccount%2Fnews%3Ffoo%3Dbar%26baz%3Dqux',
+    )
   })
 
   it('should throw error on unexpected API response status', async () => {
@@ -303,8 +260,8 @@ describe('middleware function', () => {
       }),
     })
 
-    const request = new NextRequest('https://example.com/dashboard')
-    request.cookies.set('polar_session', 'valid-session-token')
+    const request = new NextRequest('https://example.com/account/news')
+    request.cookies.set('outception_session', 'valid-session-token')
 
     await expect(proxy(request)).rejects.toThrow(
       'Unexpected response status while fetching authenticated user',
@@ -320,8 +277,8 @@ describe('middleware function', () => {
       }),
     })
 
-    const request = new NextRequest('https://example.com/dashboard')
-    request.cookies.set('polar_session', 'invalid-session-token')
+    const request = new NextRequest('https://example.com/account/news')
+    request.cookies.set('outception_session', 'invalid-session-token')
 
     const response = await proxy(request)
 
@@ -341,8 +298,8 @@ describe('middleware function', () => {
       }),
     })
 
-    const request = new NextRequest('https://example.com/dashboard')
-    request.cookies.set('polar_session', 'rate-limited-session-token')
+    const request = new NextRequest('https://example.com/account/news')
+    request.cookies.set('outception_session', 'rate-limited-session-token')
 
     // Must not throw: a 429 should be treated as "couldn't determine the user"
     // and proceed as anonymous (protected route -> redirect to login).
@@ -365,303 +322,6 @@ describe('middleware function', () => {
     expect(location).toContain('/auth')
     expect(location).toContain(
       'return_to=%2Fto%2Fdashboard%2Fsettings%2Fbilling',
-    )
-  })
-})
-
-describe('the /to/ dance', () => {
-  it('bounces /to/* to the sandbox host when polar_env cookie does not match the current env', async () => {
-    const request = new NextRequest('https://polar.sh/to/dashboard/products')
-    request.cookies.set('polar_env', 'sandbox')
-
-    const response = await proxy(request)
-
-    expect(response.status).toBe(307)
-    expect(response.headers.get('location')).toBe(
-      'https://sandbox.polar.sh/to/dashboard/products',
-    )
-  })
-
-  it('preserves query string when bouncing /to/*', async () => {
-    const request = new NextRequest(
-      'https://polar.sh/to/dashboard/products?foo=bar',
-    )
-    request.cookies.set('polar_env', 'sandbox')
-
-    const response = await proxy(request)
-
-    expect(response.status).toBe(307)
-    expect(response.headers.get('location')).toBe(
-      'https://sandbox.polar.sh/to/dashboard/products?foo=bar',
-    )
-  })
-
-  it('does not bounce when polar_env cookie matches the current env', async () => {
-    const request = new NextRequest('https://polar.sh/to/dashboard/products')
-    request.cookies.set('polar_env', 'production')
-
-    const response = await proxy(request)
-
-    expect(response.status).toBe(307)
-    expect(response.headers.get('location')).toContain('/auth')
-  })
-
-  it('ignores invalid polar_env cookie values', async () => {
-    const request = new NextRequest('https://polar.sh/to/dashboard/products')
-    request.cookies.set('polar_env', 'narnia')
-
-    const response = await proxy(request)
-
-    expect(response.status).toBe(307)
-    expect(response.headers.get('location')).toContain('/auth')
-  })
-
-  it('does not bounce non-/to/ paths even with a mismatching cookie', async () => {
-    const request = new NextRequest('https://polar.sh/dashboard')
-    request.cookies.set('polar_env', 'sandbox')
-
-    const response = await proxy(request)
-
-    expect(response.status).toBe(307)
-    expect(response.headers.get('location')).toContain('/auth')
-  })
-})
-
-describe('checkout frame ancestors', () => {
-  let mockFetch: ReturnType<typeof vi.fn>
-
-  beforeEach(() => {
-    mockFetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ frame_ancestors: ['https://example.com'] }),
-    })
-    vi.stubGlobal('fetch', mockFetch)
-  })
-
-  afterEach(() => {
-    vi.unstubAllGlobals()
-  })
-
-  const framedRequest = (url: string) =>
-    new NextRequest(url, {
-      headers: {
-        'Sec-Fetch-Dest': 'iframe',
-        Referer: 'https://example.com/pricing',
-      },
-    })
-
-  it('asks for the policy of a framed checkout', async () => {
-    const response = await proxy(
-      framedRequest('https://polar.sh/checkout/polar_c_123'),
-    )
-
-    expect(response.status).toBe(200)
-    expect(mockFetch).toHaveBeenCalledOnce()
-
-    const [url, init] = mockFetch.mock.calls[0]
-    expect(url).toContain('/v1/checkouts/client/polar_c_123/embed-policy')
-    expect(init.headers).toMatchObject({
-      Referer: 'https://example.com/pricing',
-      'Sec-Fetch-Dest': 'iframe',
-    })
-  })
-
-  it('resolves the same secret on the confirmation page', async () => {
-    await proxy(
-      framedRequest('https://polar.sh/checkout/polar_c_123/confirmation'),
-    )
-
-    expect(mockFetch.mock.calls[0][0]).toContain(
-      '/v1/checkouts/client/polar_c_123/embed-policy',
-    )
-  })
-
-  it('admits the hosts the organization listed', async () => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        frame_ancestors: ['https://example.com', 'https://*.shop.example.com'],
-      }),
-    })
-
-    const response = await proxy(
-      framedRequest('https://polar.sh/checkout/polar_c_123'),
-    )
-
-    const policy = response.headers.get('Content-Security-Policy')
-    expect(policy).toContain(
-      'frame-ancestors https://example.com https://*.shop.example.com;',
-    )
-    expect(policy).toContain("script-src 'self'")
-  })
-
-  it('asks nothing on a top-level navigation, and refuses framing', async () => {
-    const request = new NextRequest('https://polar.sh/checkout/polar_c_123', {
-      headers: { 'Sec-Fetch-Dest': 'document' },
-    })
-
-    const response = await proxy(request)
-
-    expect(mockFetch).not.toHaveBeenCalled()
-    expect(response.headers.get('Content-Security-Policy')).toContain(
-      "frame-ancestors 'none';",
-    )
-  })
-
-  it('leaves other pages to the static policy', async () => {
-    const response = await proxy(framedRequest('https://polar.sh/acme'))
-
-    expect(response.headers.get('Content-Security-Policy')).toBeNull()
-  })
-
-  it.each(['iframe', 'frame', 'object', 'embed'])(
-    'asks for every destination that can hold a document: %s',
-    async (destination) => {
-      await proxy(
-        new NextRequest('https://polar.sh/checkout/polar_c_123', {
-          headers: { 'Sec-Fetch-Dest': destination },
-        }),
-      )
-
-      expect(mockFetch).toHaveBeenCalledOnce()
-    },
-  )
-
-  it('asks when the browser sends no fetch destination', async () => {
-    await proxy(new NextRequest('https://polar.sh/checkout/polar_c_123'))
-
-    expect(mockFetch).toHaveBeenCalledOnce()
-  })
-
-  it('asks nothing outside checkout', async () => {
-    await proxy(framedRequest('https://polar.sh/acme'))
-
-    expect(mockFetch).not.toHaveBeenCalled()
-  })
-
-  it('refuses framing when the call fails', async () => {
-    mockFetch.mockRejectedValue(new Error('unreachable'))
-
-    const response = await proxy(
-      framedRequest('https://polar.sh/checkout/polar_c_123'),
-    )
-
-    expect(response.status).toBe(200)
-    expect(response.headers.get('Content-Security-Policy')).toContain(
-      "frame-ancestors 'none';",
-    )
-  })
-})
-
-describe('payment method embed policy', () => {
-  let mockFetch: ReturnType<typeof vi.fn>
-
-  beforeEach(() => {
-    mockFetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        frame_ancestors: ['https://example.com'],
-        embed_origin: 'https://example.com',
-      }),
-    })
-    vi.stubGlobal('fetch', mockFetch)
-  })
-
-  afterEach(() => {
-    vi.unstubAllGlobals()
-  })
-
-  const EMBED_URL =
-    'https://polar.sh/embed/payment-method?session_token=polar_cst_123&embed_origin=https%3A%2F%2Fexample.com'
-
-  const framedRequest = (url: string, headers: Record<string, string> = {}) =>
-    new NextRequest(url, {
-      headers: { 'Sec-Fetch-Dest': 'iframe', ...headers },
-    })
-
-  it('asks for the policy once, with the session token and embed origin', async () => {
-    const response = await proxy(framedRequest(EMBED_URL))
-
-    expect(mockFetch).toHaveBeenCalledOnce()
-    const [url, init] = mockFetch.mock.calls[0]
-    expect(url).toContain(
-      '/v1/customer-portal/customers/me/embed-policy?embed_origin=https%3A%2F%2Fexample.com',
-    )
-    expect(init.headers).toEqual({ Authorization: 'Bearer polar_cst_123' })
-    expect(response.headers.get('Content-Security-Policy')).toContain(
-      'frame-ancestors https://example.com;',
-    )
-    expect(getForwardedRequestHeader(response, 'x-polar-embed-origin')).toBe(
-      'https://example.com',
-    )
-  })
-
-  it('forwards no embed origin the organization refused', async () => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({ frame_ancestors: ['*'], embed_origin: null }),
-    })
-
-    const response = await proxy(framedRequest(EMBED_URL))
-
-    expect(
-      getForwardedRequestHeader(response, 'x-polar-embed-origin'),
-    ).toBeNull()
-  })
-
-  it('drops an embed origin sent by the client', async () => {
-    mockFetch.mockResolvedValue({ ok: false })
-
-    const response = await proxy(
-      framedRequest(EMBED_URL, { 'x-polar-embed-origin': 'https://evil.com' }),
-    )
-
-    expect(
-      getForwardedRequestHeader(response, 'x-polar-embed-origin'),
-    ).toBeNull()
-    expect(response.headers.get('Content-Security-Policy')).toContain(
-      "frame-ancestors 'none';",
-    )
-  })
-
-  it('resolves the embed origin on a top-level navigation, and refuses framing', async () => {
-    const response = await proxy(
-      new NextRequest(EMBED_URL, { headers: { 'Sec-Fetch-Dest': 'document' } }),
-    )
-
-    expect(mockFetch).toHaveBeenCalledOnce()
-    expect(response.headers.get('Content-Security-Policy')).toContain(
-      "frame-ancestors 'none';",
-    )
-    expect(getForwardedRequestHeader(response, 'x-polar-embed-origin')).toBe(
-      'https://example.com',
-    )
-  })
-
-  it('lets Polar embed itself without asking for the policy', async () => {
-    const response = await proxy(
-      framedRequest(
-        'https://polar.sh/embed/payment-method?session_token=polar_cst_123&embed_origin=https%3A%2F%2Fpolar.sh',
-      ),
-    )
-
-    expect(mockFetch).not.toHaveBeenCalled()
-    expect(response.headers.get('Content-Security-Policy')).toContain(
-      "frame-ancestors 'self';",
-    )
-    expect(getForwardedRequestHeader(response, 'x-polar-embed-origin')).toBe(
-      'https://polar.sh',
-    )
-  })
-
-  it('refuses framing without a session token', async () => {
-    const response = await proxy(
-      framedRequest('https://polar.sh/embed/payment-method'),
-    )
-
-    expect(mockFetch).not.toHaveBeenCalled()
-    expect(response.headers.get('Content-Security-Policy')).toContain(
-      "frame-ancestors 'none';",
     )
   })
 })

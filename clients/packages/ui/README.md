@@ -1,4 +1,4 @@
-# @polar-sh/ui
+# @outception-com/ui
 
 This is the UI library for the Polar project.
 

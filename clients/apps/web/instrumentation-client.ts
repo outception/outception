@@ -1,36 +1,31 @@
-// This file configures the initialization of Sentry on the client.
-// The config you add here will be used whenever a users loads a page in their browser.
-// https://docs.sentry.io/platforms/javascript/guides/nextjs/
+// Browser-side Sentry init.
 
 import { CONFIG } from '@/utils/config'
-import { isInjectedScriptError } from '@/utils/sentry'
 import * as Sentry from '@sentry/nextjs'
 
 Sentry.init({
   dsn: CONFIG.SENTRY_DSN,
   environment: CONFIG.ENVIRONMENT,
 
-  // Add optional integrations for additional features
   integrations: [
     Sentry.httpClientIntegration(),
     Sentry.browserTracingIntegration(),
   ],
 
-  // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
+  // 10% of page loads is enough for latency trends without eating quota.
   tracesSampleRate: 0.1,
 
-  // Enable distributed tracing to API
-  tracePropagationTargets: [/^https:\/\/api\.polar\.sh/],
+  // Propagate trace headers to our API only, never to third-party hosts.
+  // Derived from the configured API base: a hardcoded host here silently
+  // rotted to a domain we do not use and killed client-to-API tracing.
+  tracePropagationTargets: process.env.NEXT_PUBLIC_API_URL
+    ? [process.env.NEXT_PUBLIC_API_URL]
+    : [],
 
-  // Define how likely Replay events are sampled.
-  // This sets the sample rate to be 10%. You may want this to be 100% while
-  // in development and sample at a lower rate in production
+  // Session replay is off: it records reader screens we have no use for.
   replaysSessionSampleRate: 0,
-
-  // Define how likely Replay events are sampled when an error occurs.
   replaysOnErrorSampleRate: 0,
 
-  // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: false,
 
   ignoreErrors: [
@@ -42,23 +37,11 @@ Sentry.init({
     /QuotaExceededError/i,
     /ResizeObserver loop/i,
     /Non-Error promise rejection/i,
-    /Event `Event` \(type=error\) captured as promise rejection/i,
-    /Failed to load Stripe\.js/i,
-    /Failed to connect to MetaMask/i,
-    /__firefox__/,
-    /Java object is gone/i,
-    /Error invoking post: Method not found/i,
-    /analytics\.google\.com/i,
-    /Third-party iframes are not allowed to request payments/i,
   ],
 
   denyUrls: [/extensions\//i, /^chrome:\/\//i, /^moz-extension:\/\//i],
 
   beforeSend: (event) => {
-    if (isInjectedScriptError(event)) {
-      return null
-    }
-
     // Do not flag PostHog errors
     if (
       event.request?.url?.includes('/ingest/flags') ||

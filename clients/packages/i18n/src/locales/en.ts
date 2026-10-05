@@ -1,471 +1,609 @@
 export default {
-  checkout: {
-    footer: {
-      poweredBy: 'Powered by',
-      merchantOfRecord:
-        'This order is processed by our online reseller & Merchant of Record, Polar, who also handles order-related inquiries and returns.',
-      mandateSubscriptionTrial:
-        'By clicking "{buttonLabel}," you authorize Polar Software, Inc., our online reseller and merchant of record, to charge your selected payment method in the amount shown above at the end of your trial period and on each subsequent billing date until you cancel, and agree to the {buyerTermsLink}. You may cancel at any time before the end of your trial to avoid being charged.',
-      mandateSubscription:
-        'By clicking "{buttonLabel}," you authorize Polar Software, Inc., our online reseller and merchant of record, to immediately charge your selected payment method in the amount shown above and to charge the same amount on each subsequent billing date until you cancel, and agree to the {buyerTermsLink}.',
-      mandateOneTime:
-        'By clicking "{buttonLabel}," you authorize Polar Software, Inc., our online reseller and merchant of record, to charge your selected payment method the amount shown above, and agree to the {buyerTermsLink}. This is a one-time charge.',
-      mandateSubscriptionTrialDiscounted: {
-        value:
-          'By clicking "{buttonLabel}," you authorize Polar Software, Inc., our online reseller and merchant of record, to charge your selected payment method the discounted amount shown above at the end of your trial period, and the regular price on each billing date after your discount ends, until you cancel, and agree to the {buyerTermsLink}. You may cancel at any time before the end of your trial to avoid being charged.',
-        _llmContext:
-          'Legal mandate text for a free-trial subscription checkout where a limited-time discount (applied once or for a set number of months) is active, so the first invoice(s) differ from the ongoing price. Nothing is charged at purchase time — the first charge happens at the end of the trial, so do not add words like "immediately" (unlike the no-trial variant). Keep legal terminology precise and consistent with the sibling mandate strings in the target locale, especially the established translation of "merchant of record".',
-      },
-      mandateSubscriptionDiscounted: {
-        value:
-          'By clicking "{buttonLabel}," you authorize Polar Software, Inc., our online reseller and merchant of record, to immediately charge your selected payment method the discounted amount shown above, and the regular price on each billing date after your discount ends, until you cancel, and agree to the {buyerTermsLink}.',
-        _llmContext:
-          'Legal mandate text for a subscription checkout (no trial) where a limited-time discount is active, so the first invoice(s) differ from the ongoing price. Keep legal terminology precise in the target locale.',
-      },
-      buyerTermsLink: 'Buyer Terms',
-    },
-    form: {
-      email: 'Email',
-      cardholderName: 'Cardholder name',
-      purchasingAsBusiness: "I'm purchasing as a business",
-      businessName: 'Business name',
-      billingDetails: 'Business Details',
-      billingAddress: {
-        label: 'Billing address',
-        line1: {
-          value: 'Street address',
-          _llmContext:
-            'The first line of the billing address, typically including street address and number. Adjust to fit the most common format for the target locale.',
-        },
-        line2: {
-          value: 'Apartment or unit number',
-          _llmContext:
-            'The second line of the billing address, typically used for apartment, suite, unit, building, floor, etc. Adjust to fit the most common format for the target locale.',
-        },
-        postalCode: 'Postal code',
-        city: 'City',
-        country: 'Country',
-        state: 'State',
-        province: 'Province',
-        stateProvince: 'State / Province',
-      },
-      taxId: 'Tax ID',
-      discountCode: 'Discount code',
-      addDiscountCode: 'Add discount code',
-      optional: 'Optional',
-      apply: {
-        value: 'Apply',
-        _llmContext: 'Button text for applying a discount code.',
-      },
-      fieldRequired: 'This field is required',
-    },
-    orderSummary: {
-      value: 'Order summary',
-      _llmContext:
-        'Label of the collapsed order summary bar on mobile checkouts. Tapping it expands the product, price breakdown and discount code field.',
-    },
-    pricing: {
-      subtotal: 'Subtotal',
-      taxableAmount: 'Taxable amount',
-      taxes: {
-        value: 'Taxes',
-        _llmContext:
-          'Taxes applied to the order. This is VAT or sales tax. Prefer the specific term used in the target locale over a generic taxes (e.g. TVA in French, BTW in Dutch, etc.)',
-      },
-      inclTax: {
-        value: 'Taxes (included)',
-        _llmContext:
-          'Label for the tax line in the pricing breakdown when tax is already included in the displayed price. Prefer the specific tax term used in the target locale (e.g. TVA (incluse) in French, BTW (inbegrepen) in Dutch, Moms (inkluderad) in Swedish, etc.)',
-      },
-      free: 'Free',
-      payWhatYouWant: {
-        value: 'Pay what you want',
-        _llmContext:
-          'A pricing type where the customer can choose how much to pay.',
-      },
-      total: 'Total',
-      everyInterval: {
-        day: {
-          _mode: 'plural',
-          '=1': 'Daily',
-          '=2': 'Every other day',
-          other: 'Every # days',
-        },
-        week: {
-          _mode: 'plural',
-          '=1': 'Weekly',
-          '=2': 'Every other week',
-          other: 'Every # weeks',
-        },
-        month: {
-          _mode: 'plural',
-          '=1': 'Monthly',
-          '=2': 'Every other month',
-          other: 'Every # months',
-        },
-        year: {
-          _mode: 'plural',
-          '=1': 'Yearly',
-          '=2': 'Every other year',
-          other: 'Every # years',
-        },
-      },
-      additionalMeteredUsage: 'Additional metered usage',
-      meteredChargesMayApply: {
-        value: 'Additional metered charges may apply',
-        _llmContext:
-          'Collapsed toggle label in the checkout pricing breakdown; clicking it reveals the list of usage-based (metered) prices.',
-      },
-      meteredIncluded: {
-        value: '{units} included',
-        _llmContext:
-          'Shown next to a metered price when the product grants included usage credits. {units} is a pre-formatted quantity phrase including the unit noun, e.g. "10,000 tokens", so the sentence reads "10,000 tokens included". The per-unit overage rate is displayed separately on the same row.',
-      },
-      meterUnits: {
-        token: {
-          value: 'tokens',
-          _llmContext:
-            'Plural noun for AI/LLM tokens, used in quantity phrases like "10,000 tokens included".',
-        },
-        scalar: {
-          value: 'units',
-          _llmContext:
-            'Generic plural noun for metered usage units, used in quantity phrases like "10,000 units included".',
-        },
-      },
-      tiers: {
-        from: {
-          value: 'From',
-          _llmContext:
-            'Prefix before the cheapest rate of a tiered usage-based price, e.g. "From $0.05 / unit", meaning the rate shown is the starting one and higher usage is billed differently. Fragment, not a sentence.',
-        },
-        range: {
-          value: '{from}–{to}',
-          _llmContext:
-            'A usage range in the tier table of a metered price on checkout, e.g. "1–1,000". Both values are already-formatted unit counts. Keep it a bare numeric range with no unit noun.',
-        },
-        andAbove: {
-          value: '{from}+',
-          _llmContext:
-            'The final, unbounded usage range in the tier table of a metered price, e.g. "1,001+". {from} is an already-formatted unit count.',
-        },
-        volumeExplainer: {
-          value: 'All usage is billed at the rate for the range it falls in',
-          _llmContext:
-            'Caption under the tier table of a volume-tiered metered price on checkout. It warns that crossing into a higher range reprices the entire usage, not just the part above the bound. Shown for volume tiers only; graduated tiers get no caption.',
-        },
-      },
-      dueToday: {
-        value: 'Due today',
-        _llmContext:
-          'Total row label on free-trial checkouts where nothing is charged until the trial ends; shown next to a zero amount.',
-      },
-      firstPayment: {
-        value: 'First payment',
-        _llmContext:
-          'Total row label in the pricing breakdown when a limited-time discount makes the first payment cheaper than the ongoing recurring price and the subscription starts immediately (no trial); the amount next to it applies to the first payment only.',
-      },
-      totalAfterTrial: {
-        value: 'Total after trial',
-        _llmContext:
-          'Total row label in the pricing breakdown on free-trial checkouts when a limited-time discount makes the first charge cheaper than the ongoing recurring price. Shown next to the date of that first charge, e.g. "Total after trial Oct 31 · $49.50".',
-      },
-      perSeat: 'per seat',
-      basePrice: {
-        value: 'Base price',
-        _llmContext:
-          'Label for the flat, fixed portion of a product that combines a fixed base fee with per-seat pricing. Shown as a line item above the per-seat rows in the checkout pricing breakdown.',
-      },
-      seats: {
-        label: 'Seats',
-        numberOfSeats: 'Number of seats',
-        count: {
-          _mode: 'plural',
-          '=1': '# seat',
-          other: '# seats',
-        },
-        included: {
-          _mode: 'plural',
-          '=1': 'One seat included',
-          other: '# seats included',
-        },
-        range: {
-          value: '{min} - {max} seats',
-          _llmContext:
-            'Shown when a seat-based product has both a minimum and maximum seat count. Displayed as: "5 - 100 seats". Always plural.',
-        },
-        minimum: {
-          value: 'Minimum {min} seats',
-          _llmContext:
-            'Shown when a seat-based product has a minimum seat count but no maximum. The {min} value is always > 1 in this context, so the noun is always plural.',
-        },
-        maximum: {
-          value: 'Maximum {max} seats',
-          _llmContext:
-            'Shown when a seat-based product has a maximum seat count but no minimum constraint. The {max} value can be any number, but the message is always rendered with the plural noun.',
-        },
-        updateFailed: 'Failed to update seats',
-      },
-      perUnit: {
-        value: 'per {unitLabel}',
-        _llmContext:
-          'Suffix after a unit-based price rate. {unitLabel} is the merchant-defined singular noun, or "unit" when unset. Displayed as: "$29 per device".',
-      },
-      units: {
-        label: {
-          value: '{unitLabelPlural}',
-          _llmContext:
-            'Heading on the compact checkout unit selector. {unitLabelPlural} is already title-cased by the client (e.g. "Units", "Devices").',
-        },
-        numberOfUnits: {
-          value: 'Number of {unitLabelPlural}',
-          _llmContext:
-            'Label above the unit quantity stepper. {unitLabelPlural} is the merchant-defined plural noun, or "units" when unset. Displayed as: "Number of devices".',
-        },
-        count: {
-          _mode: 'plural',
-          '=1': '# {unitLabel}',
-          other: '# {unitLabelPlural}',
-        },
-        updateFailed: 'Failed to update units',
-      },
-      discount: {
-        until: {
-          value: 'Until {date}',
-          _llmContext:
-            'Shown next to the discount name to indicate when the discount expires. Displayed as: "Spring Sale (-50%) · Until Apr 23".',
-        },
-      },
-    },
-    trial: {
-      hero: {
-        free: {
-          day: {
-            _mode: 'plural',
-            '=1': '# day free',
-            other: '# days free',
-          },
-          month: {
-            _mode: 'plural',
-            '=1': '# month free',
-            other: '# months free',
-          },
-          year: {
-            _mode: 'plural',
-            '=1': '# year free',
-            other: '# years free',
-          },
-        },
-        intervalSuffix: {
-          day: '/day',
-          week: '/week',
-          month: '/month',
-          year: '/year',
-        },
-        then: {
-          value: 'Then',
-          _llmContext:
-            'Prefix before the recurring price in the trial hero subtitle. Displayed as: "Then <bold>$99.99/year</bold> starting April 5, 2026". The price is a separate bold element.',
-        },
-        startingDate: {
-          value: 'starting {date}',
-          _llmContext:
-            'Suffix after the recurring price when a trial end date is known. Displayed as: "Then $99.99/year starting April 5, 2026". The "Then" prefix and bold price are separate elements.',
-        },
-        freeUntil: {
-          value: 'Free until {date}',
-          _llmContext:
-            'Trial hero subtitle shown when a limited-time discount is active, replacing the recurring-price line (which would be misleading). States when the free trial ends, e.g. "Free until October 31, 2026". The full pricing breakdown appears directly below.',
-        },
-      },
-    },
-    pwywForm: {
-      label: 'Name a fair price',
-      minimum: '{amount} minimum',
-      amountMinimum: 'Amount must be at least {min}',
-      amountFreeOrMinimum: 'Amount must be {zero} or at least {min}',
-    },
-    productSwitcher: {
-      billedRecurring: 'Billed {frequency}',
-      oneTimePurchase: 'One-time purchase',
-      fromPrefix: 'From',
-    },
-    productDescription: {
-      readMore: 'Read more',
-    },
-    benefits: {
-      granting: 'Granting benefits...',
-      requestNewInvite: 'Request new invite',
-      retryIn: {
-        _mode: 'plural',
-        '=1': 'Try again in # second',
-        other: 'Try again in # seconds',
-      },
-      connectNewAccount: 'Connect new account',
-      requestMyInvite: 'Request my invite',
-      github: {
-        connect: 'Connect GitHub account',
-        goTo: 'Go to {repository}',
-        selectAccount: 'Select a GitHub account',
-      },
-      discord: {
-        connect: 'Connect Discord account',
-        open: 'Open Discord',
-        selectAccount: 'Select a Discord account',
-      },
-      slackSharedChannel: {
-        connected: 'Connected to your Slack workspace.',
-        connectedChannel:
-          'Connected to your Slack workspace in channel {channel}.',
-        inviteSent: 'Invite sent to {email}.',
-        channel: 'Channel: {channel}.',
-        openLinkToAccept: 'Open the link to accept in Slack.',
-        acceptFromEmail:
-          'Accept it from the invite email or your Slack Connect requests.',
-        openInvite: 'Open Slack invite',
-        provisioning:
-          'Setting up your Slack channel for {email}... You should receive an invite in your inbox shortly.',
-        setupFailed:
-          "We couldn't set up your Slack channel with {email}. Double-check the email and try again, or reach out to the seller if it keeps failing.",
-        enterEmail:
-          "Enter the email of an admin in your Slack workspace. They'll receive a Slack Connect invite for a private channel.",
-        emailPlaceholder: 'slack-admin@yourcompany.com',
-        tryAgain: 'Try again',
-        requestInvite: 'Request Slack invite',
-      },
-      licenseKey: {
-        copy: 'Copy',
-        copiedToClipboard: 'Copied To Clipboard',
-        copiedToClipboardDescription: 'License Key was copied to clipboard',
-        loading: 'Loading...',
-        status: 'Status',
-        statusGranted: 'Granted',
-        statusRevoked: 'Revoked',
-        statusDisabled: 'Disabled',
-        usage: 'Usage',
-        validations: 'Validations',
-        validatedAt: 'Validated At',
-        neverValidated: 'Never Validated',
-        expiryDate: 'Expiry Date',
-        noExpiry: 'No Expiry',
-        activations: 'Activations',
-        activationDeleted: 'License Key Activation Deleted',
-        activationDeletedDescription: 'Activation deleted successfully',
-        activationDeactivationFailed: 'Activation Deactivation Failed',
-      },
-    },
-    confirmation: {
-      confirmPayment: 'Confirm payment',
-      processingTitle: 'We are processing your order',
-      successTitle: 'Thank you for your order!',
-      failedTitle: 'A problem occurred while processing your order',
-      processingDescription: 'Please wait while we confirm your payment.',
-      successDescription: 'You now have access to {product}.',
-      failedDescription: 'Please try again or contact support.',
-    },
-    loading: {
-      processingOrder: 'Processing order...',
-      processingPayment: 'Processing payment',
-      paymentSuccessful: 'Payment successful! Getting your products ready...',
-      confirmationTokenFailed:
-        'Failed to create confirmation token, please try again later.',
-      paymentNotCompleted: 'Payment was not completed. Please try again.',
-    },
-    cta: {
-      startTrial: 'Start trial',
-      subscribeNow: 'Subscribe now',
-      payNow: 'Pay now',
-      getFree: 'Get for free',
-      paymentsUnavailable: 'Payments are currently unavailable',
-    },
-    trialUnavailable: {
-      title: 'No free trial for this purchase',
-      description:
-        "You've already used a free trial for this product, so you'll be charged today. Continue below to complete your purchase.",
-    },
-  },
   intervals: {
     short: {
-      day: {
-        _mode: 'plural',
-        '=1': 'dy',
-        other: '# dy',
-      },
-      week: {
-        _mode: 'plural',
-        '=1': 'wk',
-        other: '# wk',
-      },
-      month: {
-        _mode: 'plural',
-        '=1': 'mo',
-        other: '# mo',
-      },
-      year: {
-        _mode: 'plural',
-        '=1': 'yr',
-        other: '# yr',
-      },
+      day: 'dy',
+      week: 'wk',
+      month: 'mo',
+      year: 'yr',
     },
-  },
-  benefitTypes: {
-    license_keys: 'License keys',
-    github_repository: 'GitHub repository access',
-    discord: 'Discord invite',
-    downloadables: 'File downloads',
-    custom: 'Custom',
-    meter_credit: 'Meter credits',
-    feature_flag: 'Feature flag',
-    slack_shared_channel: 'Shared Slack channel',
   },
   ordinal: {
-    zero: {
-      value: '',
-      _llmContext:
-        'Ordinal suffix for the "zero" category of Intl.PluralRules (type: ordinal). Appended to a number to form ordinals. Provide the suffix only — the number is prepended automatically. For locales where all ordinals use the same suffix (e.g. German "1.", "2."), set every key to the same value. Not used in English.',
+    zero: '',
+    one: 'st',
+    two: 'nd',
+    few: 'rd',
+    many: '',
+    other: 'th',
+  },
+  news: {
+    tabs: {
+      yourCards: 'Your stack',
+      more: 'Cards',
     },
-    one: {
-      value: 'st',
-      _llmContext:
-        'Ordinal suffix for the "one" category of Intl.PluralRules (type: ordinal). Appended to a number to form ordinals (e.g. 1st, 21st, 31st in English). Provide the suffix only — the number is prepended automatically. For locales where all ordinals use the same suffix (e.g. German "1.", "2."), set every key to the same value.',
+    search: {
+      placeholder: 'Search sources…',
+      // The heading over matching PUBLICATIONS in headline search. Deliberately
+      // not the nav label: that reads "Cards", which would be nonsense over
+      // a list of the sources a query matched.
+      sourcesHeading: 'Sources',
+      all: 'All',
+      empty: 'No sources found.',
+      selectAll: 'Select all',
+      deselectAll: 'Deselect all',
     },
-    two: {
-      value: 'nd',
-      _llmContext:
-        'Ordinal suffix for the "two" category of Intl.PluralRules (type: ordinal). Appended to a number to form ordinals (e.g. 2nd, 22nd in English). Provide the suffix only — the number is prepended automatically.',
+    templates: {
+      chip: 'Starters',
+      title: 'Starter cards',
+      subtitle: 'Follow a whole curated set in one tap.',
+      followAll: 'Use this starter ({count})',
+      inCards: 'In your cards ({count})',
+      followed: 'Added {count} sources to your cards',
+      sourceCount: '{count} sources',
+      names: {
+        developer: 'Developer',
+        investor: 'Investor',
+        'news-junkie': 'News Junkie',
+        'sports-fan': 'Sports Fan',
+        'movie-buff': 'Movie Buff',
+        'music-lover': 'Music Lover',
+        gamer: 'Gamer',
+        'science-nerd': 'Science Nerd',
+        'foodie-traveler': 'Foodie & Traveler',
+        'comedy-fun': 'Comedy & Fun',
+        'fitness-buff': 'Fitness Buff',
+        fashionista: 'Fashionista',
+        petrolhead: 'Petrolhead',
+        'crypto-trader': 'Crypto Trader',
+        'space-explorer': 'Space Explorer',
+        'ai-insider': 'AI Insider',
+        'true-crime': 'True Crime',
+        'history-buff': 'History Buff',
+        bookworm: 'Bookworm',
+        'pop-culture': 'Pop Culture',
+        'esports-fan': 'Esports Fan',
+        outdoors: 'Outdoors',
+        'anime-manga': 'Anime & Manga',
+        'football-fan': 'Football Fan',
+        'cricket-fan': 'Cricket Fan',
+        'fight-fan': 'Fight Fan',
+        'deal-hunter': 'Deal Hunter',
+        'personal-finance': 'Personal Finance',
+        founder: 'Founder',
+        'home-garden': 'Home & Garden',
+        academia: 'Students & Academia',
+        researcher: 'Scientists & Research',
+        'clean-energy': 'Clean Energy',
+        photographer: 'Photographer',
+        'my-country': 'My Country',
+      },
+      blurbs: {
+        developer: 'GitHub, Hacker News, Product Hunt and the tech press.',
+        investor: 'Markets, crypto and the money movers.',
+        'news-junkie': 'The big newsrooms of the world, in one sweep.',
+        'sports-fan': 'Your leagues, tables and the best sports talk.',
+        'movie-buff': 'Screens big and small: releases, buzz and banter.',
+        'music-lover': 'New releases and the loudest music talk.',
+        gamer: 'New games, most-played charts and gaming voices.',
+        'science-nerd': 'Discoveries, explainers and long conversations.',
+        'foodie-traveler': 'Recipes, street food and cheap flights.',
+        'comedy-fun': 'A daily laugh: jokes, quotes and chaos.',
+        'fitness-buff': 'Training, nutrition and living well.',
+        fashionista: 'Runways, style, sneakers and skincare.',
+        petrolhead: 'New metal, EVs and life behind the wheel.',
+        'crypto-trader': 'Coins, chains and the market pulse.',
+        'space-explorer': 'Launches, missions and the night sky.',
+        'ai-insider': 'The labs, the models and the frontier.',
+        'true-crime': 'Cases, mysteries and courtroom drama.',
+        'history-buff': 'Empires, digs and the past brought alive.',
+        bookworm: 'New releases, reviews and reading lists.',
+        'pop-culture': 'Celebrity, red carpets and royal gossip.',
+        'esports-fan': 'Pro gaming: teams, majors and the meta.',
+        outdoors: 'Trails, parks and the wild outside.',
+        'anime-manga': 'New seasons, manga drops and fan culture.',
+        'football-fan': 'The beautiful game: tables, transfers and talk.',
+        'cricket-fan': 'Tests, T20 and every innings that matters.',
+        'fight-fan': 'Fight cards, results and the combat world.',
+        'deal-hunter': 'Price drops, brand sales and smart buys.',
+        'personal-finance': 'Budgets, saving and money that works for you.',
+        founder: 'Startups, funding rounds and builder stories.',
+        'home-garden': 'Interiors, DIY and things that grow.',
+        academia: 'Campus life, scholarships and smarter studying.',
+        researcher: 'Journals, discoveries and the research frontier.',
+        'clean-energy': 'Fusion, hydrogen and the power of tomorrow.',
+        photographer: 'Gear, technique and pictures worth studying.',
+        'my-country': 'Everything local: news, city, property and deals.',
+      },
     },
-    few: {
-      value: 'rd',
-      _llmContext:
-        'Ordinal suffix for the "few" category of Intl.PluralRules (type: ordinal). Appended to a number to form ordinals (e.g. 3rd, 23rd in English). Provide the suffix only — the number is prepended automatically.',
+    columns: {
+      news: 'News',
+      world: 'World',
+      sports: 'Sports',
+      finance: 'Finance',
+      science: 'Science',
+      entertainment: 'Entertainment',
+      tech: 'Tech',
+      social: 'Social',
+      betting: 'Betting',
+      weather: 'Weather',
+      lifestyle: 'Lifestyle',
+      food: 'Food',
+      travel: 'Travel',
+      culture: 'Culture',
+      faith: 'Faith',
+      music: 'Music',
+      gaming: 'Gaming',
+      movies: 'Movies',
+      tv: 'TV',
+      anime: 'Anime',
+      books: 'Books',
+      gadgets: 'Gadgets',
+      cars: 'Cars',
+      podcasts: 'Podcasts',
+      cities: 'Local',
+      deals: 'Deals',
+      property: 'Property',
     },
-    many: {
-      value: '',
-      _llmContext:
-        'Ordinal suffix for the "many" category of Intl.PluralRules (type: ordinal). Appended to a number to form ordinals. Provide the suffix only — the number is prepended automatically. Not used in English.',
+    mobile: {
+      headlines: 'Headlines',
+      logout: 'Logout',
+      back: 'Back',
+      noResults:
+        'No results for “{query}”. Headline search only covers sources the feed has recently shown.',
+      settings: 'Settings',
+      signIn: 'Sign in',
+      promoteTagline: 'Every headline, one wall',
+      signInSubtitle: 'Sign in to continue',
+      loadingHeadlines: 'Loading headlines',
+      searchFailed:
+        "Couldn't search right now. Check your connection and try again.",
+      adPrivacy: 'Ad privacy settings',
+      retry: 'Try again',
+      updateBanner: {
+        body: 'Version {version} is out. Update to get the newest cards and fixes.',
+        update: 'Update',
+        later: 'Later',
+      },
     },
-    other: {
-      value: 'th',
-      _llmContext:
-        'Ordinal suffix for the "other" (default/fallback) category of Intl.PluralRules (type: ordinal). Appended to a number to form ordinals (e.g. 4th, 5th, 11th in English). Provide the suffix only — the number is prepended automatically.',
+    promoted: {
+      kicker: 'Promoted',
+      visit: 'Visit site',
+      toggleSound: 'Toggle sound',
+    },
+    cards: {
+      emptyHint: 'Your stack is empty. Open “Cards” to follow publications.',
+      browse: 'Cards',
+      changeEdition: 'Change edition',
+      previous: 'Previous source',
+      next: 'Next source',
+      searchTitle: 'Search sources',
+    },
+    cube: {
+      name: 'The Cube',
+      kicker: 'Puzzle break',
+    },
+    crossword: {
+      name: 'NYT Crossword',
+      kicker: 'Daily puzzle',
+    },
+    sudoku: {
+      name: 'Sudoku',
+      kicker: 'Daily puzzle',
+    },
+    solitaire: {
+      name: 'Solitaire',
+      kicker: 'Daily deal',
+    },
+    summary: {
+      title: 'AI summary',
+      loading: 'Summarizing…',
+      readFull: 'Full article',
+      slow: 'Taking longer than usual. Open the article instead.',
+      fromPublisher: 'From {source}',
+      publisherByline:
+        'The publisher’s own summary. Open the article for the full story.',
+      failed:
+        'No summary is available for this article. You can read it at the source below.',
+      byline:
+        'Summarized by AI. It can miss nuance, so check the source for the full story.',
+    },
+    stores: {
+      available: 'Available now on',
+      appStore: 'App Store',
+      googlePlay: 'Google Play',
+      qrTitle: 'Get the iPhone app',
+      qrHint: 'Scan with your phone camera to open the App Store',
+      betaTitle: 'Join the Android beta',
+      betaBody:
+        'Outception for Android is in closed testing. Three quick steps and the app is yours before everyone else:',
+      betaStep1: 'Join the testers group',
+      betaStep2: 'Opt in as a tester (wait a couple of minutes after step 1)',
+      betaStep3: 'Install from Google Play',
+      betaStep3Note: 'The install link only works after step 2.',
+      betaAsk:
+        'One favor: open the app a few times a week. Active testers are what unlock our public launch.',
+    },
+    androidBeta: {
+      banner: 'Outception for Android is in beta.',
+      cta: 'Join free',
+      dismiss: 'Dismiss',
+    },
+    menu: {
+      open: 'Open article',
+      share: 'Share',
+      listen: 'Listen',
+      stopListening: 'Stop listening',
+      copyLink: 'Copy link',
+      copyHeadline: 'Copy headline',
+      muteSource: 'Hide {source}',
+      muteWord: 'Mute a word…',
+      mutedWords: 'Muted words',
+      mutedWordsHint: 'Headlines containing these words are hidden.',
+      addWordPlaceholder: 'Mute a word or phrase…',
+      copied: 'Copied',
+      cancel: 'Cancel',
+    },
+    quickActions: {
+      cards: 'Your stack',
+      sources: 'Cards',
+      search: 'Search headlines',
+    },
+    caughtUp: {
+      title: 'You’re all caught up',
+      body: 'That’s everything from your sources for now. New headlines land here as they happen.',
+      stats: '{sources} sources on your wall',
+    },
+    card: {
+      updated: 'updated',
+      failed: 'failed to load',
+      openInBrowser: 'Open in browser',
+      loading: 'loading…',
+      noHeadlines: 'No headlines right now.',
+    },
+    follow: {
+      unfollow: '✕ Unfollow',
+    },
+    footer: '© Outception 2026',
+    privacy: 'Privacy',
+    terms: 'Terms',
+    share: {
+      label: 'Share',
+      copied: 'Link copied',
+      text: '{source} on Outception',
+      ogSubtitle: 'Live on Outception',
     },
   },
-  embedPaymentMethod: {
-    title: 'Add payment method',
-    close: {
-      value: 'Close',
-      _llmContext:
-        'aria-label for the close (X) button on the embedded payment method modal.',
+  auth: {
+    welcome: 'Welcome to Outception',
+    tagline: 'Live news, every topic',
+    or: 'or',
+    lastUsed: 'Last used',
+    google: 'Sign in with Google',
+    googleSignup: 'Sign up with Google',
+    apple: 'Sign in with Apple',
+    appleSignup: 'Sign up with Apple',
+    microsoft: 'Sign in with Microsoft',
+    microsoftSignup: 'Sign up with Microsoft',
+    emailPlaceholder: 'Email',
+    email: 'Sign in with email',
+    emailSignup: 'Sign up with email',
+    failedTitle: 'Sign in failed',
+    failedBody: 'Could not start authentication session. Please try again.',
+    unexpectedError: 'Something went wrong. Try again.',
+  },
+  settings: {
+    preferences: 'Preferences',
+    developers: 'Developers',
+    developersDesc: 'Manage access tokens to authenticate with the API',
+    tokens: {
+      name: 'Name',
+      namePlaceholder: 'E.g app-production',
+      nameRequired: 'A name is required',
+      expiration: 'Expiration',
+      expirationPlaceholder: 'Select lifetime of token',
+      expirationRequired: 'You need to set an expiration setting',
+      noExpiration: 'No expiration',
+      day: '{days} day',
+      days: '{days} days',
+      scopes: 'Scopes',
+      selectAll: 'Select all',
+      unselectAll: 'Unselect all',
+      create: 'Create token',
+      createAccess: 'Create Access Token',
+      createTitle: 'Create Organization Token',
+      createButton: 'Create Token',
+      update: 'Update',
+      updateTitle: 'Update Organization Access Token',
+      updateButton: 'Update organization access token',
+      revoke: 'Revoke',
+      revokeTitle: 'Revoke Access Token',
+      revokeDesc: 'This will permanently delete your access token.',
+      empty: "You don't have any active organization access tokens.",
+      expiredOn: 'Expired on',
+      expiresOn: 'Expires on',
+      neverExpires: 'Never expires',
+      lastUsedOn: 'Last used on',
+      neverUsed: 'Never used',
+      copySafe:
+        "Copy the access token and save it somewhere safe. You won't be able to see it again.",
+      copied: 'Copied to clipboard',
+      updated: 'Access token updated',
+      updatedDesc: 'Access token {name} was updated successfully',
+      deleted: 'Access token deleted',
+      deletedDesc: 'Access token {name} was deleted successfully',
+      deleteError: 'Could not delete access token',
+      unknownError: 'Unknown error',
     },
-    submit: 'Add payment method',
-    processing: 'Adding payment method…',
-    fallbackError: 'Something went wrong. Please try again.',
-    errors: {
-      invalidRequest: 'Missing required parameters.',
-      unauthorized: 'Session expired.',
-      processingFailed:
-        'Could not process the payment method. Please try again.',
-      unknown: 'Something went wrong.',
+  },
+  errors: {
+    permissionTitle: 'Insufficient Permissions',
+    genericTitle: 'Something Went Wrong',
+    permissionMessage:
+      'You have insufficient permissions to access the resource. Authenticate to gain the necessary permissions.',
+    genericMessage: 'Logout & re-authenticate to try again',
+    authenticate: 'Authenticate',
+    logout: 'Logout',
+    crashTitle: 'Something went wrong',
+    crashRetry: 'Try again',
+    close: 'Close',
+  },
+  cookies: {
+    body: 'We use cookies to understand how you use the site. Declining turns off analytics cookies.',
+    accept: 'Accept',
+    decline: 'Decline',
+    managePreferences: 'Manage preferences',
+  },
+  meta: {
+    login: 'Log in to Outception',
+    overview: 'Overview',
+    news: 'News Wall',
+    settings: 'Settings',
+    preferences: 'Preferences',
+    developer: 'Developer',
+    backupCode: 'Enter backup code',
+    verificationCode: 'Enter verification code',
+    otpCode: 'Enter OTP code',
+  },
+  launches: {
+    cardName: 'Products of the day',
+    mine: {
+      title: 'Your products',
+      empty: 'Nothing submitted yet.',
+      submit: 'Submit a product',
+      withdraw: 'Withdraw',
+      state: {
+        submitted: 'Waiting for review',
+        approved: 'Approved for {{day}}',
+        live: 'Live today',
+        ended: 'Shown on {{day}}',
+        rejected: 'Not listed',
+        withdrawn: 'Withdrawn',
+      },
+    },
+    submit: {
+      title: 'Submit a product',
+      intro:
+        'Five products a day, chosen by hand. Tell us what it is and where it lives; the founder reviews every submission.',
+      name: 'Name',
+      tagline: 'Tagline',
+      url: 'Link',
+      logoUrl: 'Logo image link (optional)',
+      kicker: 'Kind',
+      description: 'One-line description',
+      contactEmail: 'Contact email',
+      preferredDay: 'Preferred day (optional)',
+      send: 'Send for review',
+      sent: 'Sent. You will hear back by email.',
+      failed: 'That did not go through. Check the link and try again.',
+    },
+    review: {
+      title: 'Review queue',
+      empty: 'The queue is empty.',
+      approve: 'Approve into a day',
+      reject: 'Reject',
+      edit: 'Edit copy',
+      featured: 'Featured second line',
+      day: 'Day',
+      slots: '{{taken}} of 5 taken',
+      note: 'Note to the submitter',
+      preview: 'As readers will see it',
+    },
+    archive: {
+      title: 'Products of the day',
+      intro: 'Every day, five products chosen by hand. The house line first.',
+      empty: 'Nothing listed yet.',
+    },
+  },
+  account: {
+    sections: {
+      personal: 'Personal Information',
+      general: 'General',
+      auth: 'Authentication Methods',
+      twoFactor: 'Two-Factor Authentication',
+      danger: 'Danger Zone',
+      dangerDesc: 'Irreversible actions for your account',
+    },
+    theme: {
+      title: 'Theme',
+      desc: "Override your browser's preferred theme settings",
+      system: 'System',
+      light: 'Light',
+      dark: 'Dark',
+    },
+    personal: {
+      firstName: 'First Name',
+      lastName: 'Last Name',
+      dob: 'Date of Birth',
+      month: 'Month',
+      day: 'Day',
+      year: 'Year',
+      save: 'Save',
+      saving: 'Saving...',
+      updated: 'Updated',
+      updatedDesc: 'Your personal information has been saved.',
+      updateFailed: 'Update Failed',
+      updateFailedDesc: 'An error occurred while updating your information.',
+    },
+    authMethods: {
+      connectMicrosoft: 'Connect Microsoft',
+      microsoftConnected: 'You can sign in with your Microsoft account.',
+      microsoftConnect: 'Sync your profile and get a better experience.',
+      connectGoogle: 'Connect Google',
+      googleConnected: 'You can sign in with your Google account.',
+      googleConnect: 'Link your Google account for faster login.',
+      disconnect: 'Disconnect',
+      disconnectError:
+        "Couldn't disconnect. Verify your email or connect another login method first.",
+      connect: 'Connect',
+      changeEmail: 'Change Email',
+      verificationSent: 'A verification email was sent to this address.',
+      emailUpdated: 'Your email has been updated!',
+      emailHint: 'You can sign in with OTP codes sent to your email.',
+      newEmail: 'New email',
+      updateEmail: 'Update',
+      cancel: 'Cancel',
+    },
+    twoFactor: {
+      authenticatorApp: 'Authenticator App',
+      authenticatorOn: "You're using an authenticator app to sign in securely.",
+      authenticatorOff: 'Add an extra layer of security when you sign in.',
+      disable: 'Disable',
+      setUp: 'Set Up',
+      backupCodes: 'Backup Codes',
+      remaining: '{count} remaining',
+      backupCodesHint: 'Generate backup codes for emergency access.',
+      regenerate: 'Regenerate',
+      generate: 'Generate',
+      error: 'Error',
+      disabled: 'Two-factor authentication disabled',
+      disableTitle: 'Disable Authenticator App?',
+      disableDesc:
+        "You'll no longer be asked for a code when you sign in, and your backup codes will stop working. You can turn it back on anytime.",
+    },
+    danger: {
+      deleteAccount: 'Delete Account',
+      deleteAccountDesc:
+        'Permanently delete your account and all associated data. This action cannot be undone.',
+      delete: 'Delete',
+      confirmDesc:
+        'Are you sure you want to delete your account? This action cannot be undone.',
+      whenYouDelete: 'When you delete your account:',
+      bulletEmail: 'Your email and personal data will be anonymized',
+      bulletOauth: 'Your OAuth connections will be deleted',
+      bulletOrgs:
+        'All your organizations must be deleted before your account can be removed',
+      deletionFailed: 'Deletion Failed',
+      deletionFailedDesc:
+        'An error occurred while trying to delete your account.',
+      accountDeleted: 'Account Deleted',
+      accountDeletedDesc: 'Your account has been successfully deleted.',
+      deletionBlocked: 'Deletion Blocked',
+      deletionBlockedDesc:
+        'You must delete all your organizations before deleting your account.',
+      blockingOrgs: 'Blocking organizations: {orgs}.',
+    },
+  },
+  legal: {
+    lastUpdated: 'Last updated: {date}',
+    privacy: {
+      title: 'Privacy Policy',
+      intro:
+        'Outception (“we”, “us”) operates the Outception news wall - a website and mobile app that aggregates headlines from public news sources and links you out to the original publishers. This policy explains what personal data we process, why, and the choices you have. It is written for compliance with the EU/UK General Data Protection Regulation (GDPR). We are based in Ireland; for privacy questions contact us at {email}.',
+      collect: {
+        title: 'Data we collect',
+        lead: 'We collect the following, depending on how you use Outception:',
+        preferencesLabel: 'Preferences',
+        preferences:
+          'the news sources you follow and your cards and theme settings. These are stored on your device.',
+        deviceLabel: 'Device & usage data',
+        device:
+          'IP address, device and app type, app version, and a randomly-generated identifier used to distinguish sessions. We derive an approximate country from your IP to seed your national cards and show local weather.',
+        locationLabel: 'Precise location',
+        location:
+          'only if you grant location permission, and only to fetch weather for your area. You can deny or revoke this at any time in your device settings.',
+        diagnosticsLabel: 'Diagnostics',
+        diagnostics:
+          'crash reports and error logs to keep the service working.',
+        noAccount:
+          'Outception works without an account - we do not offer sign-in, ask for payment information, or knowingly collect data from children under 16.',
+      },
+      advertising: {
+        title: 'Advertising',
+        body: 'Outception does not serve advertising and does not use advertising networks, ad cookies, or device advertising identifiers.',
+      },
+      analytics: {
+        title: 'Analytics',
+        body: 'To understand how Outception is used and improve it, we use product-analytics and error-monitoring tools that may set identifiers and process usage and device data on our behalf: PostHog and Sentry.',
+      },
+      why: {
+        title: 'Why we process your data',
+        consentLabel: 'Consent',
+        consent: 'for analytics and precise location.',
+        legitimateLabel: 'Legitimate interests',
+        legitimate: 'to keep the service secure, functional, and free.',
+      },
+      sharing: {
+        title: 'Sharing your data',
+        body: 'We do not sell your personal data. We share it only with the service providers that make Outception work - our EU hosting provider, Google (analytics), PostHog, and Sentry - each acting under contract. When you tap a headline you leave Outception for the publisher’s own site, which has its own privacy practices we don’t control.',
+      },
+      retention: {
+        title: 'Retention & your rights',
+        body: 'Because Outception works without an account, your preferences stay on your device - clear them any time in your app settings. Under the GDPR you can request access to, correction, or deletion of any personal data our providers process, object to or restrict processing, withdraw consent, and request a copy. Contact us at {email}. You may also complain to your local data-protection authority (in Ireland, the Data Protection Commission).',
+      },
+      changes: {
+        title: 'Changes',
+        body: 'We may update this policy from time to time. We’ll revise the “last updated” date above and, for material changes, provide a more prominent notice.',
+      },
+      contact: {
+        title: 'Contact',
+        body: 'Questions about this policy? Email {email}.',
+      },
+    },
+    terms: {
+      title: 'Terms of Service',
+      intro:
+        'These terms govern your use of Outception (“we”, “us”) - a website and mobile app that aggregates headlines from public news sources and links you out to the original publishers. By using Outception, you agree to these terms. If you do not agree, please do not use the service. We are based in Ireland.',
+      service: {
+        title: 'The service',
+        body: 'Outception is a live news wall. We collect and display headlines and links from third-party sources, organised by topic, and send you to the publisher’s own site or app to read the full story. We do not host, author, or claim ownership of that content. Reading the wall is free and requires no account.',
+      },
+      use: {
+        title: 'Acceptable use',
+        lead: 'You agree not to:',
+        law: 'use the service in a way that breaks any law or infringes someone else’s rights;',
+        disrupt:
+          'attempt to disrupt, overload, or gain unauthorised access to the service or its infrastructure;',
+        scrape:
+          'scrape, resell, or systematically copy the service or its aggregated content except through an API we expressly provide, subject to its terms;',
+        security: 'interfere with or attempt to circumvent security features.',
+      },
+      thirdParty: {
+        title: 'Third-party content and links',
+        body: 'Headlines, article text, images, and trademarks shown on the wall belong to their respective publishers and rights holders. Links to third-party sites are provided for convenience; we are not responsible for the content, accuracy, or practices of those sites, and your use of them is governed by their own terms.',
+      },
+      ip: {
+        title: 'Our intellectual property',
+        body: 'The Outception name, logo, design, and software are ours or our licensors’ and are protected by intellectual-property laws. These terms grant you a limited, personal, non-exclusive, revocable licence to use the service; they do not transfer any ownership. The application source is released separately under the Apache License 2.0 as stated in the project repository.',
+      },
+      disclaimers: {
+        title: 'Disclaimers',
+        body: 'The service is provided “as is” and “as available”, without warranties of any kind, whether express or implied, including fitness for a particular purpose and non-infringement. We do not warrant that headlines are complete, accurate, current, or available without interruption.',
+      },
+      liability: {
+        title: 'Limitation of liability',
+        body: 'To the fullest extent permitted by law, Outception is not liable for any indirect, incidental, or consequential damages, or for loss of data, profits, or goodwill, arising from your use of or inability to use the service. Nothing in these terms limits liability that cannot be limited under applicable law.',
+      },
+      changes: {
+        title: 'Changes',
+        body: 'We may update the service or these terms from time to time. When we make material changes, we will update the “last updated” date above. Continuing to use Outception after changes take effect means you accept the revised terms.',
+      },
+      law: {
+        title: 'Governing law',
+        body: 'These terms are governed by the laws of Ireland, and the courts of Ireland have jurisdiction over any dispute, without prejudice to any mandatory consumer-protection rights you have where you live.',
+      },
+      contact: {
+        title: 'Contact',
+        body: 'Questions about these terms? Email us at {email}.',
+      },
     },
   },
 } as const

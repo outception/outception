@@ -22,6 +22,7 @@ export const textWrapStyles = stylex.create({
 })
 
 export const textUtilityStyles = stylex.create({
+  serif: { fontFamily: fontFamilies.serif },
   monospace: { fontFamily: fontFamilies.mono },
   tabularNums: { fontVariantNumeric: 'tabular-nums' },
   lineThrough: { textDecoration: 'line-through' },

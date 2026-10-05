@@ -55,7 +55,9 @@ class AuthenticationSession(Schema):
 
 class EmailOTPRequest(Schema):
     email: EmailStr
-    turnstile_token: str = Field(alias="cf-turnstile-response")
+    # The bot check runs only where a secret is configured; the live tree
+    # ships without one, so the field is optional on the wire.
+    turnstile_token: str | None = Field(default=None, alias="cf-turnstile-response")
 
 
 class EmailOTPVerify(Schema):

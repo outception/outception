@@ -1,8 +1,0 @@
-{
-  "extends": "@polar-sh/typescript-config/react-library.json",
-  "compilerOptions": {
-    "outDir": "dist"
-  },
-  "include": ["src", "vitest.setup.ts", "vitest.d.ts"],
-  "exclude": ["node_modules", "dist"]
-}

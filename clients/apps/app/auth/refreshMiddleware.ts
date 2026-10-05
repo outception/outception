@@ -1,4 +1,4 @@
-import type { Middleware } from '@polar-sh/client'
+import type { Middleware } from '@outception-com/client'
 import {
   getRefresherAccessToken,
   hasRefreshToken,

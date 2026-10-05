@@ -9,8 +9,8 @@ const segmentedControlVariants = cva('flex items-center gap-x-1 p-1', {
       lg: 'rounded-full',
     },
     variant: {
-      default: 'dark:bg-polar-800 bg-gray-50',
-      tabs: 'dark:bg-polar-950 w-full bg-gray-100',
+      default: 'dark:bg-outception-800 bg-gray-50',
+      tabs: 'dark:bg-outception-950 w-full bg-gray-100',
     },
   },
   defaultVariants: {
@@ -35,7 +35,7 @@ const segmentedControlItemVariants = cva(
       active: {
         true: '',
         false:
-          'dark:text-polar-500 text-gray-500 hover:text-gray-900 dark:hover:text-white',
+          'dark:text-outception-500 text-gray-500 hover:text-gray-900 dark:hover:text-white',
       },
     },
     compoundVariants: [
@@ -43,13 +43,13 @@ const segmentedControlItemVariants = cva(
         variant: 'default',
         active: true,
         className:
-          'dark:bg-polar-700 bg-white text-black shadow-lg dark:text-white',
+          'dark:bg-outception-700 bg-white text-black shadow-lg dark:text-white',
       },
       {
         variant: 'tabs',
         active: true,
         className:
-          'dark:bg-polar-800 bg-white text-black shadow-lg dark:text-white',
+          'dark:bg-outception-800 bg-white text-black shadow-lg dark:text-white',
       },
     ],
     defaultVariants: {

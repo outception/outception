@@ -12,7 +12,7 @@ import {
   useTransactionsSummary,
 } from '@/hooks/polar/finance'
 import { OrganizationContext } from '@/providers/OrganizationProvider'
-import { formatCurrency } from '@polar-sh/currency'
+import { formatCurrency } from '@outception-com/currency'
 import { Stack, useRouter } from 'expo-router'
 import { useCallback, useContext } from 'react'
 import { RefreshControl, ScrollView } from 'react-native'

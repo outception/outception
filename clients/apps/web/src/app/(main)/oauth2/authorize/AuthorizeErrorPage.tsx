@@ -1,8 +1,7 @@
-'use client'
-
-import { Alert } from '@polar-sh/orbit'
-import { useRouter } from 'next/navigation'
+import Alert from '@outception-com/ui/components/atoms/Alert'
+import { Button } from '@outception-com/orbit/Button'
 import SharedLayout from './components/SharedLayout'
+import { safeExternalHref } from '@/utils/news'
 
 const AuthorizeErrorPage = ({
   error,
@@ -13,27 +12,21 @@ const AuthorizeErrorPage = ({
   error_description?: string
   error_uri?: string
 }) => {
-  const router = useRouter()
-
   return (
-    <SharedLayout title="Authorization failed">
-      <Alert
-        variant="danger"
-        title="An error occurred"
-        description={error_description ?? error}
-        actions={
-          error_uri
-            ? [
-                {
-                  text: 'Read more',
-                  onClick: () => {
-                    router.push(error_uri)
-                  },
-                },
-              ]
-            : undefined
-        }
-      />
+    <SharedLayout>
+      <Alert color="red">
+        <div className="flex flex-col items-center gap-2 p-2 text-center">
+          <div className="text-base font-medium">An error occured</div>
+          <div className="text-sm">
+            {error_description ? error_description : error}
+          </div>
+          {safeExternalHref(error_uri) && (
+            <a href={safeExternalHref(error_uri)}>
+              <Button variant="default">Read more</Button>
+            </a>
+          )}
+        </div>
+      </Alert>
     </SharedLayout>
   )
 }

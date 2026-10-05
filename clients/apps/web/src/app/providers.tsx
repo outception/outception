@@ -1,61 +1,23 @@
 'use client'
 
-import { cookieConsentGiven } from '@/components/Privacy/CookieConsent'
-import { DISTINCT_ID_COOKIE } from '@/experiments/constants'
+import { ThemeColorMeta } from '@/components/ThemeColorMeta'
 import { getQueryClient } from '@/utils/api/query'
-import { CONFIG } from '@/utils/config'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { ThemeProvider } from 'next-themes'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
-import posthog from 'posthog-js'
-import { PostHogProvider } from 'posthog-js/react'
 import { PropsWithChildren } from 'react'
 
-if (typeof window !== 'undefined' && CONFIG.POSTHOG_TOKEN) {
-  const distinctId = document.cookie
-    .split('; ')
-    .find((row) => row.startsWith(`${DISTINCT_ID_COOKIE}=`))
-    ?.split('=')[1]
+const FORCED_DARK_PREFIXES = ['/legal']
 
-  posthog.init(CONFIG.POSTHOG_TOKEN, {
-    ui_host: 'https://us.i.posthog.com',
-    api_host: '/ingest',
-    defaults: '2025-05-24', // enables automatic pageview tracking
-    persistence: cookieConsentGiven() === 'yes' ? 'localStorage' : 'memory',
-    bootstrap: distinctId ? { distinctID: distinctId } : undefined,
-    disable_surveys: true,
-  })
-}
-
-export function PolarPostHogProvider({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return <PostHogProvider client={posthog}>{children}</PostHogProvider>
-}
-
-const FORCED_DARK_PREFIXES = [
-  '/features',
-  '/integrate',
-  '/customers',
-  '/blog',
-  '/resources',
-  '/company',
-  '/startup-program',
-  '/downloads',
-  '/legal',
-  '/midday/portal',
-]
-
+// Note: the home page ('/') is intentionally NOT forced - the landing logo
+// toggles light/dark, and that choice must persist across every page.
 const isForcedDarkPath = (pathname: string): boolean =>
-  pathname === '/' ||
   FORCED_DARK_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   )
 
-export function PolarThemeProvider({
+export function OutceptionThemeProvider({
   children,
   forceTheme,
 }: {
@@ -75,12 +37,13 @@ export function PolarThemeProvider({
       attribute="class"
       forcedTheme={theme ?? forcedTheme}
     >
+      <ThemeColorMeta />
       {children}
     </ThemeProvider>
   )
 }
 
-export function PolarQueryClientProvider({
+export function OutceptionQueryClientProvider({
   children,
 }: {
   children: React.ReactNode
@@ -92,6 +55,6 @@ export function PolarQueryClientProvider({
   )
 }
 
-export function PolarNuqsProvider({ children }: PropsWithChildren) {
+export function OutceptionNuqsProvider({ children }: PropsWithChildren) {
   return <NuqsAdapter>{children}</NuqsAdapter>
 }

@@ -1,4 +1,4 @@
-import { schemas } from '@polar-sh/client'
+import { schemas } from '@outception-com/client'
 
 export const isLegacyRecurringPrice = (
   price: schemas['ProductPrice'] | schemas['LegacyRecurringProductPrice'],

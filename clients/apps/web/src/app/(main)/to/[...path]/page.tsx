@@ -1,9 +1,7 @@
-import { getLastVisitedOrg } from '@/utils/cookies'
-import { getUserOrganizations } from '@/utils/user'
-import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
-// Deep-link redirect: /to/dashboard/<rest> → /dashboard/<user-org>/<rest>
+// Deep-link redirect kept for links in the wild: /to/<rest> opens the
+// reader's account area at <rest>, or the wall when there is no rest.
 export default async function Page({
   params,
   searchParams,
@@ -15,22 +13,6 @@ export default async function Page({
   const resolvedSearchParams = await searchParams
   const query = new URLSearchParams(resolvedSearchParams).toString()
   const qs = query ? `?${query}` : ''
-
-  const userOrganizations = await getUserOrganizations()
-
-  if (userOrganizations.length === 0) {
-    redirect(`/onboarding/start${qs}`)
-  }
-
-  const organization =
-    getLastVisitedOrg(await cookies(), userOrganizations) ??
-    userOrganizations[0]
-
-  if (path[0] !== 'dashboard') {
-    redirect(`/dashboard/${organization.slug}${qs}`)
-  }
-
-  const rest = path.slice(1).join('/')
-  const tail = rest ? `/${rest}` : ''
-  redirect(`/dashboard/${organization.slug}${tail}${qs}`)
+  const rest = path.filter((p) => p !== 'dashboard').join('/')
+  redirect(rest ? `/account/${rest}${qs}` : `/account/news${qs}`)
 }

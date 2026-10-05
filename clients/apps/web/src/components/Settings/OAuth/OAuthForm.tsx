@@ -1,12 +1,12 @@
-import { Button } from '@polar-sh/orbit'
-import { Input } from '@polar-sh/orbit'
+import { Button } from '@outception-com/orbit/Button'
+import { Input } from '@outception-com/orbit/Input'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@polar-sh/orbit'
+} from '@outception-com/orbit/Select'
 import {
   FormControl,
   FormDescription,
@@ -14,14 +14,15 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@polar-sh/ui/components/ui/form'
-import CopyToClipboardInput from '@polar-sh/ui/components/atoms/CopyToClipboardInput'
+} from '@outception-com/ui/components/ui/form'
+import { type MouseEvent } from 'react'
 
 import AddOutlined from '@mui/icons-material/AddOutlined'
 import ClearOutlined from '@mui/icons-material/ClearOutlined'
-import { enums } from '@polar-sh/client'
+import { enums } from '@outception-com/client'
+import { Checkbox } from '@outception-com/orbit/Checkbox'
+import { useCallback, useMemo } from 'react'
 import { useFieldArray, useFormContext } from 'react-hook-form'
-import { TreeMultiSelect } from '../TreeMultiSelect'
 import { EnhancedOAuth2ClientConfiguration } from './NewOAuthClientModal'
 
 export const FieldName = () => {
@@ -35,8 +36,10 @@ export const FieldName = () => {
         required: 'This field is required',
       }}
       render={({ field }) => (
-        <FormItem>
-          <FormLabel>Application Name</FormLabel>
+        <FormItem className="flex flex-col gap-4">
+          <div className="flex flex-row items-center justify-between">
+            <FormLabel>Application Name</FormLabel>
+          </div>
           <FormControl>
             <Input {...field} placeholder="My OAuth Application" />
           </FormControl>
@@ -77,16 +80,7 @@ export const FieldClientType = () => {
           <FormDescription>
             If you intend to perform authentication on public clients, like SPA
             or mobile app, select <em>Public Client</em>. Otherwise, choose{' '}
-            <em>Confidential Client</em>.{' '}
-            <a
-              className="text-blue-500 hover:text-blue-400 dark:text-blue-400 dark:hover:text-blue-300"
-              href="https://polar.sh/docs/documentation/integration-guides/authenticating-with-polar"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Read more
-            </a>
-            .
+            <em>Confidential Client</em>.
           </FormDescription>
         </FormItem>
       )}
@@ -96,9 +90,14 @@ export const FieldClientType = () => {
 
 export const FieldClientID = ({ clientId }: { clientId: string }) => {
   return (
-    <FormItem>
-      <FormLabel>Client ID</FormLabel>
-      <CopyToClipboardInput value={clientId} variant="mono" />
+    <FormItem className="flex flex-col gap-4">
+      <div className="flex flex-row items-center justify-between">
+        <FormLabel>Client ID</FormLabel>
+      </div>
+      <FormControl>
+        <Input value={clientId} placeholder="Client ID" readOnly />
+      </FormControl>
+      <FormMessage />
     </FormItem>
   )
 }
@@ -109,23 +108,45 @@ export const FieldClientSecret = ({
   clientSecret: string
 }) => {
   return (
-    <FormItem>
-      <FormLabel>Client Secret</FormLabel>
-      <CopyToClipboardInput value={clientSecret} variant="mono" />
+    <FormItem className="flex flex-col gap-4">
+      <div className="flex flex-row items-center justify-between">
+        <FormLabel>Client Secret</FormLabel>
+      </div>
+      <FormControl>
+        <Input value={clientSecret} placeholder="Client Secret" readOnly />
+      </FormControl>
+      <FormMessage />
       <FormDescription>
         This is a sensitive value. Don&apos;t embed it in a public client like a
-        SPA or mobile app.{' '}
-        <a
-          className="text-blue-500 hover:text-blue-400 dark:text-blue-400 dark:hover:text-blue-300"
-          href="https://polar.sh/docs/documentation/integration-guides/authenticating-with-polar"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Read more
-        </a>
-        .
+        SPA or mobile app.
       </FormDescription>
     </FormItem>
+  )
+}
+
+export const FieldLogo = () => {
+  const { control } = useFormContext<EnhancedOAuth2ClientConfiguration>()
+
+  return (
+    <FormField
+      control={control}
+      name="logo_uri"
+      render={({ field }) => (
+        <FormItem className="flex flex-col gap-4">
+          <div className="flex flex-col gap-y-2">
+            <FormLabel>Logotype</FormLabel>
+          </div>
+          <FormControl>
+            <Input
+              {...field}
+              value={field.value ?? ''}
+              placeholder="https://example.com/logo.png"
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
   )
 }
 
@@ -142,11 +163,11 @@ export const FieldRedirectURIs = () => {
   })
 
   return (
-    <div>
+    <div className="flex flex-col gap-y-4">
       <div className="flex flex-row items-center justify-between gap-x-4">
         <FormLabel>Redirect URIs</FormLabel>
         <Button
-          className="aspect-square h-8 w-8"
+          className="aspect-square w-8"
           size="icon"
           variant="secondary"
           onClick={(e) => {
@@ -208,26 +229,81 @@ export const FieldRedirectURIs = () => {
 }
 
 export const FieldScopes = () => {
-  const { control } = useFormContext<EnhancedOAuth2ClientConfiguration>()
+  const { control, watch, setValue } =
+    useFormContext<EnhancedOAuth2ClientConfiguration>()
+  const sortedAvailableScopes = Array.from(enums.scopeValues).sort((a, b) =>
+    a.localeCompare(b),
+  )
+
+  const currentScopes = watch('scope')
+
+  const allSelected = useMemo(
+    () => sortedAvailableScopes.every((scope) => currentScopes.includes(scope)),
+    [currentScopes, sortedAvailableScopes],
+  )
+
+  const onToggleAll = useCallback(
+    (e: MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault()
+
+      let values: typeof currentScopes = []
+      if (!allSelected) {
+        values = sortedAvailableScopes
+      }
+
+      setValue('scope', values)
+    },
+    [setValue, allSelected, sortedAvailableScopes],
+  )
 
   return (
-    <FormField
-      control={control}
-      name="scope"
-      render={({ field }) => (
-        <FormItem>
-          <FormControl>
-            <TreeMultiSelect
-              title="Scopes"
-              options={enums.availableScopeValues}
-              value={field.value ?? []}
-              onChange={field.onChange}
-            />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-row items-center">
+        <h2 className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+          Scopes
+        </h2>
+
+        <div className="flex-auto text-right">
+          <Button onClick={onToggleAll} variant="secondary" size="sm">
+            {!allSelected ? 'Select All' : 'Unselect All'}
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        {sortedAvailableScopes.map((scope) => (
+          <FormField
+            key={scope}
+            control={control}
+            name="scope"
+            render={({ field }) => {
+              return (
+                <FormItem className="flex flex-row items-center space-y-0 space-x-3">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value?.includes(scope)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          field.onChange([...(field.value || []), scope])
+                        } else {
+                          field.onChange(
+                            (field.value || []).filter((v) => v !== scope),
+                          )
+                        }
+                      }}
+                    />
+                  </FormControl>
+                  <FormLabel className="text-sm leading-none">
+                    {scope}
+                  </FormLabel>
+                  <FormMessage />
+                </FormItem>
+              )
+            }}
+          />
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -242,8 +318,10 @@ export const FieldClientURI = () => {
         required: 'A URL to your homepage is required',
       }}
       render={({ field }) => (
-        <FormItem>
-          <FormLabel>Homepage URL</FormLabel>
+        <FormItem className="flex flex-col gap-4">
+          <div className="flex flex-row items-center justify-between">
+            <FormLabel>Homepage URL</FormLabel>
+          </div>
           <FormControl>
             <Input
               {...field}
@@ -266,8 +344,10 @@ export const FieldTOS = () => {
       control={control}
       name="tos_uri"
       render={({ field }) => (
-        <FormItem>
-          <FormLabel>Terms of Service</FormLabel>
+        <FormItem className="flex flex-col gap-4">
+          <div className="flex flex-row items-center justify-between">
+            <FormLabel>Terms of Service</FormLabel>
+          </div>
           <FormControl>
             <Input
               {...field}
@@ -290,8 +370,10 @@ export const FieldPrivacy = () => {
       control={control}
       name="policy_uri"
       render={({ field }) => (
-        <FormItem>
-          <FormLabel>Privacy Policy</FormLabel>
+        <FormItem className="flex flex-col gap-4">
+          <div className="flex flex-row items-center justify-between">
+            <FormLabel>Privacy Policy</FormLabel>
+          </div>
           <FormControl>
             <Input
               {...field}

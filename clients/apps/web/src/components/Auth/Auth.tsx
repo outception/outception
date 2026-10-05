@@ -1,23 +1,19 @@
 'use client'
 
-import { type EventName } from '@/hooks/posthog'
-import { schemas } from '@polar-sh/client'
-import { type LoginMethod } from '@/utils/auth'
+import { useT } from '@/providers/translate'
+import { schemas } from '@outception-com/client'
+import type { Factor } from '@/utils/auth'
 import { Fragment } from 'react'
 import GoogleLoginButton from './GoogleLoginButton'
 import EmailOTPForm from './EmailOTPForm'
 import AppleLoginButton from './AppleLoginButton'
-import AuthTermsFooter from './AuthTermsFooter'
-import GitHubLoginButton from './GitHubLoginButton'
-import { usePathname, useSearchParams } from 'next/navigation'
-import { useImpressionEvent } from '@/hooks/useImpressionEvent'
-import { type JsonType } from '@posthog/core'
+import MicrosoftLoginButton from './MicrosoftLoginButton'
 
-type OAuthFactor = Exclude<LoginMethod, 'email_otp' | 'totp'>
-const OAUTH_FACTORS: OAuthFactor[] = ['apple', 'github', 'google']
+type OAuthFactor = Exclude<Factor, 'email_otp' | 'totp'>
+const OAUTH_FACTORS: OAuthFactor[] = ['apple', 'microsoft', 'google']
 
 const isOAuthFactor = (
-  value: LoginMethod | null | undefined,
+  value: Factor | null | undefined,
 ): value is OAuthFactor =>
   !!value && (OAUTH_FACTORS as string[]).includes(value)
 
@@ -28,32 +24,11 @@ const Auth = ({
   signup,
 }: {
   authenticationSession: schemas['AuthenticationSession'] | null
-  lastLoginMethod?: LoginMethod | null
+  lastLoginMethod?: Factor | null
   returnTo?: string
   signup?: boolean
 }) => {
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-
-  const eventName: EventName = signup
-    ? 'global:user:signup:view'
-    : 'global:user:login:view'
-  const eventData: Record<string, JsonType> = signup
-    ? {
-        signup: {
-          path: pathname,
-          host: typeof window !== 'undefined' ? window.location.host : '',
-          campaign: searchParams.get('campaign') ?? '',
-          utm_source: searchParams.get('utm_source') ?? '',
-          utm_medium: searchParams.get('utm_medium') ?? '',
-          utm_campaign: searchParams.get('utm_campaign') ?? '',
-        },
-      }
-    : {}
-  useImpressionEvent({
-    event: eventName,
-    build: () => eventData,
-  })
+  const t = useT()
 
   const primaryOAuthFactor: OAuthFactor = isOAuthFactor(lastLoginMethod)
     ? lastLoginMethod
@@ -77,9 +52,9 @@ const Auth = ({
             signup={signup}
           />
         )
-      case 'github':
+      case 'microsoft':
         return (
-          <GitHubLoginButton
+          <MicrosoftLoginButton
             authenticationSession={authenticationSession}
             variant={variant}
             returnTo={returnTo}
@@ -109,9 +84,9 @@ const Auth = ({
           </Fragment>
         ))}
         <div className="flex w-full flex-row items-center gap-6">
-          <div className="dark:border-polar-700 grow border-t border-gray-200" />
-          <div className="text-sm text-gray-500">or</div>
-          <div className="dark:border-polar-700 grow border-t border-gray-200" />
+          <div className="dark:border-outception-700 grow border-t border-gray-200" />
+          <div className="text-sm text-gray-500">{t('auth.or')}</div>
+          <div className="dark:border-outception-700 grow border-t border-gray-200" />
         </div>
         <LastUsedWrapper show={lastLoginMethod === 'email_otp'}>
           <EmailOTPForm
@@ -121,7 +96,6 @@ const Auth = ({
           />
         </LastUsedWrapper>
       </div>
-      <AuthTermsFooter />
     </div>
   )
 }
@@ -132,15 +106,18 @@ const LastUsedWrapper = ({
 }: {
   show: boolean
   children: React.ReactNode
-}) => (
-  <div className="relative">
-    {show && (
-      <span className="dark:bg-polar-900 dark:border-polar-600 absolute -top-3 -right-2 z-20 rounded-full border border-gray-200 bg-white px-2 py-0.5 text-xs text-black dark:text-white">
-        Last used
-      </span>
-    )}
-    {children}
-  </div>
-)
+}) => {
+  const t = useT()
+  return (
+    <div className="relative">
+      {show && (
+        <span className="dark:bg-outception-900 dark:border-outception-600 absolute -top-3 -right-2 z-20 rounded-full border border-gray-200 bg-white px-2 py-0.5 text-xs text-black dark:text-white">
+          {t('auth.lastUsed')}
+        </span>
+      )}
+      {children}
+    </div>
+  )
+}
 
 export default Auth

@@ -1,5 +1,5 @@
 import { refreshMiddleware } from '@/auth/refreshMiddleware'
-import { Client, createClient } from '@polar-sh/client'
+import { Client, createClient } from '@outception-com/client'
 import Constants from 'expo-constants'
 import * as Updates from 'expo-updates'
 import {

@@ -23,11 +23,11 @@ const toastVariants = cva(
     variants: {
       variant: {
         default:
-          'bg-white dark:bg-polar-900 border border-transparent dark:border-polar-700',
+          'bg-white dark:bg-outception-900 border border-transparent dark:border-outception-700',
         error:
-          'bg-white dark:bg-polar-900 border border-transparent dark:border-polar-700',
+          'bg-white dark:bg-outception-900 border border-transparent dark:border-outception-700',
         success:
-          'bg-white dark:bg-polar-900 border border-transparent dark:border-polar-700',
+          'bg-white dark:bg-outception-900 border border-transparent dark:border-outception-700',
       },
     },
     defaultVariants: {
@@ -58,7 +58,7 @@ const ToastAction = ({
 }: React.ComponentProps<typeof ToastPrimitives.Action>) => (
   <ToastPrimitives.Action
     ref={ref}
-    className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border border-gray-200 bg-gray-100 px-3 text-sm font-medium text-gray-900 transition-colors group-[.error]:border-red-200 group-[.error]:bg-red-100 group-[.success]:border-green-200 group-[.success]:bg-green-100 hover:bg-gray-200/75 group-[.error]:hover:bg-red-200/50 group-[.success]:hover:bg-green-200/50 disabled:pointer-events-none disabled:opacity-50"
+    className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border border-gray-200 bg-gray-100 px-3 text-sm font-medium transition-colors group-[.error]:border-red-200 group-[.error]:bg-red-100 group-[.success]:border-green-200 group-[.success]:bg-green-100 hover:bg-gray-200/75 group-[.error]:hover:bg-red-200/50 group-[.success]:hover:bg-green-200/50 disabled:pointer-events-none disabled:opacity-50"
     {...props}
   />
 )
@@ -105,7 +105,6 @@ type ToastActionElement = React.ReactElement<typeof ToastAction>
 
 export {
   Toast,
-  ToastAction,
   ToastClose,
   ToastDescription,
   ToastProvider,

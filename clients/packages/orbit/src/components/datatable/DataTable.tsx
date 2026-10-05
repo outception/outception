@@ -130,7 +130,7 @@ export function DataTable<TData extends RowData>({
     <div className={twMerge('flex flex-col gap-6', className)}>
       <div
         className={twMerge(
-          'dark:border-polar-700 overflow-hidden rounded-2xl border border-gray-200',
+          'dark:border-outception-700 overflow-hidden rounded-2xl border border-gray-200',
           wrapperClassName,
         )}
       >
@@ -140,7 +140,7 @@ export function DataTable<TData extends RowData>({
               <TableRow
                 key={headerGroup.id}
                 className={twMerge(
-                  'dark:bg-polar-800 group/row bg-gray-50',
+                  'dark:bg-outception-800 group/row bg-gray-50',
                   headerClassName,
                 )}
               >

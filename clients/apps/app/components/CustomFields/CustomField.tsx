@@ -4,7 +4,7 @@ import { Touchable } from '@/components/Shared/Touchable'
 import { useTheme } from '@/design-system/useTheme'
 import { useToast } from '@/providers/ToastProvider'
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'
-import { schemas } from '@polar-sh/client'
+import { schemas } from '@outception-com/client'
 import * as Clipboard from 'expo-clipboard'
 
 const numberFormat = new Intl.NumberFormat(undefined, {})

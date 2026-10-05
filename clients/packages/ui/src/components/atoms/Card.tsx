@@ -15,7 +15,7 @@ const Card = ({
   <CardPrimitive
     ref={ref}
     className={twMerge(
-      'dark:bg-polar-800 rounded-4xl border-transparent bg-gray-100 text-gray-950 shadow-none dark:border-transparent dark:text-white',
+      'dark:bg-outception-800 rounded-4xl border-transparent bg-gray-100 text-gray-950 shadow-none dark:border-transparent dark:text-white',
       className,
     )}
     {...props}

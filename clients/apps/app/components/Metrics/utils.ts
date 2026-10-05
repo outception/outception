@@ -1,5 +1,5 @@
-import { getMetricsRangeDates, schemas } from '@polar-sh/client'
-import { formatCurrency } from '@polar-sh/currency'
+import { getMetricsRangeDates, schemas } from '@outception-com/client'
+import { formatCurrency } from '@outception-com/currency'
 import {
   differenceInDays,
   differenceInMonths,

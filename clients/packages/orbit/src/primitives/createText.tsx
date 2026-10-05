@@ -196,6 +196,11 @@ type TextProps<E extends TextTag = 'p'> = TextStyleProps & {
    * number clamps to that many lines. The component owns the CSS, so callers
    * never hand-roll line-clamp utilities.
    */
+  /**
+   * Render in the serif font family while keeping the variant's size and
+   * weight, as newspaper-style headlines do. Orthogonal to `variant`.
+   */
+  serif?: boolean
   truncate?: boolean | number
   /**
    * Format the children value for display. 'number' adds grouping separators
@@ -211,7 +216,7 @@ type TextProps<E extends TextTag = 'p'> = TextStyleProps & {
 
 const HEADING_FONT_FEATURES = "'ss07' 1, 'ss08' 1, 'liga' 0"
 const SKELETON_CLASSES =
-  'dark:bg-polar-700 animate-pulse rounded-sm bg-gray-100'
+  'dark:bg-outception-700 animate-pulse rounded-sm bg-gray-100'
 
 const renderMultiLineSkeleton = (lines: number): ReactNode =>
   Array.from({ length: lines }, (_, i) => (
@@ -260,6 +265,7 @@ function Text<E extends TextTag = 'p'>({
   lineThrough,
   monospace,
   tabularNums,
+  serif,
   truncate,
   formatter,
   ...props
@@ -298,6 +304,7 @@ function Text<E extends TextTag = 'p'>({
     monospace && textUtilityStyles.monospace,
     tabularNums && textUtilityStyles.tabularNums,
     lineThrough && textUtilityStyles.lineThrough,
+    serif && textUtilityStyles.serif,
     truncate === true && textUtilityStyles.truncate,
   )
 

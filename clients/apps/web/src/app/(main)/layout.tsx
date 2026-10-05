@@ -1,50 +1,39 @@
-import { CookieConsent } from '@/components/Privacy/CookieConsent'
+import { PaperBackground } from '@/components/Layout/PaperBackground'
 import { CONFIG } from '@/utils/config'
-import { headers } from 'next/headers'
 import { Metadata } from 'next/types'
-import { PolarThemeProvider } from '../providers'
+import { Suspense } from 'react'
+import { OutceptionThemeProvider } from '../providers'
+
+// The API lives on a different host, so the first request otherwise pays a cold
+// DNS + TCP + TLS handshake. Warm it alongside the font preloads.
+const API_ORIGIN = new URL(CONFIG.BASE_URL).origin
 
 export async function generateMetadata(): Promise<Metadata> {
   const baseMetadata: Metadata = {
     title: {
-      template: '%s | Polar',
-      default: 'Polar',
+      template: '%s | Outception',
+      default: 'Outception',
     },
-    description: 'A billing platform for the intelligence era',
+    description: 'A live news wall',
     openGraph: {
-      images: 'https://polar.sh/assets/brand/polar_og.jpg',
       type: 'website',
-      siteName: 'Polar',
-      title: 'Polar | A billing platform for the intelligence era',
-      description:
-        'Create digital products and SaaS billing with flexible pricing models and seamless payment processing.',
+      siteName: 'Outception',
+      title: 'Outception | A live news wall',
+      description: 'Follow 8,000+ news sources on one live wall.',
       locale: 'en_US',
+      images: ['/opengraph-image'],
     },
     twitter: {
-      images: 'https://polar.sh/assets/brand/polar_og.jpg',
       card: 'summary_large_image',
-      title: 'Polar | A billing platform for the intelligence era',
-      description:
-        'Create digital products and SaaS billing with flexible pricing models and seamless payment processing.',
+      title: 'Outception | A live news wall',
+      description: 'Follow 8,000+ news sources on one live wall.',
+      images: ['/opengraph-image'],
     },
-    metadataBase: new URL('https://polar.sh/'),
-    alternates: {
-      canonical: 'https://polar.sh/',
-    },
-  }
-
-  if (CONFIG.IS_SANDBOX) {
-    return {
-      ...baseMetadata,
-      robots: {
-        index: false,
-        follow: false,
-        googleBot: {
-          index: false,
-          follow: false,
-        },
-      },
-    }
+    metadataBase: new URL(CONFIG.FRONTEND_BASE_URL),
+    // No `alternates.canonical` here: layout metadata is inherited, so every
+    // page under (main) - /terms, /privacy - would declare the homepage as its
+    // canonical and get dropped from the index as a duplicate. The landing
+    // page sets its own (it genuinely wants ?card= links folded into /).
   }
 
   return {
@@ -63,90 +52,46 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default async function MainLayout({
+export default function MainLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const headersList = await headers()
-  const countryCode = headersList.get('x-vercel-ip-country')
-
+  // The theme provider reads the search params (a `?theme=` override), so
+  // it must sit under a boundary or static pages bail out of prerendering.
   return (
-    <PolarThemeProvider>
-      <link
-        rel="preload"
-        href="/fonts/Inter-Light.woff2"
-        as="font"
-        type="font/woff2"
-        crossOrigin=""
-      />
-      <link
-        rel="preload"
-        href="/fonts/Inter-Regular.woff2"
-        as="font"
-        type="font/woff2"
-        crossOrigin=""
-      />
-      <link
-        rel="preload"
-        href="/fonts/Inter-Medium.woff2"
-        as="font"
-        type="font/woff2"
-        crossOrigin=""
-      />
-      <link
-        rel="preload"
-        href="/fonts/Inter-SemiBold.woff2"
-        as="font"
-        type="font/woff2"
-        crossOrigin=""
-      />
-      <link
-        rel="preload"
-        href="/fonts/InterDisplay-Light.woff2"
-        as="font"
-        type="font/woff2"
-        crossOrigin=""
-      />
-      <link
-        rel="preload"
-        href="/fonts/InterDisplay-Regular.woff2"
-        as="font"
-        type="font/woff2"
-        crossOrigin=""
-      />
-      <link
-        rel="preload"
-        href="/fonts/InterDisplay-Medium.woff2"
-        as="font"
-        type="font/woff2"
-        crossOrigin=""
-      />
-      <link
-        rel="preload"
-        href="/fonts/InterDisplay-SemiBold.woff2"
-        as="font"
-        type="font/woff2"
-        crossOrigin=""
-      />
-      <link
-        rel="preload"
-        href="/fonts/Louize-Italic-205TF.otf"
-        as="font"
-        type="font/otf"
-        crossOrigin=""
-      />
-      <link
-        rel="preload"
-        href="/fonts/GeistMono-Variable.woff2"
-        as="font"
-        type="font/woff2"
-        crossOrigin=""
-      />
-      <div className="dark:bg-polar-950 h-full bg-white dark:text-white">
-        {children}
-        <CookieConsent countryCode={countryCode} />
-      </div>
-    </PolarThemeProvider>
+    <Suspense>
+      <OutceptionThemeProvider>
+        <PaperBackground />
+        <link rel="dns-prefetch" href={API_ORIGIN} />
+        <link
+          rel="preconnect"
+          href={API_ORIGIN}
+          crossOrigin="use-credentials"
+        />
+        <link
+          rel="preload"
+          href="/fonts/Geist-Variable.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin=""
+        />
+        <link
+          rel="preload"
+          href="/fonts/HankenGrotesk-Variable.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin=""
+        />
+        <link
+          rel="preload"
+          href="/fonts/GeistMono-Variable.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin=""
+        />
+        <div className="h-full bg-transparent dark:text-white">{children}</div>
+      </OutceptionThemeProvider>
+    </Suspense>
   )
 }

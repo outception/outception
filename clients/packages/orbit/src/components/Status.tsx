@@ -22,7 +22,7 @@ const colorClasses: Record<StatusColor, string> = {
   blue: 'bg-indigo-100 text-indigo-500 dark:bg-indigo-950 dark:text-indigo-500',
   purple:
     'bg-violet-100 text-violet-500 dark:bg-violet-950 dark:text-violet-400',
-  gray: 'bg-gray-200 text-gray-500 dark:bg-polar-700 dark:text-polar-500',
+  gray: 'bg-gray-200 text-gray-500 dark:bg-outception-700 dark:text-outception-500',
 }
 
 export interface StatusProps {

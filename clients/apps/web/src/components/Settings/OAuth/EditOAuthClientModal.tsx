@@ -1,24 +1,23 @@
 import { ConfirmModal } from '@/components/Modal/ConfirmModal'
-import { InlineModalHeader } from '@polar-sh/orbit'
+import { InlineModalHeader } from '@outception-com/orbit/InlineModal'
 import { useModal } from '@/components/Modal/useModal'
 import { toast } from '@/components/Toast/use-toast'
 import {
   useDeleteOAuthClient,
-  useOAuth2ClientSecret,
   useUpdateOAuth2Client,
 } from '@/hooks/queries/oauth'
 import { extractApiErrorMessage } from '@/utils/api/errors'
-import { schemas } from '@polar-sh/client'
-import { Button } from '@polar-sh/orbit'
-import { ShadowBoxOnMd } from '@polar-sh/ui/components/atoms/ShadowBox'
-import { Form } from '@polar-sh/ui/components/ui/form'
-import { useCallback } from 'react'
+import { schemas } from '@outception-com/client'
+import { Button } from '@outception-com/orbit/Button'
+import { ShadowBoxOnMd } from '@outception-com/ui/components/atoms/ShadowBox'
+import { Form } from '@outception-com/ui/components/ui/form'
+import { useCallback, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import {
   FieldClientID,
-  FieldClientSecret,
   FieldClientType,
   FieldClientURI,
+  FieldLogo,
   FieldName,
   FieldPrivacy,
   FieldRedirectURIs,
@@ -26,7 +25,7 @@ import {
   FieldTOS,
 } from './OAuthForm'
 
-export interface EnhancedOAuth2ClientConfigurationUpdate extends Omit<
+interface EnhancedOAuth2ClientConfigurationUpdate extends Omit<
   schemas['OAuth2ClientConfigurationUpdate'],
   'redirect_uris' | 'scope'
 > {
@@ -63,13 +62,10 @@ export const EditOAuthClientModal = ({
 
   const { handleSubmit } = form
 
-  const updateOAuth2Client = useUpdateOAuth2Client()
+  const [updated, setUpdated] =
+    useState<schemas['OAuth2ClientConfigurationUpdate']>()
 
-  const {
-    data: clientSecret,
-    isFetching: isFetchingSecret,
-    refetch: revealSecret,
-  } = useOAuth2ClientSecret(client.client_id)
+  const updateOAuth2Client = useUpdateOAuth2Client()
 
   const onSubmit = useCallback(
     async (form: EnhancedOAuth2ClientConfigurationUpdate) => {
@@ -95,9 +91,10 @@ export const EditOAuthClientModal = ({
         title: 'OAuth App Updated',
         description: `OAuth App ${client.client_name} was updated successfully`,
       })
+      setUpdated(res)
       onSuccess(res)
     },
-    [onSuccess, updateOAuth2Client, client],
+    [onSuccess, updateOAuth2Client, setUpdated, client],
   )
 
   const deleteOAuthClient = useDeleteOAuthClient()
@@ -134,20 +131,8 @@ export const EditOAuthClientModal = ({
           >
             <FieldName />
             <FieldClientID clientId={client.client_id} />
-            {client.token_endpoint_auth_method !== 'none' &&
-              (clientSecret ? (
-                <FieldClientSecret clientSecret={clientSecret} />
-              ) : (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  loading={isFetchingSecret}
-                  onClick={() => revealSecret()}
-                >
-                  Reveal client secret
-                </Button>
-              ))}
             <FieldClientType />
+            <FieldLogo />
             <FieldRedirectURIs />
             <FieldScopes />
             <FieldClientURI />
@@ -160,7 +145,7 @@ export const EditOAuthClientModal = ({
                   <h3 className="font-medium text-gray-950 dark:text-white">
                     Delete OAuth Application
                   </h3>
-                  <p className="dark:text-polar-500 text-sm text-gray-500">
+                  <p className="dark:text-outception-500 text-sm text-gray-500">
                     This action will delete the OAuth Application configuration
                     permanently
                   </p>
@@ -190,7 +175,11 @@ export const EditOAuthClientModal = ({
               />
             </ShadowBoxOnMd>
 
-            <Button type="submit" loading={updateOAuth2Client.isPending}>
+            <Button
+              type="submit"
+              loading={updateOAuth2Client.isPending}
+              disabled={Boolean(updated)}
+            >
               Update
             </Button>
           </form>

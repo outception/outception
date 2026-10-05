@@ -83,7 +83,7 @@ export const Modal: FunctionComponent<ModalProps> = ({
           <div className="block h-20 w-2 lg:max-h-[10%] lg:grow-2" />
           <motion.div
             className={twMerge(
-              'dark:bg-polar-950 dark:border-polar-800 relative z-10 flex max-h-full w-full flex-col gap-y-1 overflow-x-hidden overflow-y-auto rounded-3xl bg-gray-100 p-1 shadow-sm lg:w-[800px] lg:max-w-full dark:border',
+              'dark:bg-outception-950 dark:border-outception-800 relative z-10 flex max-h-full w-full flex-col gap-y-1 overflow-x-hidden overflow-y-auto rounded-3xl bg-gray-100 p-1 shadow-sm lg:w-[800px] lg:max-w-full dark:border',
               className,
             )}
             initial={{ opacity: 0, scale: 0.99 }}
@@ -92,17 +92,19 @@ export const Modal: FunctionComponent<ModalProps> = ({
             onClick={onInnerClick}
           >
             <div className="flex flex-row items-center justify-between pt-1 pr-1 pb-0 pl-4 text-sm">
-              <span className="dark:text-polar-500 text-gray-500">{title}</span>
+              <span className="dark:text-outception-500 text-gray-500">
+                {title}
+              </span>
               <Button
                 variant="ghost"
                 size="sm"
-                className="dark:text-polar-500 dark:hover:text-polar-400 size-8 rounded-full text-gray-500 hover:text-gray-600"
+                className="dark:text-outception-500 dark:hover:text-outception-400 size-8 rounded-full text-gray-500 hover:text-gray-600"
                 onClick={hide}
               >
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            <div className="dark:bg-polar-900 flex flex-col overflow-y-auto rounded-[20px] bg-white">
+            <div className="dark:bg-outception-900 flex flex-col overflow-y-auto rounded-[20px] bg-white">
               {modalContent}
             </div>
           </motion.div>

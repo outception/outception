@@ -1,8 +1,9 @@
 'use client'
 
-import { Box } from '@polar-sh/orbit/Box'
-import { Button, Text } from '@polar-sh/orbit'
-import { Checkbox } from '@polar-sh/orbit'
+import { Box } from '@outception-com/orbit/Box'
+import { Button } from '@outception-com/orbit/Button'
+import { Text } from '@outception-com/orbit/Text'
+import { Checkbox } from '@outception-com/orbit/Checkbox'
 import { useMemo, type MouseEvent, type ReactNode } from 'react'
 
 interface OptionGroup<T extends string> {
