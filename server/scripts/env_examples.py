@@ -76,11 +76,25 @@ def default_for(name: str) -> str | None:
     return _encode(field.default)
 
 
-def fill(text: str) -> str:
+# What the compose stack needs instead of the development default: the
+# service names on the internal network, the public addresses, the mounted
+# key pair, the production mail sender.
+DEPLOY_VALUES = {
+    "POSTGRES_HOST": "db",
+    "REDIS_HOST": "redis",
+    "BASE_URL": "https://api.outception.com",
+    "FRONTEND_BASE_URL": "https://outception.com",
+    "EMAIL_SENDER": "smtp",
+}
+
+
+def fill(text: str, deploy: bool = False) -> str:
     out = []
     for line in text.splitlines():
         match = LINE.match(line)
         value = default_for(match.group(1)) if match else None
+        if match and deploy and match.group(1) in DEPLOY_VALUES:
+            value = DEPLOY_VALUES[match.group(1)]
         out.append(f"{line}{value}" if value is not None else line)
     return "\n".join(out) + "\n"
 
@@ -94,7 +108,7 @@ def main(argv: list[str] | None = None) -> int:
     stale = []
     for path in EXAMPLES:
         before = path.read_text()
-        after = fill(before)
+        after = fill(before, deploy=path.parent.name == "deploy")
         if after != before:
             stale.append(path)
             if not args.check:

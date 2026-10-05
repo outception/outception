@@ -95,8 +95,9 @@ Bootstrap complete. Finish setup as the ${DEPLOY_USER} user:
   # OUTCEPTION_SECRET (prod refuses to boot on the dev default):
   openssl rand -hex 32
 
-  # OUTCEPTION_JWKS - RS256 keypair mounted at /run/secrets/jwks.json:
-  ( cd ${APP_DIR}/server && uv run task generate_dev_jwks && mv .jwks.json ../deploy/secrets/jwks.json )
+  # OUTCEPTION_LOCAL_JWKS - RS256 keypair mounted at /run/secrets/jwks.json,
+  # generated with a key id of your own; set OUTCEPTION_LOCAL_JWK_KID to it:
+  ( cd ${APP_DIR}/server && uv run python -m outception.kit.jwk outception_prod > ../deploy/secrets/jwks.json )
   #   ...or generate it once on your laptop and scp it to
   #   ${APP_DIR}/deploy/secrets/jwks.json
 

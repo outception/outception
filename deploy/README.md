@@ -80,12 +80,13 @@ sh`, create a user, and `git clone` the repo yourself.)
 # OUTCEPTION_SECRET - strong random value:
 openssl rand -hex 32
 
-# OUTCEPTION_JWKS - a JWKS *file* (RS256), mounted into the containers.
-# Generate one (from server/) and place it where compose expects it:
-cd server && uv run task generate_dev_jwks      # writes server/.jwks.json
-mkdir -p ../deploy/secrets && mv .jwks.json ../deploy/secrets/jwks.json
-# .env.prod already points OUTCEPTION_JWKS at /run/secrets/jwks.json and
-# CURRENT_JWK_KID at "outception_dev" (the kid the generator uses).
+# OUTCEPTION_LOCAL_JWKS - a JWKS *file* (RS256), mounted into the containers.
+# Generate one with a key id of your own and place it where compose expects it:
+mkdir -p deploy/secrets
+cd server && uv run python -m outception.kit.jwk outception_prod > ../deploy/secrets/jwks.json
+# .env.prod already points OUTCEPTION_LOCAL_JWKS at /run/secrets/jwks.json;
+# set OUTCEPTION_LOCAL_JWK_KID to the key id you used ("outception_prod" here).
+# The app refuses to boot in production on the public development key set.
 ```
 
 `deploy/secrets/` is gitignored - the keypair never gets committed.

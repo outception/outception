@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, Literal
 
 import pytest
@@ -5,7 +6,7 @@ from sqlalchemy.dialects.postgresql.asyncpg import PGDialect_asyncpg
 from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
 from sqlalchemy.engine import make_url
 
-from outception.config import settings
+from outception.config import Environment, settings
 
 
 def build_dsn(
@@ -89,3 +90,46 @@ class TestBuildPostgresDsn:
         connect_args = get_connect_args(build_dsn("asyncpg", fallback_port=None))
 
         assert connect_args["port"] == [6432, 6432]
+
+
+class TestSigningKeySet:
+    """A hosted environment must never sign with the development key set,
+    which ships in the repository."""
+
+    def test_production_refuses_the_development_set(self) -> None:
+        from pydantic import ValidationError
+
+        from outception.config import Settings
+
+        with pytest.raises(ValidationError, match="development key set is public"):
+            Settings(
+                _env_file=None,
+                ENV=Environment.production,
+                SECRET="a-strong-unique-value-" + "x" * 40,
+            )
+
+    def test_production_accepts_a_mounted_private_set(self, tmp_path: Path) -> None:
+        from outception.config import Settings
+        from outception.kit.jwk import generate_jwks
+
+        key_file = tmp_path / "jwks.json"
+        key_file.write_text(generate_jwks("outception_prod"))
+        settings = Settings(
+            _env_file=None,
+            ENV=Environment.production,
+            SECRET="a-strong-unique-value-" + "x" * 40,
+            LOCAL_JWKS=str(key_file),
+            LOCAL_JWK_KID="outception_prod",
+        )
+        assert settings.LOCAL_JWK_KID == "outception_prod"
+
+    def test_production_with_a_kms_key_needs_no_file(self) -> None:
+        from outception.config import Settings
+
+        settings = Settings(
+            _env_file=None,
+            ENV=Environment.production,
+            SECRET="a-strong-unique-value-" + "x" * 40,
+            AWS_JWKS_KMS_KEY_ID="2f5a7b1c",
+        )
+        assert settings.AWS_JWKS_KMS_KEY_ID == "2f5a7b1c"

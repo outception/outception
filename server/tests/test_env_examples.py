@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from outception.config import Settings
+from outception.kit.jwk import generate_jwks
 
 SERVER = Path(__file__).parent.parent
 EXAMPLES = [
@@ -37,6 +38,12 @@ def test_example_loads(
     renderer = tmp_path / "renderer"
     renderer.touch()
     monkeypatch.setenv("OUTCEPTION_EMAIL_RENDERER_BINARY_PATH", str(renderer))
+    # The production examples point at the mounted key set; here a generated
+    # one stands in, the way a deploy's does.
+    key_file = tmp_path / "jwks.json"
+    key_file.write_text(generate_jwks("outception_test"))
+    monkeypatch.setenv("OUTCEPTION_LOCAL_JWKS", str(key_file))
+    monkeypatch.setenv("OUTCEPTION_LOCAL_JWK_KID", "outception_test")
     settings = Settings(_env_file=example)
     assert isinstance(settings.ADMIN_EMAILS, list)
     assert isinstance(settings.BRIEFING_PROFILES, list)

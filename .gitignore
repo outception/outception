@@ -185,3 +185,7 @@ deploy/.env.prod
 
 # Product logos written in development
 server/media/
+
+# Deploy-time private material: the signing key pair and the filled-in env.
+deploy/secrets/
+deploy/.env.prod

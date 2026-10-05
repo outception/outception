@@ -124,12 +124,11 @@ def _local_signer(kid: str) -> LocalSigner:
 def get_signer() -> Signer:
     """Do not cache this: a rotation changes which key is current, and must apply
     without a restart. The signers are cached instead, one per key."""
-    if settings.is_production() or settings.is_sandbox():
-        key_id = settings.AWS_JWKS_KMS_KEY_ID
-        if key_id is None:
-            raise RuntimeError(
-                "OUTCEPTION_AWS_JWKS_KMS_KEY_ID is required in this environment"
-            )
+    # A KMS key when one is configured; otherwise the operator's own key set
+    # signs in process. The settings refuse the development set in a hosted
+    # environment, so this branch never signs with a public key there.
+    key_id = settings.AWS_JWKS_KMS_KEY_ID
+    if key_id is not None and (settings.is_production() or settings.is_sandbox()):
         return _kms_signer(key_id)
     return _local_signer(settings.LOCAL_JWK_KID)
 

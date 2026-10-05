@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from authlib.jose import JsonWebKey
 from cryptography.hazmat.primitives import hashes
@@ -5,6 +7,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 
 from outception.config import Environment, settings
 from outception.kit import signer
+from outception.kit.jwk import generate_jwks
 from outception.kit.signer import KMSSigner
 
 
@@ -64,14 +67,22 @@ def test_published_signers_include_the_current_key_the_list_omits(
     assert [s.kid for s in published] == ["cccc3333", "dddd4444"]
 
 
-def test_get_signer_requires_the_kms_key_in_production(
-    monkeypatch: pytest.MonkeyPatch,
+def test_get_signer_uses_the_mounted_key_set_in_production_without_kms(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
+    # A compose deploy has no KMS: the operator's key set, mounted as a file,
+    # signs in process. The settings refuse the development set there.
+    key_file = tmp_path / "jwks.json"
+    key_file.write_text(generate_jwks("outception_prod"))
     monkeypatch.setattr(settings, "ENV", Environment.production)
     monkeypatch.setattr(settings, "AWS_JWKS_KMS_KEY_ID", None)
-
-    with pytest.raises(RuntimeError, match="OUTCEPTION_AWS_JWKS_KMS_KEY_ID"):
-        signer.get_signer()
+    monkeypatch.setattr(settings, "LOCAL_JWKS", str(key_file))
+    monkeypatch.setattr(settings, "LOCAL_JWK_KID", "outception_prod")
+    signer._local_signer.cache_clear()
+    try:
+        assert signer.get_signer().kid == "outception_prod"
+    finally:
+        signer._local_signer.cache_clear()
 
 
 def test_get_signer_follows_a_moved_current_key(

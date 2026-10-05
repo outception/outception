@@ -498,6 +498,32 @@ class Settings(BaseSettings):
         return self
 
     @model_validator(mode="after")
+    def _require_private_signing_key(self) -> "Settings":
+        # The development key set ships in the repository, so a hosted
+        # environment signing with it would issue tokens anyone can forge.
+        # Without a KMS key the in-process signer is the one that runs, so
+        # its key set must be the operator's own: a mounted file or a
+        # document, never the default.
+        if self.ENV not in {Environment.production, Environment.sandbox}:
+            return self
+        if self.AWS_JWKS_KMS_KEY_ID:
+            return self
+        if self.LOCAL_JWKS.strip() == DEVELOPMENT_JWKS.strip():
+            raise ValueError(
+                "OUTCEPTION_LOCAL_JWKS must point at the operator's private key "
+                f"set in {self.ENV} (a mounted file such as /run/secrets/jwks.json), "
+                "or set OUTCEPTION_AWS_JWKS_KMS_KEY_ID: the development key set "
+                "is public."
+            )
+        raw = self.LOCAL_JWKS.strip()
+        if not raw.startswith("{") and not Path(raw).is_file():
+            raise ValueError(
+                f"OUTCEPTION_LOCAL_JWKS {raw} is not a file; generate one with "
+                "`python -m outception.kit.jwk <kid>` and mount it."
+            )
+        return self
+
+    @model_validator(mode="after")
     def apply_postgres_url_non_pooling(self) -> "Settings":
         if self.POSTGRES_URL_NON_POOLING is None:
             return self

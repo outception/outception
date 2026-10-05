@@ -25,8 +25,10 @@ x-logging: &logging
       max-file: "5"
 
 # Production JWKS keypair (RS256). Placed on the host at deploy/secrets/jwks.json
-# (gitignored, NOT committed) and mounted read-only. OUTCEPTION_JWKS in .env.prod
-# must point at /run/secrets/jwks.json.
+# (gitignored, NOT committed) and mounted read-only. OUTCEPTION_LOCAL_JWKS in
+# .env.prod must point at /run/secrets/jwks.json and OUTCEPTION_LOCAL_JWK_KID at
+# the key id it was generated with; the app refuses to boot on the public
+# development key set.
 x-app-secrets: &app-secrets
   volumes:
     - ./secrets/jwks.json:/run/secrets/jwks.json:ro
