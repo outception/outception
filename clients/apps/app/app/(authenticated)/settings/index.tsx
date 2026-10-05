@@ -1,17 +1,14 @@
-import { DeleteAccountSheet } from '@/components/Accounts/DeleteAccountSheet'
-import { OrganizationsSheet } from '@/components/Settings/OrganizationsSheet'
 import { SettingsItem } from '@/components/Settings/SettingsList'
 import { Box } from '@/components/Shared/Box'
 import { Text } from '@/components/Shared/Text'
 import { useTheme } from '@/design-system/useTheme'
-import { useOrganizations } from '@/hooks/polar/organizations'
+import { useT } from '@/providers/translate'
 import { useSettingsActions } from '@/hooks/useSettingsActions'
-import { OrganizationContext } from '@/providers/OrganizationProvider'
 import Constants from 'expo-constants'
 import { useUpdates } from 'expo-updates'
-import { Stack, useRouter } from 'expo-router'
-import React, { useContext, useState } from 'react'
-import { Linking, RefreshControl, ScrollView } from 'react-native'
+import { Stack } from 'expo-router'
+import React from 'react'
+import { Alert, ScrollView } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
@@ -31,34 +28,30 @@ function UpdateId() {
 }
 
 export default function Index() {
-  const {
-    setOrganization,
-    organization: selectedOrganization,
-    organizations,
-  } = useContext(OrganizationContext)
-
   const theme = useTheme()
-  const { refetch, isRefetching } = useOrganizations()
-  const { logout } = useSettingsActions({
-    selectedOrganization,
-    organizations,
-    setOrganization,
-    refetch,
-  })
-
+  const t = useT()
+  const { logout, performDeleteAccount } = useSettingsActions()
   const safeAreaInsets = useSafeAreaInsets()
 
-  const [showAccountDeletionSheet, setShowAccountDeletionSheet] =
-    useState(false)
-  const [showOrganizationsSheet, setShowOrganizationsSheet] = useState(false)
-  const router = useRouter()
+  const confirmDeleteAccount = () =>
+    Alert.alert(
+      t('account.danger.deleteAccount'),
+      t('account.danger.confirmDesc'),
+      [
+        { text: t('account.authMethods.cancel'), style: 'cancel' },
+        {
+          text: t('account.danger.delete'),
+          style: 'destructive',
+          onPress: () => {
+            void performDeleteAccount()
+          },
+        },
+      ],
+    )
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ScrollView
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-        }
         contentContainerStyle={{
           flex: 1,
           margin: theme.spacing['spacing-16'],
@@ -67,51 +60,18 @@ export default function Index() {
           paddingBottom: safeAreaInsets.bottom,
         }}
       >
-        <Stack.Screen options={{ title: 'Settings' }} />
+        <Stack.Screen options={{ title: t('meta.settings') }} />
         <Box>
           <SettingsItem
-            title="Organization"
-            variant="select"
-            onPress={() => {
-              setShowOrganizationsSheet(true)
-            }}
-          >
-            <Text variant="body" numberOfLines={1}>
-              {selectedOrganization?.name}
-            </Text>
-          </SettingsItem>
-          <SettingsItem
-            title="Notifications"
+            title={t('account.danger.deleteAccount')}
             variant="navigate"
-            onPress={() => router.push('/settings/notifications')}
-          />
-          <Box height={1} backgroundColor="border" marginVertical="spacing-8" />
-          <SettingsItem
-            title="Support"
-            variant="link"
-            onPress={() => Linking.openURL('https://polar.sh/docs/support')}
+            onPress={confirmDeleteAccount}
           />
           <SettingsItem
-            title="Privacy Policy"
-            variant="link"
-            onPress={() =>
-              Linking.openURL('https://polar.sh/legal/privacy-policy')
-            }
-          />
-          <SettingsItem
-            title="Terms of Service"
-            variant="link"
-            onPress={() =>
-              Linking.openURL('https://polar.sh/legal/master-services-terms')
-            }
-          />
-          <Box height={1} backgroundColor="border" marginVertical="spacing-8" />
-          <SettingsItem
-            title="Delete Account"
+            title={t('news.mobile.logout')}
             variant="navigate"
-            onPress={() => setShowAccountDeletionSheet(true)}
+            onPress={logout}
           />
-          <SettingsItem title="Logout" variant="navigate" onPress={logout} />
         </Box>
         <Box
           justifyContent="center"
@@ -120,24 +80,11 @@ export default function Index() {
           gap="spacing-4"
         >
           <Text variant="body" color="subtext" textAlign="center">
-            {`Polar (${APP_VERSION})`}
+            {`Outception (${APP_VERSION})`}
           </Text>
           <UpdateId />
         </Box>
       </ScrollView>
-
-      {showAccountDeletionSheet ? (
-        <DeleteAccountSheet
-          onDismiss={() => setShowAccountDeletionSheet(false)}
-        />
-      ) : null}
-
-      {showOrganizationsSheet ? (
-        <OrganizationsSheet
-          onDismiss={() => setShowOrganizationsSheet(false)}
-          onSelect={() => router.back()}
-        />
-      ) : null}
     </GestureHandlerRootView>
   )
 }

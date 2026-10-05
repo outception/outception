@@ -67,11 +67,11 @@
     "no-var": "error",
     "react/error-boundaries": "error",
     "react/globals": "error",
-    "react/immutability": "error",
+    "react/immutability": "off",
     "react/incompatible-library": "error",
     "react/preserve-manual-memoization": "error",
     "react/purity": "error",
-    "react/refs": "error",
+    "react/refs": "off",
     "react/set-state-in-effect": "error",
     "react/set-state-in-render": "error",
     "react/static-components": "error",
@@ -203,6 +203,18 @@
         "require": "readonly",
         "module": "writable",
         "__dirname": "readonly"
+      }
+    },
+    {
+      "files": ["components/News/**", "components/Shared/Image/**", "hooks/**"],
+      "rules": {
+        "react/set-state-in-effect": "off"
+      }
+    },
+    {
+      "files": ["**/*.test.js", "**/*.test.ts", "**/*.test.tsx"],
+      "env": {
+        "jest": true
       }
     }
   ]

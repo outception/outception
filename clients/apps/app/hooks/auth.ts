@@ -1,56 +1,55 @@
 import { useOAuthConfig } from '@/hooks/oauth'
-import { useNotifications } from '@/providers/NotificationsProvider'
 import { useSession } from '@/providers/SessionProvider'
-import { ExtensionStorage } from '@bacons/apple-targets'
-import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useQueryClient } from '@tanstack/react-query'
-import { revokeAsync } from 'expo-auth-session'
-import * as Notifications from 'expo-notifications'
+import { revokeAsync, TokenTypeHint } from 'expo-auth-session'
 import { useRouter } from 'expo-router'
 import * as WebBrowser from 'expo-web-browser'
 import { useCallback } from 'react'
-import {
-  useDeleteNotificationRecipient,
-  useGetNotificationRecipient,
-} from './polar/notifications'
-
-const widgetStorage = new ExtensionStorage('group.com.polarsource.Polar')
 
 export const useLogout = () => {
-  const { session, setSession } = useSession()
-  const { expoPushToken } = useNotifications()
+  const { session, refreshToken, setSession } = useSession()
   const router = useRouter()
   const { CLIENT_ID, discovery } = useOAuthConfig()
-
-  const deleteNotificationRecipient = useDeleteNotificationRecipient()
-  const { data: notificationRecipient } =
-    useGetNotificationRecipient(expoPushToken)
 
   const queryClient = useQueryClient()
 
   const signOut = useCallback(async () => {
     try {
-      if (notificationRecipient?.id) {
-        deleteNotificationRecipient
-          .mutateAsync(notificationRecipient.id)
-          .catch(() => {})
-      }
-
+      // Revoke BOTH tokens server-side, fire-and-forget: the requests start as
+      // soon as revokeAsync is called, so we don't await them - otherwise a
+      // slow/offline network would make "sign out" hang until the fetch times
+      // out. Revoking only the access token would leave the long-lived refresh
+      // token able to mint new access tokens after sign-out, so both are killed.
       if (session) {
         revokeAsync(
-          { token: session, clientId: CLIENT_ID },
+          {
+            token: session,
+            tokenTypeHint: TokenTypeHint.AccessToken,
+            clientId: CLIENT_ID,
+          },
+          { revocationEndpoint: discovery.revocationEndpoint },
+        ).catch(() => {})
+      }
+      if (refreshToken) {
+        revokeAsync(
+          {
+            token: refreshToken,
+            tokenTypeHint: TokenTypeHint.RefreshToken,
+            clientId: CLIENT_ID,
+          },
           { revocationEndpoint: discovery.revocationEndpoint },
         ).catch(() => {})
       }
 
-      Notifications.unregisterForNotificationsAsync().catch(() => {})
       WebBrowser.coolDownAsync().catch(() => {})
       queryClient.clear()
-      await AsyncStorage.clear()
 
-      widgetStorage.set('widget_api_token', '')
-      widgetStorage.set('widget_organization_id', '')
-      widgetStorage.set('widget_organization_name', '')
+      // Nothing account-scoped lives in AsyncStorage - it holds only reader
+      // preferences (language, theme edition, tone, card set position, hidden and
+      // followed sources), and tokens live in SecureStore, cleared by
+      // setSession(null) below. The old `AsyncStorage.clear()` here wiped all
+      // of those; worse, the error boundary offers this same action after a
+      // network failure, so one offline blip erased every preference.
 
       setSession(null)
       router.replace('/')
@@ -61,9 +60,8 @@ export const useLogout = () => {
     }
   }, [
     session,
+    refreshToken,
     setSession,
-    deleteNotificationRecipient,
-    notificationRecipient,
     router,
     queryClient,
     CLIENT_ID,

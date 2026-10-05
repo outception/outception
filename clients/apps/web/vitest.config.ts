@@ -17,6 +17,10 @@ export default defineConfig({
     tsconfigPaths({ projects: ['tsconfig.json'] }),
     react({ babel: { plugins: [stylexBabelPlugin] } }),
   ],
+  resolve: {
+    // One React for every module under test, the app's own.
+    dedupe: ['react', 'react-dom'],
+  },
   test: {
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],

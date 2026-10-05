@@ -90,3 +90,7 @@ overrides:
   'uuid@<11.1.1': '>=11.1.1'
   'webpack@>=5.49.0 <=5.104.0': '>=5.104.1'
   'webpack@>=5.49.0 <5.104.0': '>=5.104.0'
+
+# Workspace packages never carry their own React: the apps provide it, and
+# the app bundles exactly one copy.
+autoInstallPeers: false

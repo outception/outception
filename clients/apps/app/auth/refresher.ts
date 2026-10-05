@@ -1,10 +1,5 @@
-import { getStorageItemAsync } from '@/hooks/storage'
 import { refreshAsync } from 'expo-auth-session'
 import { CLIENT_ID, discovery } from './oauthConfig'
-
-export const ACCESS_TOKEN_KEY = 'session'
-export const REFRESH_TOKEN_KEY = 'session_refresh_token'
-export const EXPIRES_AT_KEY = 'session_expires_at'
 
 export type SessionData = {
   accessToken: string
@@ -81,12 +76,47 @@ function shouldClearSessionAfterTokenRefreshFailure(error: unknown): boolean {
     code === 'invalid_grant' ||
     code === 'invalid_client' ||
     code === 'unauthorized_client' ||
-    code === 'unsupported_grant_type'
+    code === 'unsupported_grant_type' ||
+    // Also definitive: the server judged the request itself, not its own
+    // health - retrying an out-of-scope refresh forever keeps a dead
+    // session limping instead of signing the reader out cleanly.
+    code === 'invalid_scope'
   )
+}
+
+let lastRefreshWasTransient = false
+
+/**
+ * True when the most recent refresh failed for a transport reason (offline,
+ * 5xx, timeout) rather than because the server rejected the credentials, AND
+ * nothing has succeeded since.
+ *
+ * Callers need the distinction: a rejected refresh is a real auth failure, but
+ * a transport failure is a network blip. Treating them the same sent the
+ * request out with a stale token, got a 401, and surfaced a permanent "you
+ * don't have permission" screen for what was a dropped connection.
+ *
+ * The "nothing since" half matters just as much. Left sticky, this flag would
+ * still read true long after connectivity returned, so a LATER genuine
+ * authorization failure would be misreported as transient and the reader would
+ * be offered a no-op retry instead of the sign-in that would actually fix it -
+ * worse than the behaviour it replaced.
+ */
+export function lastRefreshFailedTransiently(): boolean {
+  return lastRefreshWasTransient
+}
+
+/** Clear the transient marker: any successful response proves we're online. */
+export function noteRequestSucceeded(): void {
+  lastRefreshWasTransient = false
 }
 
 export function isAccessTokenStale(): boolean {
   if (!state.refreshToken) return false
+  // No expiry from the token endpoint means we can't predict staleness. Don't
+  // guess: proactively refreshing here would fire a refresh on EVERY request,
+  // which is far worse than the one 401-and-retry the middleware already
+  // handles when the token finally expires.
   if (typeof state.expiresAt !== 'number') return false
   const lifetime = knownLifetimeMs ?? DEFAULT_LIFETIME_MS
   const marginMs = Math.max(
@@ -94,37 +124,6 @@ export function isAccessTokenStale(): boolean {
     Math.min(MAX_REFRESH_MARGIN_MS, Math.floor(lifetime / 3)),
   )
   return state.expiresAt - Date.now() < marginMs
-}
-
-async function adoptRotatedSession(
-  usedRefreshToken: string,
-): Promise<string | null> {
-  const latestRefreshToken = await getStorageItemAsync(REFRESH_TOKEN_KEY)
-  if (!latestRefreshToken || latestRefreshToken === usedRefreshToken) {
-    return null
-  }
-
-  const accessToken = await getStorageItemAsync(ACCESS_TOKEN_KEY)
-  if (!accessToken) {
-    return null
-  }
-
-  const expiresAtRaw = await getStorageItemAsync(EXPIRES_AT_KEY)
-  const parsedExpiresAt = expiresAtRaw
-    ? Number.parseInt(expiresAtRaw, 10)
-    : null
-
-  const next: SessionData = {
-    accessToken,
-    refreshToken: latestRefreshToken,
-    expiresAt: Number.isFinite(parsedExpiresAt) ? parsedExpiresAt : null,
-  }
-
-  state.accessToken = next.accessToken
-  state.refreshToken = next.refreshToken ?? null
-  state.expiresAt = next.expiresAt ?? null
-  state.setSession?.(next)
-  return next.accessToken
 }
 
 export async function refreshAccessToken(): Promise<string | null> {
@@ -162,17 +161,16 @@ export async function refreshAccessToken(): Promise<string | null> {
       }
 
       state.setSession?.(next)
+      lastRefreshWasTransient = false
       return next.accessToken
     } catch (error) {
       if (!shouldClearSessionAfterTokenRefreshFailure(error)) {
+        // Keep the session: the credentials were never rejected, we just
+        // couldn't reach the token endpoint.
+        lastRefreshWasTransient = true
         return null
       }
-
-      const adoptedAccessToken = await adoptRotatedSession(currentRefreshToken)
-      if (adoptedAccessToken) {
-        return adoptedAccessToken
-      }
-
+      lastRefreshWasTransient = false
       state.accessToken = null
       state.refreshToken = null
       state.expiresAt = null

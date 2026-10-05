@@ -1,20 +1,20 @@
 import { ErrorFallback } from '@/components/Errors/Fallback'
 import { useTheme } from '@/design-system/useTheme'
 import { useAppOpenTracking } from '@/hooks/useAppOpenTracking'
-import DeepLinkProvider from '@/providers/DeepLinkProvider'
-import NotificationsProvider from '@/providers/NotificationsProvider'
-import { PolarOrganizationProvider } from '@/providers/OrganizationProvider'
-import { PolarClientProvider } from '@/providers/PolarClientProvider'
-import { PolarQueryClientProvider } from '@/providers/PolarQueryClientProvider'
 import { useSession } from '@/providers/SessionProvider'
 import { ToastProvider } from '@/providers/ToastProvider'
 import { UserProvider } from '@/providers/UserProvider'
-import { DarkTheme, ThemeProvider } from '@react-navigation/native'
+import { ACCOUNTS_ENABLED } from '@/utils/features'
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from '@react-navigation/native'
 import { useQueryClient } from '@tanstack/react-query'
 import { Redirect, Stack, useRouter } from 'expo-router'
 import { PropsWithChildren } from 'react'
 import { ErrorBoundary as ErrorBoundaryComponent } from 'react-error-boundary'
-import { StatusBar } from 'react-native'
+import { StatusBar, useColorScheme } from 'react-native'
 
 const AuthenticatedErrorBoundary = ({ children }: PropsWithChildren) => {
   const queryClient = useQueryClient()
@@ -27,7 +27,10 @@ const AuthenticatedErrorBoundary = ({ children }: PropsWithChildren) => {
         router.replace('/')
       }}
       fallbackRender={({ error, resetErrorBoundary }) => (
-        <ErrorFallback error={error} resetErrorBoundary={resetErrorBoundary} />
+        <ErrorFallback
+          error={error as Error}
+          resetErrorBoundary={resetErrorBoundary}
+        />
       )}
     >
       {children}
@@ -38,16 +41,19 @@ const AuthenticatedErrorBoundary = ({ children }: PropsWithChildren) => {
 const RootLayout = () => {
   const theme = useTheme()
   const { session } = useSession()
+  const scheme = useColorScheme()
 
   useAppOpenTracking()
 
-  if (!session) {
+  if (!ACCOUNTS_ENABLED || !session) {
     return <Redirect href="/" />
   }
 
   return (
     <>
-      <StatusBar barStyle="light-content" />
+      <StatusBar
+        barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'}
+      />
       <Stack
         screenOptions={{
           headerStyle: {
@@ -66,25 +72,16 @@ const RootLayout = () => {
 }
 
 export default function Providers() {
+  const scheme = useColorScheme()
   return (
-    <ThemeProvider value={DarkTheme}>
-      <PolarClientProvider>
-        <PolarQueryClientProvider>
-          <DeepLinkProvider>
-            <NotificationsProvider>
-              <AuthenticatedErrorBoundary>
-                <UserProvider>
-                  <PolarOrganizationProvider>
-                    <ToastProvider>
-                      <RootLayout />
-                    </ToastProvider>
-                  </PolarOrganizationProvider>
-                </UserProvider>
-              </AuthenticatedErrorBoundary>
-            </NotificationsProvider>
-          </DeepLinkProvider>
-        </PolarQueryClientProvider>
-      </PolarClientProvider>
+    <ThemeProvider value={scheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <AuthenticatedErrorBoundary>
+        <UserProvider>
+          <ToastProvider>
+            <RootLayout />
+          </ToastProvider>
+        </UserProvider>
+      </AuthenticatedErrorBoundary>
     </ThemeProvider>
   )
 }

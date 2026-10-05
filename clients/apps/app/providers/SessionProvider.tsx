@@ -1,12 +1,6 @@
-import {
-  ACCESS_TOKEN_KEY,
-  configureRefresher,
-  EXPIRES_AT_KEY,
-  REFRESH_TOKEN_KEY,
-  type SessionData,
-} from '@/auth/refresher'
+import { configureRefresher, type SessionData } from '@/auth/refresher'
 import { useStorageState } from '@/hooks/storage'
-import { ExtensionStorage } from '@bacons/apple-targets'
+import { ACCOUNTS_ENABLED } from '@/utils/features'
 import {
   createContext,
   useCallback,
@@ -16,7 +10,9 @@ import {
   type PropsWithChildren,
 } from 'react'
 
-const widgetStorage = new ExtensionStorage('group.com.polarsource.Polar')
+const ACCESS_TOKEN_KEY = 'session'
+const REFRESH_TOKEN_KEY = 'session_refresh_token'
+const EXPIRES_AT_KEY = 'session_expires_at'
 
 type AuthContextValue = {
   setSession: (data: SessionData | null) => void
@@ -44,7 +40,30 @@ export function useSession() {
   return value
 }
 
+const DISABLED_AUTH: AuthContextValue = {
+  setSession: () => null,
+  session: null,
+  refreshToken: null,
+  expiresAt: null,
+  isLoading: false,
+}
+
 export function SessionProvider({ children }: PropsWithChildren) {
+  // Accounts are switched off for this launch (utils/features.ts). Skip the
+  // three SecureStore keychain reads - they resolve at different times during
+  // the busiest part of startup and each one re-renders every context consumer
+  // - and provide the static signed-out value instead.
+  if (!ACCOUNTS_ENABLED) {
+    return (
+      <AuthContext.Provider value={DISABLED_AUTH}>
+        {children}
+      </AuthContext.Provider>
+    )
+  }
+  return <ActiveSessionProvider>{children}</ActiveSessionProvider>
+}
+
+function ActiveSessionProvider({ children }: PropsWithChildren) {
   const [[isLoadingAccess, accessToken], setAccessTokenStorage] =
     useStorageState(ACCESS_TOKEN_KEY)
   const [[isLoadingRefresh, refreshToken], setRefreshTokenStorage] =
@@ -76,12 +95,6 @@ export function SessionProvider({ children }: PropsWithChildren) {
     },
     [setAccessTokenStorage, setRefreshTokenStorage, setExpiresAtStorage],
   )
-
-  useEffect(() => {
-    if (accessToken) {
-      widgetStorage.set('widget_api_token', accessToken)
-    }
-  }, [accessToken])
 
   useEffect(() => {
     configureRefresher({

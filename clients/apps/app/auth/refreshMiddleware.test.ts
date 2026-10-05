@@ -103,10 +103,11 @@ const configureStale = () => {
 
 beforeEach(() => {
   jest.resetModules()
-  // oxlint-disable-next-line typescript/no-require-imports
+  // require (not import) is required to re-load modules fresh after resetModules.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   ;({ configureRefresher } = require('./refresher') as typeof RefresherModule)
   ;({ refreshMiddleware } =
-    // oxlint-disable-next-line typescript/no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     require('./refreshMiddleware') as typeof RefreshMiddlewareModule)
   mockRefreshAsync.mockReset()
   middlewareOptions.fetch.mockReset()

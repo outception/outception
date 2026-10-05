@@ -1,0 +1,63 @@
+name: app preview
+on:
+  pull_request:
+    paths:
+      - clients/apps/app/**
+      - clients/packages/news-core/**
+      - clients/packages/client/**
+      - clients/packages/i18n/**
+
+permissions: {}
+
+jobs:
+  update:
+    name: Over-the-air preview
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ github.workspace }}/clients
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Check for the publishing token
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "EXPO_TOKEN is not set in this repository's secrets."
+            exit 1
+          fi
+
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+        with:
+          package_json_file: clients/package.json
+
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: clients/.nvmrc
+          cache: "pnpm"
+          cache-dependency-path: "clients/pnpm-lock.yaml"
+
+      - name: Setup the build service
+        uses: expo/expo-github-action@eab7a230208c952974db8c3245cfd78402c7b385 # v9
+        with:
+          working-directory: ${{ github.workspace }}/clients/apps/app
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build the packages
+        run: pnpm exec turbo run build --filter='./packages/*'
+
+      - name: Create preview
+        uses: expo/expo-github-action/preview@eab7a230208c952974db8c3245cfd78402c7b385 # v9
+        with:
+          working-directory: ${{ github.workspace }}/clients/apps/app
+          command: eas update --auto --channel preview

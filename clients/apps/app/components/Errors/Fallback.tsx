@@ -1,10 +1,12 @@
 import { useMemo } from 'react'
 
 import { Box } from '@/components/Shared/Box'
-import PolarLogo from '@/components/Shared/PolarLogo'
+import OutceptionLogo from '@/components/Shared/OutceptionLogo'
 import { useTheme } from '@/design-system/useTheme'
 import { useLogout } from '@/hooks/auth'
 import { useOAuth } from '@/hooks/oauth'
+import { lastRefreshFailedTransiently } from '@/auth/refresher'
+import { useT } from '@/providers/translate'
 import {
   isValidationError,
   UnauthorizedResponseError,
@@ -12,7 +14,7 @@ import {
 import { Text } from '../Shared/Text'
 import { Touchable } from '../Shared/Touchable'
 export interface ErrorFallbackProps {
-  error: unknown
+  error: Error
   resetErrorBoundary: () => void
 }
 
@@ -21,41 +23,41 @@ export const ErrorFallback = ({
   resetErrorBoundary,
 }: ErrorFallbackProps) => {
   const theme = useTheme()
+  const t = useT()
   const logout = useLogout()
   const { authenticate } = useOAuth()
+  // A 401 that followed a refresh we couldn't even deliver is a network blip,
+  // not an authorization problem. Calling it a permission error stranded the
+  // reader on "you don't have permission" with a Sign in button that couldn't
+  // help - for what a retry would have fixed.
+  const transientAuth = lastRefreshFailedTransiently()
   const permissionError =
-    error instanceof UnauthorizedResponseError ||
-    (error instanceof Error &&
-      isValidationError(error) &&
-      error.message.includes('insufficient_scope')) ||
-    (error instanceof Error && error.message.includes('privileges'))
+    !transientAuth &&
+    (error instanceof UnauthorizedResponseError ||
+      (isValidationError(error) &&
+        error.message.includes('insufficient_scope')) ||
+      (error instanceof Error && error.message.includes('privileges')))
 
-  const title = useMemo(() => {
-    switch (true) {
-      case permissionError:
-        return 'Insufficient Permissions'
-      default:
-        return 'Something Went Wrong'
-    }
-  }, [permissionError])
+  const title = permissionError
+    ? t('errors.permissionTitle')
+    : t('errors.genericTitle')
 
-  const message = useMemo(() => {
-    switch (true) {
-      case permissionError:
-        return 'You have insufficient permissions to access the resource. Authenticate to gain the necessary permissions.'
-      default:
-        return 'Logout & re-authenticate to try again'
-    }
-  }, [permissionError])
+  const message = permissionError
+    ? t('errors.permissionMessage')
+    : t('errors.genericMessage')
 
-  const [actionText, action] = useMemo(() => {
-    switch (true) {
-      case permissionError:
-        return ['Authenticate', authenticate]
-      default:
-        return ['Logout', logout]
-    }
-  }, [permissionError, logout, authenticate])
+  // Retry first for anything that isn't a genuine authorization failure:
+  // logging out is destructive and was previously the ONLY option offered
+  // after something as ordinary as a dropped connection.
+  const [actionText, action] = useMemo(
+    () =>
+      permissionError
+        ? ([t('errors.authenticate'), authenticate] as const)
+        : transientAuth
+          ? ([t('news.mobile.retry'), async () => {}] as const)
+          : ([t('errors.logout'), logout] as const),
+    [permissionError, transientAuth, logout, authenticate, t],
+  )
 
   return (
     <Box
@@ -66,7 +68,7 @@ export const ErrorFallback = ({
       gap="spacing-32"
       paddingHorizontal="spacing-24"
     >
-      <PolarLogo size={80} />
+      <OutceptionLogo size={80} />
       <Box gap="spacing-12">
         <Text variant="titleLarge" textAlign="center">
           {title}

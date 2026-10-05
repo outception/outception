@@ -58,6 +58,7 @@ export const Touchable = ({
   if (feedback === 'opacity') {
     return (
       <TouchableOpacity
+        accessibilityRole="button"
         activeOpacity={activeOpacity}
         onPress={onPress}
         onLongPress={onLongPress}

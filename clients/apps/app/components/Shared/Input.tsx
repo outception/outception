@@ -1,14 +1,18 @@
+import { useTone } from '@/design-system/toneStore'
 import { useTheme } from '@/design-system/useTheme'
+import { forwardRef } from 'react'
 import { TextInput, TextInputProps } from 'react-native'
 
-export const Input = (props: TextInputProps) => {
+export const Input = forwardRef<TextInput, TextInputProps>((props, ref) => {
   const theme = useTheme()
+  const tone = useTone()
 
   return (
     <TextInput
+      ref={ref}
       {...props}
       placeholderTextColor={theme.colors.subtext}
-      keyboardAppearance="dark"
+      keyboardAppearance={tone === 'dark' ? 'dark' : 'light'}
       style={[
         {
           borderRadius: theme.borderRadii['border-radius-12'],
@@ -23,4 +27,6 @@ export const Input = (props: TextInputProps) => {
       ]}
     />
   )
-}
+})
+
+Input.displayName = 'Input'

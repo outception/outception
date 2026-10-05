@@ -1,27 +1,24 @@
+// Usage: node send-push.js <payload-name>   (names are the keys in push-payload.js)
 const { execSync } = require('child_process')
 const fs = require('fs')
 const path = require('path')
-// oxlint-disable-next-line no-undef
 const TEMP_FILE = path.join(__dirname, '.push-payload-temp.json')
 const payloads = require('./push-payload')
-const BUNDLE_ID = 'com.polarsource.Polar'
+const BUNDLE_ID = 'com.outception.Outception'
 
-// Update this with one of the push notification names in push-payload.js
-const SELECTED_PUSH_NOTIFICATION = 'newOrder'
-
-const payload = payloads[SELECTED_PUSH_NOTIFICATION]
+const name = process.argv[2]
+const payload = name && payloads[name]
 if (!payload) {
-  console.error(`Unknown payload: "${SELECTED_PUSH_NOTIFICATION}"`)
+  console.error(
+    name ? `Unknown payload: "${name}"` : 'Usage: send-push.js <payload-name>',
+  )
   console.error(`Available: ${Object.keys(payloads).join(', ')}`)
   process.exit(1)
 }
 
 try {
   fs.writeFileSync(TEMP_FILE, JSON.stringify(payload, null, 2))
-
-  console.log(
-    `Sending "${SELECTED_PUSH_NOTIFICATION}" push notification to iOS simulator...`,
-  )
+  console.log(`Sending "${name}" to the booted iOS simulator...`)
   execSync(`xcrun simctl push booted "${BUNDLE_ID}" "${TEMP_FILE}"`, {
     stdio: 'inherit',
   })

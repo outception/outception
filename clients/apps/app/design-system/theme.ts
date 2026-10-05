@@ -33,18 +33,91 @@ export const palette = {
   indigoDark: '#1e1b4b',
 } as const
 
-export const colors = {
+// The semantic colour set. Light and dark provide the same keys with different
+// values, so component colour tokens stay valid in both themes.
+export type ColorSet = {
+  'background-regular': string
+  'foreground-regular': string
+  background: string
+  text: string
+  scrim: string
+  subtext: string
+  primary: string
+  /** The accent one step darker (web `--color-brand-700`) - active chip fill. */
+  primaryStrong: string
+  /** Text sitting on a primaryStrong fill - white in BOTH tones (web chips are
+   * `text-white` over brand-700 regardless of theme). */
+  onAccent: string
+  secondary: string
+  border: string
+  /** Ink ~30% - the crisp ring on the header pill (web `.paper-input` ring). */
+  borderStrong: string
+  /** Ink ~7% - near-invisible ornament rules (web `rule-hairline`). */
+  borderFaint: string
+  /** Ink ~3% - faint field tint behind the header pill (web `.paper-input`). */
+  inputTint: string
+  /** Text for chrome sitting on the page gradient's END stop (footer, pager) -
+   * luminance-picked per edition, since several light editions end dark. */
+  pageEndText: string
+  /** Ring/rule strength for the same bottom-of-gradient chrome. */
+  pageEndBorder: string
+  card: string
+  /** Stock for peeking cards - duller than `card`, giving the stack depth. */
+  cardUnder: string
+  /** The game strip's capsule fill (web `.game-pill`). Deliberately the SAME in
+   * both tones and every edition: the game boards are always light paper, so
+   * the clue pill must read as part of the board, not as the app's surface. */
+  gamePill: string
+  /** Ink on a `gamePill` capsule - likewise tone-independent. */
+  gamePillText: string
+  monochrome: string
+  monochromeInverted: string
+  error: string
+  errorSubtle: string
+  overlay: string
+  disabled: string
+  inputBackground: string
+  inputPlaceholder: string
+  statusGreen: string
+  statusGreenBg: string
+  statusYellow: string
+  statusYellowBg: string
+  statusRed: string
+  statusRedBg: string
+  statusBlue: string
+  statusBlueBg: string
+  statusGray: string
+  statusGrayBg: string
+}
+
+// Dark palette (the app's original look) - mirrors the web app's dark mode.
+export const darkColors: ColorSet = {
   'background-regular': palette.gray900,
   'foreground-regular': palette.pureWhite,
 
   // Semantic colors (migrated from old useTheme)
   background: palette.gray900,
   text: palette.pureWhite,
+  scrim: palette.pureBlack,
   subtext: palette.gray500,
   primary: palette.blue,
+  // Web base ramp's --color-brand-700 (globals.css :root).
+  primaryStrong: '#10499e',
+  onAccent: palette.pureWhite,
   secondary: palette.gray700,
   border: palette.gray700,
-  card: palette.gray800,
+  borderStrong: '#4b4b52',
+  borderFaint: '#232327',
+  inputTint: '#1a1a1d',
+  pageEndText: '#b9bbc4',
+  pageEndBorder: '#45464e',
+  // Web's night paper stocks: raised front sheet vs a duller under-sheet so
+  // the peeking card set reads as a real pile (paper-night-raised / -under).
+  card: '#151517',
+  cardUnder: '#111113',
+  // Same values in both tones - see ColorSet.gamePill.
+  gamePill: 'rgba(255, 255, 255, 0.88)',
+  gamePillText: '#3d3d46',
   monochrome: palette.pureBlack,
   monochromeInverted: palette.pureWhite,
   error: palette.red,
@@ -67,7 +140,59 @@ export const colors = {
   statusBlueBg: palette.indigoDark,
   statusGray: palette.gray100,
   statusGrayBg: palette.gray600,
-} as const
+}
+
+// Light palette - mirrors the web app's light mode (warm cream surfaces, dark
+// text, black primary buttons). Keys MUST stay identical to darkColors.
+export const lightColors: ColorSet = {
+  'background-regular': '#fdfaf4',
+  'foreground-regular': '#111111',
+  scrim: palette.pureBlack,
+
+  background: '#fdfaf4',
+  text: '#111111',
+  subtext: '#6c6e7f',
+  primary: palette.blue,
+  primaryStrong: '#10499e',
+  onAccent: palette.pureWhite,
+  secondary: '#efe9de',
+  border: '#e6e0d4',
+  borderStrong: '#b6b4b0',
+  borderFaint: '#ecebe4',
+  inputTint: '#f6f3ed',
+  pageEndText: '#6c6e7f',
+  pageEndBorder: '#d8d3c8',
+  // Web's day paper stocks (paper-sheet / paper-sheet-under): warm white
+  // front sheet over a slightly duller under-sheet, not clinical #fff.
+  card: '#fffdf7',
+  cardUnder: '#fdf9f0',
+  gamePill: 'rgba(255, 255, 255, 0.88)',
+  gamePillText: '#3d3d46',
+  // Inverted vs dark so primary buttons read black-on-light (like web/dub).
+  monochrome: palette.pureWhite,
+  monochromeInverted: palette.pureBlack,
+  error: palette.red,
+  errorSubtle: '#fde8e8',
+
+  overlay: palette.blackOverlay,
+  disabled: '#00000014',
+  inputBackground: 'rgba(0, 0, 0, 0.04)',
+  inputPlaceholder: 'rgba(0, 0, 0, 0.4)',
+
+  statusGreen: palette.green,
+  statusGreenBg: '#dcfce7',
+  statusYellow: '#a16207',
+  statusYellowBg: '#fef9c3',
+  statusRed: palette.red,
+  statusRedBg: '#fee2e2',
+  statusBlue: palette.indigo,
+  statusBlueBg: '#e0e7ff',
+  statusGray: '#374151',
+  statusGrayBg: '#e5e7eb',
+}
+
+// `colors` stays the dark set so existing ColorToken typing is unchanged.
+export const colors = darkColors
 
 export const dimension = {
   'dimension-1': 1,
@@ -78,6 +203,7 @@ export const dimension = {
   'dimension-10': 10,
   'dimension-12': 12,
   'dimension-16': 16,
+  'dimension-20': 20,
   'dimension-24': 24,
   'dimension-32': 32,
   'dimension-40': 40,
@@ -127,17 +253,25 @@ export const borderRadii = {
   'border-radius-full': 9999,
 } as const
 
-const theme = createTheme({
-  colors,
+const sharedTheme = {
   dimension,
   spacing,
   borderRadii,
   textVariants,
   buttonVariants,
-})
+}
 
-export type Theme = typeof theme
-export default theme
+export const darkTheme = createTheme({ colors: darkColors, ...sharedTheme })
+export const lightTheme = createTheme({ colors: lightColors, ...sharedTheme })
+
+/** Build a Restyle theme from a colour set (used by the theme editions). */
+export const makeTheme = (themeColors: ColorSet) =>
+  createTheme({ colors: themeColors, ...sharedTheme })
+
+export type Theme = typeof darkTheme
+// Default stays dark for any non-themed importer; the root layout picks light or
+// dark from the system setting via useColorScheme.
+export default darkTheme
 export type ColorToken = keyof typeof colors
 export type SpacingToken = keyof typeof spacing
 export type BorderRadiiToken = keyof typeof borderRadii

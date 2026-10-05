@@ -7,7 +7,12 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "channel": "development"
+      "channel": "development",
+      "env": {
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "EXPO_PUBLIC_OUTCEPTION_SERVER_URL": "https://api.outception.com",
+        "EXPO_PUBLIC_OUTCEPTION_WEB_URL": "https://outception.com"
+      }
     },
     "simulator": {
       "ios": {
@@ -19,14 +24,36 @@
     "preview": {
       "extends": "production",
       "distribution": "internal",
-      "channel": "preview"
+      "channel": "preview",
+      "autoIncrement": false,
+      "env": {
+        "EXPO_PUBLIC_OUTCEPTION_SERVER_URL": "https://api.outception.com",
+        "EXPO_PUBLIC_OUTCEPTION_WEB_URL": "https://outception.com",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
+      }
     },
     "production": {
       "autoIncrement": true,
-      "channel": "production"
+      "channel": "production",
+      "ios": {
+        "credentialsSource": "local"
+      },
+      "env": {
+        "EXPO_PUBLIC_OUTCEPTION_SERVER_URL": "https://api.outception.com",
+        "EXPO_PUBLIC_OUTCEPTION_WEB_URL": "https://outception.com",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
+      }
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "ascAppId": "6793827093"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./credentials/google-play-service-account.json",
+        "track": "alpha"
+      }
+    }
   }
 }

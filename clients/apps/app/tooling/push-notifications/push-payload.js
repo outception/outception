@@ -1,42 +1,42 @@
-const BUNDLE_ID = 'com.polarsource.Polar'
+const BUNDLE_ID = 'com.outception.Outception'
 
 const payloads = {
-  newOrder: {
+  headline: {
     'Simulator Target Bundle': BUNDLE_ID,
     aps: {
       alert: {
-        title: 'New Order',
-        body: 'You received a new order for $49.00',
+        title: 'World',
+        body: 'Parliament passes revised budget after late-night vote',
       },
       sound: 'default',
       badge: 1,
     },
     body: {
-      // Update with a proper order ID
-      deepLink: 'polar://orders/517a341f-6df1-4d21-8c32-c236a7d4069d',
+      deepLink:
+        'outception://news/article/517a341f-6df1-4d21-8c32-c236a7d4069d',
     },
   },
 
-  productsList: {
+  sources: {
     'Simulator Target Bundle': BUNDLE_ID,
     aps: {
       alert: {
-        title: 'Check Your Products',
-        body: 'You have 5 products available',
+        title: 'New sources',
+        body: '5 new sources match your cards',
       },
       sound: 'default',
     },
     body: {
-      deepLink: 'polar://products',
+      deepLink: 'outception://news/sources',
     },
   },
 
-  simpleAlert: {
+  plain: {
     'Simulator Target Bundle': BUNDLE_ID,
     aps: {
       alert: {
-        title: 'Hello!',
-        body: 'This is a test notification that does not open a deep link',
+        title: 'Outception',
+        body: 'Notification without a deep link',
       },
       sound: 'default',
     },

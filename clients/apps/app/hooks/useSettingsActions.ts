@@ -1,90 +1,28 @@
 import { useLogout } from '@/hooks/auth'
-import { useDeleteOrganization } from '@/hooks/polar/organizations'
-import { useDeleteUser } from '@/hooks/polar/users'
-import { schemas } from '@outception-com/client'
+import { useDeleteUser } from '@/hooks/outception/users'
 import { useCallback, useState } from 'react'
-import { Alert, Linking } from 'react-native'
+import { Alert } from 'react-native'
 
-const SUPPORT_URL = 'https://polar.sh/docs/support'
-
-interface UseSettingsActionsOptions {
-  selectedOrganization: schemas['Organization'] | undefined
-  organizations: schemas['Organization'][]
-  setOrganization: (organization: schemas['Organization']) => void
-  refetch: () => Promise<unknown>
-}
-
-export const useSettingsActions = ({
-  selectedOrganization,
-  organizations,
-  setOrganization,
-  refetch,
-}: UseSettingsActionsOptions) => {
+export const useSettingsActions = () => {
   const logout = useLogout()
-  const deleteOrganization = useDeleteOrganization()
   const deleteUser = useDeleteUser()
 
   const [isDeletingAccount, setIsDeletingAccount] = useState(false)
 
-  const showSupportAlert = useCallback((title: string, message: string) => {
-    Alert.alert(title, message, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Contact Support',
-        onPress: () => Linking.openURL(SUPPORT_URL),
-      },
-    ])
+  const showErrorAlert = useCallback((title: string, message: string) => {
+    Alert.alert(title, message)
   }, [])
 
   const performDeleteAccount = useCallback(async () => {
     setIsDeletingAccount(true)
     try {
-      const nonDeletableOrgs: string[] = []
-      const deletedOrgIds: string[] = []
-
-      // Start with deleting all organizations tied to the account
-      for (const org of organizations) {
-        const { data, error } = await deleteOrganization.mutateAsync(org.id)
-
-        if (error || data?.requires_support) {
-          nonDeletableOrgs.push(org.name)
-        } else if (data?.deleted) {
-          deletedOrgIds.push(org.id)
-        }
-      }
-
-      if (nonDeletableOrgs.length > 0) {
-        if (
-          selectedOrganization &&
-          deletedOrgIds.includes(selectedOrganization.id)
-        ) {
-          const remainingOrg = organizations.find(
-            (org) => !deletedOrgIds.includes(org.id),
-          )
-          if (remainingOrg) {
-            setOrganization(remainingOrg)
-          }
-        }
-
-        await refetch()
-
-        setIsDeletingAccount(false)
-        const orgNames = nonDeletableOrgs.join(', ')
-        showSupportAlert(
-          'Unable to delete account',
-          `The following organization${nonDeletableOrgs.length > 1 ? 's have' : ' has'} active orders and cannot be deleted: ${orgNames}. Please contact support for assistance.`,
-        )
-        return
-      }
-
-      // Lastly we delete the actual user account
       const { data, error } = await deleteUser.mutateAsync()
 
       if (error) {
         setIsDeletingAccount(false)
-        showSupportAlert(
+        showErrorAlert(
           'Unable to delete account',
-          'An unexpected error occurred. Please contact support for assistance.',
+          'An unexpected error occurred. Please try again.',
         )
         return
       }
@@ -93,29 +31,20 @@ export const useSettingsActions = ({
         logout()
       } else {
         setIsDeletingAccount(false)
-        showSupportAlert(
+        showErrorAlert(
           'Unable to delete account',
-          'An unexpected error occurred. Please contact support for assistance.',
+          'Your account could not be deleted. Please try again.',
         )
       }
     } catch (err) {
       console.error('[Delete Account] Unexpected error:', err)
       setIsDeletingAccount(false)
-      showSupportAlert(
+      showErrorAlert(
         'Unable to delete account',
-        'An unexpected error occurred. Please contact support for assistance.',
+        'An unexpected error occurred. Please try again.',
       )
     }
-  }, [
-    organizations,
-    selectedOrganization,
-    setOrganization,
-    deleteOrganization,
-    deleteUser,
-    showSupportAlert,
-    logout,
-    refetch,
-  ])
+  }, [deleteUser, logout, showErrorAlert])
 
   return {
     performDeleteAccount,

@@ -1,5 +1,4 @@
 import * as Linking from 'expo-linking'
-import { useRouter } from 'expo-router'
 import {
   createContext,
   useCallback,
@@ -25,8 +24,6 @@ export default function DeepLinkProvider({
 }: {
   children: React.ReactNode
 }) {
-  // oxlint-disable-next-line no-unused-vars
-  const router = useRouter()
   const handlersRef = useRef<Map<string, DeepLinkHandler>>(new Map())
   const initialUrlHandled = useRef(false)
 
@@ -43,7 +40,14 @@ export default function DeepLinkProvider({
   const handleDeepLink = useCallback((event: { url: string }) => {
     try {
       const url = new URL(event.url)
-      const path = url.hostname
+      // Scheme links put the route in the hostname (outception://news/...);
+      // https universal links put it in the pathname (outception.com/news).
+      // Keying on hostname alone meant a handler registered for a path name
+      // could never fire for universal links.
+      const path =
+        url.protocol === 'https:' || url.protocol === 'http:'
+          ? url.pathname.split('/').filter(Boolean)[0] || ''
+          : url.hostname
 
       const handler = handlersRef.current.get(path)
       if (handler) {

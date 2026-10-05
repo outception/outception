@@ -1,28 +1,31 @@
 import { Box } from '@/components/Shared/Box'
 import { Image as ExpoImage, ImageLoadEventData, ImageProps } from 'expo-image'
-import { LayoutChangeEvent, StyleSheet } from 'react-native'
+import { LayoutChangeEvent } from 'react-native'
 import { Text } from '../Text'
 import { useImageSizeWarning } from './hooks/useImageSizeWarning'
 
-export const Image = ({ onLoad, onLayout, style, ...props }: ImageProps) => {
+export const Image = ({
+  onLoad,
+  onLayout,
+  style,
+  source,
+  ...props
+}: ImageProps) => {
   const {
     sizeWarning,
     onLayout: onSizeWarningLayout,
     onImageLoad,
-  } = useImageSizeWarning()
+  } = useImageSizeWarning(source)
 
   const handleLoad = (event: ImageLoadEventData) => {
-    onImageLoad(event.source.width)
+    if (__DEV__) onImageLoad(event.source.width)
     onLoad?.(event)
   }
 
   const handleLayout = (event: LayoutChangeEvent) => {
-    onSizeWarningLayout(event)
+    if (__DEV__) onSizeWarningLayout(event)
     onLayout?.(event)
   }
-
-  // Adding this little breadcrump below to make it easier to find and disable this warning
-  // Too large, too small
 
   const showWarning = __DEV__ && sizeWarning
 
@@ -30,20 +33,24 @@ export const Image = ({ onLoad, onLayout, style, ...props }: ImageProps) => {
     <>
       <ExpoImage
         {...props}
+        source={source}
         style={style}
         onLayout={handleLayout}
         onLoad={handleLoad}
       />
       {showWarning ? (
         <Box
-          position="absolute"
           backgroundColor="error"
           justifyContent="center"
           alignItems="center"
           opacity={0.8}
           style={{
-            ...StyleSheet.absoluteFill,
-            zIndex: 999999,
+            position: 'absolute',
+            top: sizeWarning.frame.y,
+            left: sizeWarning.frame.x,
+            width: sizeWarning.frame.width,
+            height: sizeWarning.frame.height,
+            zIndex: 999,
           }}
         >
           <Text textAlign="center" style={{ fontSize: 9, lineHeight: 10 }}>

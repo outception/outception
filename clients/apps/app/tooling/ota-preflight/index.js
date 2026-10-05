@@ -11,11 +11,17 @@
  * finished build on the target channel.
  *
  * Usage:
- *   pnpm ota --channel production --message "Fix X"   # check, then publish
- *   pnpm ota --channel production --check-only        # check only, don't publish
+ *   pnpm ota --channel production --message "Fix X"       # check both platforms, then publish
+ *   pnpm ota --channel production --platform ios ...      # check + publish one platform
+ *   pnpm ota --channel production --check-only            # check only, don't publish
+ *
+ * Fingerprinting and publishing run with the env of the eas.json build
+ * profile matching --channel, exactly as the store build was compiled:
+ * local EXPO_PUBLIC_* vars are dropped and .env files are not read.
  */
 
 const { execFileSync, spawnSync } = require('node:child_process')
+const fs = require('node:fs')
 const path = require('node:path')
 
 const { diffFingerprints, stripPnpmPeerHashes } = require('./fingerprint-diff')
@@ -23,7 +29,7 @@ const { diffFingerprints, stripPnpmPeerHashes } = require('./fingerprint-diff')
 const APP_DIR = path.resolve(__dirname, '../..')
 const PLATFORMS = ['ios', 'android']
 const OWN_FLAGS = new Set(['--check-only'])
-const OTA_BRANCH = 'main'
+const BUILD_LIST_LIMIT = 20
 
 const REASON_LABELS = {
   expoAutolinkingIos: 'native module (iOS autolinking)',
@@ -46,8 +52,19 @@ const CHANGE_VERBS = {
 }
 
 function parseArgs(argv) {
+  const platformGiven = argv.some(
+    (arg) =>
+      arg === '--platform' ||
+      arg === '-p' ||
+      arg.startsWith('--platform=') ||
+      arg.startsWith('-p='),
+  )
   return {
     channel: readOption(argv, '--channel'),
+    platform:
+      readOption(argv, '--platform') ??
+      readOption(argv, '-p') ??
+      (platformGiven ? undefined : 'all'),
     checkOnly: argv.includes('--check-only'),
     forwarded: argv.filter((arg) => !OWN_FLAGS.has(arg)),
   }
@@ -63,39 +80,6 @@ function readOption(argv, name) {
   return inline ? inline.slice(name.length + 1) : undefined
 }
 
-function git(args) {
-  return execFileSync('git', args, {
-    cwd: APP_DIR,
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-  }).trim()
-}
-
-function checkGitState() {
-  const branch = git(['rev-parse', '--abbrev-ref', 'HEAD'])
-  if (branch !== OTA_BRANCH) {
-    return (
-      `On branch "${branch}", but OTAs must ship from "${OTA_BRANCH}". ` +
-      `Switch branches before publishing.`
-    )
-  }
-
-  const dirty = git(['status', '--porcelain'])
-  if (dirty) {
-    const files = dirty
-      .split('\n')
-      .map((line) => `      ${line}`)
-      .join('\n')
-    return (
-      'Working tree has uncommitted changes — the OTA bundle is built from the ' +
-      'working tree, so commit or stash them to avoid shipping unintended code:\n' +
-      files
-    )
-  }
-
-  return undefined
-}
-
 function resolveRuntimeVersion() {
   const { expo } = require(path.join(APP_DIR, 'app.config.js'))
   const policy = expo.runtimeVersion
@@ -106,12 +90,39 @@ function resolveRuntimeVersion() {
   return undefined
 }
 
+function resolveBuildProfileEnv(channel) {
+  let profiles
+  try {
+    profiles = require(path.join(APP_DIR, 'eas.json')).build ?? {}
+  } catch {
+    return {}
+  }
+
+  const collectEnv = (name, seen) => {
+    const profile = profiles[name]
+    if (!profile || seen.has(name)) return {}
+    seen.add(name)
+    const inherited = profile.extends ? collectEnv(profile.extends, seen) : {}
+    return { ...inherited, ...(profile.env ?? {}) }
+  }
+
+  const name = Object.keys(profiles).find(
+    (key) => profiles[key].channel === channel,
+  )
+  return name ? collectEnv(name, new Set()) : {}
+}
+
 function resolveEasCommand() {
+  const bin = process.platform === 'win32' ? 'eas.cmd' : 'eas'
+  const local = path.join(APP_DIR, 'node_modules', '.bin', bin)
+  if (fs.existsSync(local)) {
+    return [local]
+  }
   try {
     execFileSync('eas', ['--version'], { stdio: 'ignore' })
     return ['eas']
   } catch {
-    return ['pnpm', 'dlx', 'eas-cli']
+    return ['npx', 'eas-cli']
   }
 }
 
@@ -138,7 +149,7 @@ function createEasClient() {
         '--channel',
         channel,
         '--limit',
-        '20',
+        String(BUILD_LIST_LIMIT),
         '--json',
         '--non-interactive',
       ])
@@ -156,11 +167,16 @@ function createEasClient() {
     },
 
     publish(args) {
-      const { status } = spawnSync(cmd, [...prefix, 'update', ...args], {
+      const result = spawnSync(cmd, [...prefix, 'update', ...args], {
         cwd: APP_DIR,
         stdio: 'inherit',
       })
-      return status ?? 0
+      if (result.error) throw result.error
+      if (result.status === null) {
+        console.error(`\neas update was terminated (${result.signal})\n`)
+        return 1
+      }
+      return result.status
     },
   }
 }
@@ -174,18 +190,25 @@ function checkPlatform(eas, platform, { channel, runtime }) {
     return { platform, status: 'skipped' }
   }
 
-  const build = runtime
-    ? builds.find((candidate) => buildRuntime(candidate) === runtime)
-    : builds[0]
-  if (!build) {
+  // EVERY finished build sharing the runtime, not just the newest: several
+  // store builds can share a runtime while differing natively (the tool's
+  // founding premise), and devices pinned to an older one would otherwise be
+  // validated against a build they don't run.
+  const candidates = runtime
+    ? builds.filter((candidate) => buildRuntime(candidate) === runtime)
+    : builds.slice(0, 1)
+  if (candidates.length === 0) {
     return { platform, status: 'missing-build' }
   }
 
-  const { fingerprint1, fingerprint2 } = eas.compareToBuild(build.id)
-  const changes = diffFingerprints(fingerprint1, fingerprint2)
-  return changes.length === 0
-    ? { platform, status: 'ok', build }
-    : { platform, status: 'native-drift', build, changes }
+  for (const build of candidates) {
+    const { fingerprint1, fingerprint2 } = eas.compareToBuild(build.id)
+    const changes = diffFingerprints(fingerprint1, fingerprint2)
+    if (changes.length > 0) {
+      return { platform, status: 'native-drift', build, changes }
+    }
+  }
+  return { platform, status: 'ok', build: candidates[0] }
 }
 
 const isBlocking = (result) =>
@@ -194,7 +217,8 @@ const isBlocking = (result) =>
 function blockerMessage(result, runtime) {
   if (result.status === 'missing-build') {
     return (
-      `No finished ${result.platform} build on this channel has runtime "${runtime}". ` +
+      `No finished ${result.platform} build on this channel has runtime "${runtime}" ` +
+      `(checked the ${BUILD_LIST_LIMIT} most recent). ` +
       `An OTA for this runtime would reach 0 devices, so bump the build and submit it first.`
     )
   }
@@ -206,7 +230,9 @@ function blockerMessage(result, runtime) {
 
 function describeSourceChange({ kind, source }) {
   const locator =
-    source.filePath != null ? stripPnpmPeerHashes(source.filePath) : source.id
+    source.filePath != null
+      ? stripPnpmPeerHashes(source.filePath)
+      : (source.id ?? '<unknown source>')
   const marker = 'node_modules/'
   const cut = locator.lastIndexOf(marker)
   const name = cut === -1 ? locator : locator.slice(cut + marker.length)
@@ -223,7 +249,7 @@ function reportResult(result) {
 
   switch (result.status) {
     case 'skipped':
-      console.log(`   ${label} no finished builds on this channel — skipped`)
+      console.log(`   ${label} no finished builds on this channel - skipped`)
       return
     case 'missing-build':
       console.log(`   ${label} no matching build for this runtime`)
@@ -250,35 +276,41 @@ function reportBlockers(blockers) {
 }
 
 function main(argv) {
-  const { channel, checkOnly, forwarded } = parseArgs(argv)
+  const { channel, platform, checkOnly, forwarded } = parseArgs(argv)
   if (!channel) {
     console.error(
-      '\n❌ Missing --channel. Usage: pnpm ota --channel production --message "…"\n',
+      '\nMissing --channel. Usage: pnpm ota --channel production --message "…"\n',
     )
     return 2
   }
+  if (platform !== 'all' && !PLATFORMS.includes(platform)) {
+    console.error('\n--platform must be ios, android or all\n')
+    return 2
+  }
+
+  const platforms = platform === 'all' ? PLATFORMS : [platform]
+
+  // The bundle has to be built with the env the store binary was compiled
+  // with, not whatever this shell happens to have. Drop local EXPO_PUBLIC_*
+  // vars, stop expo from reading .env (build servers have none), and apply
+  // the profile env before anything evaluates the app config.
+  for (const key of Object.keys(process.env)) {
+    if (key.startsWith('EXPO_PUBLIC_')) delete process.env[key]
+  }
+  process.env.EXPO_NO_DOTENV = '1'
+  Object.assign(process.env, resolveBuildProfileEnv(channel))
 
   const runtime = resolveRuntimeVersion()
   console.log(
-    `\n🔎 OTA preflight — channel "${channel}"` +
+    `\nOTA preflight - channel "${channel}"` +
+      (platform !== 'all' ? `, ${platform} only` : '') +
       (runtime ? `, runtime "${runtime}" (appVersion policy)` : '') +
       '\n',
   )
 
-  if (!checkOnly) {
-    const gitIssue = checkGitState()
-    if (gitIssue) {
-      console.error('──────────────────────────────────────────────')
-      console.error('OTA preflight blocked by git state:\n')
-      console.error(`  • ${gitIssue}\n`)
-      return 1
-    }
-    console.log(`   ${'git'.padEnd(8)} on ${OTA_BRANCH}, working tree clean`)
-  }
-
   const eas = createEasClient()
-  const results = PLATFORMS.map((platform) =>
-    checkPlatform(eas, platform, { channel, runtime }),
+  const results = platforms.map((p) =>
+    checkPlatform(eas, p, { channel, runtime }),
   )
   results.forEach(reportResult)
 
@@ -286,11 +318,27 @@ function main(argv) {
     .filter(isBlocking)
     .map((result) => blockerMessage(result, runtime))
 
+  const skipped = results.filter((result) => result.status === 'skipped')
+  if (skipped.length === results.length) {
+    blockers.push(
+      `Channel "${channel}" has no finished builds on any platform, so an OTA would reach 0 devices. ` +
+        'Build & submit a binary to this channel first.',
+    )
+  } else if (skipped.length > 0) {
+    console.log(
+      `\n   note: publishing will still target ${skipped
+        .map((result) => result.platform)
+        .join(
+          ', ',
+        )} even though no build exists there - pass --platform to leave it out`,
+    )
+  }
+
   if (blockers.length > 0) {
     reportBlockers(blockers)
     return 1
   }
-  console.log('\n✅ Preflight passed, safe to ship!\n')
+  console.log('\nPreflight passed, safe to ship.\n')
 
   if (checkOnly) return 0
 
@@ -303,7 +351,7 @@ if (require.main === module) {
   try {
     process.exit(main(process.argv.slice(2)))
   } catch (error) {
-    console.error(`\n❌ ${error.message || error}\n`)
+    console.error(`\n${error.message || error}\n`)
     process.exit(1)
   }
 }

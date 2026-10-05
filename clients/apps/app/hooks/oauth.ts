@@ -34,7 +34,7 @@ export const useOAuth = () => {
       clientId: CLIENT_ID,
       scopes,
       redirectUri: makeRedirectUri({
-        scheme: 'polar',
+        scheme: 'outception',
         path: 'oauth/callback',
       }),
       usePKCE: true,
@@ -53,7 +53,12 @@ export const useOAuth = () => {
       if (response?.type !== 'success') {
         Sentry.captureMessage('[OAuth] auth session failed', {
           level: 'warning',
-          extra: { responseType: response?.type, response },
+          // Never the raw response: on 'error' it carries the callback params.
+          extra: {
+            responseType: response?.type,
+            errorCode:
+              response?.type === 'error' ? response.error?.code : undefined,
+          },
         })
         return
       }
@@ -63,7 +68,7 @@ export const useOAuth = () => {
           clientId: CLIENT_ID,
           code: response.params.code,
           redirectUri: makeRedirectUri({
-            scheme: 'polar',
+            scheme: 'outception',
             path: 'oauth/callback',
           }),
           extraParams: {

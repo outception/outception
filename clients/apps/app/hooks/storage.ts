@@ -2,12 +2,6 @@ import * as SecureStore from 'expo-secure-store'
 import { useCallback, useEffect, useReducer } from 'react'
 import { Platform } from 'react-native'
 
-// ⚠️ Changing this to a different group would make existing sessions unreadable
-const SECURE_STORE_OPTIONS: SecureStore.SecureStoreOptions = {
-  accessGroup: '55U3YA3QTA.com.polarsource.Polar',
-  keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK,
-}
-
 type UseStateHook<T> = [[boolean, T | null], (value: T | null) => void]
 
 function useAsyncState<T>(
@@ -23,9 +17,18 @@ function useAsyncState<T>(
 }
 
 export async function getStorageItemAsync(key: string): Promise<string | null> {
-  const value = await SecureStore.getItemAsync(key, SECURE_STORE_OPTIONS)
-  if (value !== null) {
-    return value
+  // Branch on platform like its setter/reader siblings do. SecureStore has no
+  // web implementation, so the unconditional call threw there - which silently
+  // stopped useStoreReview from ever counting an app open on web.
+  if (Platform.OS === 'web') {
+    try {
+      return typeof localStorage !== 'undefined'
+        ? localStorage.getItem(key)
+        : null
+    } catch (e) {
+      console.error('Local storage is unavailable:', e)
+      return null
+    }
   }
   return await SecureStore.getItemAsync(key)
 }
@@ -43,9 +46,9 @@ export async function setStorageItemAsync(key: string, value: string | null) {
     }
   } else {
     if (value == null) {
-      await SecureStore.deleteItemAsync(key, SECURE_STORE_OPTIONS)
+      await SecureStore.deleteItemAsync(key)
     } else {
-      await SecureStore.setItemAsync(key, value, SECURE_STORE_OPTIONS)
+      await SecureStore.setItemAsync(key, value)
     }
   }
 }
@@ -55,7 +58,6 @@ export function useStorageState(key: string): UseStateHook<string> {
   const [state, setState] = useAsyncState<string>()
 
   // Get
-  /* oxlint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     if (Platform.OS === 'web') {
       try {
@@ -66,11 +68,11 @@ export function useStorageState(key: string): UseStateHook<string> {
         console.error('Local storage is unavailable:', e)
       }
     } else {
-      getStorageItemAsync(key).then((value) => {
+      SecureStore.getItemAsync(key).then((value) => {
         setState(value)
       })
     }
-  }, [key])
+  }, [key, setState])
 
   // Set
   const setValue = useCallback(
@@ -78,9 +80,8 @@ export function useStorageState(key: string): UseStateHook<string> {
       setState(value)
       setStorageItemAsync(key, value)
     },
-    [key],
+    [key, setState],
   )
-  /* oxlint-enable react-hooks/exhaustive-deps */
 
   return [state, setValue]
 }

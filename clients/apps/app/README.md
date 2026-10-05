@@ -1,4 +1,4 @@
-# Polar App
+# Outception App
 
 iOS and Android app built with Expo and React Native.
 
@@ -17,7 +17,7 @@ EAS (Expo Application Services) is used to compile and sign Android/iOS apps wit
 ### Install the EAS CLI
 
 ```bash
-pnpm add -g eas-cli
+npm install eas-cli -g
 ```
 
 ### Build profiles
@@ -66,9 +66,9 @@ OTA updates let you push JavaScript/asset changes directly to users without goin
 
 After publishing an update, you need to **force close and reopen the app twice** to see the changes:
 
-1. First open — the app detects and downloads the update in the background
+1. First open - the app detects and downloads the update in the background
 2. Force close the app (swipe it away, don't just background it)
-3. Second open — the downloaded update is applied
+3. Second open - the downloaded update is applied
 
 This is how `expo-updates` works by default: it downloads updates in the background and applies them on the next cold start.
 
@@ -79,9 +79,6 @@ Publish through `pnpm ota`, **not** raw `eas update`. It runs a preflight guard
 reach devices then forwards to `eas update` for you:
 
 ```bash
-# Make sure you are on the main branch first
-git checkout main
-
 # Test on preview first if it's a larger change
 pnpm ota --channel preview --message "Description of changes"
 
@@ -96,7 +93,7 @@ The guard verifies, per platform, against the latest finished build on the chann
 2. **The native layer matches that build** comparing fingerprints while ignoring
    pnpm's virtual-store path churn, so only _real_ native changes block you.
 
-If it blocks, you need a new native build (see below) — not an OTA. Use
+If it blocks, you need a new native build (see below) - not an OTA. Use
 `--check-only` to run the checks without publishing.
 
 ### When to OTA vs native build
@@ -121,7 +118,7 @@ If it blocks, you need a new native build (see below) — not an OTA. Use
 
 ### Preview builds
 
-A preview build is a production-like build distributed internally to your team — no app store submission needed. It's used to test OTA updates before pushing them to real users.
+A preview build is a production-like build distributed internally to your team - no app store submission needed. It's used to test OTA updates before pushing them to real users.
 
 **Creating a preview build:**
 
@@ -140,7 +137,7 @@ eas build --profile preview --platform ios   # Rebuild with the device included
 
 Once the build finishes, EAS gives you a URL. Open it on your phone to install directly (no TestFlight needed). For Android, you just download and install the APK.
 
-You don't need to rebuild the preview build for every change — only when native code changes. Day-to-day, you push OTA updates to it via `pnpm ota --channel preview`.
+You don't need to rebuild the preview build for every change - only when native code changes. Day-to-day, you push OTA updates to it via `eas update --channel preview`.
 
 ### Recommended workflow
 

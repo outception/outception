@@ -72,7 +72,7 @@ export const Button = ({
       <Box
         paddingHorizontal={sizeStyle.paddingHorizontal}
         paddingVertical={sizeStyle.paddingVertical}
-        borderRadius="border-radius-999"
+        borderRadius="border-radius-8"
         alignItems="center"
         justifyContent="center"
         flexDirection="row"

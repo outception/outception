@@ -19,7 +19,7 @@ const MINIMUM_DAYS_BETWEEN_PROMPTS = 120
 
 export interface UseStoreReviewReturn {
   requestReview: () => Promise<void>
-  shouldShow: (hasOrders: boolean) => boolean
+  shouldShow: () => boolean
   isLoading: boolean
   incrementAppOpenCount: () => Promise<void>
 }
@@ -50,43 +50,38 @@ export function useStoreReview(): UseStoreReviewReturn {
     StoreReview.isAvailableAsync().then(setIsAvailable)
   }, [])
 
-  const shouldShow = useCallback(
-    (hasOrders: boolean) => {
-      if (isLoading || !isAvailable) {
-        return false
-      }
+  const shouldShow = useCallback(() => {
+    if (isLoading || !isAvailable) {
+      return false
+    }
 
-      const openCount = appOpenCount ? parseInt(appOpenCount, 10) : 0
+    const openCount = appOpenCount ? parseInt(appOpenCount, 10) : 0
 
-      // We only want to show the rating if you have orders and have opened
-      // the app 5 times from a cold state.
-      const meetsAppOpenRequirement = openCount >= MINIMUM_APP_OPENS
-      const meetsOrderRequirement = hasOrders
-      const meetsRequirements = meetsAppOpenRequirement && meetsOrderRequirement
+    // We only want to show the rating once the app has been opened 5 times
+    // from a cold state.
+    const meetsRequirements = openCount >= MINIMUM_APP_OPENS
 
-      // Apple guidelines requires us to only ask for rating 3 times per year,
-      // with at least 3 months apart between each request.
-      const hasNotRated = hasRated !== 'true'
-      const count = askCount ? parseInt(askCount, 10) : 0
-      const underMaxPrompts = count < MAX_PROMPTS_PER_YEAR
-      let meetsTimingRequirement = true
+    // Apple guidelines requires us to only ask for rating 3 times per year,
+    // with at least 3 months apart between each request.
+    const hasNotRated = hasRated !== 'true'
+    const count = askCount ? parseInt(askCount, 10) : 0
+    const underMaxPrompts = count < MAX_PROMPTS_PER_YEAR
+    let meetsTimingRequirement = true
 
-      if (lastShown) {
-        const lastShownDate = new Date(parseInt(lastShown, 10))
-        const daysSinceLastShown = Math.floor(
-          (Date.now() - lastShownDate.getTime()) / (1000 * 60 * 60 * 24),
-        )
-        meetsTimingRequirement =
-          daysSinceLastShown >= MINIMUM_DAYS_BETWEEN_PROMPTS
-      }
+    if (lastShown) {
+      const lastShownDate = new Date(parseInt(lastShown, 10))
+      const daysSinceLastShown = Math.floor(
+        (Date.now() - lastShownDate.getTime()) / (1000 * 60 * 60 * 24),
+      )
+      meetsTimingRequirement =
+        daysSinceLastShown >= MINIMUM_DAYS_BETWEEN_PROMPTS
+    }
 
-      const meetsMandatoryAppleRequirements =
-        hasNotRated && underMaxPrompts && meetsTimingRequirement
+    const meetsMandatoryAppleRequirements =
+      hasNotRated && underMaxPrompts && meetsTimingRequirement
 
-      return meetsRequirements && meetsMandatoryAppleRequirements
-    },
-    [isLoading, isAvailable, hasRated, appOpenCount, askCount, lastShown],
-  )
+    return meetsRequirements && meetsMandatoryAppleRequirements
+  }, [isLoading, isAvailable, hasRated, appOpenCount, askCount, lastShown])
 
   const requestReview = useCallback(async () => {
     if (!isAvailable) {

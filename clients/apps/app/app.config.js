@@ -1,6 +1,16 @@
-const IS_WIDGET_BUILD = process.env.EXPO_WIDGET_BUILD === '1'
+// Build-time app config; per-profile env comes from eas.json.
 
 const plugins = [
+  [
+    'expo-build-properties',
+    {
+      android: {
+        // R8 shrinking; RN/Expo libs ship their own keep rules
+        enableMinifyInReleaseBuilds: true,
+        enableShrinkResourcesInReleaseBuilds: true,
+      },
+    },
+  ],
   'expo-router',
   [
     'expo-splash-screen',
@@ -8,13 +18,12 @@ const plugins = [
       image: './assets/images/splash-icon.png',
       imageWidth: 120,
       resizeMode: 'contain',
-      // oxlint-disable-next-line @outception/no-hardcoded-colors
+      // eslint-disable-next-line @outception/no-hardcoded-colors
       backgroundColor: '#0D0E10',
     },
   ],
   'expo-secure-store',
   'expo-font',
-  'expo-notifications',
   [
     'expo-asset',
     {
@@ -22,63 +31,62 @@ const plugins = [
     },
   ],
   'expo-web-browser',
-]
-
-// Only include Sentry plugin for non-widget builds
-// The Sentry plugin fails with @bacons/apple-targets blank template
-// because it expects the "Bundle React Native code and images" build phase to exist
-if (!IS_WIDGET_BUILD) {
-  plugins.push([
+  [
     '@sentry/react-native/expo',
     {
       url: 'https://sentry.io/',
-      project: 'polar-app',
-      organization: 'polar-sh',
+      project: 'outception-app',
+      organization: 'outception-com',
     },
-  ])
-}
-
-plugins.push('@bacons/apple-targets')
+  ],
+  'expo-quick-actions',
+]
 
 module.exports = {
   expo: {
-    name: 'Polar',
-    slug: 'Polar',
-    version: '1.7.0',
+    name: 'Outception',
+    slug: 'outception-app',
+    // runtimeVersion follows appVersion, so this has to track package.json
+    version: require('./package.json').version,
     orientation: 'portrait',
     icon: './assets/images/icon.png',
-    scheme: 'polar',
-    userInterfaceStyle: 'dark',
+    scheme: 'outception',
+    // 'dark' pins AppCompatDelegate to MODE_NIGHT_YES and breaks useColorScheme()
+    userInterfaceStyle: 'automatic',
+    // SDK 54 edge-to-edge scrim draws a grey band under the nav bar otherwise
+    androidNavigationBar: { enforceContrast: false },
     newArchEnabled: true,
-    owner: 'polar-sh',
+    owner: 'outception-app',
     ios: {
-      appleTeamId: '55U3YA3QTA',
+      appleTeamId: 'PFQXM32538',
       supportsTablet: false,
-      bundleIdentifier: 'com.polarsource.Polar',
+      bundleIdentifier: 'com.outception.Outception',
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
       },
       icon: './assets/images/ios-dark.png',
       entitlements: {
         'com.apple.developer.applesignin': ['Default'],
-        'com.apple.security.application-groups': [
-          'group.com.polarsource.Polar',
-        ],
-        'keychain-access-groups': [
-          '$(AppIdentifierPrefix)com.polarsource.Polar',
-        ],
       },
-      associatedDomains: ['applinks:polar.godetour.link'],
+      associatedDomains: [
+        'applinks:outception.godetour.link',
+        'applinks:outception.com',
+      ],
     },
     android: {
       adaptiveIcon: {
         foregroundImage: './assets/images/adaptive-icon.png',
-        // oxlint-disable-next-line @outception/no-hardcoded-colors
+        // Native build-time value - Expo config can't reference theme tokens.
+        // eslint-disable-next-line @outception/no-hardcoded-colors
         backgroundColor: '#0D0E10',
       },
-      package: 'com.polarsource.Polar',
-      scheme: 'polar',
-      googleServicesFile: './google-services.json',
+      package: 'com.outception.Outception',
+      // Nothing reads location; block both so a transitive lib can't add them.
+      blockedPermissions: [
+        'android.permission.ACCESS_COARSE_LOCATION',
+        'android.permission.ACCESS_FINE_LOCATION',
+      ],
+      scheme: 'outception',
       intentFilters: [
         {
           action: 'VIEW',
@@ -86,10 +94,19 @@ module.exports = {
           data: [
             {
               scheme: 'https',
-              host: 'polar.godetour.link',
+              host: 'outception.godetour.link',
               pathPrefix: '/baSjUTJtg8',
             },
           ],
+          category: ['BROWSABLE', 'DEFAULT'],
+        },
+        {
+          // shared card links (https://outception.com/?card=<id>)
+          // autoVerify needs assetlinks.json on outception.com with our
+          // signing cert - until then Android shows the app chooser
+          action: 'VIEW',
+          autoVerify: true,
+          data: [{ scheme: 'https', host: 'outception.com' }],
           category: ['BROWSABLE', 'DEFAULT'],
         },
       ],
@@ -109,16 +126,21 @@ module.exports = {
         root: './app',
       },
       eas: {
-        projectId: '0c79977b-c070-4416-8878-d8b8febe2e25',
+        projectId: 'd49bc2f6-e86b-4c89-beab-8edfb0b87ed4',
       },
     },
     runtimeVersion: {
+      // bump package.json whenever a native module is added, or an OTA can
+      // reach an older binary and crash ('fingerprint' would automate this
+      // but fails EAS's expo-updates configure step on this project)
       policy: 'appVersion',
     },
     updates: {
-      url: 'https://u.expo.dev/0c79977b-c070-4416-8878-d8b8febe2e25',
+      url: 'https://u.expo.dev/d49bc2f6-e86b-4c89-beab-8edfb0b87ed4',
       checkAutomatically: 'ON_LOAD',
-      fallbackToCacheTimeout: 20000,
+      // anything > 0 blocks cold start on the manifest fetch (black splash);
+      // updates still download in the background and apply next launch
+      fallbackToCacheTimeout: 0,
     },
   },
 }
