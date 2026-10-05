@@ -34,6 +34,11 @@ export default {
       hideSource: 'Hide {source}',
       unhideSource: 'Show {source} again',
       hidden: 'Hidden',
+      findCity: 'Find the city “{query}”',
+      findingCity: 'Looking up {query}…',
+      cityFound: 'Added {name}',
+      noCity: 'No card covers {place} yet.',
+      noPlace: 'No place found for “{query}”.',
     },
     templates: {
       chip: 'Starters',
@@ -328,6 +333,12 @@ export default {
       hideRead: 'Hide read',
       everyOutlet: 'Every outlet',
       oneRowPerStory: 'One row per story',
+      autoplay: 'Auto-play',
+    },
+    autoplay: {
+      play: 'Play the wall',
+      pause: 'Pause',
+      progress: 'Position on the wall',
     },
     trust: {
       line: 'No account to read. No tracking profile. No ad network. One products card a day, reviewed by hand. Open source.',

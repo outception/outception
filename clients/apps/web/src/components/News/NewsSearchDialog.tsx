@@ -1,6 +1,6 @@
 'use client'
 
-import { useNewsSources } from '@/hooks/queries/news'
+import { useCityLookup, useNewsSources } from '@/hooks/queries/news'
 import type { NewsSourceMeta } from '@/utils/news'
 import {
   Command,
@@ -16,7 +16,7 @@ import {
 } from '@outception-com/ui/components/ui/dialog'
 import { useT } from '@/providers/translate'
 import { NEWS_TOPIC_GROUPS } from '@outception-com/i18n'
-import { Eye, EyeOff, Star, X } from 'lucide-react'
+import { Eye, EyeOff, MapPin, Star, X } from 'lucide-react'
 import {
   useDeferredValue,
   useEffect,
@@ -138,6 +138,34 @@ export const NewsSearchDialog = () => {
   }, [searchOpen, setSearchOpen])
 
   const resultIds = useMemo(() => results.map((s) => s.id), [results])
+
+  // Place mode: a typed city resolves on the server to a city card, which
+  // is followed and shown. No coordinate parsing; a miss says so.
+  const cityLookup = useCityLookup()
+  const [cityNote, setCityNote] = useState<string | null>(null)
+  const placeQuery = deferredQuery.trim()
+  const canFindCity = placeQuery.length >= 3 && !templatesOpen
+  const findCity = async () => {
+    setCityNote(t('news.search.findingCity', { query: placeQuery }))
+    try {
+      const found = await cityLookup.mutateAsync(placeQuery)
+      if (found.cardId) {
+        if (!isFocused(found.cardId)) toggleFocus(found.cardId)
+        setCityNote(
+          t('news.search.cityFound', {
+            name: found.place?.name ?? found.cardId,
+          }),
+        )
+        setSearchOpen(false)
+      } else if (found.place) {
+        setCityNote(t('news.search.noCity', { place: found.place.name }))
+      } else {
+        setCityNote(t('news.search.noPlace', { query: placeQuery }))
+      }
+    } catch {
+      setCityNote(t('news.search.noPlace', { query: placeQuery }))
+    }
+  }
 
   // Start with a viewport's worth of rows, then grow only when the reader
   // scrolls the sentinel into view - so the DOM never holds more than what
@@ -268,6 +296,23 @@ export const NewsSearchDialog = () => {
                 </button>
                 <span className="meta-kicker ml-auto">{resultIds.length}</span>
               </div>
+              {canFindCity ? (
+                <CommandItem
+                  value={`city:${placeQuery}`}
+                  onSelect={() => void findCity()}
+                  className="mx-1 cursor-pointer rounded-xl px-3 py-2 data-[selected=true]:!bg-neutral-500/10 data-[selected=true]:!text-current"
+                >
+                  <MapPin className="mr-2 h-4 w-4 opacity-60" aria-hidden />
+                  <span>
+                    {t('news.search.findCity', { query: placeQuery })}
+                  </span>
+                </CommandItem>
+              ) : null}
+              {cityNote ? (
+                <div className="px-4 py-1">
+                  <span className="meta-kicker">{cityNote}</span>
+                </div>
+              ) : null}
               <CommandEmpty>{t('news.search.empty')}</CommandEmpty>
               {visibleResults.map((s) => {
                 const followed = isFocused(s.id)

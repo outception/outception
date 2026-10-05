@@ -47,6 +47,7 @@ const ReadingControls = ({ open }: { open: boolean }) => {
   const flags = useFlags()
   const hideRead = flags.includes(FLAGS.hideRead)
   const everyOutlet = flags.includes(FLAGS.showEveryOutlet)
+  const autoplay = flags.includes(FLAGS.autoplay)
   return (
     <span
       className="nav-pill-looks nav-pill-controls"
@@ -76,6 +77,16 @@ const ReadingControls = ({ open }: { open: boolean }) => {
         {everyOutlet
           ? t('news.controls.everyOutlet')
           : t('news.controls.oneRowPerStory')}
+      </button>
+      <button
+        type="button"
+        className="ghost-pill"
+        aria-pressed={autoplay}
+        data-active={autoplay}
+        tabIndex={open ? 0 : -1}
+        onClick={() => toggleFlag(FLAGS.autoplay)}
+      >
+        {t('news.controls.autoplay')}
       </button>
       <TellUsSheet trigger="pill" />
     </span>

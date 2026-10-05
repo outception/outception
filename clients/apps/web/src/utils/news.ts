@@ -77,6 +77,10 @@ export const newsApi = {
     ),
   briefingProfiles: () => unwrap(api.GET('/v1/news/briefing/profiles')),
   credits: () => unwrap(api.GET('/v1/news/credits')),
+  // A typed city resolved to a city card, through the catalog or a keyless
+  // geocoder on the server.
+  city: (q: string) =>
+    unwrap(api.GET('/v1/news/cities', { params: { query: { q } } })),
   briefing: (profile: string) =>
     unwrap(
       api.GET('/v1/news/briefing/{profile}', { params: { path: { profile } } }),

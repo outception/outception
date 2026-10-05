@@ -19,6 +19,7 @@ export default defineConfig({
   ],
   test: {
     environment: 'jsdom',
+    setupFiles: ['./vitest.setup.ts'],
     fsModuleCache: true,
     exclude: ['**/node_modules/**', '**/dist/**'],
     env: {

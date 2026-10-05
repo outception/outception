@@ -8,6 +8,7 @@ import { TermsContent } from '@/components/Legal/TermsContent'
 import { NewsColumnProvider } from '@/components/News/NewsColumnContext'
 import { NewsNavTabs } from '@/components/News/NewsNavTabs'
 import { useT } from '@/providers/translate'
+import { useHoldsEnvironment } from '@/utils/motion'
 import { Text } from '@outception-com/orbit/Text'
 import { Box } from '@outception-com/orbit/Box'
 import { PropsWithChildren } from 'react'
@@ -93,6 +94,7 @@ const LandingFooter = () => {
 }
 
 export default function LandingLayout({ children }: PropsWithChildren) {
+  useHoldsEnvironment()
   return (
     <NewsColumnProvider>
       <Box flexDirection="column" minHeight="100vh">

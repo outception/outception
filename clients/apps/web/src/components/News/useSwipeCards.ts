@@ -127,5 +127,6 @@ export const useSwipeCards = (
     canNext: items.length > 1,
     goNext,
     goPrev,
+    goTo: move,
   }
 }

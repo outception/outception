@@ -32,6 +32,7 @@ from outception.routing import APIRouter
 from . import auth as news_auth
 from . import (
     cache,
+    cities,
     client_budget,
     follows,
     heatmap,
@@ -325,6 +326,19 @@ async def get_templates(
     return TemplatesResponse.model_validate(
         {"templates": resolve_templates(_catalog, cc)}
     )
+
+
+@router.get("/cities", response_model=cities.CityResolution, tags=[APITag.public])
+async def resolve_city(
+    response: Response,
+    q: str = Query(min_length=2, max_length=80),
+    redis: Redis = Depends(get_redis),
+) -> cities.CityResolution:
+    """A typed city resolved to a city card: by name when the catalog has
+    it, else through a keyless geocoder and the nearest card within reach.
+    `cardId` is null when no card covers the place yet."""
+    response.headers["Cache-Control"] = "public, max-age=600"
+    return await cities.resolve_city(redis, q)
 
 
 @router.get("/credits", response_model=CreditsResponse, tags=[APITag.public])

@@ -93,3 +93,6 @@ jobs:
 
       - name: 🛠️ Build
         run: pnpm build
+
+      - name: ⚖️ Performance budget
+        run: pnpm exec tsx scripts/check-budget.ts

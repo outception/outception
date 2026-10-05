@@ -5,7 +5,7 @@ import {
   type NewsSort,
   type NewsSourceMeta,
 } from '@/utils/news'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef } from 'react'
 import { defaultRetry } from './retry'
 
@@ -245,3 +245,8 @@ export const useCredits = (enabled = true) =>
     retry: defaultRetry,
     enabled,
   })
+
+/** Resolve a typed place to a city card. A mutation, not a query: it runs
+ * on the reader's choice, never on every keystroke. */
+export const useCityLookup = () =>
+  useMutation({ mutationFn: (q: string) => newsApi.city(q) })

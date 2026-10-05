@@ -1,16 +1,18 @@
 'use client'
 
+import { useNow } from '@/hooks/useNow'
 import { useT } from '@/providers/translate'
 import {
   safeExternalHref,
   stateWord,
+  timeAgo,
   type SignalState,
 } from '@outception-com/news-core'
 import { Box } from '@outception-com/orbit/Box'
 import { Text } from '@outception-com/orbit/Text'
-import OutceptionTimeAgo from '@outception-com/ui/components/atoms/OutceptionTimeAgo'
 import type { ReactNode } from 'react'
 import { SourceBadge } from './SourceBadge'
+import { SplitFlap } from './SplitFlap'
 
 /**
  * The one header every card kind shares: the badge, the accent dot and the
@@ -48,6 +50,7 @@ export const CardHeader = ({
   badge?: boolean
 }) => {
   const t = useT()
+  const now = useNow()
   const word = state ? stateWord(state) : null
   const stateLabel = word
     ? {
@@ -118,14 +121,10 @@ export const CardHeader = ({
             {/* Uppercase micro-kicker, like the row timestamps. */}
             <span className="meta-kicker" data-testid="card-kicker">
               {updatedAt ? (
-                <>
-                  {t('news.card.updated')}{' '}
-                  <OutceptionTimeAgo
-                    date={updatedAt}
-                    locale="en"
-                    minPeriod={60}
-                  />
-                </>
+                <SplitFlap
+                  owner={id}
+                  text={`${t('news.card.updated')} ${timeAgo(updatedAt, now, 'en')}`}
+                />
               ) : error ? (
                 t('news.card.failed')
               ) : loading ? (

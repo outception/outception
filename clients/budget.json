@@ -1,0 +1,5 @@
+{
+  "why": "The wall is the product: its scripts stay under these gzipped sizes so a phone on a slow link paints the first card quickly. Measured after `next build` on the landing route.",
+  "rootGzipKb": 200,
+  "wallGzipKb": 420
+}

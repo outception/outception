@@ -8,11 +8,14 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useSyncExternalStore,
   type KeyboardEvent,
 } from 'react'
 import { useIsMobileMedia } from '@/utils/mobile'
+import { AutoplayControl } from './AutoplayControl'
 import type { CardDescriptor } from './Card'
+import { FLAGS, useFlag } from './readerStores'
 import { PEEK_X, PEEK_X_MOBILE, SwipeCard } from './SwipeCard'
 import { useSwipeCards } from './useSwipeCards'
 import {
@@ -76,7 +79,9 @@ export const NewsCards = ({
     getFocusRequestServerSnapshot,
   )
   const cards = useSwipeCards(items, column, initialActiveId, focusRequest)
-  const { goNext, goPrev } = cards
+  const { goNext, goPrev, goTo } = cards
+  const autoplay = useFlag(FLAGS.autoplay)
+  const deckRef = useRef<HTMLDivElement>(null)
   const onSwipe = useCallback(
     (move: 'next' | 'prev') => (move === 'next' ? goNext() : goPrev()),
     [goNext, goPrev],
@@ -131,6 +136,7 @@ export const NewsCards = ({
       paddingBottom="m"
     >
       <motion.div
+        ref={deckRef}
         key={column}
         initial={{ opacity: 0, y: 18, scale: 0.985 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -206,6 +212,14 @@ export const NewsCards = ({
         >
           <NextIcon className="h-4 w-4" />
         </button>
+        {autoplay ? (
+          <AutoplayControl
+            cardIds={items}
+            index={cards.index}
+            goTo={goTo}
+            interactionRef={deckRef}
+          />
+        ) : null}
       </div>
     </Box>
   )

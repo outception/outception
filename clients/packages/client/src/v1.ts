@@ -698,6 +698,28 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/v1/news/cities': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Resolve City
+     * @description A typed city resolved to a city card: by name when the catalog has
+     *     it, else through a keyless geocoder and the nearest card within reach.
+     *     `cardId` is null when no card covers the place yet.
+     */
+    get: operations['news:resolve_city']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/v1/news/credits': {
     parameters: {
       query?: never
@@ -1317,6 +1339,14 @@ export interface components {
      * @enum {string}
      */
     CardKind: 'feed' | 'table' | 'briefing' | 'strip'
+    /** CityResolution */
+    CityResolution: {
+      /** Query */
+      query: string
+      place: components['schemas']['Place'] | null
+      /** Cardid */
+      cardId: string | null
+    }
     /**
      * CountryAlpha2Input
      * @enum {string}
@@ -2207,6 +2237,21 @@ export interface components {
       total_count: number
       /** Max Page */
       max_page: number
+    }
+    /** Place */
+    Place: {
+      /** Name */
+      name: string
+      /** Admin */
+      admin?: string | null
+      /** Country */
+      country?: string | null
+      /** Countrycode */
+      countryCode?: string | null
+      /** Latitude */
+      latitude: number
+      /** Longitude */
+      longitude: number
     }
     /** RevokeTokenResponse */
     RevokeTokenResponse: Record<string, never>
@@ -4202,6 +4247,37 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['TemplatesResponse']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  'news:resolve_city': {
+    parameters: {
+      query: {
+        q: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CityResolution']
         }
       }
       /** @description Validation Error */

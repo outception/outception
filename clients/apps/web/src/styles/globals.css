@@ -1423,3 +1423,14 @@ body.kb-open .game-strip {
 .rank-numeral[data-tier='low'] {
   opacity: 0.6;
 }
+
+/* The ambient play control under the deck. */
+.autoplay-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.autoplay-progress {
+  width: 96px;
+  accent-color: var(--color-brand-500);
+}
