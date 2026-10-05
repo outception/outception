@@ -20,13 +20,16 @@
 # The RS256 keypair at deploy/secrets/jwks.json is host-only and never
 # committed; the deploy mints one when it is missing.
 #
-# Manual trigger only until the deploy directory lands with the ops port;
-# the push trigger on main returns with it.
+# The build job is automation. The deploy job runs in the `production`
+# environment, which requires a named reviewer: that is the publication
+# boundary, and tests/test_publication_boundary.py keeps it in place.
 
 name: Deploy
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
 
 permissions: {}
 
@@ -87,12 +90,14 @@ jobs:
             NEXT_PUBLIC_FRONTEND_BASE_URL=${{ vars.NEXT_PUBLIC_FRONTEND_BASE_URL }}
             NEXT_PUBLIC_ENVIRONMENT=production
             NEXT_PUBLIC_SENTRY_DSN=${{ vars.NEXT_PUBLIC_SENTRY_DSN }}
+            NEXT_PUBLIC_ADMIN_EMAILS=${{ vars.NEXT_PUBLIC_ADMIN_EMAILS }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    environment: production
     timeout-minutes: 20
     permissions: {}
     steps:

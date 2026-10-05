@@ -21,6 +21,8 @@ from pathlib import Path
 SERVER = Path(__file__).resolve().parents[1]
 CONFIG = SERVER / "outception" / "config.py"
 CONTRACT = SERVER / ".env.prod.example"
+# The operator's file: the compose-level keys, then the contract verbatim.
+DEPLOY_EXAMPLE = SERVER.parent / "deploy" / ".env.prod.example"
 
 NAME = re.compile(r"^\s*(?:export\s+)?(OUTCEPTION_[A-Z0-9_]+)\s*=", re.MULTILINE)
 
@@ -69,14 +71,27 @@ def fields() -> set[str]:
     }
 
 
+def deploy_example() -> set[str]:
+    if not DEPLOY_EXAMPLE.exists():
+        raise RuntimeError(f"{DEPLOY_EXAMPLE} is missing")
+    return set(NAME.findall(DEPLOY_EXAMPLE.read_text()))
+
+
 def main() -> int:
     declared = contract()
     read = fields()
     unknown = declared - read
     missing = read - declared - INTERNAL
-    if not unknown and not missing:
+    # The operator's file must carry every contract name, so a value never
+    # goes unprovisioned on the host.
+    absent = declared - deploy_example()
+    if not unknown and not missing and not absent:
         print(f"OK: {len(declared)} OUTCEPTION_* names agree with the settings.")
         return 0
+    if absent:
+        print(f"{len(absent)} contract name(s) missing from {DEPLOY_EXAMPLE}:")
+        for name in sorted(absent):
+            print(f"  {name}")
     if unknown:
         print(f"{len(unknown)} name(s) in {CONTRACT.name} that no setting reads:")
         for name in sorted(unknown):

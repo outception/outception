@@ -173,3 +173,6 @@ sdk/code-samples/
 
 # Eval reports are run output
 server/evals/*.report.json
+
+# The host-only production env and keypair never enter the tree.
+deploy/.env.prod
