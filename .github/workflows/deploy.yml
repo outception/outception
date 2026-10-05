@@ -89,6 +89,7 @@ jobs:
             NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
             NEXT_PUBLIC_FRONTEND_BASE_URL=${{ vars.NEXT_PUBLIC_FRONTEND_BASE_URL }}
             NEXT_PUBLIC_ENVIRONMENT=production
+            NEXT_PUBLIC_BUILD_SHA=${{ github.sha }}
             NEXT_PUBLIC_SENTRY_DSN=${{ vars.NEXT_PUBLIC_SENTRY_DSN }}
             NEXT_PUBLIC_ADMIN_EMAILS=${{ vars.NEXT_PUBLIC_ADMIN_EMAILS }}
           cache-from: type=gha

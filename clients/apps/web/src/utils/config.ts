@@ -1,9 +1,5 @@
 const defaults = {
-  ENVIRONMENT:
-    process.env.NEXT_PUBLIC_ENVIRONMENT ||
-    process.env.VERCEL_ENV ||
-    process.env.NEXT_PUBLIC_VERCEL_ENV ||
-    'development',
+  ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT || 'development',
   FRONTEND_BASE_URL:
     process.env.NEXT_PUBLIC_FRONTEND_BASE_URL || 'http://127.0.0.1:3000',
   BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000',

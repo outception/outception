@@ -68,7 +68,11 @@ for (const spec of specs) {
     // The later of the marker and the doc's own last commit.
     const docCommit = git('log', '-1', '--format=%H', '--', spec.file)
     const since = docCommit && isAncestor(spec.verified, docCommit) ? docCommit : spec.verified
-    changed = git('diff', '--name-only', since, 'HEAD', '--', ...spec.covers)
+    // Against the working tree, not HEAD: a doc has to be bumped in the
+    // same change that touches what it covers, before the commit. A doc
+    // with uncommitted edits of its own is being brought up to date.
+    const editing = git('diff', '--name-only', '--', spec.file) !== ''
+    changed = editing ? '' : git('diff', '--name-only', since, '--', ...spec.covers)
       .split('\n')
       .filter(Boolean)
   } catch {

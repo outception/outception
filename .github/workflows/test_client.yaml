@@ -44,7 +44,7 @@ jobs:
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ vars.TURBO_TEAM }}
-      VERCEL_ENV: "testing"
+      NEXT_PUBLIC_ENVIRONMENT: "testing"
 
     steps:
       - name: Check out code

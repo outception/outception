@@ -18,7 +18,7 @@ const errorMiddleware: Middleware = {
 
 const CLIENT_VERSION_HEADERS = {
   'X-outception-Client-Version': `web/${
-    process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA?.slice(0, 8) ?? 'dev'
+    process.env.NEXT_PUBLIC_BUILD_SHA?.slice(0, 8) ?? 'dev'
   }`,
 }
 
@@ -53,14 +53,6 @@ export const createServerSideAPI = async (
   apiHeaders = {
     ...apiHeaders,
     Cookie: cookies.toString(),
-  }
-
-  // Preview environments: include access token so SSR calls pass through the funnel gate
-  if (process.env.OUTCEPTION_PREVIEW_ACCESS_TOKEN) {
-    apiHeaders = {
-      ...apiHeaders,
-      'X-Preview-Token': process.env.OUTCEPTION_PREVIEW_ACCESS_TOKEN,
-    }
   }
 
   // Use OUTCEPTION_API_URL for server-side requests (e.g., in Docker containers)

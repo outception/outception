@@ -53,7 +53,8 @@ runbook. The swap from the live tree is `docs/SWAP.md`.
 `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_FRONTEND_BASE_URL`,
 `NEXT_PUBLIC_ENVIRONMENT`, `NEXT_PUBLIC_SENTRY_DSN` and
 `NEXT_PUBLIC_ADMIN_EMAILS` are baked into the bundle at build time by the
-deploy workflow from repository variables. The web server reads the API over
+deploy workflow from repository variables, and `NEXT_PUBLIC_BUILD_SHA` from
+the commit, for the client version header. The web server reads the API over
 the internal network through `OUTCEPTION_API_URL`.
 
 ## App

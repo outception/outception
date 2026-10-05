@@ -1,5 +1,5 @@
 <!-- doc-covers: .github/workflows/test_server.yaml .github/workflows/test_client.yaml server/pyproject.toml -->
-<!-- doc-verified: 48e98d8 -->
+<!-- doc-verified: 6e0c70e -->
 
 # Testing
 
@@ -14,6 +14,7 @@ pushing; the staged-file hooks (`lefthook.yml`) run the fast ones on commit.
 | Types | `uv run task lint_types` | mypy over the package, the scripts and the tests |
 | Lint and format | `uv run task lint_check` | ruff, plus the custom AST rules |
 | Env contract | `uv run python -m scripts.check_env_vars` | Settings and the two env examples drifting apart |
+| Env examples | `uv run python -m scripts.env_examples --check` and `tests/test_env_examples.py` | A typed setting without a value in a production example, or an example that does not load |
 | Migrations | `uv run task check_migrations` | More than one head, or a migration filed out of order |
 | Naming | `uv run python -m scripts.linters.names --strict` | A third party named outside the allowlisted paths |
 | Key boundary | `uv run python -m scripts.linters.llm_key_boundary` | A model key read outside the provider modules |

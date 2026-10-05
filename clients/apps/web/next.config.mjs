@@ -2,48 +2,27 @@
 import path from 'node:path'
 import { withSentryConfig } from '@sentry/nextjs'
 
-const PREVIEW_BUILD = process.env.OUTCEPTION_PREVIEW_BUILD === '1'
-
-// Optional PR-preview builds: derive basePath + API URL from the PR number.
-// Inert in production (no-op unless the preview env vars below are set).
-let previewBasePath = ''
-if (
-  process.env.VERCEL_GIT_PULL_REQUEST_ID &&
-  process.env.OUTCEPTION_PREVIEW_BACKEND_HOST
-) {
-  const prNum = parseInt(process.env.VERCEL_GIT_PULL_REQUEST_ID)
-  previewBasePath = `/pr-${prNum}`
-  const baseUrl = `https://${process.env.OUTCEPTION_PREVIEW_BACKEND_HOST}${previewBasePath}`
-  process.env.NEXT_PUBLIC_API_URL = baseUrl
-  process.env.NEXT_PUBLIC_FRONTEND_BASE_URL = baseUrl
-}
-
-// Mirrors src/utils/features.ts - next.config can't import from src/.
-const ACCOUNTS_ENABLED = true
+// Mirrors src/utils/features.ts (next.config cannot import from src/); a
+// test keeps the two equal. With accounts off this must be false, or a
+// reader still holding a session cookie is bounced between / and /start
+// forever.
+const ACCOUNTS_ENABLED = false
 
 const OUTCEPTION_AUTH_COOKIE_KEY =
   process.env.OUTCEPTION_AUTH_COOKIE_KEY || 'outception_session'
-const ENVIRONMENT =
-  process.env.VERCEL_ENV || process.env.NEXT_PUBLIC_VERCEL_ENV || 'development'
+const ENVIRONMENT = process.env.NEXT_PUBLIC_ENVIRONMENT || 'development'
 
 const defaultFrontendHostname = process.env.NEXT_PUBLIC_FRONTEND_BASE_URL
   ? new URL(process.env.NEXT_PUBLIC_FRONTEND_BASE_URL).hostname
   : 'outception.com'
 
-const S3_PUBLIC_IMAGES_BUCKET_ORIGIN = process.env
-  .S3_PUBLIC_IMAGES_BUCKET_HOSTNAME
-  ? `${process.env.S3_PUBLIC_IMAGES_BUCKET_PROTOCOL || 'https'}://${process.env.S3_PUBLIC_IMAGES_BUCKET_HOSTNAME}${process.env.S3_PUBLIC_IMAGES_BUCKET_PORT ? `:${process.env.S3_PUBLIC_IMAGES_BUCKET_PORT}` : ''}`
-  : ''
-// Unset in most environments; without the guard the template emits the
-// literal "undefined" as a connect-src host.
-const S3_UPLOAD_ORIGINS = (process.env.S3_UPLOAD_ORIGINS ?? '').trim()
 const baseCSP = `
     default-src 'self';
-    connect-src 'self' ${process.env.NEXT_PUBLIC_API_URL} ${S3_UPLOAD_ORIGINS} https://maps.googleapis.com https://*.google-analytics.com;
+    connect-src 'self' ${process.env.NEXT_PUBLIC_API_URL};
     frame-src 'self';
-    script-src 'self' ${ENVIRONMENT === 'development' ? "'unsafe-eval'" : ''} 'unsafe-inline' https://maps.googleapis.com https://www.googletagmanager.com;
-    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-    img-src 'self' blob: data: https://www.gravatar.com https://img.logo.dev https://lh3.googleusercontent.com https://avatars.githubusercontent.com ${S3_PUBLIC_IMAGES_BUCKET_ORIGIN} https://uploads.outception.com https://upload.wikimedia.org https://commons.wikimedia.org https://cdn.jsdelivr.net https://flagcdn.com https://icons.duckduckgo.com https://*.gstatic.com https://static.finnhub.io https://static2.finnhub.io https://coin-images.coingecko.com https://assets.coingecko.com https://crests.football-data.org https://a.espncdn.com https://cdn.cloudflare.steamstatic.com;
+    script-src 'self' ${ENVIRONMENT === 'development' ? "'unsafe-eval'" : ''} 'unsafe-inline';
+    style-src 'self' 'unsafe-inline';
+    img-src 'self' blob: data: ${process.env.NEXT_PUBLIC_API_URL} https://www.gravatar.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://upload.wikimedia.org https://commons.wikimedia.org https://cdn.jsdelivr.net https://flagcdn.com https://icons.duckduckgo.com https://*.gstatic.com https://static.finnhub.io https://static2.finnhub.io https://coin-images.coingecko.com https://assets.coingecko.com https://crests.football-data.org https://a.espncdn.com https://cdn.cloudflare.steamstatic.com;
     font-src 'self';
     object-src 'none';
     base-uri 'self';
@@ -74,17 +53,6 @@ const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@outception-com/orbit'],
 
-  ...(previewBasePath && {
-    basePath: previewBasePath,
-    env: {
-      OUTCEPTION_API_URL: `https://${process.env.OUTCEPTION_PREVIEW_BACKEND_HOST}:8443${previewBasePath}`,
-    },
-  }),
-
-  ...(PREVIEW_BUILD && {
-    typescript: { ignoreBuildErrors: true },
-  }),
-
   // NOTE: the build runs `next build --turbopack`, so this webpack hook is
   // NOT applied. Kept only for a `next build` without the flag; don't add
   // load-bearing config here expecting it to take effect.
@@ -100,16 +68,6 @@ const nextConfig = {
 
   images: {
     remotePatterns: [
-      ...(process.env.S3_PUBLIC_IMAGES_BUCKET_HOSTNAME
-        ? [
-            {
-              protocol: process.env.S3_PUBLIC_IMAGES_BUCKET_PROTOCOL || 'https',
-              hostname: process.env.S3_PUBLIC_IMAGES_BUCKET_HOSTNAME,
-              port: process.env.S3_PUBLIC_IMAGES_BUCKET_PORT || '',
-              pathname: process.env.S3_PUBLIC_IMAGES_BUCKET_PATHNAME || '**',
-            },
-          ]
-        : []),
       {
         protocol: 'https',
         hostname: 'avatars.githubusercontent.com',
@@ -117,29 +75,6 @@ const nextConfig = {
         pathname: '**',
       },
     ],
-  },
-
-  async rewrites() {
-    const apiUrl =
-      process.env.OUTCEPTION_API_URL || process.env.NEXT_PUBLIC_API_URL
-    return [
-      ...(PREVIEW_BUILD && apiUrl
-        ? [
-            {
-              source: '/v1/:path*',
-              destination: `${apiUrl}/v1/:path*`,
-            },
-            {
-              source: '/healthz',
-              destination: `${apiUrl}/healthz`,
-            },
-            {
-              source: '/openapi.json',
-              destination: `${apiUrl}/openapi.json`,
-            },
-          ]
-        : []),
-    ]
   },
 
   async redirects() {
@@ -200,51 +135,7 @@ const nextConfig = {
           ]
         : []),
 
-      // Redirect /dashboard to correct domain if on a different domain name
-      // Skip in preview builds - preview env uses a single domain via Caddy proxy
-      ...(!previewBasePath
-        ? [
-            {
-              source: '/dashboard/:path*',
-              destination: `https://${defaultFrontendHostname}/dashboard/:path*`,
-              missing: [
-                {
-                  type: 'host',
-                  value: defaultFrontendHostname,
-                },
-                {
-                  type: 'header',
-                  key: 'x-forwarded-host',
-                  value: defaultFrontendHostname,
-                },
-              ],
-              permanent: false,
-            },
-          ]
-        : []),
-
-      {
-        source: '/maintainer',
-        destination: '/dashboard',
-        permanent: true,
-      },
-      {
-        source: '/maintainer/:path(.*)',
-        destination: '/dashboard/:path(.*)',
-        permanent: true,
-      },
-      {
-        source: '/dashboard/:organization/overview',
-        destination: '/dashboard/:organization',
-        permanent: true,
-      },
-
       // Account Settings Redirects
-      {
-        source: '/settings',
-        destination: '/dashboard/account/preferences',
-        permanent: true,
-      },
 
       {
         source: '/signup',
