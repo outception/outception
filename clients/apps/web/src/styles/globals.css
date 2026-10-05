@@ -1345,15 +1345,26 @@ body.kb-open .game-strip {
   transform: translateX(-50%);
   margin-top: 8px;
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 6px;
+  /* Never wider than the screen: an absolutely placed row still widens the
+     layout viewport on a phone, and six pills in one line did, so every
+     page opened zoomed out at 390px. */
+  max-width: calc(100vw - 32px);
+  width: max-content;
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
-  transition: opacity 180ms ease;
-  white-space: nowrap;
+  transition:
+    opacity 180ms ease,
+    visibility 0s linear 180ms;
 }
 .nav-pill-looks[data-open='true'] {
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
+  transition-delay: 0s;
 }
 .nav-pill-controls {
   margin-top: 46px;
