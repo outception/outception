@@ -57,6 +57,14 @@ export const AutoplayControl = ({
     goToRef.current = goTo
   }, [goTo])
   const release = useRef<(() => void) | null>(null)
+  const indexRef = useRef(index)
+  useEffect(() => {
+    indexRef.current = index
+  }, [index])
+  // The wall plays itself on arrival, once: a later timeline (a card
+  // dropped) never restarts what the reader paused. The registry says no
+  // when motion is reduced or the tab is hidden.
+  const autoStarted = useRef(false)
 
   // One runner per timeline; stopping the old one on change.
   useEffect(() => {
@@ -68,6 +76,10 @@ export const AutoplayControl = ({
       onChange: setState,
     })
     runner.current = r
+    if (!autoStarted.current && holds.canAnimate()) {
+      autoStarted.current = true
+      r.start(timeline.shots[indexRef.current]?.startMs ?? 0)
+    }
     return () => {
       r.stop()
       release.current?.()

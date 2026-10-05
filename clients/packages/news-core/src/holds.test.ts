@@ -38,3 +38,19 @@ describe('holds', () => {
     expect(n).toBe(4)
   })
 })
+
+describe('canAnimate', () => {
+  it('reads the environment before any hold exists', async () => {
+    const { createHoldRegistry } = await import('./holds')
+    const registry = createHoldRegistry()
+    expect(registry.canAnimate()).toBe(true)
+    expect(registry.shouldAnimate('x')).toBe(false)
+    registry.setReducedMotion(true)
+    expect(registry.canAnimate()).toBe(false)
+    registry.setReducedMotion(false)
+    registry.setVisible(false)
+    expect(registry.canAnimate()).toBe(false)
+    registry.setVisible(true)
+    expect(registry.canAnimate(false)).toBe(false)
+  })
+})

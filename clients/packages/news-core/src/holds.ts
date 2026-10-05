@@ -16,6 +16,10 @@ export interface HoldRegistry {
   /** Whether an animation for `owner` should run now. `onscreen` is the
    * owner's own visibility, when it knows it. */
   shouldAnimate(owner?: string, onscreen?: boolean): boolean
+  /** Whether the environment allows motion at all: the tab is visible and
+   * the reader has not asked for reduced motion. What an owner checks
+   * before taking its first hold. */
+  canAnimate(onscreen?: boolean): boolean
   subscribe(listener: () => void): () => void
 }
 
@@ -61,6 +65,7 @@ export const createHoldRegistry = (): HoldRegistry => {
       reducedMotion = next
       emit()
     },
+    canAnimate: (onscreen = true) => !reducedMotion && visible && onscreen,
     shouldAnimate: (owner, onscreen = true) => {
       if (reducedMotion || !visible || !onscreen) return false
       if (owner !== undefined) return (holds.get(owner) ?? 0) > 0
