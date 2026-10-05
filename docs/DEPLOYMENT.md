@@ -37,6 +37,10 @@ The settings that break the product when wrong:
 Migrations run in the one-shot `migrate` service before the API and the
 worker start.
 
+The `engine` service sits under the `engine` compose profile and stays off
+until a checkpoint is on the `engine_models` volume; `docs/ENGINE.md` is the
+runbook. The swap from the live tree is `docs/SWAP.md`.
+
 ## Web
 
 `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_FRONTEND_BASE_URL`,
