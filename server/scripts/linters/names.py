@@ -27,7 +27,7 @@ ALLOWED_PATHS: tuple[str, ...] = (
     "server/outception/news/heatmap/specs.py",
     "server/outception/config.py",
     "server/.env.prod.example",
-    "server/.env.template",
+    "server/.env.example",
     "server/.env.testing",
     "server/outception/integrations/",
     "server/outception/email/sender.py",

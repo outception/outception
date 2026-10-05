@@ -22,7 +22,7 @@ Thank you for your interest in contributing to Outception! This document provide
 
 Minor fixes are small, self-evident changes that don't require discussion or planning:
 
-yes **Allowed without an issue**:
+**Allowed without an issue**:
 
 - Fixing typos in documentation, comments, or error messages
 - Correcting broken links in README or documentation
@@ -30,7 +30,7 @@ yes **Allowed without an issue**:
 - Updating outdated version numbers in documentation
 - Small grammar or spelling corrections
 
-no **Requires an issue**:
+**Requires an issue**:
 
 - Any code logic changes, no matter how small
 - Adding new dependencies or packages
@@ -43,24 +43,25 @@ no **Requires an issue**:
 
 **When in doubt, create an issue first.** It's better to over-communicate than to have your PR rejected.
 
-## AI/LLM Usage Policy
+## Tested before submitted
 
-We welcome the use of AI tools and Large Language Models to assist with development. However, **all code must be tested and executed in your local environment** before submission.
+Whatever tools helped you write a change, **it must have run on your
+machine** before it is submitted.
 
 ### Requirements:
 
-- yes Test your changes locally using our development environment
-- yes Run existing tests to ensure nothing breaks
-- yes Add new tests for new functionality
-- yes Verify the application runs correctly with your changes
-- no **Do not submit "vibe-coded" contributions** that haven't been executed
+- Test your changes locally using the development environment
+- Run the existing tests to ensure nothing breaks
+- Add new tests for new functionality
+- Verify the application runs correctly with your changes
+- Put the before and after evidence in the pull request: what you ran and what it printed
 
 > [!WARNING]
-> Pull requests that show evidence of being AI-generated without proper local testing will be immediately closed.
+> Pull requests with no sign of having been run locally are closed.
 
 ## Development Setup
 
-Before contributing, set up your local development environment following the instructions in [`DEVELOPMENT.md`](./DEVELOPMENT.md).
+Before contributing, set up your local development environment following the instructions in [`docs/DEVELOPMENT.md`](./docs/DEVELOPMENT.md).
 
 ## Code Style and Standards
 
@@ -75,16 +76,23 @@ Before contributing, set up your local development environment following the ins
 ### Backend (Python/FastAPI)
 
 - **Linting**: Run `uv run task lint && uv run task lint_types`
-- **Testing**: Run `uv run task test`
+- **Testing**: Run `uv run task test_fast`, and the naming check `uv run python -m scripts.linters.names --strict`
 - **Structure**: Follow the modular structure in `server/outception/`
 - **Imports**: Place all imports at the top of files
 - **Async**: Use proper async/await patterns
 
+### House rules (enforced in CI)
+
+- No third party is named in the product, the tree or a commit message, except at outception.ai; publishers and data sources are exempt. The denylist is `docs/naming/denylist.txt`.
+- No emoji and no em dashes in the tree.
+- Secrets live only in `.env` files; a scanner runs on every push.
+- Every pull request carries before and after evidence.
+
 ### Frontend (TypeScript/Next.js/React)
 
 - **Package Manager**: Use `pnpm`
-- **Components**: Prefer Orbit components from `@outception-sh/orbit`; use `@outception-sh/ui` only when no Orbit equivalent exists
-- **Styling**: Use `<Box />` from `@outception-sh/orbit/Box` with design tokens (Tailwind is deprecated for layout/spacing/color)
+- **Components**: Prefer Orbit components from `@outception-com/orbit`; use `@outception-com/ui` only when no Orbit equivalent exists
+- **Styling**: Use `<Box />` from `@outception-com/orbit/Box` with design tokens (Tailwind is deprecated for layout/spacing/color)
 
 ## Code Review Process
 
@@ -110,11 +118,11 @@ Before contributing, set up your local development environment following the ins
 
 We welcome various types of contributions:
 
-- ** Bug fixes** - Fix existing issues
-- ** Features** - Add new functionality (discuss first)
-- ** Documentation** - Improve guides, API docs, or code comments
-- ** Tests** - Improve test coverage
-- ** Developer Experience** - Improve tooling, setup, or workflows
+- **Bug fixes** - Fix existing issues
+- **Features** - Add new functionality (discuss first)
+- **Documentation** - Improve guides, API docs, or code comments
+- **Tests** - Improve test coverage
+- **Developer Experience** - Improve tooling, setup, or workflows
 
 ## License
 

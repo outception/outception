@@ -176,3 +176,6 @@ server/evals/*.report.json
 
 # The host-only production env and keypair never enter the tree.
 deploy/.env.prod
+
+# Product logos written in development
+server/media/

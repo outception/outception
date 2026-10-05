@@ -100,6 +100,10 @@ jobs:
       - name: Skills in sync
         run: pnpm exec tsx scripts/sync-skills.ts --check
 
+      - name: Docs are fresh
+        working-directory: .
+        run: node scripts/check-doc-freshness.mts --check
+
       - name: Build
         run: pnpm build
 

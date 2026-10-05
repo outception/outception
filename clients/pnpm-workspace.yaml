@@ -3,6 +3,8 @@ packages:
   - packages/*
 
 allowBuilds:
+  # Hooks are installed on purpose: `pnpm exec lefthook install`.
+  lefthook: false
   dtrace-provider: false
   '@parcel/watcher': true
   '@sentry/cli': true

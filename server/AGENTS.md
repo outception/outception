@@ -1,6 +1,6 @@
 # Server Development Guide
 
-Python/FastAPI backend with PostgreSQL, Redis, and S3 storage.
+Python/FastAPI backend with PostgreSQL and Redis.
 
 ## Quick Commands
 
@@ -11,6 +11,9 @@ uv run task test         # Run tests with coverage, serially
 uv run task test_fast    # Parallel, no coverage — use this interactively
 uv run task lint         # Auto-fix linting
 uv run task lint_types   # Type checking with mypy
+uv run python -m scripts.check_env_vars            # env contract
+uv run python -m scripts.linters.names --strict    # no third party named
+uv run python -m evals.run --suite scrub           # the evals gate
 
 # Database migrations
 uv run alembic revision --autogenerate -m "description"  # Create migration
@@ -400,18 +403,13 @@ async def create(...) -> Resource:   # ORM model, not the schema
     return await resource_service.create(...)
 ```
 
-## Tax ID Validation
-
-When adding or modifying tax ID validators in `outception/tax/tax_id.py`:
-- Keep validators minimal — no lengthy docstrings; the code should be self-explanatory.
-- Follow existing patterns (e.g. `CLTINValidator`, `TRTINValidator`).
-- Use the `stdnum` library when a module exists for the tax ID type.
-- Add a few representative valid-format tests and only one invalid case per type — no excessive negatives.
-
 ## Key Files Reference
 
 - Repository base: `outception/kit/repository/base.py`
 - Auth models: `outception/auth/models.py`
 - Pagination: `outception/kit/pagination.py`
 - Worker: `outception/worker/`
-- Example module: `outception/organization/`
+- Example module: `outception/launches/`
+- The catalog as data: `outception/news/data/` and `outception/news/catalog/`
+- The governor: `outception/news/summaries/providers/`
+- Health codes: `outception/health/reasons.py`

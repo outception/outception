@@ -23,18 +23,11 @@ Notes that save time:
   which is why that build has to happen before any package's tests can run.
 - Scope with `--filter` — `pnpm test --filter web`, `pnpm typecheck --filter @outception-com/orbit`.
   An unscoped `pnpm test` saturates a 4-CPU container and yields spurious 5s vitest timeouts.
-- `pnpm test` includes `packages/cli`, whose tests require **bun**, plus `apps/app` (jest) and
-  `adapters/nuxt` (builds a Nuxt fixture).
+- `pnpm test` includes `apps/app` (jest) and every package's vitest suite.
 - Unit tests need neither a running backend nor `.env.local`; `apps/web/vitest.config.ts`
-  injects the `NEXT_PUBLIC_*` values itself. Only `test:e2e` (Playwright) needs a live stack and `E2E_ORG_TOKEN`;
-  `dev e2e setup` provides it, `dev e2e run` runs it from anywhere, `--headed` shows the browser.
-  CI runs one worker: sandbox rate-limits anonymous traffic per IP (100 requests and 6 checkout
-  confirmations a minute). The harness polls with the organization token, so give the E2E
-  organization the `elevated` rate limit group in the backoffice; the browser's own confirmations
-  stay anonymous, which is why the page object spaces them 10 s apart. Each test revokes its
-  subscriptions and deletes its customer afterwards.
-  Every attempt leaves screenshots, `browser.log` and a Playwright `trace.zip` under
-  `apps/web/e2e/artifacts/<test>/attempt-N/`; open a trace with `pnpm exec playwright show-trace <zip>`.
+  injects the `NEXT_PUBLIC_*` values itself.
+- Other gates: `pnpm exec tsx scripts/check-names.ts --strict`, `scripts/check-boundaries.ts`
+  (in `pnpm lint`), `scripts/check-budget.ts` after a web build, `scripts/sync-skills.ts --check`.
 - `pnpm generate` shells into the server's Python env to run `scripts.generate_openapi`, so it
   needs the import-blocking backend artifact — the email-renderer binary. You rarely need it:
   the generated `packages/client/src/v1.ts` is committed.
@@ -47,24 +40,21 @@ After finishing a feature, always run `pnpm lint` and check for any new errors o
 
 ```
 clients/
-├── adapters/               # Published framework and authentication adapters
 ├── apps/
-│   ├── web/                    # Main Next.js application
+│   ├── web/                    # The wall on the web (Next.js)
 │   │   └── src/
-│   │       ├── app/            # App Router pages
-│   │       │   ├── (main)/     # Main layout (dashboard, org pages)
-│   │       │   └── (public)/   # Public pages
+│   │       ├── app/            # App Router pages: (main)/(website) is the wall, account/ the signed-in area
+│   │       ├── components/News # The card family, the deck, the palette
 │   │       └── hooks/          # React hooks
-│   ├── app/                    # iOS and Android app (Expo/React Native)
-│   └── orbit/                  # Orbit design system documentation and showcase
+│   └── app/                    # The wall on iOS and Android (Expo)
 ├── packages/
-│   ├── ui/                     # Shared UI components
-│   │   └── src/components/
-│   │       ├── atoms/          # Legacy basic components (Card, Status, Tabs)
-│   │       ├── molecules/      # Composite components (Banner)
-│   │       └── ui/             # shadcn/ui base components
+│   ├── news-core/              # The domain layer both renderers share (pure, node tests)
 │   ├── client/                 # Generated API client
-│   └── orbit/                  # Orbit design system: components and design tokens
+│   ├── i18n/                   # The UI strings (English only)
+│   ├── mcp/                    # The agent tools
+│   ├── cli/                    # The agent installer
+│   ├── orbit/                  # Orbit design system: components and design tokens
+│   └── ui/                     # Shared UI components (legacy)
 ```
 
 ## UI Authoring Rule (READ FIRST)
@@ -709,7 +699,7 @@ if (error) {
 
 ## Internationalization (i18n)
 
-Translation files live in `packages/i18n/src/locales/`. When adding new translatable strings, **only add them to `en.ts`**. Do not manually edit other locale files. A CI job automatically translates new English strings into all supported languages and commits the results to the branch. After pushing changes to `en.ts`, pull the branch once the CI translation job completes.
+The strings live in `packages/i18n/src/locales/en.ts`, English only. Add a key there and use it through `useT()`; `pnpm --filter @outception-com/i18n check-keys` fails on a key that is used but missing. Placeholders are `{name}`.
 
 ## Reference Files
 
@@ -719,4 +709,5 @@ Translation files live in `packages/i18n/src/locales/`. When adding new translat
 - Orbit barrel exports: `packages/orbit/src/index.ts`
 - Legacy Card: `packages/ui/src/components/atoms/Card.tsx`
 - Global styles: `apps/web/src/styles/globals.css`
-- Dashboard layout: `apps/web/src/app/(main)/dashboard/`
+- The signed-in area: `apps/web/src/app/(main)/account/`
+- The domain layer: `packages/news-core/src/`

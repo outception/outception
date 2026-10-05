@@ -43,7 +43,7 @@ SHARED_COMPOSE_FILE = DOCKER_DIR / "docker-compose.shared.yml"
 ENV_TEMPLATE = DOCKER_DIR / ".env.docker.template"
 ENV_FILE = DOCKER_DIR / ".env.docker"
 SERVER_ENV_FILE = SERVER_DIR / ".env"
-SERVER_ENV_TEMPLATE = SERVER_DIR / ".env.template"
+SERVER_ENV_TEMPLATE = SERVER_DIR / ".env.example"
 
 SHARED_PROJECT_NAME = "outception-shared"
 SHARED_NETWORK_NAME = "outception-shared"
@@ -329,7 +329,7 @@ def _ensure_server_env() -> None:
         return
 
     if not SERVER_ENV_TEMPLATE.exists():
-        console.print("[red]server/.env.template not found[/red]")
+        console.print("[red]server/.env.example not found[/red]")
         raise typer.Exit(1)
 
     console.print("[dim]Creating server/.env from template...[/dim]")
