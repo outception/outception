@@ -1,11 +1,9 @@
 'use client'
 
-import type { NewsSourceMeta } from '@/utils/news'
 import { animate, motion, useMotionValue, useTransform } from 'motion/react'
 import type { PanInfo } from 'motion/react'
 import { useEffect, useRef, type PointerEvent } from 'react'
-import { HeatmapCard } from './HeatmapCard'
-import { NewsSourceCard } from './NewsSourceCard'
+import { Card, type CardDescriptor } from './Card'
 
 type CardsMove = 'next' | 'prev'
 type Dir = 'left' | 'right' | 'up' | 'down'
@@ -66,15 +64,17 @@ const isNextDir = (d: Dir, rtl: boolean) =>
 const isTopDepth = (depth: number) => depth === 0
 
 export const SwipeCard = ({
-  source,
+  card,
   depth,
   canNext,
   canPrev,
   peekX,
   rtl = false,
   onSwipe,
+  why,
+  storyId,
 }: {
-  source: NewsSourceMeta
+  card: CardDescriptor
   /** 0 = centred/interactive; >0 = upcoming peek stack; <0 = previous peek. */
   depth: number
   canNext: boolean
@@ -84,6 +84,8 @@ export const SwipeCard = ({
   /** Right-to-left locale: mirror the peek sides, tilt, and swipe direction. */
   rtl?: boolean
   onSwipe: (move: CardsMove) => void
+  why?: string | null
+  storyId?: string | null
 }) => {
   const el = useRef<HTMLDivElement>(null)
   const rtlSign = rtl ? -1 : 1
@@ -91,7 +93,7 @@ export const SwipeCard = ({
   // Deterministic per-source jitter (±0.8°) layered on the resting tilt, so
   // the pile reads as naturally tossed rather than machine-fanned.
   let hash = 0
-  for (const ch of source.id) hash = (hash * 31 + ch.charCodeAt(0)) | 0
+  for (const ch of card.id) hash = (hash * 31 + ch.charCodeAt(0)) | 0
   const jitter = ((((hash % 100) + 100) % 100) / 100 - 0.5) * 1.6
 
   const x = useMotionValue(slot.x)
@@ -217,13 +219,17 @@ export const SwipeCard = ({
       <div
         aria-hidden
         className="absolute top-0 left-6 z-10 h-1 w-10 rounded-b-full opacity-90"
-        style={{ backgroundColor: source.color }}
+        style={{
+          backgroundColor: card.meta?.color ?? 'var(--color-brand-500)',
+        }}
       />
-      {source.type === 'heatmap' ? (
-        <HeatmapCard source={source} active={isTop} />
-      ) : (
-        <NewsSourceCard source={source} active={isTop} upcoming={depth === 1} />
-      )}
+      <Card
+        card={card}
+        active={isTop}
+        upcoming={depth === 1}
+        why={why}
+        storyId={isTop ? storyId : null}
+      />
     </motion.div>
   )
 }

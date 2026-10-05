@@ -43,6 +43,9 @@ interface NewsColumnState {
   isFailed: (id: string) => boolean
   markFailed: (id: string) => void
   markLoaded: (id: string) => void
+  /** The deck on show, in order, for the share link. */
+  deck: readonly string[]
+  setDeck: (ids: readonly string[]) => void
 }
 
 const NewsColumnContext = createContext<NewsColumnState | null>(null)
@@ -63,6 +66,7 @@ export const NewsColumnProvider = ({ children }: PropsWithChildren) => {
     getHiddenServerSnapshot,
   )
   const [searchOpen, setSearchOpen] = useState(false)
+  const [deck, setDeck] = useState<readonly string[]>([])
   // Consecutive failures per source, not a one-strike set: the feed polls every
   // 60s, so a single offline blip or upstream 502 used to remove a card for the
   // rest of the session with no way back - and if it was the card being read,
@@ -122,8 +126,19 @@ export const NewsColumnProvider = ({ children }: PropsWithChildren) => {
       isFailed,
       markFailed,
       markLoaded,
+      deck,
+      setDeck,
     }),
-    [searchOpen, focused, isFocused, hidden, isFailed, markFailed, markLoaded],
+    [
+      searchOpen,
+      focused,
+      isFocused,
+      hidden,
+      isFailed,
+      markFailed,
+      markLoaded,
+      deck,
+    ],
   )
   return (
     <NewsColumnContext.Provider value={value}>

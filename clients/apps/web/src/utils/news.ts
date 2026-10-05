@@ -3,10 +3,15 @@ import { unwrap } from '@outception-com/client'
 import type { NewsSort } from '@outception-com/news-core'
 
 export type {
+  BriefingItem,
+  Card,
+  CardItem,
+  CardKind,
   HeatmapTile as NewsHeatmapTile,
   NewsItem,
   NewsSort,
   NewsTemplate,
+  SignalState,
   SourceMeta as NewsSourceMeta,
 } from '@outception-com/news-core'
 export { isSummarizable, safeExternalHref } from '@outception-com/news-core'
@@ -62,4 +67,23 @@ export const newsApi = {
     ),
   search: (q: string) =>
     unwrap(api.GET('/v1/news/search', { params: { query: { q } } })),
+  // One card contract: the envelope for a feed, a table, a briefing or the
+  // weather strip, with the signal state and the update stamp.
+  card: (id: string, latest = false, attachedTo?: string) =>
+    unwrap(
+      api.GET('/v1/cards/{card_id}', {
+        params: { path: { card_id: id }, query: { latest, attachedTo } },
+      }),
+    ),
+  briefingProfiles: () => unwrap(api.GET('/v1/news/briefing/profiles')),
+  briefing: (profile: string) =>
+    unwrap(
+      api.GET('/v1/news/briefing/{profile}', { params: { path: { profile } } }),
+    ),
+  story: (id: string) =>
+    unwrap(
+      api.GET('/v1/news/story/{story_id}', {
+        params: { path: { story_id: id } },
+      }),
+    ),
 }

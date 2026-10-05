@@ -1,12 +1,18 @@
 'use client'
 
 import { useT } from '@/providers/translate'
-import type { NewsSourceMeta } from '@/utils/news'
 import { Box } from '@outception-com/orbit/Box'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { motion } from 'motion/react'
-import { useCallback, useMemo, useSyncExternalStore, useEffect } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useSyncExternalStore,
+  type KeyboardEvent,
+} from 'react'
 import { useIsMobileMedia } from '@/utils/mobile'
+import type { CardDescriptor } from './Card'
 import { PEEK_X, PEEK_X_MOBILE, SwipeCard } from './SwipeCard'
 import { useSwipeCards } from './useSwipeCards'
 import {
@@ -43,18 +49,27 @@ const NAV_BUTTON =
  * persists per column.
  */
 export const NewsCards = ({
-  sources,
+  cards: deck,
   column,
   initialActiveId,
+  whyFor,
+  storyId,
+  onActiveChange,
 }: {
-  sources: NewsSourceMeta[]
+  cards: CardDescriptor[]
   column: string
   initialActiveId?: string
+  /** The "why this card" line for an id, when there is one. */
+  whyFor?: (id: string) => string | null | undefined
+  /** A shared story to open on the card that holds it. */
+  storyId?: string | null
+  /** The id on top, whenever it changes. */
+  onActiveChange?: (id: string) => void
 }) => {
   // Memoised: a fresh array each render re-creates `move` and re-fires both of
   // useSwipeCards's effects on every repaint, remeasuring the card set as you type.
   const t = useT()
-  const items = useMemo(() => sources.map((s) => s.id), [sources])
+  const items = useMemo(() => deck.map((c) => c.id), [deck])
   const focusRequest = useSyncExternalStore(
     subscribeNewsPrefs,
     getFocusRequestSnapshot,
@@ -68,24 +83,22 @@ export const NewsCards = ({
   )
   // English only: kept as a flag so the swipe geometry stays direction-aware.
   const rtl = false
-  // Game pages forward horizontal strokes the card set cannot see (they start
-  // inside the game's iframe - its intro screen, or the play screen's empty
-  // chrome). Same-origin only: the games are our own static pages, and a
-  // foreign embedder must not steer the card set. Left advances, mirroring the
-  // card's own drag mapping (and flipped under RTL like everything else).
+  const activeId = items[cards.index]
   useEffect(() => {
-    const onMessage = (e: MessageEvent) => {
-      if (e.origin !== window.location.origin) return
-      const dir = (e.data as { outceptionGameSwipe?: string } | null)
-        ?.outceptionGameSwipe
-      if (dir !== 'left' && dir !== 'right') return
-      const advance = rtl ? dir === 'right' : dir === 'left'
+    if (activeId) onActiveChange?.(activeId)
+  }, [activeId, onActiveChange])
+  // The arrow keys move the deck when it has focus: the forward key follows
+  // the script direction like the swipe does.
+  const onKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLDivElement>) => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+      const advance = rtl ? e.key === 'ArrowLeft' : e.key === 'ArrowRight'
+      e.preventDefault()
       if (advance) goNext()
       else goPrev()
-    }
-    window.addEventListener('message', onMessage)
-    return () => window.removeEventListener('message', onMessage)
-  }, [goNext, goPrev, rtl])
+    },
+    [goNext, goPrev, rtl],
+  )
   // Resolved once here rather than per card: one media listener, and no
   // per-card post-mount flip that made the peeks jump on first paint.
   const peekX = useIsMobileMedia() ? PEEK_X_MOBILE : PEEK_X
@@ -94,9 +107,9 @@ export const NewsCards = ({
   const PrevIcon = rtl ? ChevronRight : ChevronLeft
   const NextIcon = rtl ? ChevronLeft : ChevronRight
 
-  if (!sources.length) return null
+  if (!deck.length) return null
 
-  const byId = new Map(sources.map((s) => [s.id, s]))
+  const byId = new Map(deck.map((c) => [c.id, c]))
   // Mounted window: the previous card (peeking left), the current one, and the
   // next card(s) peeking right. Indices wrap so the card set loops - at the last
   // card the upcoming peek is the first card, and vice versa. Keyed by id so
@@ -128,20 +141,27 @@ export const NewsCards = ({
         // only as wide as the card set there, so overflow would cause sideways
         // scrolling).
         className="cards-viewport relative min-h-[min(540px,62svh)] w-full max-w-2xl overflow-x-clip [mask-image:linear-gradient(to_right,transparent_0,black_16px,black_calc(100%-16px),transparent_100%)] md:min-h-[560px] md:overflow-x-visible md:[mask-image:none]"
+        role="region"
+        aria-label={t('news.cards.deck')}
+        tabIndex={0}
+        onKeyDown={onKeyDown}
+        data-testid="card-deck"
       >
         {windowed.map(({ id, depth }) => {
-          const source = byId.get(id)
-          if (!source) return null
+          const card = byId.get(id)
+          if (!card) return null
           return (
             <SwipeCard
               key={id}
-              source={source}
+              card={card}
               depth={depth}
               canNext={cards.canNext}
               canPrev={cards.canPrev}
               peekX={peekX}
               rtl={rtl}
               onSwipe={onSwipe}
+              why={whyFor?.(id)}
+              storyId={storyId}
             />
           )
         })}

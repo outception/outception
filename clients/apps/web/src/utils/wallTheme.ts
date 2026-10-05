@@ -15,17 +15,24 @@ import {
   DEFAULT_EDITION,
   DEFAULT_EDITION_ID,
   EDITION_STORAGE_KEY,
+  LOOK_STORAGE_KEY,
   WALL_EDITIONS,
+  WALL_LOOKS,
   normalizeEdition,
+  normalizeLook,
   type WallEdition,
+  type WallLook,
   type WallTone,
 } from '@outception-com/news-core'
 
 export type WallThemeTone = WallTone
 export type WallTheme = WallEdition
+export type { WallLook }
 
 export const WALL_THEMES: readonly WallTheme[] = WALL_EDITIONS
 export const WALL_THEME_STORAGE_KEY = EDITION_STORAGE_KEY
+export const WALL_LOOK_STORAGE_KEY = LOOK_STORAGE_KEY
+export { WALL_LOOKS }
 export const DEFAULT_WALL_THEME_ID = DEFAULT_EDITION_ID
 export const DEFAULT_WALL_THEME: WallTheme = DEFAULT_EDITION
 
@@ -68,4 +75,28 @@ export const setWallTheme = (id: string): WallTheme => {
   const theme = normalizeEdition(id)
   apply(theme)
   return theme
+}
+
+/** The look: a CSS-only treatment on images and chrome, layered over any
+ * edition and carried separately in the share link. */
+export const getWallLookSnapshot = (): WallLook => {
+  try {
+    return normalizeLook(localStorage.getItem(WALL_LOOK_STORAGE_KEY))
+  } catch {
+    return normalizeLook(null)
+  }
+}
+
+export const getWallLookServerSnapshot = (): WallLook => normalizeLook(null)
+
+export const setWallLook = (id: string): WallLook => {
+  const look = normalizeLook(id)
+  document.documentElement.dataset.look = look.id
+  try {
+    localStorage.setItem(WALL_LOOK_STORAGE_KEY, look.id)
+  } catch {
+    // storage disabled: the look just won't persist
+  }
+  emit()
+  return look
 }

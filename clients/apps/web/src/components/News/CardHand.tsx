@@ -4,7 +4,7 @@ import { useDefaultCards, useWallSourceMetas } from '@/hooks/queries/news'
 import { type NewsSourceMeta } from '@/utils/news'
 import { useEffect, useMemo, useState } from 'react'
 import { NewsColumnProvider } from './NewsColumnContext'
-import { NewsSourceCard } from './NewsSourceCard'
+import { FeedCard } from './FeedCard'
 
 /**
  * The wall as a hand of cards.
@@ -123,8 +123,8 @@ const Hand = () => {
                 so the fan is real from the start, but only the card being read
                 joins the polling loop. */}
             <div className={isPicked ? '' : 'pointer-events-none'}>
-              <NewsSourceCard
-                source={meta}
+              <FeedCard
+                card={{ id: meta.id, kind: 'feed', meta }}
                 active={isPicked}
                 upcoming={!isPicked}
               />

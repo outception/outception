@@ -2,20 +2,79 @@
 
 import { WallThemeSwatches } from '@/components/Layout/Public/WallThemeSwatches'
 import { useT } from '@/providers/translate'
-import { setWallTheme, type WallThemeTone } from '@/utils/wallTheme'
+import {
+  WALL_LOOKS,
+  getWallLookServerSnapshot,
+  getWallLookSnapshot,
+  setWallLook,
+  setWallTheme,
+  subscribeWallTheme,
+  type WallThemeTone,
+} from '@/utils/wallTheme'
+import { briefingPath } from '@outception-com/news-core'
 import { Settings } from 'lucide-react'
 import { useTheme } from 'next-themes'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import {
   useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
   useState,
+  useSyncExternalStore,
 } from 'react'
 import { useNewsColumn } from './NewsColumnContext'
+import {
+  getBriefingProfilesSnapshot,
+  getBriefingProfilesServerSnapshot,
+  subscribe,
+} from './newsPrefsStore'
 
-/** The four places in the pill the raised chip can sit. */
-type NavItem = 'stack' | 'cards' | 'settings'
+/** The places in the pill the raised chip can sit. */
+type NavItem = 'stack' | 'cards' | 'briefing' | 'settings'
+
+/** The briefing the pill opens: the first profile the reader follows, else
+ * the house default. */
+const DEFAULT_BRIEFING_PROFILE = 'news-junkie'
+
+/** The look row under the fan: three CSS-only treatments, plain first. */
+const LookPicker = ({ open }: { open: boolean }) => {
+  const t = useT()
+  const active = useSyncExternalStore(
+    subscribeWallTheme,
+    getWallLookSnapshot,
+    getWallLookServerSnapshot,
+  )
+  const labels: Record<string, string> = {
+    plain: t('news.looks.plain'),
+    noir: t('news.looks.noir'),
+    night: t('news.looks.night'),
+  }
+  return (
+    <span
+      className="nav-pill-looks"
+      data-open={open}
+      aria-hidden={!open}
+      role="group"
+      aria-label={t('news.looks.label')}
+    >
+      {WALL_LOOKS.map((look) => (
+        <button
+          key={look.id}
+          type="button"
+          className="ghost-pill"
+          aria-pressed={active.id === look.id}
+          tabIndex={open ? 0 : -1}
+          onClick={() => setWallLook(look.id)}
+          data-active={active.id === look.id}
+        >
+          {labels[look.id] ?? look.label}
+        </button>
+      ))}
+    </span>
+  )
+}
 
 const item =
   'nav-pill-tab relative z-10 cursor-pointer px-3 py-1 transition-[color,transform] duration-100 active:scale-95'
@@ -38,12 +97,22 @@ export const NewsNavTabs = () => {
   const t = useT()
   const { setTheme } = useTheme()
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const pathname = usePathname()
+  const onBriefing = pathname?.startsWith('/briefing') ?? false
+  const profiles = useSyncExternalStore(
+    subscribe,
+    getBriefingProfilesSnapshot,
+    getBriefingProfilesServerSnapshot,
+  )
+  const briefingHref = briefingPath(profiles[0] ?? DEFAULT_BRIEFING_PROFILE)
 
   const active: NavItem = searchOpen
     ? 'cards'
     : settingsOpen
       ? 'settings'
-      : 'stack'
+      : onBriefing
+        ? 'briefing'
+        : 'stack'
 
   const rootRef = useRef<HTMLSpanElement>(null)
   const markerRef = useRef<HTMLSpanElement>(null)
@@ -117,16 +186,37 @@ export const NewsNavTabs = () => {
           box, and one box cannot both overflow and be clipped. */}
       <span className="relative flex max-w-full items-center gap-x-1 overflow-x-auto p-1 text-sm whitespace-nowrap">
         <span ref={markerRef} className="nav-pill-marker tab-pill" />
-        <button
-          type="button"
+        {onBriefing ? (
+          <Link
+            href="/"
+            ref={(el) => {
+              items.current.stack = el
+            }}
+            className={`${item} font-serif ${active === 'stack' ? lit : muted}`}
+          >
+            {t('news.tabs.yourCards')}
+          </Link>
+        ) : (
+          <button
+            type="button"
+            ref={(el) => {
+              items.current.stack = el
+            }}
+            onClick={() => setSearchOpen(false)}
+            className={`${item} font-serif ${active === 'stack' ? lit : muted}`}
+          >
+            {t('news.tabs.yourCards')}
+          </button>
+        )}
+        <Link
+          href={briefingHref}
           ref={(el) => {
-            items.current.stack = el
+            items.current.briefing = el
           }}
-          onClick={() => setSearchOpen(false)}
-          className={`${item} font-serif ${active === 'stack' ? lit : muted}`}
+          className={`${item} ${active === 'briefing' ? lit : muted}`}
         >
-          {t('news.tabs.yourCards')}
-        </button>
+          {t('news.tabs.briefing')}
+        </Link>
         <button
           type="button"
           ref={(el) => {
@@ -165,6 +255,7 @@ export const NewsNavTabs = () => {
           onSelect={selectTheme}
         />
       </span>
+      <LookPicker open={settingsOpen} />
     </span>
   )
 }

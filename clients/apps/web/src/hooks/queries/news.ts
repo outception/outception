@@ -1,5 +1,10 @@
 import { getClientCountry } from '@/utils/i18n/shared'
-import { newsApi, type NewsSort, type NewsSourceMeta } from '@/utils/news'
+import {
+  newsApi,
+  type CardKind,
+  type NewsSort,
+  type NewsSourceMeta,
+} from '@/utils/news'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef } from 'react'
 import { defaultRetry } from './retry'
@@ -151,5 +156,83 @@ export const useNewsSearch = (query: string) =>
     queryFn: () => newsApi.search(query),
     enabled: query.trim().length >= 2,
     staleTime: 30_000,
+    retry: defaultRetry,
+  })
+
+// How often the top card of each kind re-pulls. Feeds refresh every minute
+// (the server bounds upstream fetches per source per cooldown); tables and
+// briefings are rebuilt server-side every five, the strip rarely moves.
+const POLL_MS: Record<CardKind, number> = {
+  feed: 60_000,
+  table: 300_000,
+  briefing: 300_000,
+  strip: 600_000,
+}
+
+/** One card by id through the envelope: the payload for its kind, the signal
+ * state and the update stamp. Only the top (active) card polls; the peeking
+ * neighbours mount for the animation and keep their cache. */
+export const useCard = (
+  id: string | null,
+  kind: CardKind,
+  {
+    active = true,
+    enabled = true,
+    attachedTo,
+  }: { active?: boolean; enabled?: boolean; attachedTo?: string } = {},
+) => {
+  const queryClient = useQueryClient()
+  const poll = POLL_MS[kind]
+  const queryKey = ['news', 'card', id, attachedTo ?? null]
+  // Promotion re-arms the poll interval from zero, so a card that waited
+  // behind the top one for minutes would paint stale rows for up to another
+  // minute. Pull it live on arrival instead.
+  useEffect(() => {
+    if (!active || !id) return
+    const state = queryClient.getQueryState(queryKey)
+    if (state?.dataUpdatedAt && Date.now() - state.dataUpdatedAt > poll) {
+      void queryClient.refetchQueries({ queryKey, exact: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, id, attachedTo, queryClient, poll])
+  return useQuery({
+    queryKey,
+    // latest=true on feeds so a card older than its freshness window refetches
+    // live instead of re-serving the stale cache.
+    queryFn: () => newsApi.card(id as string, kind === 'feed', attachedTo),
+    enabled: !!id && enabled,
+    staleTime: poll,
+    refetchInterval: active ? poll : false,
+    // Coming back to the tab must re-pull the visible feed immediately; a
+    // table re-sorting under the reader is worse than a few minutes of age.
+    refetchOnWindowFocus: active && kind === 'feed' ? 'always' : true,
+    retry: defaultRetry,
+  })
+}
+
+export const useBriefingProfiles = (enabled = true) =>
+  useQuery({
+    queryKey: ['news', 'briefing', 'profiles'],
+    queryFn: () => newsApi.briefingProfiles(),
+    staleTime: Infinity,
+    retry: defaultRetry,
+    enabled,
+  })
+
+export const useBriefing = (profile: string | null) =>
+  useQuery({
+    queryKey: ['news', 'briefing', profile],
+    queryFn: () => newsApi.briefing(profile as string),
+    enabled: !!profile,
+    staleTime: 300_000,
+    retry: defaultRetry,
+  })
+
+export const useStory = (id: string | null) =>
+  useQuery({
+    queryKey: ['news', 'story', id],
+    queryFn: () => newsApi.story(id as string),
+    enabled: !!id,
+    staleTime: 60_000,
     retry: defaultRetry,
   })

@@ -2,7 +2,12 @@
 
 import { useT } from '@/providers/translate'
 import { memo, useCallback, useState } from 'react'
-import { type NewsItem, isSummarizable, safeExternalHref } from '@/utils/news'
+import {
+  type CardItem,
+  type NewsItem,
+  isSummarizable,
+  safeExternalHref,
+} from '@/utils/news'
 import { InlineSummary } from './InlineSummary'
 import { Text } from '@outception-com/orbit/Text'
 import { Box } from '@outception-com/orbit/Box'
@@ -55,8 +60,8 @@ const CaughtUpNote = ({ count }: { count: number }) => {
  * right-click menu's "Open article" is untouched. Links that can't be
  * summarized (Google News redirects, videos) open the article directly -
  * never an "unavailable" message. */
-const useInlineSummary = () => {
-  const [expandedKey, setExpandedKey] = useState<string | null>(null)
+const useInlineSummary = (initialKey: string | null = null) => {
+  const [expandedKey, setExpandedKey] = useState<string | null>(initialKey)
   // A summary that failed (and opened the article) must collapse its row,
   // otherwise the next tap on that headline toggles an already-expanded key
   // and does nothing.
@@ -75,16 +80,27 @@ const useInlineSummary = () => {
   return { expandedKey, onHeadlineClick, onSummaryClose }
 }
 
+/** The row key of the item carrying a shared story, so it opens on arrival. */
+const storyKey = (items: readonly CardItem[], storyId?: string | null) => {
+  if (!storyId) return null
+  const i = items.findIndex((item) => item.clusterId === storyId)
+  return i >= 0 ? `${items[i].id}-${i}` : null
+}
+
 export const NewsListHot = memo(function NewsListHot({
   items,
   sourceName,
   onItemMenu,
+  storyId,
 }: {
-  items: NewsItem[]
+  items: CardItem[]
   sourceName: string
   onItemMenu?: (e: React.MouseEvent, item: NewsItem) => void
+  storyId?: string | null
 }) {
-  const { expandedKey, onHeadlineClick, onSummaryClose } = useInlineSummary()
+  const { expandedKey, onHeadlineClick, onSummaryClose } = useInlineSummary(
+    storyKey(items, storyId),
+  )
   return (
     <Box as="ol" flexDirection="column" rowGap="xs">
       {items.map((item, i) => (
@@ -159,12 +175,16 @@ export const NewsListTimeline = memo(function NewsListTimeline({
   items,
   sourceName,
   onItemMenu,
+  storyId,
 }: {
-  items: NewsItem[]
+  items: CardItem[]
   sourceName: string
   onItemMenu?: (e: React.MouseEvent, item: NewsItem) => void
+  storyId?: string | null
 }) {
-  const { expandedKey, onHeadlineClick, onSummaryClose } = useInlineSummary()
+  const { expandedKey, onHeadlineClick, onSummaryClose } = useInlineSummary(
+    storyKey(items, storyId),
+  )
   return (
     <Box as="ol" flexDirection="column" rowGap="m">
       {items.map((item, i) => (

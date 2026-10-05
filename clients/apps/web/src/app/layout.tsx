@@ -72,11 +72,12 @@ export default async function RootLayout({
             edge-to-edge is unaffected. The chrome map and the 'midnight'
             default are duplicated from WALL_THEMES / DEFAULT_WALL_THEME_ID
             because this runs before any module loads - brand.test.ts guards
-            both against drift. */}
+            both against drift. A share link's `e=` and `l=` hash tokens
+            win over the stored pair so the page never flashes. */}
         <script
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var c={midnight:['#eeeeee','#191617'],tide:['#dceefa','#08324f'],phosphor:['#dff4e7','#04140b'],neon:['#fae4f0','#2b1322'],dune:['#f2ddc0','#211610']};var g={ruby:'midnight',daybreak:'dune',light:'dune',technical:'dune','studio-showroom':'dune',beach:'dune',dark:'midnight',blue:'tide',pink:'neon','clay-sunrise':'dune',terminal:'phosphor'};var t=localStorage.getItem('theme');var d=t==='dark'||((!t||t==='system')&&window.matchMedia('(prefers-color-scheme: dark)').matches);var w=localStorage.getItem('news.wallTheme');var id=w?(g[w]||w):'midnight';if(!c[id]){id='midnight';}document.documentElement.dataset.theme=id;if(d){document.documentElement.classList.add('dark');}var m=document.createElement('meta');m.name='theme-color';m.content=c[id][d?1:0];document.head.appendChild(m);}catch(e){}})();`,
+            __html: `(function(){try{var c={midnight:['#eeeeee','#191617'],tide:['#dceefa','#08324f'],phosphor:['#dff4e7','#04140b'],neon:['#fae4f0','#2b1322'],dune:['#f2ddc0','#211610']};var g={ruby:'midnight',daybreak:'dune',light:'dune',technical:'dune','studio-showroom':'dune',beach:'dune',dark:'midnight',blue:'tide',pink:'neon','clay-sunrise':'dune',terminal:'phosphor'};var t=localStorage.getItem('theme');var d=t==='dark'||((!t||t==='system')&&window.matchMedia('(prefers-color-scheme: dark)').matches);var h=location.hash||'';var he=/[#&]e=([a-z0-9-]+)/i.exec(h);var hl=/[#&]l=([a-z0-9-]+)/i.exec(h);var w=he?he[1]:localStorage.getItem('news.wallTheme');var id=w?(g[w]||w):'midnight';if(!c[id]){id='midnight';}document.documentElement.dataset.theme=id;var lk=hl?hl[1]:localStorage.getItem('news.wallLook');if(lk==='noir'||lk==='night'){document.documentElement.dataset.look=lk;}if(d){document.documentElement.classList.add('dark');}var m=document.createElement('meta');m.name='theme-color';m.content=c[id][d?1:0];document.head.appendChild(m);}catch(e){}})();`,
           }}
         />
         <UserContextProvider user={authenticatedUser}>

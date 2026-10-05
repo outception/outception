@@ -66,6 +66,10 @@ export const getBriefingProfilesSnapshot = (): readonly string[] =>
 export const getBriefingProfilesServerSnapshot = (): readonly string[] =>
   EMPTY_LIST
 
+export const getCollapsedSnapshot = (): readonly string[] =>
+  store.getState().collapsed
+export const getCollapsedServerSnapshot = (): readonly string[] => EMPTY_LIST
+
 export const getFocusRequestSnapshot = (): FocusRequest =>
   store.getFocusRequest()
 export const getFocusRequestServerSnapshot = (): FocusRequest =>

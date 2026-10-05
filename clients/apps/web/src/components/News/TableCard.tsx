@@ -1,21 +1,21 @@
 'use client'
 
-import { useNewsHeatmap } from '@/hooks/queries/news'
+import { useCard } from '@/hooks/queries/news'
 import { useT } from '@/providers/translate'
-import {
-  safeExternalHref,
-  type NewsHeatmapTile,
-  type NewsSourceMeta,
-} from '@/utils/news'
+import { safeExternalHref, type NewsHeatmapTile } from '@/utils/news'
 import { Text } from '@outception-com/orbit/Text'
 import { Box } from '@outception-com/orbit/Box'
-import OutceptionTimeAgo from '@outception-com/ui/components/atoms/OutceptionTimeAgo'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { CardProps } from './Card'
+import { CardHeader } from './CardHeader'
 import { FollowButton } from './FollowButton'
 import { ShareButton } from './ShareButton'
-import { SourceBadge } from './SourceBadge'
 import { useNewsColumn } from './NewsColumnContext'
-import { squarify } from '@outception-com/news-core'
+import {
+  isTableCard,
+  squarify,
+  stateFromFetch,
+} from '@outception-com/news-core'
 
 /** Every tile uses the finviz/TradingView language - solid green for gains,
  * red for losses, brighter with magnitude, neutral slate at exactly 0.
@@ -68,22 +68,21 @@ const quoteUrl = (heatmapId: string, symbol: string): string =>
     : `https://finance.yahoo.com/quote/${encodeURIComponent(symbol)}`
 
 /**
- * A market heatmap panel: the roster source's tiles as a squarified treemap -
- * area by market cap, color by day's move. Mirrors NewsSourceCard's chrome
- * (badge header, follow/share) and renders bare like it: the SwipeCard
- * wrapper owns the paper surface.
+ * A table card: the catalog entry's tiles as a squarified treemap, area by
+ * weight, colour by the day's move. Shares the header with every other kind
+ * and renders bare like them: the SwipeCard wrapper owns the paper.
  */
-export const HeatmapCard = ({
-  source,
-  active = true,
-}: {
-  source: NewsSourceMeta
-  active?: boolean
-}) => {
+export const TableCard = ({ card, active = true, why }: CardProps) => {
   const { markFailed, markLoaded } = useNewsColumn()
   const t = useT()
-  const { data, isLoading, isError, errorUpdateCount, dataUpdatedAt } =
-    useNewsHeatmap(source.id, active)
+  const { data, isLoading, isError, errorUpdateCount, dataUpdatedAt } = useCard(
+    card.id,
+    'table',
+    { active },
+  )
+  const source = card.meta ?? data?.meta ?? null
+  const payloadTiles =
+    data && isTableCard(data) ? data.payload.tiles : undefined
   const boxRef = useRef<HTMLDivElement>(null)
   const [box, setBox] = useState({ width: 0, height: 0 })
 
@@ -103,8 +102,8 @@ export const HeatmapCard = ({
   }, [])
 
   const tiles = useMemo(
-    () => [...(data?.tiles ?? [])].sort((a, b) => b.weight - a.weight),
-    [data?.tiles],
+    () => [...(payloadTiles ?? [])].sort((a, b) => b.weight - a.weight),
+    [payloadTiles],
   )
   const rects = useMemo(
     () =>
@@ -116,25 +115,29 @@ export const HeatmapCard = ({
     [tiles, box.width, box.height],
   )
 
-  // Same card-hygiene contract as NewsSourceCard: a heatmap whose upstream is
+  // Same card-hygiene contract as the feed card: a table whose upstream is
   // dead (or served empty) drops off the wall instead of showing a husk.
   const isEmpty = Boolean(data) && tiles.length === 0
-  // errorUpdateCount/dataUpdatedAt in the deps for the same reason as
-  // NewsSourceCard: else the strike effect fires once and sticks at 1, so a
-  // persistently dead/empty map never reaches the drop threshold.
   useEffect(() => {
-    if (isError || isEmpty) markFailed(source.id)
-    else if (data) markLoaded(source.id)
+    if (isError || isEmpty) markFailed(card.id)
+    else if (data) markLoaded(card.id)
   }, [
     isError,
     isEmpty,
     data,
     errorUpdateCount,
     dataUpdatedAt,
-    source.id,
+    card.id,
     markFailed,
     markLoaded,
   ])
+  const rawName = source?.name ?? card.id
+  const name = rawName.endsWith(' Table')
+    ? rawName.slice(0, -' Table'.length)
+    : rawName
+  const state =
+    data?.state ??
+    stateFromFetch({ loading: isLoading, error: isError, hasData: !!data })
 
   const tileLabel = (tile: NewsHeatmapTile, width: number, height: number) => {
     // Every tile that can physically hold type gets its symbol and number -
@@ -227,86 +230,24 @@ export const HeatmapCard = ({
       height="100%"
       padding={{ base: 'l', md: 'xl' }}
     >
-      <Box
-        flexDirection="row"
-        alignItems="center"
-        justifyContent="between"
-        columnGap="s"
-      >
-        <Box
-          flexDirection="row"
-          alignItems="center"
-          columnGap="s"
-          flexShrink={1}
-          minWidth={0}
-        >
-          <a
-            href={safeExternalHref(source.home)}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={source.name}
-            style={{ flexShrink: 0, lineHeight: 0 }}
-          >
-            <SourceBadge
-              id={source.id}
-              name={source.name}
-              logo={source.logo}
-              size={32}
-            />
-          </a>
-          <Box flexDirection="column" rowGap="none" minWidth={0}>
-            <Box
-              flexDirection="row"
-              alignItems="center"
-              columnGap="s"
-              minWidth={0}
-            >
-              <span
-                aria-hidden
-                style={{
-                  display: 'inline-block',
-                  width: 8,
-                  height: 8,
-                  flexShrink: 0,
-                  borderRadius: 9999,
-                  backgroundColor: source.color,
-                }}
-              />
-              <Text variant="body" as="h3" serif truncate>
-                {source.name.endsWith(' Table')
-                  ? source.name.slice(0, -' Table'.length)
-                  : source.name}
-              </Text>
-            </Box>
-            <span className="meta-kicker">
-              {source.name.endsWith(' Table') ? '' : null}
-              {data?.updatedTime ? (
-                <>
-                  {t('news.card.updated')}{' '}
-                  <OutceptionTimeAgo
-                    date={data.updatedTime}
-                    minPeriod={60}
-                    locale="en"
-                  />
-                </>
-              ) : isError ? (
-                t('news.card.failed')
-              ) : (
-                t('news.card.loading')
-              )}
-            </span>
-          </Box>
-        </Box>
-        <Box
-          flexDirection="row"
-          alignItems="center"
-          columnGap="s"
-          flexShrink={0}
-        >
-          <ShareButton source={source} />
-          <FollowButton sourceId={source.id} />
-        </Box>
-      </Box>
+      <CardHeader
+        id={card.id}
+        name={name}
+        color={source?.color}
+        logo={source?.logo}
+        home={source?.home}
+        updatedAt={data?.updatedAt}
+        state={state}
+        loading={isLoading}
+        error={isError}
+        why={why}
+        actions={
+          <>
+            <ShareButton cardId={card.id} name={name} />
+            <FollowButton sourceId={card.id} />
+          </>
+        }
+      />
 
       <Box
         flex={1}
@@ -341,9 +282,7 @@ export const HeatmapCard = ({
                     // Labelled tiles (sports grids) have no meaningful quote
                     // page - without a server URL the anchor stays inert.
                     tile.url ??
-                      (tile.label
-                        ? undefined
-                        : quoteUrl(source.id, tile.symbol)),
+                      (tile.label ? undefined : quoteUrl(card.id, tile.symbol)),
                   )}
                   target="_blank"
                   rel="noopener noreferrer"

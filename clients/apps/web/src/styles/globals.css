@@ -1336,3 +1336,87 @@ body.kb-open .game-strip {
     transform: none;
   }
 }
+
+/* The look row under the pill, shown with the edition fan. */
+.nav-pill-looks {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 8px;
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+  white-space: nowrap;
+}
+.nav-pill-looks[data-open='true'] {
+  opacity: 1;
+  pointer-events: auto;
+}
+.nav-pill-looks .ghost-pill[data-active='true'] {
+  color: var(--color-brand-500);
+}
+
+/* Looks: CSS-only treatments on images and chrome, never on body text.
+   `noir` is grayscale with a touch of sepia, a vignette and grain; `night`
+   is the night-vision tint with scanlines. The parameters mirror the shared
+   looks table, so a shared link can carry them. */
+:root[data-look='noir'] .paper-sheet img,
+:root[data-look='noir'] .paper-sheet-peek img,
+:root[data-look='noir'] .heatmap-tile,
+:root[data-look='noir'] .swatch {
+  filter: grayscale(1) contrast(1.15) sepia(0.15) brightness(0.95);
+}
+:root[data-look='noir'] .cards-viewport::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  border-radius: 1rem;
+  background:
+    radial-gradient(
+      ellipse at center,
+      transparent 55%,
+      rgba(0, 0, 0, 0.32) 100%
+    ),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+  opacity: 0.9;
+}
+:root[data-look='night'] .paper-sheet img,
+:root[data-look='night'] .paper-sheet-peek img,
+:root[data-look='night'] .heatmap-tile,
+:root[data-look='night'] .swatch {
+  filter: grayscale(1) contrast(1.1) brightness(0.9);
+}
+:root[data-look='night'] .cards-viewport::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  border-radius: 1rem;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(31, 226, 102, 0.1) 0 1px,
+      transparent 1px 3px
+    ),
+    radial-gradient(
+      ellipse at center,
+      rgba(31, 226, 102, 0.22) 0%,
+      rgba(0, 20, 8, 0.4) 100%
+    );
+  mix-blend-mode: screen;
+}
+
+/* The score mark on briefing rows, tier by tier. */
+.rank-numeral[data-tier='top'] {
+  color: var(--color-brand-500);
+}
+.rank-numeral[data-tier='low'] {
+  opacity: 0.6;
+}
