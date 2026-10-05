@@ -67,7 +67,7 @@ const MIN_PANEL_PX = 140
 // nothing but a longer wall of text.
 const MAX_PANEL_PX = 240
 
-/** The AI summary, expanded inline right under the tapped headline. The tap
+/** The summary, expanded inline right under the tapped headline. The tap
  * first asks whether a summary can be expected at all; articles known to be
  * unavailable (videos, paywalls and bot walls seen before, exhausted budget)
  * open directly, without a loading state that ends in a redirect. Otherwise

@@ -94,3 +94,27 @@ describe('rankByCoverage', () => {
     expect(rankByCoverage([], () => 1)).toEqual([])
   })
 })
+
+describe('liftCoverage', () => {
+  it('puts the widely carried stories first and keeps the rest in order', async () => {
+    const { liftCoverage } = await import('./stories')
+    const rows = [
+      { id: 'a', publisherCount: 1 },
+      { id: 'b', publisherCount: 3 },
+      { id: 'c' },
+      { id: 'd', publisherCount: 2 },
+      { id: 'e', publisherCount: 1 },
+    ]
+    expect(liftCoverage(rows).map((r) => r.id)).toEqual([
+      'b',
+      'd',
+      'a',
+      'c',
+      'e',
+    ])
+    expect(liftCoverage([{ id: 'x' }, { id: 'y' }]).map((r) => r.id)).toEqual([
+      'x',
+      'y',
+    ])
+  })
+})

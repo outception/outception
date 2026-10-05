@@ -42,7 +42,7 @@ type State =
   | { kind: 'writing'; text: string }
   | { kind: 'done'; text: string; teaser: boolean; source?: string }
 
-/** The AI summary, expanded inline right under the tapped headline - the
+/** The summary, expanded inline right under the tapped headline - the
  * app twin of the web's InlineSummary: typed out as it "arrives", capped and
  * scrollable when long, and patient when generation is slow. Only a summary
  * that is unavailable before anything is shown sends the reader straight to

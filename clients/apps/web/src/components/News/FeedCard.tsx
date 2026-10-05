@@ -6,6 +6,7 @@ import { flagOn, launchesPath } from '@outception-com/news-core'
 import type { NewsItem } from '@/utils/news'
 import {
   collapseStories,
+  liftCoverage,
   hideRead,
   isCountryCardId,
   isFeedCard,
@@ -87,7 +88,7 @@ export const FeedCard = ({
     let rows = (payloadItems ?? []).filter(
       (it) => !isMuted(it.title, mutedWords),
     )
-    if (!everyOutlet) rows = collapseStories(rows)
+    if (!everyOutlet) rows = liftCoverage(collapseStories(rows))
     if (hidingRead) rows = hideRead(rows, new Set(readItems))
     return rows.slice(0, MAX_ITEMS)
   }, [payloadItems, mutedWords, everyOutlet, hidingRead, readItems])

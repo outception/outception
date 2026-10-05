@@ -1,4 +1,4 @@
-// Whether the elevated news card has an inline AI summary OPEN (see
+// Whether the elevated news card has an inline summary OPEN (see
 // NewsSourceCard). Exposed as an external store, same pattern as
 // the prefs stores, so the card set's pan gesture can stand down while the
 // reader is inside the summary's ScrollView - a vertical drag there must

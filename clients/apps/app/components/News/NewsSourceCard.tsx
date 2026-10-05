@@ -99,7 +99,7 @@ export const NewsSourceCard = memo(function NewsSourceCard({
   const theme = useTheme()
   // Gap matches NewsCardList: spacing-4 for the hot list, spacing-12 for the
   // timeline - the clip must subtract it or the last row still gets sliced.
-  // Inline AI summary: which row key is expanded (mirrors the web's
+  // Inline summary: which row key is expanded (mirrors the web's
   // useInlineSummary). The clip hook pins the expanded row so growing it
   // never clips it out of the card.
   const [expandedSummary, setExpandedSummary] = useState<string | null>(null)

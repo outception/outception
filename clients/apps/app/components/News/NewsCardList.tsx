@@ -22,7 +22,7 @@ type SummaryProps = {
   onToggleSummary: (key: string | null) => void
 }
 
-/** Plain taps open the inline AI summary (like the web); links the server
+/** Plain taps open the inline summary (like the web); links the server
  * can never summarize (videos) go straight to the article instead. */
 const pressAction = (
   item: NewsItem,

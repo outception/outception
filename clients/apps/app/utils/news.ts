@@ -56,7 +56,7 @@ export const openExternalUrl = (url: string | null | undefined) => {
 }
 
 export const newsApi = (outception: Client) => ({
-  // One-tap AI article summary (cache-first server-side; kind 'teaser' when
+  // One-tap article summary (cache-first server-side; kind 'teaser' when
   // the article was unreachable and the publisher's standfirst serves).
   summary: (url: string) =>
     unwrap(outception.GET('/v1/news/summary', { params: { query: { url } } })),
