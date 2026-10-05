@@ -1,0 +1,62 @@
+import { describe, expect, it } from 'vitest'
+import { FLAGS, createFlagStore, createListStore } from './lists'
+import { PREF_KEYS, createMemoryStorage } from './prefs'
+import { collapseStories, hasCoverage, hideRead } from './stories'
+
+describe('createListStore', () => {
+  it('appends, bounds, toggles and notifies', () => {
+    const storage = createMemoryStorage()
+    const store = createListStore(storage, 'k', { max: 3 })
+    let n = 0
+    store.subscribe(() => {
+      n += 1
+    })
+    store.add('a')
+    store.add('b')
+    store.add('a')
+    store.add('c')
+    store.add('d')
+    expect(store.get()).toEqual(['b', 'c', 'd'])
+    expect(store.has('a')).toBe(false)
+    store.toggle('b')
+    store.toggle('e')
+    expect(store.get()).toEqual(['c', 'd', 'e'])
+    expect(JSON.parse(storage.getItem('k')!)).toEqual(['c', 'd', 'e'])
+    expect(n).toBe(6)
+    store.remove('zz')
+    expect(n).toBe(6)
+    store.clear()
+    expect(store.get()).toEqual([])
+  })
+
+  it('flags live under their own key', () => {
+    const storage = createMemoryStorage()
+    const flags = createFlagStore(storage)
+    flags.toggle(FLAGS.hideRead)
+    expect(JSON.parse(storage.getItem(PREF_KEYS.flags)!)).toEqual(['hide-read'])
+  })
+})
+
+describe('stories', () => {
+  const items = [
+    { id: '1', clusterId: 'x', publisherCount: 3 },
+    { id: '2', clusterId: null },
+    { id: '3', clusterId: 'x', publisherCount: 3 },
+    { id: '4', clusterId: 'y', publisherCount: 1 },
+  ]
+
+  it('keeps one row per story and every unclustered row', () => {
+    expect(collapseStories(items).map((i) => i.id)).toEqual(['1', '2', '4'])
+  })
+
+  it('marks coverage and hides read rows', () => {
+    expect(hasCoverage(items[0]!)).toBe(true)
+    expect(hasCoverage(items[3]!)).toBe(false)
+    expect(hideRead(items, new Set(['2'])).map((i) => i.id)).toEqual([
+      '1',
+      '3',
+      '4',
+    ])
+    expect(hideRead(items, (id) => id === '1').length).toBe(3)
+  })
+})

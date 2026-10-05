@@ -31,6 +31,9 @@ export default {
       empty: 'No sources found.',
       selectAll: 'Select all',
       deselectAll: 'Deselect all',
+      hideSource: 'Hide {source}',
+      unhideSource: 'Show {source} again',
+      hidden: 'Hidden',
     },
     templates: {
       chip: 'Starters',
@@ -319,6 +322,33 @@ export default {
       house: 'Reviewed by hand, one day at a time.',
       submit: 'Submit yours',
       archive: 'Every day so far',
+    },
+    controls: {
+      label: 'Reading',
+      hideRead: 'Hide read',
+      everyOutlet: 'Every outlet',
+      oneRowPerStory: 'One row per story',
+    },
+    trust: {
+      line: 'No account to read. No tracking profile. No ad network. One products card a day, reviewed by hand. Open source.',
+      credits: 'Credits',
+      creditsTitle: 'Where the data comes from',
+      creditsIntro:
+        'The tables, the weather and the live cards are built on open and public data. Every source and its terms:',
+      usedFor: 'Used for {what}',
+    },
+    tellUs: {
+      label: 'Tell us',
+      title: 'Tell us',
+      intro:
+        'A bug, a missing publisher, a card that reads wrong: one line is enough. We read every message.',
+      placeholder: 'What should we know?',
+      emailPlaceholder: 'Email, if you want a reply (optional)',
+      send: 'Send',
+      sending: 'Sending…',
+      sent: 'Thank you. It has landed.',
+      failed: 'That did not go through. Try again in a moment.',
+      tooShort: 'A few more words, please.',
     },
     follow: {
       unfollow: '✕ Unfollow',

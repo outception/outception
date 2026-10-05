@@ -8,7 +8,10 @@ import {
   isSummarizable,
   safeExternalHref,
 } from '@/utils/news'
+import { hasCoverage, storyPath } from '@outception-com/news-core'
+import Link from 'next/link'
 import { InlineSummary } from './InlineSummary'
+import { markRead } from './readerStores'
 import { Text } from '@outception-com/orbit/Text'
 import { Box } from '@outception-com/orbit/Box'
 import OutceptionTimeAgo from '@outception-com/ui/components/atoms/OutceptionTimeAgo'
@@ -35,6 +38,22 @@ const ExtraInfo = ({ item }: { item: NewsItem }) => {
     )
   }
   return null
+}
+
+/** The coverage mark on a clustered row: how many outlets carry the story,
+ * linking to the story across them. Counts only, never a label. */
+const CoverageMark = ({ item }: { item: CardItem }) => {
+  const t = useT()
+  if (!hasCoverage(item) || !item.clusterId) return null
+  return (
+    <Link
+      href={storyPath(item.clusterId)}
+      className="meta-kicker coverage-mark"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {t('news.card.outlets', { count: item.publisherCount ?? 0 })}
+    </Link>
+  )
 }
 
 /** Trailing "that's everything" caption for short feeds: a card that shows
@@ -71,6 +90,8 @@ const useInlineSummary = (initialKey: string | null = null) => {
     key: string,
     item: NewsItem,
   ) => {
+    // Opened in any way counts as read, for the "hide read" switch.
+    markRead(item.id)
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0)
       return
     if (!isSummarizable(item.url)) return
@@ -123,6 +144,7 @@ export const NewsListHot = memo(function NewsListHot({
                   <ExtraInfo item={item} />
                 </Text>
               </Text>
+              <CoverageMark item={item} />
             </a>
           ) : (
             <a
@@ -152,6 +174,7 @@ export const NewsListHot = memo(function NewsListHot({
                     <ExtraInfo item={item} />
                   </Text>
                 </Text>
+                <CoverageMark item={item} />
               </Box>
             </a>
           )}
@@ -223,6 +246,7 @@ export const NewsListTimeline = memo(function NewsListTimeline({
             <Text variant="caption" color="muted" as="span">
               <ExtraInfo item={item} />
             </Text>
+            <CoverageMark item={item} />
           </Box>
           <a
             href={safeExternalHref(item.url)}

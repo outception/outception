@@ -5,6 +5,8 @@ import { useT } from '@/providers/translate'
 import { launchesPath } from '@outception-com/news-core'
 import type { NewsItem } from '@/utils/news'
 import {
+  collapseStories,
+  hideRead,
   isCountryCardId,
   isFeedCard,
   isMuted,
@@ -35,6 +37,7 @@ import {
   getMutedWordsServerSnapshot,
   subscribeMutedWords,
 } from './mutedWords'
+import { FLAGS, useFlags, useReadItems } from './readerStores'
 import { useClipPartialRows } from './useClipPartialRows'
 
 const MAX_ITEMS = 30
@@ -74,15 +77,20 @@ export const FeedCard = ({
     getMutedWordsServerSnapshot,
   )
   const payloadItems = data && isFeedCard(data) ? data.payload.items : undefined
+  const flags = useFlags()
+  const hidingRead = flags.includes(FLAGS.hideRead)
+  const everyOutlet = flags.includes(FLAGS.showEveryOutlet)
+  const readItems = useReadItems()
   // Memoised: every swipe re-renders all mounted cards (their depth changes),
   // and a fresh array here would re-render every headline row with them.
-  const items = useMemo(
-    () =>
-      (payloadItems ?? [])
-        .filter((it) => !isMuted(it.title, mutedWords))
-        .slice(0, MAX_ITEMS),
-    [payloadItems, mutedWords],
-  )
+  const items = useMemo(() => {
+    let rows = (payloadItems ?? []).filter(
+      (it) => !isMuted(it.title, mutedWords),
+    )
+    if (!everyOutlet) rows = collapseStories(rows)
+    if (hidingRead) rows = hideRead(rows, new Set(readItems))
+    return rows.slice(0, MAX_ITEMS)
+  }, [payloadItems, mutedWords, everyOutlet, hidingRead, readItems])
   const { menuElement, openMenu } = useHeadlineMenu()
   const name = source?.name ?? card.id
   const onItemMenu = useCallback(

@@ -24,7 +24,9 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react'
+import { TellUsSheet } from '@/components/Landing/TellUsSheet'
 import { useNewsColumn } from './NewsColumnContext'
+import { FLAGS, toggleFlag, useFlags } from './readerStores'
 import {
   getBriefingProfilesSnapshot,
   getBriefingProfilesServerSnapshot,
@@ -37,6 +39,48 @@ type NavItem = 'stack' | 'cards' | 'briefing' | 'settings'
 /** The briefing the pill opens: the first profile the reader follows, else
  * the house default. */
 const DEFAULT_BRIEFING_PROFILE = 'news-junkie'
+
+/** The reading switches beside the looks: hide what was read, one row per
+ * story or every outlet, and the way to tell us something. */
+const ReadingControls = ({ open }: { open: boolean }) => {
+  const t = useT()
+  const flags = useFlags()
+  const hideRead = flags.includes(FLAGS.hideRead)
+  const everyOutlet = flags.includes(FLAGS.showEveryOutlet)
+  return (
+    <span
+      className="nav-pill-looks nav-pill-controls"
+      data-open={open}
+      aria-hidden={!open}
+      role="group"
+      aria-label={t('news.controls.label')}
+    >
+      <button
+        type="button"
+        className="ghost-pill"
+        aria-pressed={hideRead}
+        data-active={hideRead}
+        tabIndex={open ? 0 : -1}
+        onClick={() => toggleFlag(FLAGS.hideRead)}
+      >
+        {t('news.controls.hideRead')}
+      </button>
+      <button
+        type="button"
+        className="ghost-pill"
+        aria-pressed={everyOutlet}
+        data-active={everyOutlet}
+        tabIndex={open ? 0 : -1}
+        onClick={() => toggleFlag(FLAGS.showEveryOutlet)}
+      >
+        {everyOutlet
+          ? t('news.controls.everyOutlet')
+          : t('news.controls.oneRowPerStory')}
+      </button>
+      <TellUsSheet trigger="pill" />
+    </span>
+  )
+}
 
 /** The look row under the fan: three CSS-only treatments, plain first. */
 const LookPicker = ({ open }: { open: boolean }) => {
@@ -256,6 +300,7 @@ export const NewsNavTabs = () => {
         />
       </span>
       <LookPicker open={settingsOpen} />
+      <ReadingControls open={settingsOpen} />
     </span>
   )
 }

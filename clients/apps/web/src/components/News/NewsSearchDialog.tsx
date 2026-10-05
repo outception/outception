@@ -16,7 +16,7 @@ import {
 } from '@outception-com/ui/components/ui/dialog'
 import { useT } from '@/providers/translate'
 import { NEWS_TOPIC_GROUPS } from '@outception-com/i18n'
-import { Star, X } from 'lucide-react'
+import { Eye, EyeOff, Star, X } from 'lucide-react'
 import {
   useDeferredValue,
   useEffect,
@@ -34,7 +34,12 @@ import {
   removeMutedWord,
   subscribeMutedWords,
 } from './mutedWords'
-import { followAll, setActiveTemplates, unfollowAll } from './newsPrefsStore'
+import {
+  followAll,
+  setActiveTemplates,
+  unfollowAll,
+  unhideSource,
+} from './newsPrefsStore'
 import { SourceBadge } from './SourceBadge'
 
 // Rows painted in the frame the dialog opens - a viewport-full, so sources
@@ -50,7 +55,14 @@ type SourceEntry = { source: NewsSourceMeta; haystack: string }
  * follow (star) sources into your cards. Followed sources are device-local
  * (localStorage) so this works without signing in. */
 export const NewsSearchDialog = () => {
-  const { searchOpen, setSearchOpen, isFocused, toggleFocus } = useNewsColumn()
+  const {
+    searchOpen,
+    setSearchOpen,
+    isFocused,
+    toggleFocus,
+    hidden,
+    hideSource,
+  } = useNewsColumn()
   // The full roster is only needed once the palette opens; fetching it lazily
   // keeps the multi-megabyte parse off the wall's first paint.
   const { data: sources } = useNewsSources(searchOpen)
@@ -259,6 +271,7 @@ export const NewsSearchDialog = () => {
               <CommandEmpty>{t('news.search.empty')}</CommandEmpty>
               {visibleResults.map((s) => {
                 const followed = isFocused(s.id)
+                const isHidden = hidden.includes(s.id)
                 return (
                   <CommandItem
                     key={s.id}
@@ -274,12 +287,41 @@ export const NewsSearchDialog = () => {
                         size={20}
                       />
                     </span>
-                    <span>{s.name}</span>
+                    <span className={isHidden ? 'opacity-50' : undefined}>
+                      {s.name}
+                    </span>
                     {s.title && (
                       <span className="meta-kicker ml-2">{s.title}</span>
                     )}
+                    {isHidden && (
+                      <span className="meta-kicker ml-2">
+                        {t('news.search.hidden')}
+                      </span>
+                    )}
+                    {/* Block a publisher here as well as on its card; the
+                        same eye brings it back. */}
+                    <button
+                      type="button"
+                      className="ml-auto cursor-pointer opacity-40 hover:opacity-100"
+                      aria-label={
+                        isHidden
+                          ? t('news.search.unhideSource', { source: s.name })
+                          : t('news.search.hideSource', { source: s.name })
+                      }
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (isHidden) unhideSource(s.id)
+                        else hideSource(s.id)
+                      }}
+                    >
+                      {isHidden ? (
+                        <Eye className="h-4 w-4" />
+                      ) : (
+                        <EyeOff className="h-4 w-4" />
+                      )}
+                    </button>
                     <Star
-                      className={`ml-auto h-4 w-4 ${followed ? 'fill-current' : 'opacity-30'}`}
+                      className={`ml-2 h-4 w-4 ${followed ? 'fill-current' : 'opacity-30'}`}
                     />
                   </CommandItem>
                 )

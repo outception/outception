@@ -133,6 +133,13 @@ class CreditRow(BaseModel):
     used_for: str
 
 
+class CreditsResponse(BaseModel):
+    """Where the data comes from: every upstream the tables, the weather and
+    the live cards are built on, with its terms."""
+
+    credits: list[CreditRow]
+
+
 class DeckEntryRow(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

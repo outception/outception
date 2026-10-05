@@ -43,6 +43,7 @@ from .briefing.endpoints import router as briefing_router
 from .catalog import registry as catalog_registry
 from .catalog.decks import default_cards as compose_default_cards
 from .catalog.decks import resolve_templates
+from .catalog.schemas import CreditsResponse
 from .fetch import FETCH_TIMEOUT_SECONDS, StaleFeedError
 from .registry import DISABLED_SOURCES
 from .schemas import (
@@ -324,6 +325,15 @@ async def get_templates(
     return TemplatesResponse.model_validate(
         {"templates": resolve_templates(_catalog, cc)}
     )
+
+
+@router.get("/credits", response_model=CreditsResponse, tags=[APITag.public])
+async def get_credits(response: Response) -> CreditsResponse:
+    """Where the data comes from: every upstream the tables, the weather and
+    the live cards are built on, with its terms. One data file feeds the
+    credits drawer on the web and the settings row in the app."""
+    response.headers["Cache-Control"] = "public, max-age=3600, s-maxage=86400"
+    return CreditsResponse(credits=list(_catalog.catalog.credits))
 
 
 @router.get("/weather", response_model=WeatherResponse, tags=[APITag.public])

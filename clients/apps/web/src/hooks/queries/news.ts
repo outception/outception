@@ -236,3 +236,12 @@ export const useStory = (id: string | null) =>
     staleTime: 60_000,
     retry: defaultRetry,
   })
+
+export const useCredits = (enabled = true) =>
+  useQuery({
+    queryKey: ['news', 'credits'],
+    queryFn: () => newsApi.credits(),
+    staleTime: Infinity,
+    retry: defaultRetry,
+    enabled,
+  })

@@ -1,5 +1,7 @@
 'use client'
 
+import { CreditsDrawer } from '@/components/Landing/CreditsDrawer'
+import { TellUsSheet } from '@/components/Landing/TellUsSheet'
 import { LegalDialog } from '@/components/Legal/LegalDialog'
 import { PrivacyContent } from '@/components/Legal/PrivacyContent'
 import { TermsContent } from '@/components/Legal/TermsContent'
@@ -36,35 +38,56 @@ const LandingHeader = () => {
   )
 }
 
-/** The page footer. */
+const Dot = () => (
+  <Text variant="caption" color="disabled" aria-hidden>
+    ·
+  </Text>
+)
+
+/** The page footer: the trust line, then the small print. */
 const LandingFooter = () => {
   const t = useT()
   return (
     <Box
       as="footer"
+      flexDirection="column"
       alignItems="center"
-      justifyContent="center"
-      flexWrap="wrap"
       rowGap="s"
-      columnGap="s"
       paddingHorizontal="xl"
       paddingVertical="l"
     >
-      <Text variant="caption" color="muted">
-        {t('news.footer')}
-      </Text>
-      <Text variant="caption" color="disabled" aria-hidden>
-        ·
-      </Text>
-      <LegalDialog label={t('news.privacy')} title={t('legal.privacy.title')}>
-        <PrivacyContent />
-      </LegalDialog>
-      <Text variant="caption" color="disabled" aria-hidden>
-        ·
-      </Text>
-      <LegalDialog label={t('news.terms')} title={t('legal.terms.title')}>
-        <TermsContent />
-      </LegalDialog>
+      <Box textAlign="center" maxWidth={640}>
+        <Text variant="caption" color="muted" as="p">
+          {t('news.trust.line')}
+        </Text>
+      </Box>
+      <Box
+        alignItems="center"
+        justifyContent="center"
+        flexWrap="wrap"
+        rowGap="s"
+        columnGap="s"
+      >
+        <Text variant="caption" color="muted">
+          {t('news.footer')}
+        </Text>
+        <Dot />
+        <CreditsDrawer />
+        <Dot />
+        <TellUsSheet />
+        <Text variant="caption" color="disabled" aria-hidden>
+          ·
+        </Text>
+        <LegalDialog label={t('news.privacy')} title={t('legal.privacy.title')}>
+          <PrivacyContent />
+        </LegalDialog>
+        <Text variant="caption" color="disabled" aria-hidden>
+          ·
+        </Text>
+        <LegalDialog label={t('news.terms')} title={t('legal.terms.title')}>
+          <TermsContent />
+        </LegalDialog>
+      </Box>
     </Box>
   )
 }

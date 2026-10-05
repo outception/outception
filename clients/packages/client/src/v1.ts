@@ -698,6 +698,28 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/v1/news/credits': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Get Credits
+     * @description Where the data comes from: every upstream the tables, the weather and
+     *     the live cards are built on, with its terms. One data file feeds the
+     *     credits drawer on the web and the settings row in the app.
+     */
+    get: operations['news:get_credits']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/v1/news/weather': {
     parameters: {
       query?: never
@@ -1544,6 +1566,32 @@ export interface components {
       | 'ZA'
       | 'ZM'
       | 'ZW'
+    /**
+     * CreditRow
+     * @description One line of the credits drawer and `DATA_SOURCES.md`: who the data
+     *     comes from and under what terms.
+     */
+    CreditRow: {
+      /** Id */
+      id: string
+      /** Name */
+      name: string
+      /** Url */
+      url: string
+      /** Terms */
+      terms: string
+      /** Used For */
+      used_for: string
+    }
+    /**
+     * CreditsResponse
+     * @description Where the data comes from: every upstream the tables, the weather and
+     *     the live cards are built on, with its terms.
+     */
+    CreditsResponse: {
+      /** Credits */
+      credits: components['schemas']['CreditRow'][]
+    }
     /** EmailOTPRequest */
     EmailOTPRequest: {
       /**
@@ -4163,6 +4211,26 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  'news:get_credits': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CreditsResponse']
         }
       }
     }

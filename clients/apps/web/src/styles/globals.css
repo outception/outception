@@ -1355,6 +1355,9 @@ body.kb-open .game-strip {
   opacity: 1;
   pointer-events: auto;
 }
+.nav-pill-controls {
+  margin-top: 46px;
+}
 .nav-pill-looks .ghost-pill[data-active='true'] {
   color: var(--color-brand-500);
 }

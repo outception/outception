@@ -76,6 +76,7 @@ export const newsApi = {
       }),
     ),
   briefingProfiles: () => unwrap(api.GET('/v1/news/briefing/profiles')),
+  credits: () => unwrap(api.GET('/v1/news/credits')),
   briefing: (profile: string) =>
     unwrap(
       api.GET('/v1/news/briefing/{profile}', { params: { path: { profile } } }),
