@@ -1,0 +1,67 @@
+# One-off operational task: read the last lines of a service's log on the
+# host, filtered to errors by default, so a failure in production can be
+# diagnosed without a shell on the box. Run from the Actions tab or with:
+#   gh workflow run ops-logs.yml -f service=api -f lines=300 -f grep=error
+# Uses the same SSH secrets as the deploy workflow. Secrets never appear in
+# the application logs; the deploy writes them to the env file only.
+name: Ops (read logs)
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: "Compose service (api, worker, web, db, redis, caddy)"
+        required: true
+        default: "api"
+      lines:
+        description: "How many lines from the end to read"
+        required: true
+        default: "300"
+      grep:
+        description: "Case-insensitive filter (empty for everything)"
+        required: false
+        default: ""
+
+permissions: {}
+
+jobs:
+  logs:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      # Fail closed: without a pinned fingerprint the SSH client would trust
+      # whoever answers, and ship every secret below to it.
+      - name: Host key is pinned
+        env:
+          FINGERPRINT: ${{ vars.SSH_HOST_FINGERPRINT }}
+        run: |
+          [ -n "$FINGERPRINT" ] || { echo "::error::SSH_HOST_FINGERPRINT is unset"; exit 1; }
+      - name: Read the log over SSH
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        env:
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+          SERVICE: ${{ inputs.service }}
+          LINES: ${{ inputs.lines }}
+          FILTER: ${{ inputs.grep }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          # The host's key fingerprint (repository variable; the ECDSA key, which the
+          # client negotiates first). The step above refuses to run without it.
+          fingerprint: ${{ vars.SSH_HOST_FINGERPRINT }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: DEPLOY_PATH,SERVICE,LINES,FILTER
+          script: |
+            set -euo pipefail
+            cd "$DEPLOY_PATH"
+            case "$SERVICE" in api|worker|web|db|redis|caddy|migrate) ;; *)
+              echo "::error::unknown service $SERVICE"; exit 1;;
+            esac
+            case "$LINES" in ''|*[!0-9]*) echo "::error::lines must be a number"; exit 1;; esac
+            compose() { docker compose --env-file .env.prod -f docker-compose.prod.yml "$@"; }
+            echo "=== $SERVICE, last $LINES lines${FILTER:+, filtered by '$FILTER'} ==="
+            if [ -n "$FILTER" ]; then
+              compose logs --no-color --tail "$LINES" "$SERVICE" 2>&1 | grep -i -F -- "$FILTER" || echo "(no line matched)"
+            else
+              compose logs --no-color --tail "$LINES" "$SERVICE" 2>&1
+            fi

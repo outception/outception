@@ -1,0 +1,182 @@
+[project]
+name = "outception"
+version = "0.0.0"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+  "fastapi==0.141.1",
+  "uvicorn[standard]>=0.49.0",
+  "asyncpg>=0.29.0",
+  "alembic>=1.18.5",
+  "sqlalchemy[asyncio]>=2.0.51",
+  "greenlet>=3.5.5",
+  "structlog>=26.1.0",
+  # hiredis parses replies in C; without it every MGET on the hot paths is
+  # decoded in pure Python.
+  "redis[hiredis]>=5.0.4",
+  "sse-starlette>=3.4.5",
+  "pyjwt>=2.13.0",
+  "pydantic>=2.13.4",
+  "sentry-sdk[fastapi,sqlalchemy]>=2.64.0",
+  "python-slugify>=8.0.1",
+  "python-multipart>=0.0.32",
+  "safe-redirect-url>=0.1.1",
+  "httpx-oauth>=0.17.0",
+  "httpx>=0.23.0",
+  "pydantic-settings>=2.14.2",
+  "email-validator>=2.1.0.post1",
+  "sqlalchemy-utils>=0.41.1",
+  "authlib>=1.7.2",
+  "typer>=0.26.7",
+  "logfire[fastapi,httpx,sqlalchemy,redis]>=4.38.0",
+  "makefun>=1.15.6",
+  "boto3>=1.43.38",
+  "cryptography>=48.0.1",
+  "pycountry>=24.6.1",
+  "taskipy>=1.10.3",
+  "psycopg2-binary>=2.9.12",
+  "apscheduler>=3.11.3",
+  "dramatiq[redis,watch]>=2.2.1",
+  "prometheus-client>=0.25.0",
+  "python-snappy>=0.7.3",
+  "asgi-ratelimit>=0.10.0",
+  "alembic-utils>=0.8.8",
+  "anyio==4.15.1", # Potential culprit for Sep 23-24 memory leak
+  "tzdata>=2026.2",
+  "reauth==0.4.1",
+  "aiosmtplib>=5.1.2",
+  "beautifulsoup4>=4.14.3",
+  "lxml>=6.0.2",
+  "feedparser>=6.0.12",
+  "joserfc>=1.7.4",
+  "sgp4>=2.27",
+  "gtfs-realtime-bindings>=3.0.0",
+  "pillow>=12.3.0",
+]
+
+[dependency-groups]
+dev = [
+  "mypy>=2.1.0",
+  "pytest<10",
+  "pytest-sugar>=1.0.0",
+  "typer>=0.26.7",
+  "coverage>=7.14.1",
+  "pytest-mock>=3.10.0",
+  "ruff>=0.15.16",
+  "pytest-asyncio>=1.4.0",
+  "types-redis>=4.6.0.20240903",
+  "pytest-subtests>=0.13.1",
+  "pytest-recording>=0.13.1",
+  "respx>=0.23.1",
+  "pytest-cov>=5.0.0",
+  "types-python-slugify>=8.0.0.3",
+  "types-requests>=2.33.0.20260518",
+  "boto3-stubs[s3]>=1.43.26",
+  "freezegun>=1.5.1",
+  "fakeredis[lua]>=2.36.1",
+  "pytest-xdist[psutil]>=3.8.0",
+  "sqlalchemy-utils>=0.41.2",
+  "debugpy>=1.8.21",
+  "pytest-split>=0.11.0",
+  "openapi-kit>=0.3.1",
+]
+
+[tool.taskipy.tasks]
+emails = { cmd = "cd emails && pnpm i --frozen-lockfile && pnpm run build", help = "build emails" }
+api = { cmd = "env AUTHLIB_INSECURE_TRANSPORT=true uvicorn outception.app:app --reload --workers 1 --host 127.0.0.1 --port 8000", help = "run api service" }
+worker = { cmd = "dramatiq -p 1 -t 1 --watch outception -f outception.worker.scheduler:start outception.worker.run", help = "run worker" }
+test = { cmd = "OUTCEPTION_ENV=testing python -m pytest --cov outception/ --cov-report=term-missing", help = "run all tests" }
+test_fast = { cmd = "OUTCEPTION_ENV=testing python -m pytest -n auto -p no:sugar --no-cov", help = "run all tests, but fast" }
+lint = { cmd = "ruff format . && ruff check --fix . && task lint_ast", help = "run linters with autofix" }
+lint_check = { cmd = "ruff format --check . && ruff check . && task lint_ast", help = "run ruff linter" }
+lint_ast = { cmd = "python -m scripts.linters", help = "run all custom AST lint rules" }
+lint_names = { cmd = "python -m scripts.linters.names --strict", help = "fail on a third party named outside the allowlisted paths" }
+api_docs = { cmd = "python -m scripts.api_docs", help = "regenerate the public API schema and reference under docs/" }
+lint_subquery = { cmd = "python -m scripts.linters --only subquery", help = "flag .subquery() calls that don't narrow columns" }
+lint_types = { cmd = "mypy --num-workers 2 outception scripts tests", help = "run mypy type verify" }
+db_migrate = { cmd = "python -m scripts.db upgrade", help = "run alembic upgrade" }
+db_recreate = { cmd = "python -m scripts.db recreate", help = "drop and recreate database" }
+db_reparent = { cmd = "python -m scripts.db reparent", help = "try to auto-fix conflicting migrations" }
+check_migrations = { cmd = "python -m scripts.check_migrations", help = "check new migrations have a single head and a later filename" }
+env_examples = { cmd = "python -m scripts.env_examples --check", help = "check the production env examples carry every typed default" }
+generate_dev_jwks = { cmd = "python -m outception.kit.jwk outception_dev > ./.jwks.json", help = "generate a development JWKS file" }
+generate_openapi = { cmd = "python -m scripts.generate_openapi", help = "print the OpenAPI document" }
+clean = { cmd = "find * -name '*.pyc' -delete && find * -name '__pycache__' -delete", help = "clean up .pyc and __pycache__" }
+
+[tool.pytest.ini_options]
+markers = [
+  "auth",
+  "api_version(*versions): Run the test for each APIVersion with its Outception-Version client header",
+  "benchmark: performance benchmark, deselected by default (run with -m benchmark)",
+]
+addopts = "-m 'not benchmark'"
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.coverage.run]
+concurrency = ["thread", "greenlet"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "if TYPE_CHECKING:",
+] # See: https://github.com/nedbat/coveragepy/issues/831
+
+[tool.ruff]
+target-version = "py314"
+
+[tool.ruff.lint]
+extend-select = [
+  "I",
+  "UP",
+  "T20",
+  "PT",
+  "RUF10",
+]
+ignore = [
+  "F841",
+  "PT012",
+  "B008",
+  "B009",
+  "B010",
+  "BLE001",
+  "PLC0105",
+  "PYI041",
+  "RUF012",
+  "RUF059",
+  "SIM117",
+  "TRY",
+  "UP037",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"migrations/*" = [
+  "F401", # remove unused import
+]
+"scripts/*" = ["T20"]
+"tests/news/fixtures/parity/*" = ["T20", "ASYNC221"] # a capture script, run by hand in the live venv
+"docker/*" = ["T20"]
+"tests/**/test_*_benchmark.py" = ["T20"] # benchmarks report their measurements
+
+[tool.mypy]
+ignore_missing_imports = true
+plugins = ["pydantic.mypy"]
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_any_generics = true
+check_untyped_defs = true
+no_implicit_reexport = true
+strict_equality = true
+disallow_untyped_defs = true
+skip_cache_mtime_checks = true
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = false
+warn_untyped_fields = true
+
+[tool.uv]
+exclude-newer = "1 week"
+exclude-newer-package = { reauth = false }
+

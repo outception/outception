@@ -1,0 +1,45 @@
+# Staged-file hooks. Install once: `cd clients && pnpm exec lefthook install`
+# (the git root is this directory). Every check here also runs in CI; the
+# hooks only shorten the loop.
+
+pre-commit:
+  parallel: true
+  commands:
+    ruff-format:
+      root: server/
+      glob: "*.py"
+      run: .venv/bin/ruff format {staged_files}
+      stage_fixed: true
+    ruff-check:
+      root: server/
+      glob: "*.py"
+      run: .venv/bin/ruff check --fix {staged_files}
+      stage_fixed: true
+    mypy:
+      root: server/
+      glob: "outception/**/*.py"
+      run: .venv/bin/python -m mypy {staged_files}
+    oxlint:
+      root: clients/
+      glob: "*.{ts,tsx,js,mjs,cjs}"
+      run: pnpm exec oxlint {staged_files}
+    oxfmt:
+      root: clients/
+      glob: "*.{ts,tsx,js,mjs,cjs,json,md,yaml,yml,css}"
+      run: pnpm exec oxfmt {staged_files}
+      stage_fixed: true
+    web-types:
+      root: clients/
+      glob: "apps/web/**/*.{ts,tsx}"
+      run: pnpm --filter web exec tsc --noEmit
+    app-types:
+      root: clients/
+      glob: "apps/app/**/*.{ts,tsx}"
+      run: pnpm --filter @outception-com/app exec tsc --noEmit
+    names:
+      run: cd server && .venv/bin/python -m scripts.linters.names --strict
+
+commit-msg:
+  commands:
+    message:
+      run: cd server && .venv/bin/python -m scripts.linters.commit_message {1}

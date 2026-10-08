@@ -1,0 +1,184 @@
+name: Server
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  merge_group:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  OUTCEPTION_ENV: testing
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    name: "Detect changes"
+    runs-on: ubuntu-latest
+    outputs:
+      server: ${{ steps.filter.outputs.server }}
+      migrations: ${{ steps.filter.outputs.migrations }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: dorny/paths-filter@0e4a8c6effa4802afeda77dc8d303f8176d7dfad # v3
+        id: filter
+        with:
+          filters: |
+            # Beyond the server itself: the boundary tests read every
+            # workflow, the env and naming checks read deploy/ and docs/,
+            # so a change there alone must still run them.
+            server:
+              - 'server/**'
+              - 'docs/**'
+              - 'deploy/**'
+              - '.github/workflows/**'
+              - '.github/actions/**'
+            migrations:
+              - 'server/migrations/versions/**'
+              - 'server/scripts/check_migrations.py'
+
+  linters:
+    name: "Server: Linters"
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
+    runs-on: ubuntu-latest
+    env:
+      OUTCEPTION_EMAIL_RENDERER_BINARY_PATH: /tmp/email-renderer
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: server/uv.lock
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version-file: server/.python-version
+      - name: Install
+        working-directory: ./server
+        run: uv sync --dev --frozen
+      - name: Mock the email renderer binary
+        run: touch /tmp/email-renderer
+      - name: Lint
+        working-directory: ./server
+        run: uv run task lint_check
+      - name: Types
+        working-directory: ./server
+        run: uv run task lint_types
+      - name: Env contract
+        working-directory: ./server
+        run: uv run python -m scripts.check_env_vars
+      - name: Env examples load as written
+        working-directory: ./server
+        run: uv run python -m scripts.env_examples --check
+      - name: Naming
+        working-directory: ./server
+        run: uv run python -m scripts.linters.names --strict
+      - name: Evals gate (the scrubber)
+        working-directory: ./server
+        run: uv run python -m evals.run --suite scrub
+      - name: Public API reference
+        working-directory: ./server
+        run: uv run python -m scripts.api_docs --check
+
+  migrations:
+    name: "Server: Migrations"
+    needs: changes
+    if: needs.changes.outputs.migrations == 'true' && github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      OUTCEPTION_EMAIL_RENDERER_BINARY_PATH: /tmp/email-renderer
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: server/uv.lock
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version-file: server/.python-version
+      - name: Install
+        working-directory: ./server
+        run: uv sync --frozen --no-dev
+      - name: Mock the email renderer binary
+        run: touch /tmp/email-renderer
+      - name: One head, later filenames
+        working-directory: ./server
+        run: uv run python -m scripts.check_migrations --base "${{ github.event.pull_request.base.sha }}"
+
+  test:
+    name: "Server: Tests"
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      OUTCEPTION_EMAIL_RENDERER_BINARY_PATH: ${{ github.workspace }}/server/emails/bin/react-email-pkg
+    services:
+      postgres:
+        image: postgres:15.1-bullseye
+        env:
+          POSTGRES_USER: outception
+          POSTGRES_PASSWORD: outception
+          POSTGRES_DB: outception_rebuild_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7.4-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: server/uv.lock
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version-file: server/.python-version
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          package_json_file: server/emails/package.json
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: server/emails/pnpm-lock.yaml
+      - name: Cache the email renderer
+        id: emails
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: server/emails/bin
+          key: emails-${{ runner.os }}-${{ hashFiles('server/emails/**', '!server/emails/node_modules/**', '!server/emails/bin/**') }}
+      - name: Build the email renderer
+        if: steps.emails.outputs.cache-hit != 'true'
+        working-directory: server/emails
+        run: pnpm install --frozen-lockfile && pnpm build
+      - name: Install
+        working-directory: ./server
+        run: uv sync --dev --frozen
+      - name: Migrate
+        working-directory: ./server
+        run: uv run task db_migrate
+      - name: Migration check
+        working-directory: ./server
+        run: uv run alembic check
+      - name: Test
+        working-directory: ./server
+        run: uv run pytest -n auto --no-cov -p no:sugar

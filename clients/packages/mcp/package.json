@@ -1,0 +1,47 @@
+{
+  "name": "@outception-com/mcp",
+  "version": "0.1.0",
+  "description": "Read-only tools over the Outception public API for coding agents and assistants",
+  "author": "Outception",
+  "license": "Apache-2.0",
+  "type": "module",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/outception/outception.git",
+    "directory": "clients/packages/mcp"
+  },
+  "bin": {
+    "outception-mcp": "./dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "skills"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsup",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@outception-com/typescript-config": "workspace:*",
+    "@types/node": "^24.3.0",
+    "@typescript/native": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

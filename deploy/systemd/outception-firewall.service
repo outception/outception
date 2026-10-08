@@ -1,0 +1,24 @@
+[Unit]
+Description=Outception firewall: web ports open to the edge ranges only
+# At boot it runs before Docker publishes the web ports, from the list saved
+# on the last good run when the network is not up yet; the timer runs it
+# again a minute later, online, and weekly.
+After=ufw.service network-pre.target
+Wants=network-pre.target
+Before=docker.service
+
+[Service]
+Type=oneshot
+# The root-owned copy provisioning installs, never the deploy user's
+# checkout, which every deploy rewrites.
+ExecStart=/usr/local/sbin/outception-firewall
+StateDirectory=outception-firewall
+Restart=on-failure
+RestartSec=60
+TimeoutStartSec=600
+ProtectHome=yes
+PrivateTmp=yes
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=multi-user.target

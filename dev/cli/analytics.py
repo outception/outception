@@ -1,0 +1,132 @@
+import json
+import os
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+# Off unless DEV_CLI_ANALYTICS_URL names an endpoint: the dev CLI reports
+# nothing anywhere by default.
+ANALYTICS_URL = ""
+EVENT = "dev_cli_command"
+COMPLETED_EVENT = "dev_cli_command_completed"
+UP_STEP_EVENT = "dev_cli_up_step"
+_GROUP_COMMANDS = {"db", "docker"}
+_FLAG_NAME = re.compile(r"^--?[A-Za-z][A-Za-z0-9-]{0,39}$")
+_REDACTED = "<redacted>"
+_TOKENISH = re.compile(r"^[A-Za-z0-9_.\-]+$")
+_SECRET_PREFIX = re.compile(
+    r"^(outception_|sk_|pk_|rk_|whsec_|ghp_|gho_|ghu_|ghs_|ghr_|github_pat_|glpat-|"
+    r"xox[baprs]-|AKIA|ASIA|AIza|ya29\.|eyJ[A-Za-z0-9_-]+\.)"
+)
+
+
+def _looks_like_secret(token: str) -> bool:
+    if _SECRET_PREFIX.match(token):
+        return True
+    if len(token) < 20 or not _TOKENISH.match(token):
+        return False
+    has_digit = any(character.isdigit() for character in token)
+    has_upper = any(character.isupper() for character in token)
+    has_lower = any(character.islower() for character in token)
+    return has_digit or (has_upper and has_lower)
+
+
+def _redact(token: str) -> str:
+    return _REDACTED if _looks_like_secret(token) else token
+
+
+def _disabled() -> bool:
+    if not _endpoint():
+        return True
+    return bool(
+        os.environ.get("DEV_CLI_NO_ANALYTICS") or os.environ.get("DO_NOT_TRACK")
+    )
+
+
+def _endpoint() -> str:
+    return (os.environ.get("DEV_CLI_ANALYTICS_URL") or ANALYTICS_URL).strip()
+
+
+def parse_invocation(argv: list[str]) -> tuple[str, list[str], str]:
+    args = argv[1:]
+
+    leading: list[str] = []
+    for arg in args:
+        if arg.startswith("-"):
+            break
+        leading.append(arg)
+        if len(leading) >= 2:
+            break
+
+    if not leading:
+        command = "<no command>"
+    elif len(leading) >= 2 and leading[0] in _GROUP_COMMANDS:
+        command = f"{leading[0]} {_redact(leading[1])}"
+    else:
+        command = _redact(leading[0])
+
+    flag_names = (arg.split("=", 1)[0] for arg in args if arg.startswith("-"))
+    flags = sorted({_redact(name) for name in flag_names if _FLAG_NAME.match(name)})
+    invocation = " ".join([command, *flags])
+    return command, flags, invocation
+
+
+def track(argv: list[str]) -> None:
+    _send(EVENT, argv, {})
+
+
+def track_completed(argv: list[str], duration_ms: int, exit_code: int) -> None:
+    _send(
+        COMPLETED_EVENT,
+        argv,
+        {"duration_ms": duration_ms, "exit_code": exit_code},
+    )
+
+
+def track_up_step(
+    argv: list[str], step: str, duration_ms: int, success: bool, clean: bool
+) -> None:
+    _send(
+        UP_STEP_EVENT,
+        argv,
+        {
+            "step": step,
+            "duration_ms": duration_ms,
+            "success": success,
+            "clean": clean,
+        },
+    )
+
+
+def _send(event: str, argv: list[str], extra: dict[str, int | str | bool]) -> None:
+    endpoint = _endpoint()
+    if _disabled() or not endpoint:
+        return
+    command, flags, invocation = parse_invocation(argv)
+    payload = json.dumps(
+        {
+            "url": endpoint,
+            "event": event,
+            "properties": {
+                "command": command,
+                "invocation": invocation,
+                "flags": flags,
+                "os": sys.platform,
+                **extra,
+            },
+        }
+    )
+    try:
+        sender = Path(__file__).with_name("_analytics_send.py")
+        proc = subprocess.Popen(
+            [sys.executable, str(sender)],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+        proc.stdin.write(payload.encode())
+        proc.stdin.close()
+    except Exception:
+        pass

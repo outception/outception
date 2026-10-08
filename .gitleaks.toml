@@ -1,0 +1,12 @@
+# The secrets scan (.github/workflows/gitleaks.yml) keeps the default rules.
+# The three test files below hold placeholder tokens that exist to exercise
+# the scrubber and the OAuth token service; nothing in them opens anything.
+[extend]
+useDefault = true
+
+[allowlist]
+paths = [
+  '''server/tests/net/test_scrub\.py''',
+  '''server/tests/oauth2/endpoints/test_oauth2\.py''',
+  '''server/tests/oauth2/service/test_oauth2_token\.py''',
+]

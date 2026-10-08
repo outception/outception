@@ -1,0 +1,8 @@
+{
+  "name": "outception.ai",
+  "tagline": "The engine that reads the news for Outception",
+  "url": "https://outception.ai",
+  "info": "The house model behind the wall. It tells when two headlines from different outlets are the same story, so the deck shows one row per story and names every outlet that carries it. Built and run in house, open for anyone to inspect.",
+  "kicker": "house",
+  "icon": "https://outception.ai/favicon.ico"
+}

@@ -1,0 +1,212 @@
+[
+  {
+    "id": "live-quakes",
+    "name": "Earthquakes",
+    "provider": "quakes",
+    "interval": 120000,
+    "fresh_for": 120000,
+    "stale_for": 86400000,
+    "budget_per_day": 1500,
+    "cooldown_range": [
+      60,
+      900
+    ],
+    "terms": "Earthquake data by the United States Geological Survey",
+    "enabled": false
+  },
+  {
+    "id": "live-storms",
+    "name": "Tropical Storms",
+    "provider": "storms",
+    "interval": 600000,
+    "fresh_for": 600000,
+    "stale_for": 86400000,
+    "budget_per_day": 300,
+    "cooldown_range": [
+      60,
+      900
+    ],
+    "terms": "Storm data by the National Hurricane Center",
+    "enabled": false,
+    "countries": [
+      "US",
+      "MX",
+      "BS",
+      "CU",
+      "JM",
+      "HT",
+      "DO",
+      "PR",
+      "BZ",
+      "HN",
+      "NI",
+      "GT",
+      "SV",
+      "CR",
+      "PA",
+      "BM"
+    ],
+    "season": [
+      6,
+      11
+    ]
+  },
+  {
+    "id": "live-wildfires",
+    "name": "Wildfires",
+    "provider": "wildfires",
+    "interval": 600000,
+    "fresh_for": 600000,
+    "stale_for": 86400000,
+    "budget_per_day": 300,
+    "cooldown_range": [
+      60,
+      900
+    ],
+    "terms": "Incident data by the National Interagency Fire Center",
+    "enabled": false,
+    "countries": [
+      "US"
+    ]
+  },
+  {
+    "id": "live-launches",
+    "name": "Rocket Launches",
+    "provider": "launches",
+    "interval": 900000,
+    "fresh_for": 900000,
+    "stale_for": 86400000,
+    "budget_per_day": 96,
+    "cooldown_range": [
+      300,
+      3600
+    ],
+    "terms": "Launch data by The Space Devs' Launch Library",
+    "enabled": false
+  },
+  {
+    "id": "live-iss",
+    "name": "Space Station Passes",
+    "provider": "iss",
+    "interval": 3600000,
+    "fresh_for": 3600000,
+    "stale_for": 86400000,
+    "budget_per_day": 48,
+    "cooldown_range": [
+      300,
+      3600
+    ],
+    "terms": "Orbital elements by CelesTrak",
+    "enabled": false
+  },
+  {
+    "id": "transit-london",
+    "name": "London Transit Alerts",
+    "provider": "transit",
+    "code": "london",
+    "interval": 120000,
+    "fresh_for": 120000,
+    "stale_for": 21600000,
+    "budget_per_day": 1500,
+    "cooldown_range": [
+      60,
+      900
+    ],
+    "terms": "Service alerts by Transport for London",
+    "enabled": false,
+    "countries": [
+      "GB"
+    ],
+    "cities": [
+      "city-unitedkingdom-london"
+    ]
+  },
+  {
+    "id": "transit-newyork",
+    "name": "New York Transit Alerts",
+    "provider": "transit",
+    "code": "newyork",
+    "interval": 120000,
+    "fresh_for": 120000,
+    "stale_for": 21600000,
+    "budget_per_day": 1500,
+    "cooldown_range": [
+      60,
+      900
+    ],
+    "terms": "Service alerts by the Metropolitan Transportation Authority",
+    "enabled": false,
+    "countries": [
+      "US"
+    ],
+    "cities": [
+      "city-unitedstates-newyork"
+    ]
+  },
+  {
+    "id": "transit-dublin",
+    "name": "Dublin Transit Alerts",
+    "provider": "transit",
+    "code": "dublin",
+    "interval": 120000,
+    "fresh_for": 120000,
+    "stale_for": 21600000,
+    "budget_per_day": 1500,
+    "cooldown_range": [
+      60,
+      900
+    ],
+    "terms": "Service alerts by Transport for Ireland",
+    "enabled": false,
+    "countries": [
+      "IE"
+    ],
+    "cities": [
+      "city-ireland-dublin"
+    ]
+  },
+  {
+    "id": "transit-sydney",
+    "name": "Sydney Transit Alerts",
+    "provider": "transit",
+    "code": "sydney",
+    "interval": 120000,
+    "fresh_for": 120000,
+    "stale_for": 21600000,
+    "budget_per_day": 1500,
+    "cooldown_range": [
+      60,
+      900
+    ],
+    "terms": "Service alerts by Transport for NSW",
+    "enabled": false,
+    "countries": [
+      "AU"
+    ],
+    "cities": [
+      "city-australia-sydney"
+    ]
+  },
+  {
+    "id": "transit-toronto",
+    "name": "Toronto Transit Alerts",
+    "provider": "transit",
+    "code": "toronto",
+    "interval": 120000,
+    "fresh_for": 120000,
+    "stale_for": 21600000,
+    "budget_per_day": 1500,
+    "cooldown_range": [
+      60,
+      900
+    ],
+    "terms": "Service alerts by the Toronto Transit Commission",
+    "enabled": false,
+    "countries": [
+      "CA"
+    ],
+    "cities": [
+      "city-canada-toronto"
+    ]
+  }
+]

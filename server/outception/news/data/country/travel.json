@@ -1,0 +1,77 @@
+{
+ "table": "travel",
+ "entries": {
+  "GB": [
+   "headforpoints"
+  ],
+  "US": [
+   "theflightdeal"
+  ],
+  "DE": [
+   "urlaubspiraten"
+  ],
+  "FR": [
+   "voyagespirates"
+  ],
+  "IT": [
+   "piratinviaggio"
+  ],
+  "ES": [
+   "viajerospiratas"
+  ],
+  "PL": [
+   "wakacyjnipiraci"
+  ],
+  "CH": [
+   "ferienpiraten"
+  ],
+  "NL": [
+   "vakantiepiraten"
+  ],
+  "BR": [
+   "melhoresdestinos"
+  ],
+  "JP": [
+   "traicy"
+  ],
+  "KR": [
+   "milemoa"
+  ],
+  "DK": [
+   "insideflyerdk"
+  ],
+  "NO": [
+   "insideflyerno"
+  ],
+  "SE": [
+   "insideflyerse"
+  ],
+  "CZ": [
+   "zaletsi"
+  ],
+  "GR": [
+   "travelgr"
+  ],
+  "AR": [
+   "promocionesaereas"
+  ],
+  "VN": [
+   "vnexpressdulich"
+  ],
+  "SG": [
+   "milelion"
+  ],
+  "IN": [
+   "livefromalounge"
+  ],
+  "ZA": [
+   "travelstart"
+  ],
+  "AU": [
+   "iknowthepilot"
+  ],
+  "NZ": [
+   "iknowthepilot"
+  ]
+ }
+}

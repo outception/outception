@@ -1,0 +1,3830 @@
+{
+  "components": {
+    "schemas": {
+      "AuthorizationCodeTokenRequest": {
+        "properties": {
+          "client_id": {
+            "title": "Client Id",
+            "type": "string"
+          },
+          "client_secret": {
+            "title": "Client Secret",
+            "type": "string"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "grant_type": {
+            "const": "authorization_code",
+            "title": "Grant Type",
+            "type": "string"
+          },
+          "redirect_uri": {
+            "format": "uri",
+            "maxLength": 2083,
+            "minLength": 1,
+            "title": "Redirect Uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "grant_type",
+          "client_id",
+          "client_secret",
+          "code",
+          "redirect_uri"
+        ],
+        "title": "AuthorizationCodeTokenRequest",
+        "type": "object"
+      },
+      "AuthorizeResponseUser": {
+        "properties": {
+          "client": {
+            "$ref": "#/components/schemas/OAuth2ClientPublic"
+          },
+          "scope_display_names": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {
+              "email": "Read your email address",
+              "openid": "OpenID",
+              "profile": "Read your profile",
+              "user:read": "Read your account, followed sources and preferences",
+              "user:write": "Manage your account, followed sources and preferences"
+            },
+            "title": "Scope Display Names",
+            "type": "object"
+          },
+          "scopes": {
+            "items": {
+              "$ref": "#/components/schemas/Scope"
+            },
+            "title": "Scopes",
+            "type": "array"
+          },
+          "sub": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AuthorizeUser"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sub_type": {
+            "const": "user",
+            "title": "Sub Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "client",
+          "sub_type",
+          "sub",
+          "scopes"
+        ],
+        "title": "AuthorizeResponseUser",
+        "type": "object"
+      },
+      "AuthorizeUser": {
+        "properties": {
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url"
+          },
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid4",
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "avatar_url"
+        ],
+        "title": "AuthorizeUser",
+        "type": "object"
+      },
+      "Card": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/CardKind"
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceMeta"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "payload": {
+            "discriminator": {
+              "mapping": {
+                "feed": "#/components/schemas/FeedPayload",
+                "strip": "#/components/schemas/StripPayload",
+                "table": "#/components/schemas/TablePayload"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/FeedPayload"
+              },
+              {
+                "$ref": "#/components/schemas/TablePayload"
+              },
+              {
+                "$ref": "#/components/schemas/StripPayload"
+              }
+            ],
+            "title": "Payload"
+          },
+          "state": {
+            "$ref": "#/components/schemas/SignalState"
+          },
+          "updatedAt": {
+            "title": "Updatedat",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "state",
+          "updatedAt",
+          "payload"
+        ],
+        "title": "Card",
+        "type": "object"
+      },
+      "CardItem": {
+        "description": "A feed item on the envelope: the legacy item plus what clustering\nadds. Both extras are optional so an unclustered item serializes exactly\nlike a legacy one apart from the two nulls.",
+        "properties": {
+          "clusterId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clusterid"
+          },
+          "extra": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NewsExtra"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "mobileUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mobileurl"
+          },
+          "pubDate": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pubdate"
+          },
+          "publisherCount": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publishercount"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "url"
+        ],
+        "title": "CardItem",
+        "type": "object"
+      },
+      "CardKind": {
+        "enum": [
+          "feed",
+          "table",
+          "strip"
+        ],
+        "title": "CardKind",
+        "type": "string"
+      },
+      "CityResolution": {
+        "properties": {
+          "cardId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cardid"
+          },
+          "place": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Place"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "query": {
+            "title": "Query",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query",
+          "place",
+          "cardId"
+        ],
+        "title": "CityResolution",
+        "type": "object"
+      },
+      "CreditRow": {
+        "additionalProperties": false,
+        "description": "One line of the credits drawer and `DATA_SOURCES.md`: who the data\ncomes from and under what terms.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "terms": {
+            "title": "Terms",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "used_for": {
+            "title": "Used For",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "url",
+          "terms",
+          "used_for"
+        ],
+        "title": "CreditRow",
+        "type": "object"
+      },
+      "CreditsResponse": {
+        "description": "Where the data comes from: every upstream the tables, the weather and\nthe live cards are built on, with its terms.",
+        "properties": {
+          "credits": {
+            "items": {
+              "$ref": "#/components/schemas/CreditRow"
+            },
+            "title": "Credits",
+            "type": "array"
+          }
+        },
+        "required": [
+          "credits"
+        ],
+        "title": "CreditsResponse",
+        "type": "object"
+      },
+      "FeedPayload": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CardItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "kind": {
+            "const": "feed",
+            "default": "feed",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "FeedPayload",
+        "type": "object"
+      },
+      "FeedbackCreate": {
+        "properties": {
+          "context": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "maxProperties": 12,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Context"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "format": "email",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "message": {
+            "maxLength": 2000,
+            "minLength": 3,
+            "title": "Message",
+            "type": "string"
+          },
+          "surface": {
+            "default": "web",
+            "enum": [
+              "web",
+              "app"
+            ],
+            "title": "Surface",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "FeedbackCreate",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HeatmapResponse": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "success",
+              "cache"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "tiles": {
+            "items": {
+              "$ref": "#/components/schemas/HeatmapTile"
+            },
+            "title": "Tiles",
+            "type": "array"
+          },
+          "updatedTime": {
+            "title": "Updatedtime",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "status",
+          "id",
+          "updatedTime",
+          "tiles"
+        ],
+        "title": "HeatmapResponse",
+        "type": "object"
+      },
+      "HeatmapTile": {
+        "description": "One treemap tile: area from ``weight``, color from ``changePercent``.",
+        "properties": {
+          "changePercent": {
+            "title": "Changepercent",
+            "type": "number"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "logo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "price": {
+            "title": "Price",
+            "type": "number"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subtitle"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "weight": {
+            "title": "Weight",
+            "type": "number"
+          }
+        },
+        "required": [
+          "symbol",
+          "name",
+          "changePercent",
+          "price",
+          "weight"
+        ],
+        "title": "HeatmapTile",
+        "type": "object"
+      },
+      "IntrospectTokenRequest": {
+        "properties": {
+          "client_id": {
+            "title": "Client Id",
+            "type": "string"
+          },
+          "client_secret": {
+            "title": "Client Secret",
+            "type": "string"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          },
+          "token_type_hint": {
+            "anyOf": [
+              {
+                "enum": [
+                  "access_token",
+                  "refresh_token"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Token Type Hint"
+          }
+        },
+        "required": [
+          "token",
+          "client_id",
+          "client_secret"
+        ],
+        "title": "IntrospectTokenRequest",
+        "type": "object"
+      },
+      "IntrospectTokenResponse": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "aud": {
+            "title": "Aud",
+            "type": "string"
+          },
+          "client_id": {
+            "title": "Client Id",
+            "type": "string"
+          },
+          "exp": {
+            "title": "Exp",
+            "type": "integer"
+          },
+          "iat": {
+            "title": "Iat",
+            "type": "integer"
+          },
+          "iss": {
+            "title": "Iss",
+            "type": "string"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "sub": {
+            "title": "Sub",
+            "type": "string"
+          },
+          "sub_type": {
+            "$ref": "#/components/schemas/SubType"
+          },
+          "token_type": {
+            "enum": [
+              "access_token",
+              "refresh_token"
+            ],
+            "title": "Token Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "active",
+          "client_id",
+          "token_type",
+          "scope",
+          "sub_type",
+          "sub",
+          "aud",
+          "iss",
+          "exp",
+          "iat"
+        ],
+        "title": "IntrospectTokenResponse",
+        "type": "object"
+      },
+      "LaunchArchive": {
+        "properties": {
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/LaunchDay"
+            },
+            "title": "Days",
+            "type": "array"
+          }
+        },
+        "required": [
+          "days"
+        ],
+        "title": "LaunchArchive",
+        "type": "object"
+      },
+      "LaunchDay": {
+        "properties": {
+          "day": {
+            "format": "date",
+            "title": "Day",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/LaunchRead"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "day",
+          "items"
+        ],
+        "title": "LaunchDay",
+        "type": "object"
+      },
+      "LaunchRead": {
+        "description": "A product as the archive and the card see it: no contact email, no\nsubmitter.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "day": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "featured": {
+            "title": "Featured",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kicker": {
+            "title": "Kicker",
+            "type": "string"
+          },
+          "logo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          },
+          "state": {
+            "$ref": "#/components/schemas/LaunchStatus"
+          },
+          "tagline": {
+            "title": "Tagline",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "tagline",
+          "url",
+          "logo",
+          "kicker",
+          "description",
+          "state",
+          "featured",
+          "day",
+          "position",
+          "created_at"
+        ],
+        "title": "LaunchRead",
+        "type": "object"
+      },
+      "LaunchStatus": {
+        "description": "A product moves submitted -> approved (into a day) -> live (that day\narrives) -> ended (the day passes). The submitter can withdraw before it\nis live; the founder can reject at any point before it is live.",
+        "enum": [
+          "submitted",
+          "approved",
+          "live",
+          "ended",
+          "rejected",
+          "withdrawn"
+        ],
+        "title": "LaunchStatus",
+        "type": "string"
+      },
+      "LaunchViews": {
+        "description": "The products the wall just showed; at most one card's worth.",
+        "properties": {
+          "ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "ids"
+        ],
+        "title": "LaunchViews",
+        "type": "object"
+      },
+      "MetadataQuery": {
+        "anyOf": [
+          {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                },
+                {
+                  "items": {
+                    "type": "boolean"
+                  },
+                  "type": "array"
+                }
+              ]
+            },
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "MetadataQuery"
+      },
+      "NewsExtra": {
+        "properties": {
+          "date": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "hover": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hover"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "info": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Info"
+          }
+        },
+        "title": "NewsExtra",
+        "type": "object"
+      },
+      "NewsItem": {
+        "properties": {
+          "extra": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NewsExtra"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "mobileUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mobileurl"
+          },
+          "pubDate": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pubdate"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "url"
+        ],
+        "title": "NewsItem",
+        "type": "object"
+      },
+      "NewsSearchItem": {
+        "description": "A headline matched by search, tagged with its source.",
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/NewsItem"
+          },
+          "sourceId": {
+            "title": "Sourceid",
+            "type": "string"
+          },
+          "sourceName": {
+            "title": "Sourcename",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sourceId",
+          "sourceName",
+          "item"
+        ],
+        "title": "NewsSearchItem",
+        "type": "object"
+      },
+      "NewsSearchResponse": {
+        "description": "Search results: matching sources (by name) and matching cached\nheadlines.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/NewsSearchItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/SourceMeta"
+            },
+            "title": "Sources",
+            "type": "array"
+          }
+        },
+        "required": [
+          "sources",
+          "items"
+        ],
+        "title": "NewsSearchResponse",
+        "type": "object"
+      },
+      "NewsTemplate": {
+        "description": "A Starter: a persona's curated source bundle, country-resolved.\nDisplay name and blurb live client-side, keyed by ``id``.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Sources",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "sources"
+        ],
+        "title": "NewsTemplate",
+        "type": "object"
+      },
+      "OAuth2ClientConfiguration": {
+        "properties": {
+          "client_name": {
+            "title": "Client Name",
+            "type": "string"
+          },
+          "client_uri": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Uri"
+          },
+          "default_sub_type": {
+            "$ref": "#/components/schemas/SubType",
+            "default": "user"
+          },
+          "grant_types": {
+            "default": [
+              "authorization_code",
+              "refresh_token"
+            ],
+            "items": {
+              "enum": [
+                "authorization_code",
+                "refresh_token"
+              ],
+              "type": "string"
+            },
+            "title": "Grant Types",
+            "type": "array"
+          },
+          "logo_uri": {
+            "anyOf": [
+              {
+                "format": "uri",
+                "maxLength": 2083,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Uri"
+          },
+          "policy_uri": {
+            "anyOf": [
+              {
+                "format": "uri",
+                "maxLength": 2083,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Uri"
+          },
+          "redirect_uris": {
+            "items": {
+              "format": "uri",
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Redirect Uris",
+            "type": "array"
+          },
+          "response_types": {
+            "default": [
+              "code"
+            ],
+            "items": {
+              "const": "code",
+              "type": "string"
+            },
+            "title": "Response Types",
+            "type": "array"
+          },
+          "scope": {
+            "default": "openid profile email user:read user:write",
+            "title": "Scope",
+            "type": "string"
+          },
+          "token_endpoint_auth_method": {
+            "default": "client_secret_post",
+            "enum": [
+              "client_secret_basic",
+              "client_secret_post",
+              "none"
+            ],
+            "title": "Token Endpoint Auth Method",
+            "type": "string"
+          },
+          "tos_uri": {
+            "anyOf": [
+              {
+                "format": "uri",
+                "maxLength": 2083,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tos Uri"
+          }
+        },
+        "required": [
+          "redirect_uris",
+          "client_name"
+        ],
+        "title": "OAuth2ClientConfiguration",
+        "type": "object"
+      },
+      "OAuth2ClientConfigurationUpdate": {
+        "properties": {
+          "client_id": {
+            "title": "Client Id",
+            "type": "string"
+          },
+          "client_name": {
+            "title": "Client Name",
+            "type": "string"
+          },
+          "client_uri": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Uri"
+          },
+          "default_sub_type": {
+            "$ref": "#/components/schemas/SubType",
+            "default": "user"
+          },
+          "grant_types": {
+            "default": [
+              "authorization_code",
+              "refresh_token"
+            ],
+            "items": {
+              "enum": [
+                "authorization_code",
+                "refresh_token"
+              ],
+              "type": "string"
+            },
+            "title": "Grant Types",
+            "type": "array"
+          },
+          "logo_uri": {
+            "anyOf": [
+              {
+                "format": "uri",
+                "maxLength": 2083,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Uri"
+          },
+          "policy_uri": {
+            "anyOf": [
+              {
+                "format": "uri",
+                "maxLength": 2083,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Uri"
+          },
+          "redirect_uris": {
+            "items": {
+              "format": "uri",
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Redirect Uris",
+            "type": "array"
+          },
+          "response_types": {
+            "default": [
+              "code"
+            ],
+            "items": {
+              "const": "code",
+              "type": "string"
+            },
+            "title": "Response Types",
+            "type": "array"
+          },
+          "scope": {
+            "default": "openid profile email user:read user:write",
+            "title": "Scope",
+            "type": "string"
+          },
+          "token_endpoint_auth_method": {
+            "default": "client_secret_post",
+            "enum": [
+              "client_secret_basic",
+              "client_secret_post",
+              "none"
+            ],
+            "title": "Token Endpoint Auth Method",
+            "type": "string"
+          },
+          "tos_uri": {
+            "anyOf": [
+              {
+                "format": "uri",
+                "maxLength": 2083,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tos Uri"
+          }
+        },
+        "required": [
+          "redirect_uris",
+          "client_name",
+          "client_id"
+        ],
+        "title": "OAuth2ClientConfigurationUpdate",
+        "type": "object"
+      },
+      "OAuth2ClientPublic": {
+        "properties": {
+          "client_id": {
+            "title": "Client Id",
+            "type": "string"
+          },
+          "client_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Name"
+          },
+          "client_uri": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Uri"
+          },
+          "created_at": {
+            "description": "Creation timestamp of the object.",
+            "examples": [
+              "2026-01-01T00:00:00.000000Z"
+            ],
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "logo_uri": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Uri"
+          },
+          "modified_at": {
+            "anyOf": [
+              {
+                "examples": [
+                  "2026-01-01T00:00:00.000000Z"
+                ],
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Last modification timestamp of the object.",
+            "title": "Modified At"
+          },
+          "policy_uri": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Uri"
+          },
+          "tos_uri": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tos Uri"
+          }
+        },
+        "required": [
+          "created_at",
+          "modified_at",
+          "client_id",
+          "client_name",
+          "client_uri",
+          "logo_uri",
+          "tos_uri",
+          "policy_uri"
+        ],
+        "title": "OAuth2ClientPublic",
+        "type": "object"
+      },
+      "Place": {
+        "properties": {
+          "admin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Admin"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "countryCode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Countrycode"
+          },
+          "latitude": {
+            "title": "Latitude",
+            "type": "number"
+          },
+          "longitude": {
+            "title": "Longitude",
+            "type": "number"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "latitude",
+          "longitude"
+        ],
+        "title": "Place",
+        "type": "object"
+      },
+      "RefreshTokenRequest": {
+        "properties": {
+          "client_id": {
+            "title": "Client Id",
+            "type": "string"
+          },
+          "client_secret": {
+            "title": "Client Secret",
+            "type": "string"
+          },
+          "grant_type": {
+            "const": "refresh_token",
+            "title": "Grant Type",
+            "type": "string"
+          },
+          "refresh_token": {
+            "title": "Refresh Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "grant_type",
+          "client_id",
+          "client_secret",
+          "refresh_token"
+        ],
+        "title": "RefreshTokenRequest",
+        "type": "object"
+      },
+      "RevokeTokenRequest": {
+        "properties": {
+          "client_id": {
+            "title": "Client Id",
+            "type": "string"
+          },
+          "client_secret": {
+            "title": "Client Secret",
+            "type": "string"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          },
+          "token_type_hint": {
+            "anyOf": [
+              {
+                "enum": [
+                  "access_token",
+                  "refresh_token"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Token Type Hint"
+          }
+        },
+        "required": [
+          "token",
+          "client_id",
+          "client_secret"
+        ],
+        "title": "RevokeTokenRequest",
+        "type": "object"
+      },
+      "RevokeTokenResponse": {
+        "properties": {},
+        "title": "RevokeTokenResponse",
+        "type": "object"
+      },
+      "Scope": {
+        "enum": [
+          "openid",
+          "profile",
+          "email",
+          "user:read",
+          "user:write"
+        ],
+        "enumNames": {
+          "email": "Read your email address",
+          "openid": "OpenID",
+          "profile": "Read your profile",
+          "user:read": "Read your account, followed sources and preferences",
+          "user:write": "Manage your account, followed sources and preferences"
+        },
+        "title": "Scope",
+        "type": "string"
+      },
+      "SignalState": {
+        "enum": [
+          "nominal",
+          "loading",
+          "degraded",
+          "stale",
+          "fallback",
+          "unavailable"
+        ],
+        "title": "SignalState",
+        "type": "string"
+      },
+      "SourceMeta": {
+        "properties": {
+          "color": {
+            "title": "Color",
+            "type": "string"
+          },
+          "column": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Column"
+          },
+          "desc": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Desc"
+          },
+          "home": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Home"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "interval": {
+            "title": "Interval",
+            "type": "integer"
+          },
+          "logo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "redirect": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Redirect"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "enum": [
+                  "hottest",
+                  "realtime",
+                  "heatmap",
+                  "game"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "color",
+          "interval"
+        ],
+        "title": "SourceMeta",
+        "type": "object"
+      },
+      "SourceResponse": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/NewsItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "success",
+              "cache"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "updatedTime": {
+            "title": "Updatedtime",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "status",
+          "id",
+          "updatedTime",
+          "items"
+        ],
+        "title": "SourceResponse",
+        "type": "object"
+      },
+      "StoryMember": {
+        "properties": {
+          "logo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo"
+          },
+          "pubDate": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pubdate"
+          },
+          "seenAt": {
+            "title": "Seenat",
+            "type": "integer"
+          },
+          "sourceId": {
+            "title": "Sourceid",
+            "type": "string"
+          },
+          "sourceName": {
+            "title": "Sourcename",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sourceId",
+          "sourceName",
+          "title",
+          "url",
+          "seenAt"
+        ],
+        "title": "StoryMember",
+        "type": "object"
+      },
+      "StoryResponse": {
+        "properties": {
+          "firstSeenAt": {
+            "title": "Firstseenat",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/StoryMember"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "lastSeenAt": {
+            "title": "Lastseenat",
+            "type": "integer"
+          },
+          "leadSourceId": {
+            "title": "Leadsourceid",
+            "type": "string"
+          },
+          "leadSourceName": {
+            "title": "Leadsourcename",
+            "type": "string"
+          },
+          "publisherCount": {
+            "title": "Publishercount",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "publisherCount",
+          "leadSourceId",
+          "leadSourceName",
+          "firstSeenAt",
+          "lastSeenAt",
+          "items"
+        ],
+        "title": "StoryResponse",
+        "type": "object"
+      },
+      "StripPayload": {
+        "description": "A one-line attachment to another card. Today only weather, on the\ncountry and city cards.",
+        "properties": {
+          "attachedTo": {
+            "title": "Attachedto",
+            "type": "string"
+          },
+          "kind": {
+            "const": "strip",
+            "default": "strip",
+            "title": "Kind",
+            "type": "string"
+          },
+          "weather": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WeatherResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "attachedTo"
+        ],
+        "title": "StripPayload",
+        "type": "object"
+      },
+      "SubType": {
+        "enum": [
+          "user"
+        ],
+        "title": "SubType",
+        "type": "string"
+      },
+      "SummaryAvailability": {
+        "description": "Whether a headline tap can expect a summary, decided from what the\nserver already knows, so the client either opens the summary panel or\nsends the reader straight to the article, never both in a row.",
+        "properties": {
+          "available": {
+            "description": "False when the summary is known to be unavailable",
+            "title": "Available",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "available"
+        ],
+        "title": "SummaryAvailability",
+        "type": "object"
+      },
+      "SummaryResponse": {
+        "description": "The summary for a headline tap: the written text plus the article URL\nit covers (the client links to it under the summary).",
+        "properties": {
+          "kind": {
+            "default": "summary",
+            "description": "'summary' is written from the article; 'teaser' is the publisher's own standfirst, shown when the article itself is not available (paywall, bot wall)",
+            "enum": [
+              "summary",
+              "teaser"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "summary": {
+            "description": "Summary of the article",
+            "title": "Summary",
+            "type": "string"
+          },
+          "url": {
+            "description": "The article URL the summary covers",
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "summary",
+          "url"
+        ],
+        "title": "SummaryResponse",
+        "type": "object"
+      },
+      "TablePayload": {
+        "properties": {
+          "kind": {
+            "const": "table",
+            "default": "table",
+            "title": "Kind",
+            "type": "string"
+          },
+          "tiles": {
+            "items": {
+              "$ref": "#/components/schemas/HeatmapTile"
+            },
+            "title": "Tiles",
+            "type": "array"
+          }
+        },
+        "required": [
+          "tiles"
+        ],
+        "title": "TablePayload",
+        "type": "object"
+      },
+      "TemplatesResponse": {
+        "properties": {
+          "templates": {
+            "items": {
+              "$ref": "#/components/schemas/NewsTemplate"
+            },
+            "title": "Templates",
+            "type": "array"
+          }
+        },
+        "required": [
+          "templates"
+        ],
+        "title": "TemplatesResponse",
+        "type": "object"
+      },
+      "TokenResponse": {
+        "properties": {
+          "access_token": {
+            "title": "Access Token",
+            "type": "string"
+          },
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "id_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id Token"
+          },
+          "refresh_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refresh Token"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "token_type": {
+            "const": "Bearer",
+            "title": "Token Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "access_token",
+          "token_type",
+          "expires_in",
+          "scope"
+        ],
+        "title": "TokenResponse",
+        "type": "object"
+      },
+      "UserInfoUser": {
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "email_verified": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Verified"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "sub": {
+            "title": "Sub",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sub"
+        ],
+        "title": "UserInfoUser",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "WeatherCurrent": {
+        "properties": {
+          "apparentTemperature": {
+            "title": "Apparenttemperature",
+            "type": "number"
+          },
+          "humidity": {
+            "title": "Humidity",
+            "type": "integer"
+          },
+          "isDay": {
+            "title": "Isday",
+            "type": "boolean"
+          },
+          "temperature": {
+            "title": "Temperature",
+            "type": "number"
+          },
+          "weatherCode": {
+            "title": "Weathercode",
+            "type": "integer"
+          },
+          "windSpeed": {
+            "title": "Windspeed",
+            "type": "number"
+          }
+        },
+        "required": [
+          "temperature",
+          "apparentTemperature",
+          "weatherCode",
+          "windSpeed",
+          "humidity",
+          "isDay"
+        ],
+        "title": "WeatherCurrent",
+        "type": "object"
+      },
+      "WeatherDaily": {
+        "properties": {
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "tempMax": {
+            "title": "Tempmax",
+            "type": "number"
+          },
+          "tempMin": {
+            "title": "Tempmin",
+            "type": "number"
+          },
+          "weatherCode": {
+            "title": "Weathercode",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "date",
+          "weatherCode",
+          "tempMax",
+          "tempMin"
+        ],
+        "title": "WeatherDaily",
+        "type": "object"
+      },
+      "WeatherResponse": {
+        "description": "Current conditions and a short daily forecast for the weather strip,\nlocalized to the reader's coordinates or IP country capital.",
+        "properties": {
+          "current": {
+            "$ref": "#/components/schemas/WeatherCurrent"
+          },
+          "daily": {
+            "items": {
+              "$ref": "#/components/schemas/WeatherDaily"
+            },
+            "title": "Daily",
+            "type": "array"
+          },
+          "latitude": {
+            "title": "Latitude",
+            "type": "number"
+          },
+          "location": {
+            "title": "Location",
+            "type": "string"
+          },
+          "longitude": {
+            "title": "Longitude",
+            "type": "number"
+          },
+          "timezone": {
+            "title": "Timezone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "location",
+          "latitude",
+          "longitude",
+          "timezone",
+          "current",
+          "daily"
+        ],
+        "title": "WeatherResponse",
+        "type": "object"
+      },
+      "WebTokenRequest": {
+        "properties": {
+          "client_id": {
+            "title": "Client Id",
+            "type": "string"
+          },
+          "client_secret": {
+            "title": "Client Secret",
+            "type": "string"
+          },
+          "grant_type": {
+            "const": "web",
+            "title": "Grant Type",
+            "type": "string"
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Scope"
+          },
+          "session_token": {
+            "title": "Session Token",
+            "type": "string"
+          },
+          "sub": {
+            "anyOf": [
+              {
+                "format": "uuid4",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Sub"
+          },
+          "sub_type": {
+            "const": "user",
+            "default": "user",
+            "title": "Sub Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "grant_type",
+          "client_id",
+          "client_secret",
+          "session_token"
+        ],
+        "title": "WebTokenRequest",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "oidc": {
+        "openIdConnectUrl": "/.well-known/openid-configuration",
+        "type": "openIdConnect"
+      }
+    }
+  },
+  "info": {
+    "description": "Read the docs at https://outception.sh/docs/api-reference",
+    "summary": "Outception HTTP and Webhooks API",
+    "title": "Outception API",
+    "version": "2026-10"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/v1/cards/{card_id}": {
+      "get": {
+        "description": "The card by id: a source id for a feed or a table, `weather` for the\nstrip (with `attachedTo` naming the country or city card it rides on).",
+        "operationId": "cards:get_card",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "card_id",
+            "required": true,
+            "schema": {
+              "title": "Card Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "latest",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Latest",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "country",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 2,
+                  "minLength": 2,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Country"
+            }
+          },
+          {
+            "in": "query",
+            "name": "attachedTo",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Attachedto"
+            }
+          },
+          {
+            "in": "header",
+            "name": "CF-IPCountry",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cf-Ipcountry"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Card"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Card",
+        "tags": [
+          "cards",
+          "public"
+        ],
+        "x-speakeasy-group": "cards",
+        "x-speakeasy-name-override": "get_card"
+      }
+    },
+    "/v1/feedback": {
+      "post": {
+        "description": "One message from the \"Tell us\" sheet. No account; the sender's\naddress is kept only as a keyed hash for abuse review.",
+        "operationId": "feedback:submit_feedback",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Submit Feedback",
+        "tags": [
+          "feedback",
+          "public"
+        ],
+        "x-speakeasy-group": "feedback",
+        "x-speakeasy-name-override": "submit_feedback"
+      }
+    },
+    "/v1/launches": {
+      "get": {
+        "description": "Every day's products, newest day first: the archive page.",
+        "operationId": "launches:list_archive",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LaunchArchive"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Archive",
+        "tags": [
+          "launches",
+          "public"
+        ],
+        "x-speakeasy-group": "launches",
+        "x-speakeasy-name-override": "list_archive"
+      }
+    },
+    "/v1/launches/views": {
+      "post": {
+        "description": "The wall showed these products: one view each. Unlisted ids are\nignored, so the beacon reveals nothing.",
+        "operationId": "launches:record_views",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LaunchViews"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Record Views",
+        "tags": [
+          "launches",
+          "public"
+        ],
+        "x-speakeasy-group": "launches",
+        "x-speakeasy-name-override": "record_views"
+      }
+    },
+    "/v1/launches/{id}": {
+      "get": {
+        "description": "A listed product; before listing, only its submitter and the admin\nlist can see it.",
+        "operationId": "launches:get_launch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LaunchRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "oidc": []
+          }
+        ],
+        "summary": "Get Launch",
+        "tags": [
+          "launches",
+          "public"
+        ],
+        "x-outception-allowed-subjects": [
+          "Anonymous",
+          "User"
+        ],
+        "x-speakeasy-group": "launches",
+        "x-speakeasy-name-override": "get_launch"
+      }
+    },
+    "/v1/launches/{id}/go": {
+      "get": {
+        "description": "Opens the product's link and counts the click.",
+        "operationId": "launches:go",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Go",
+        "tags": [
+          "launches",
+          "public"
+        ],
+        "x-speakeasy-group": "launches",
+        "x-speakeasy-name-override": "go"
+      }
+    },
+    "/v1/news/cities": {
+      "get": {
+        "description": "A typed city resolved to a city card: by name when the catalog has\nit, else through a keyless geocoder and the nearest card within reach.\n`cardId` is null when no card covers the place yet.",
+        "operationId": "news:resolve_city",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "maxLength": 80,
+              "minLength": 2,
+              "title": "Q",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CityResolution"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resolve City",
+        "tags": [
+          "news",
+          "public"
+        ],
+        "x-speakeasy-group": "news",
+        "x-speakeasy-name-override": "resolve_city"
+      }
+    },
+    "/v1/news/credits": {
+      "get": {
+        "description": "Where the data comes from: every upstream the tables, the weather and\nthe live cards are built on, with its terms. One data file feeds the\ncredits drawer on the web and the settings row in the app.",
+        "operationId": "news:get_credits",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Credits",
+        "tags": [
+          "news",
+          "public"
+        ],
+        "x-speakeasy-group": "news",
+        "x-speakeasy-name-override": "get_credits"
+      }
+    },
+    "/v1/news/default-cards": {
+      "get": {
+        "description": "The default \"Your stack\" seeded for a fresh visitor: one representative\nsource per major category (world, tech, music, culture, weather, sports,\nscience, markets, crypto, betting, gaming). When the reader's ``country``\nis known (the edge's IP country), the generic sports sources are swapped for\nthat country's native sports/teams (e.g. Ireland \u2192 Gaelic football + hurling,\nUSA \u2192 NFL/NBA/MLB). Retired sources are dropped.",
+        "operationId": "news:default_cards",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "country",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 2,
+                  "minLength": 2,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Country"
+            }
+          },
+          {
+            "in": "header",
+            "name": "CF-IPCountry",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cf-Ipcountry"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Response News:Default Cards",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Default Cards",
+        "tags": [
+          "news",
+          "public"
+        ],
+        "x-speakeasy-group": "news",
+        "x-speakeasy-name-override": "default_cards"
+      }
+    },
+    "/v1/news/default-deck": {
+      "get": {
+        "deprecated": true,
+        "description": "The default \"Your stack\" seeded for a fresh visitor: one representative\nsource per major category (world, tech, music, culture, weather, sports,\nscience, markets, crypto, betting, gaming). When the reader's ``country``\nis known (the edge's IP country), the generic sports sources are swapped for\nthat country's native sports/teams (e.g. Ireland \u2192 Gaelic football + hurling,\nUSA \u2192 NFL/NBA/MLB). Retired sources are dropped.",
+        "operationId": "news:default_deck",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "country",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 2,
+                  "minLength": 2,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Country"
+            }
+          },
+          {
+            "in": "header",
+            "name": "CF-IPCountry",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cf-Ipcountry"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Response News:Default Deck",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Default Cards",
+        "tags": [
+          "news",
+          "public"
+        ],
+        "x-speakeasy-group": "news",
+        "x-speakeasy-name-override": "default_cards"
+      }
+    },
+    "/v1/news/heatmap/{heatmap_id}": {
+      "get": {
+        "description": "Tiles for one market heatmap card (a `type: \"heatmap\"` roster source).\n\nTile area follows `weight` (market cap), color follows `changePercent`.\nServed cache-first with the same success/cache semantics as headline\nsources.",
+        "operationId": "news:get_heatmap",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "heatmap_id",
+            "required": true,
+            "schema": {
+              "title": "Heatmap Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeatmapResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Heatmap",
+        "tags": [
+          "news",
+          "public"
+        ],
+        "x-speakeasy-group": "news",
+        "x-speakeasy-name-override": "get_heatmap"
+      }
+    },
+    "/v1/news/search": {
+      "get": {
+        "description": "Search the wall: source names (always) and cached headlines (warm\nsources only - search never triggers an outbound fetch).",
+        "operationId": "news:search_news",
+        "parameters": [
+          {
+            "description": "Search query.",
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "description": "Search query.",
+              "maxLength": 80,
+              "minLength": 2,
+              "title": "Q",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NewsSearchResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search News",
+        "tags": [
+          "news",
+          "public"
+        ],
+        "x-speakeasy-group": "news",
+        "x-speakeasy-name-override": "search_news"
+      }
+    },
+    "/v1/news/sources": {
+      "get": {
+        "description": "Metadata for every known source (including redirect aliases). Pass\n``ids`` (comma-separated) for just those sources - what the wall needs to\npaint its cards without downloading the multi-megabyte roster.",
+        "operationId": "news:list_sources",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "ids",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 8192,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ids"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SourceMeta"
+                  },
+                  "title": "Response News:List Sources",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Sources",
+        "tags": [
+          "news",
+          "public"
+        ],
+        "x-speakeasy-group": "news",
+        "x-speakeasy-name-override": "list_sources"
+      }
+    },
+    "/v1/news/sources/{source_id}": {
+      "get": {
+        "description": "Metadata for one source - what a share-card unfurl needs, without\npulling the whole roster.",
+        "operationId": "news:get_source_meta",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "source_id",
+            "required": true,
+            "schema": {
+              "title": "Source Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceMeta"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Source Meta",
+        "tags": [
+          "news",
+          "public"
+        ],
+        "x-speakeasy-group": "news",
+        "x-speakeasy-name-override": "get_source_meta"
+      }
+    },
+    "/v1/news/story/{story_id}": {
+      "get": {
+        "description": "One story across its publishers: the cluster with every member.",
+        "operationId": "news:get_story_route",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "story_id",
+            "required": true,
+            "schema": {
+              "title": "Story Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Story Route",
+        "tags": [
+          "news",
+          "public"
+        ],
+        "x-speakeasy-group": "news",
+        "x-speakeasy-name-override": "get_story_route"
+      }
+    },
+    "/v1/news/summary": {
+      "get": {
+        "description": "The summary for a headline tap. One model call per article - everything\nelse is served from cache (and the edge can cache it too).",
+        "operationId": "news:get_article_summary",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "url",
+            "required": true,
+            "schema": {
+              "maxLength": 2048,
+              "minLength": 12,
+              "title": "Url",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SummaryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "502": {
+            "description": "Summary unavailable for this article"
+          },
+          "503": {
+            "description": "Summaries not configured"
+          }
+        },
+        "summary": "Get Article Summary",
+        "tags": [
+          "news",
+          "public"
+        ],
+        "x-speakeasy-group": "news",
+        "x-speakeasy-name-override": "get_article_summary"
+      }
+    },
+    "/v1/news/summary/available": {
+      "get": {
+        "description": "Cheap pre-check for a headline tap: known-unavailable articles (videos,\npaywalls and bot walls seen before, exhausted budget) answer false in a\nfew milliseconds so the reader is sent to the article immediately rather\nthan after a failed generation.",
+        "operationId": "news:get_summary_availability",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "url",
+            "required": true,
+            "schema": {
+              "maxLength": 2048,
+              "minLength": 12,
+              "title": "Url",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SummaryAvailability"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Summary Availability",
+        "tags": [
+          "news",
+          "public"
+        ],
+        "x-speakeasy-group": "news",
+        "x-speakeasy-name-override": "get_summary_availability"
+      }
+    },
+    "/v1/news/summary/stream": {
+      "get": {
+        "description": "The summary as server-sent events, so the panel shows the text as it\nis written: `text` (a whole cached or publisher result), `delta` pieces,\nthen `done` - or `error` when the reader should open the article. An\n`error` of `\"429\"` means this client's hourly allowance of new summaries\nis spent (cached ones stay free); the panel opens the article instead.",
+        "operationId": "news:stream_article_summary",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "url",
+            "required": true,
+            "schema": {
+              "maxLength": 2048,
+              "minLength": 12,
+              "title": "Url",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Stream Article Summary",
+        "tags": [
+          "news",
+          "public"
+        ],
+        "x-speakeasy-group": "news",
+        "x-speakeasy-name-override": "stream_article_summary"
+      }
+    },
+    "/v1/news/templates": {
+      "get": {
+        "description": "Starter templates: curated source bundles by persona (developer,\ninvestor, sports fan, \u2026), country-resolved like the default cards. Display\nnames live client-side, keyed by template id.",
+        "operationId": "news:get_templates",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "country",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 2,
+                  "minLength": 2,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Country"
+            }
+          },
+          {
+            "in": "header",
+            "name": "CF-IPCountry",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cf-Ipcountry"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplatesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Templates",
+        "tags": [
+          "news",
+          "public"
+        ],
+        "x-speakeasy-group": "news",
+        "x-speakeasy-name-override": "get_templates"
+      }
+    },
+    "/v1/news/weather": {
+      "get": {
+        "description": "Current conditions and a short forecast for the reader's location. The\nbrowser sends precise ``latitude``/``longitude`` when geolocation is\ngranted; otherwise it sends the IP ``country`` (from the edge) and we\nresolve that country's capital. Proxied from Open-Meteo, cache-first.\n\nNative clients have no IP-country cookie to read, so when they send neither\ncoordinates nor a country we fall back to the edge's header ourselves -\notherwise a phone whose UI language is US English would be given US weather\nwherever it actually is.",
+        "operationId": "news:get_weather",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "latitude",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 90,
+                  "minimum": -90,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Latitude"
+            }
+          },
+          {
+            "in": "query",
+            "name": "longitude",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 180,
+                  "minimum": -180,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longitude"
+            }
+          },
+          {
+            "in": "query",
+            "name": "country",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 2,
+                  "minLength": 2,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Country"
+            }
+          },
+          {
+            "in": "header",
+            "name": "CF-IPCountry",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cf-Ipcountry"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeatherResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Weather",
+        "tags": [
+          "news",
+          "public"
+        ],
+        "x-speakeasy-group": "news",
+        "x-speakeasy-name-override": "get_weather"
+      }
+    },
+    "/v1/news/{source_id}": {
+      "get": {
+        "description": "Items for one source - cache-first with the ported TTL semantics.",
+        "operationId": "news:get_source",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "source_id",
+            "required": true,
+            "schema": {
+              "title": "Source Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "latest",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Latest",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Source",
+        "tags": [
+          "news",
+          "public"
+        ],
+        "x-speakeasy-group": "news",
+        "x-speakeasy-name-override": "get_source"
+      }
+    },
+    "/v1/oauth2/authorize": {
+      "get": {
+        "operationId": "oauth2:authorize",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorizeResponseUser"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "oidc": []
+          }
+        ],
+        "summary": "Authorize",
+        "tags": [
+          "oauth2",
+          "public"
+        ],
+        "x-outception-allowed-subjects": [
+          "Anonymous",
+          "User"
+        ],
+        "x-speakeasy-group": "oauth2",
+        "x-speakeasy-name-override": "authorize"
+      }
+    },
+    "/v1/oauth2/introspect": {
+      "post": {
+        "description": "Get information about an access token.",
+        "operationId": "oauth2:introspect_token",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/IntrospectTokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntrospectTokenResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Introspect Token",
+        "tags": [
+          "oauth2",
+          "public"
+        ],
+        "x-speakeasy-group": "oauth2",
+        "x-speakeasy-name-override": "oauth2:introspect_token"
+      }
+    },
+    "/v1/oauth2/register": {
+      "post": {
+        "description": "Create an OAuth2 client.",
+        "operationId": "oauth2:clients:oauth2:create_client",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OAuth2ClientConfiguration"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "oidc": []
+          }
+        ],
+        "summary": "Create Client",
+        "tags": [
+          "oauth2",
+          "clients",
+          "public"
+        ],
+        "x-outception-allowed-subjects": [
+          "Anonymous",
+          "User"
+        ],
+        "x-speakeasy-group": "oauth2.clients",
+        "x-speakeasy-name-override": "oauth2:create_client"
+      }
+    },
+    "/v1/oauth2/register/{client_id}": {
+      "delete": {
+        "description": "Delete an OAuth2 client.",
+        "operationId": "oauth2:clients:oauth2:delete_client",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "title": "Client Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "oidc": []
+          }
+        ],
+        "summary": "Delete Client",
+        "tags": [
+          "oauth2",
+          "clients",
+          "public"
+        ],
+        "x-outception-allowed-subjects": [
+          "Anonymous",
+          "User"
+        ],
+        "x-speakeasy-group": "oauth2.clients",
+        "x-speakeasy-name-override": "oauth2:delete_client"
+      },
+      "get": {
+        "description": "Get an OAuth2 client by Client ID.",
+        "operationId": "oauth2:clients:oauth2:get_client",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "title": "Client Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "oidc": []
+          }
+        ],
+        "summary": "Get Client",
+        "tags": [
+          "oauth2",
+          "clients",
+          "public"
+        ],
+        "x-outception-allowed-subjects": [
+          "Anonymous",
+          "User"
+        ],
+        "x-speakeasy-group": "oauth2.clients",
+        "x-speakeasy-name-override": "oauth2:get_client"
+      },
+      "put": {
+        "description": "Update an OAuth2 client.",
+        "operationId": "oauth2:clients:oauth2:update_client",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "title": "Client Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OAuth2ClientConfigurationUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "oidc": []
+          }
+        ],
+        "summary": "Update Client",
+        "tags": [
+          "oauth2",
+          "clients",
+          "public"
+        ],
+        "x-outception-allowed-subjects": [
+          "Anonymous",
+          "User"
+        ],
+        "x-speakeasy-group": "oauth2.clients",
+        "x-speakeasy-name-override": "oauth2:update_client"
+      }
+    },
+    "/v1/oauth2/revoke": {
+      "post": {
+        "description": "Revoke an access token or a refresh token.",
+        "operationId": "oauth2:revoke_token",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokeTokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevokeTokenResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Revoke Token",
+        "tags": [
+          "oauth2",
+          "public"
+        ],
+        "x-speakeasy-group": "oauth2",
+        "x-speakeasy-name-override": "oauth2:revoke_token"
+      }
+    },
+    "/v1/oauth2/token": {
+      "post": {
+        "description": "Request an access token using a valid grant.",
+        "operationId": "oauth2:request_token",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/AuthorizationCodeTokenRequest"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RefreshTokenRequest"
+                  },
+                  {
+                    "$ref": "#/components/schemas/WebTokenRequest"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Request Token",
+        "tags": [
+          "oauth2",
+          "public"
+        ],
+        "x-speakeasy-group": "oauth2",
+        "x-speakeasy-name-override": "oauth2:request_token"
+      }
+    },
+    "/v1/oauth2/userinfo": {
+      "get": {
+        "description": "Get information about the authenticated user.",
+        "operationId": "oauth2:userinfo",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserInfoUser"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "oidc": []
+          }
+        ],
+        "summary": "Get User Info",
+        "tags": [
+          "oauth2",
+          "public"
+        ],
+        "x-speakeasy-group": "oauth2",
+        "x-speakeasy-name-override": "userinfo"
+      }
+    }
+  },
+  "servers": [
+    {
+      "description": "Production environment",
+      "url": "https://api.outception.sh",
+      "x-outception-environment": "production",
+      "x-speakeasy-server-id": "production"
+    },
+    {
+      "description": "Sandbox environment",
+      "url": "https://sandbox-api.outception.sh",
+      "x-outception-environment": "sandbox",
+      "x-speakeasy-server-id": "sandbox"
+    }
+  ],
+  "tags": [
+    {
+      "description": "Endpoints shown and documented in the Outception API documentation and available in our SDKs.",
+      "name": "public"
+    },
+    {
+      "description": "Endpoints that should appear in the schema only in development to generate our internal JS SDK.",
+      "name": "private"
+    },
+    {
+      "description": "Endpoints supported by Outception's MCP server.",
+      "name": "mcp"
+    },
+    {
+      "description": "Endpoints exposed as commands by Outception's CLI.",
+      "name": "cli"
+    }
+  ]
+}

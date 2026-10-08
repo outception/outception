@@ -1,0 +1,251 @@
+"""Envelope encryption for secrets stored at rest.
+
+Each secret is stored as ciphertext wrapped in an :class:`EncryptedString`. The
+column is mapped with a wrap-only :class:`EncryptedStringType` that does no
+crypto and no I/O: on load it boxes the stored ciphertext into an
+:class:`EncryptedString`; on save it unboxes it. Encryption and decryption are
+explicit ``await`` calls that go through a :class:`KeyProvider` chosen by config.
+
+See the design document for the full rationale:
+``handbook/engineering/design-documents/secrets-encryption.mdx``.
+"""
+
+import asyncio
+import base64
+import functools
+import hashlib
+import json
+import os
+from typing import Any, Protocol
+
+import sqlalchemy as sa
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from sqlalchemy.engine.interfaces import Dialect
+
+from outception.config import DEFAULT_ENCRYPTION_LOCAL_KEY, settings
+from outception.kit.extensions.sqlalchemy.types import TypeDecorator
+
+VERSION = "v1"
+NONCE_SIZE = 12
+DATA_KEY_SIZE = 32
+
+
+def _encode_context(context: dict[str, str]) -> bytes:
+    return json.dumps(context, sort_keys=True, separators=(",", ":")).encode("utf-8")
+
+
+def _b64encode(value: bytes) -> str:
+    return base64.b64encode(value).decode("ascii")
+
+
+def _b64decode(value: str) -> bytes:
+    return base64.b64decode(value)
+
+
+class KeyProvider(Protocol):
+    """Wraps and unwraps the per-secret data key. The plaintext secret never
+    reaches the provider."""
+
+    async def generate_data_key(self, context: dict[str, str]) -> tuple[bytes, bytes]:
+        """Return a fresh ``(plaintext_data_key, wrapped_data_key)`` pair."""
+        ...
+
+    def generate_data_key_sync(self, context: dict[str, str]) -> tuple[bytes, bytes]:
+        """Blocking variant of :meth:`generate_data_key` for callers that cannot await."""
+        ...
+
+    async def decrypt_data_key(self, wrapped: bytes, context: dict[str, str]) -> bytes:
+        """Unwrap a previously wrapped data key."""
+        ...
+
+    def decrypt_data_key_sync(self, wrapped: bytes, context: dict[str, str]) -> bytes:
+        """Blocking variant of :meth:`decrypt_data_key` for callers that cannot await."""
+        ...
+
+
+class LocalKeyProvider:
+    """Wraps the data key with a static key. Used for local development and CI,
+    so tests need no cloud access."""
+
+    def __init__(self, key: str) -> None:
+        self._key = AESGCM(hashlib.sha256(key.encode("utf-8")).digest())
+
+    def generate_data_key_sync(self, context: dict[str, str]) -> tuple[bytes, bytes]:
+        data_key = os.urandom(DATA_KEY_SIZE)
+        nonce = os.urandom(NONCE_SIZE)
+        wrapped = nonce + self._key.encrypt(nonce, data_key, _encode_context(context))
+        return data_key, wrapped
+
+    async def generate_data_key(self, context: dict[str, str]) -> tuple[bytes, bytes]:
+        return self.generate_data_key_sync(context)
+
+    def decrypt_data_key_sync(self, wrapped: bytes, context: dict[str, str]) -> bytes:
+        nonce, ciphertext = wrapped[:NONCE_SIZE], wrapped[NONCE_SIZE:]
+        return self._key.decrypt(nonce, ciphertext, _encode_context(context))
+
+    async def decrypt_data_key(self, wrapped: bytes, context: dict[str, str]) -> bytes:
+        return self.decrypt_data_key_sync(wrapped, context)
+
+
+class KMSKeyProvider:
+    """Wraps the data key with a KMS master key. Used in production and sandbox."""
+
+    def __init__(self, key_id: str) -> None:
+        self._key_id = key_id
+
+    @functools.cached_property
+    def _client(self) -> Any:
+        import boto3
+        from botocore.config import Config
+
+        # Bound the blocking KMS calls: the sync encryption path can run on the
+        # event loop, so a slow or throttled KMS must fail fast, not stall it.
+        return boto3.client(
+            "kms",
+            region_name=settings.AWS_REGION,
+            config=Config(
+                connect_timeout=3,
+                read_timeout=5,
+                retries={"max_attempts": 3, "mode": "standard"},
+            ),
+        )
+
+    def generate_data_key_sync(self, context: dict[str, str]) -> tuple[bytes, bytes]:
+        response = self._client.generate_data_key(
+            KeyId=self._key_id, KeySpec="AES_256", EncryptionContext=context
+        )
+        return response["Plaintext"], response["CiphertextBlob"]
+
+    async def generate_data_key(self, context: dict[str, str]) -> tuple[bytes, bytes]:
+        return await asyncio.to_thread(self.generate_data_key_sync, context)
+
+    def decrypt_data_key_sync(self, wrapped: bytes, context: dict[str, str]) -> bytes:
+        response = self._client.decrypt(
+            CiphertextBlob=wrapped, EncryptionContext=context
+        )
+        return response["Plaintext"]
+
+    async def decrypt_data_key(self, wrapped: bytes, context: dict[str, str]) -> bytes:
+        return await asyncio.to_thread(self.decrypt_data_key_sync, wrapped, context)
+
+
+@functools.cache
+def get_key_provider() -> KeyProvider:
+    # A hosted environment wraps data keys with KMS when it has one; without
+    # it the operator's own local key does the wrapping, the way the signing
+    # key set works. Only the default local key is refused there, since it
+    # ships in the repository.
+    if settings.is_production() or settings.is_sandbox():
+        key_id = settings.AWS_KMS_KEY_ID
+        if key_id is not None:
+            return KMSKeyProvider(key_id)
+        if settings.ENCRYPTION_LOCAL_KEY == DEFAULT_ENCRYPTION_LOCAL_KEY:
+            raise RuntimeError(
+                "OUTCEPTION_ENCRYPTION_LOCAL_KEY must be the operator's own key "
+                "in this environment, or set OUTCEPTION_AWS_KMS_KEY_ID"
+            )
+    return LocalKeyProvider(settings.ENCRYPTION_LOCAL_KEY)
+
+
+class EncryptedString:
+    """Holds the ciphertext of a secret and owns the only paths that touch the
+    key provider. Immutable: any new value is a fresh instance, so ORM change
+    tracking works without ``sqlalchemy.ext.mutable``."""
+
+    __slots__ = ("context", "encrypted_value")
+
+    def __init__(self, encrypted_value: str, context: dict[str, str]) -> None:
+        self.encrypted_value = encrypted_value
+        self.context = dict(context)
+
+    @staticmethod
+    def _seal(
+        data_key: bytes, wrapped: bytes, plaintext: str, context: dict[str, str]
+    ) -> str:
+        nonce = os.urandom(NONCE_SIZE)
+        ciphertext = AESGCM(data_key).encrypt(
+            nonce, plaintext.encode("utf-8"), _encode_context(context)
+        )
+        return ".".join(
+            (VERSION, _b64encode(wrapped), _b64encode(nonce), _b64encode(ciphertext))
+        )
+
+    @classmethod
+    async def encrypt(
+        cls, plaintext: str, *, context: dict[str, str]
+    ) -> "EncryptedString":
+        provider = get_key_provider()
+        data_key, wrapped = await provider.generate_data_key(context)
+        return cls(cls._seal(data_key, wrapped, plaintext, context), context)
+
+    @classmethod
+    def encrypt_sync(
+        cls, plaintext: str, *, context: dict[str, str]
+    ) -> "EncryptedString":
+        """Blocking encryption for callers that cannot await; keep it to
+        low-volume paths since it blocks on the KMS call."""
+        provider = get_key_provider()
+        data_key, wrapped = provider.generate_data_key_sync(context)
+        return cls(cls._seal(data_key, wrapped, plaintext, context), context)
+
+    def _unpack(self, id: str | None) -> tuple[bytes, bytes, bytes, dict[str, str]]:
+        context = {**self.context, "id": id} if id is not None else self.context
+        version, wrapped, nonce, ciphertext = self.encrypted_value.split(".")
+        if version != VERSION:
+            raise ValueError(f"Unsupported encryption version: {version}")
+        return _b64decode(wrapped), _b64decode(nonce), _b64decode(ciphertext), context
+
+    @staticmethod
+    def _open(
+        data_key: bytes, nonce: bytes, ciphertext: bytes, context: dict[str, str]
+    ) -> str:
+        plaintext = AESGCM(data_key).decrypt(
+            nonce, ciphertext, _encode_context(context)
+        )
+        return plaintext.decode("utf-8")
+
+    async def decrypt(self, *, id: str | None = None) -> str:
+        wrapped, nonce, ciphertext, context = self._unpack(id)
+        data_key = await get_key_provider().decrypt_data_key(wrapped, context)
+        return self._open(data_key, nonce, ciphertext, context)
+
+    def decrypt_sync(self, *, id: str | None = None) -> str:
+        """Blocking decryption for callers that cannot await; keep it to
+        low-volume paths since it blocks on the KMS call."""
+        wrapped, nonce, ciphertext, context = self._unpack(id)
+        data_key = get_key_provider().decrypt_data_key_sync(wrapped, context)
+        return self._open(data_key, nonce, ciphertext, context)
+
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}("***", {self.context!r})'
+
+    def __str__(self) -> str:
+        return "<encrypted>"
+
+
+class EncryptedStringType(TypeDecorator):
+    """Wrap-only column type: no crypto, no I/O. Boxes the stored ciphertext
+    into an :class:`EncryptedString` on load and unboxes it on save."""
+
+    impl = sa.Text
+    cache_ok = True
+
+    def __init__(self, context: dict[str, str]) -> None:
+        super().__init__()
+        self.context = tuple(sorted(context.items()))
+
+    def process_bind_param(
+        self, value: EncryptedString | None, dialect: Dialect
+    ) -> str | None:
+        if value is None:
+            return None
+        if isinstance(value, EncryptedString):
+            return value.encrypted_value
+        raise ValueError("encrypt the value before assigning it")
+
+    def process_result_value(
+        self, value: str | None, dialect: Dialect
+    ) -> EncryptedString | None:
+        if value is None:
+            return None
+        return EncryptedString(value, dict(self.context))

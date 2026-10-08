@@ -1,0 +1,599 @@
+{
+ "table": "business",
+ "entries": {
+  "US": [
+   "business-us"
+  ],
+  "GB": [
+   "business-gb"
+  ],
+  "CA": [
+   "business-ca"
+  ],
+  "AU": [
+   "business-au"
+  ],
+  "NZ": [
+   "business-nz"
+  ],
+  "IE": [
+   "business-ie"
+  ],
+  "DE": [
+   "business-de"
+  ],
+  "FR": [
+   "business-fr"
+  ],
+  "ES": [
+   "business-es"
+  ],
+  "IT": [
+   "business-it"
+  ],
+  "NL": [
+   "business-nl"
+  ],
+  "BE": [
+   "business-be"
+  ],
+  "AT": [
+   "business-at"
+  ],
+  "CH": [
+   "business-ch"
+  ],
+  "SE": [
+   "business-se"
+  ],
+  "NO": [
+   "business-no"
+  ],
+  "DK": [
+   "business-dk"
+  ],
+  "FI": [
+   "business-fi"
+  ],
+  "PL": [
+   "business-pl"
+  ],
+  "PT": [
+   "business-pt"
+  ],
+  "GR": [
+   "business-gr"
+  ],
+  "CZ": [
+   "business-cz"
+  ],
+  "RO": [
+   "business-ro"
+  ],
+  "HU": [
+   "business-hu"
+  ],
+  "SK": [
+   "business-sk"
+  ],
+  "BG": [
+   "business-bg"
+  ],
+  "HR": [
+   "business-hr"
+  ],
+  "SI": [
+   "business-si"
+  ],
+  "LT": [
+   "business-lt"
+  ],
+  "LV": [
+   "business-lv"
+  ],
+  "EE": [
+   "business-ee"
+  ],
+  "LU": [
+   "business-lu"
+  ],
+  "MT": [
+   "business-mt"
+  ],
+  "CY": [
+   "business-cy"
+  ],
+  "UA": [
+   "business-ua"
+  ],
+  "RS": [
+   "business-rs"
+  ],
+  "GE": [
+   "business-ge"
+  ],
+  "AZ": [
+   "business-az"
+  ],
+  "AM": [
+   "business-am"
+  ],
+  "RU": [
+   "business-ru"
+  ],
+  "TR": [
+   "business-tr"
+  ],
+  "JP": [
+   "business-jp"
+  ],
+  "KR": [
+   "business-kr"
+  ],
+  "CN": [
+   "business-cn"
+  ],
+  "TW": [
+   "business-tw"
+  ],
+  "HK": [
+   "business-hk"
+  ],
+  "MN": [
+   "business-mn"
+  ],
+  "SG": [
+   "business-sg"
+  ],
+  "MY": [
+   "business-my"
+  ],
+  "ID": [
+   "business-id"
+  ],
+  "TH": [
+   "business-th"
+  ],
+  "VN": [
+   "business-vn"
+  ],
+  "PH": [
+   "business-ph"
+  ],
+  "MM": [
+   "business-mm"
+  ],
+  "KH": [
+   "business-kh"
+  ],
+  "LA": [
+   "business-la"
+  ],
+  "IN": [
+   "business-in"
+  ],
+  "BD": [
+   "business-bd"
+  ],
+  "PK": [
+   "business-pk"
+  ],
+  "LK": [
+   "business-lk"
+  ],
+  "NP": [
+   "business-np"
+  ],
+  "SA": [
+   "business-sa"
+  ],
+  "AE": [
+   "business-ae"
+  ],
+  "IL": [
+   "business-il"
+  ],
+  "JO": [
+   "business-jo"
+  ],
+  "LB": [
+   "business-lb"
+  ],
+  "KW": [
+   "business-kw"
+  ],
+  "QA": [
+   "business-qa"
+  ],
+  "OM": [
+   "business-om"
+  ],
+  "BH": [
+   "business-bh"
+  ],
+  "IQ": [
+   "business-iq"
+  ],
+  "IR": [
+   "business-ir"
+  ],
+  "KZ": [
+   "business-kz"
+  ],
+  "UZ": [
+   "business-uz"
+  ],
+  "EG": [
+   "business-eg"
+  ],
+  "MA": [
+   "business-ma"
+  ],
+  "DZ": [
+   "business-dz"
+  ],
+  "TN": [
+   "business-tn"
+  ],
+  "LY": [
+   "business-ly"
+  ],
+  "NG": [
+   "business-ng"
+  ],
+  "GH": [
+   "business-gh"
+  ],
+  "SN": [
+   "business-sn"
+  ],
+  "CI": [
+   "business-ci"
+  ],
+  "CM": [
+   "business-cm"
+  ],
+  "KE": [
+   "business-ke"
+  ],
+  "TZ": [
+   "business-tz"
+  ],
+  "UG": [
+   "business-ug"
+  ],
+  "ET": [
+   "business-et"
+  ],
+  "RW": [
+   "business-rw"
+  ],
+  "ZA": [
+   "business-za"
+  ],
+  "AF": [
+   "business-af"
+  ],
+  "IS": [
+   "business-is"
+  ],
+  "MZ": [
+   "business-mz"
+  ],
+  "ZW": [
+   "business-zw"
+  ],
+  "ZM": [
+   "business-zm"
+  ],
+  "BW": [
+   "business-bw"
+  ],
+  "BR": [
+   "business-br"
+  ],
+  "MX": [
+   "business-mx"
+  ],
+  "AR": [
+   "business-ar"
+  ],
+  "CL": [
+   "business-cl"
+  ],
+  "CO": [
+   "business-co"
+  ],
+  "PE": [
+   "business-pe"
+  ],
+  "VE": [
+   "business-ve"
+  ],
+  "EC": [
+   "business-ec"
+  ],
+  "UY": [
+   "business-uy"
+  ],
+  "BO": [
+   "business-bo"
+  ],
+  "PY": [
+   "business-py"
+  ],
+  "CR": [
+   "business-cr"
+  ],
+  "GT": [
+   "business-gt"
+  ],
+  "CU": [
+   "business-cu"
+  ],
+  "DO": [
+   "business-do"
+  ],
+  "PA": [
+   "business-pa"
+  ],
+  "HN": [
+   "business-hn"
+  ],
+  "JM": [
+   "business-jm"
+  ],
+  "TT": [
+   "business-tt"
+  ],
+  "BB": [
+   "business-bb"
+  ],
+  "BS": [
+   "business-bs"
+  ],
+  "GD": [
+   "business-gd"
+  ],
+  "LC": [
+   "business-lc"
+  ],
+  "VC": [
+   "business-vc"
+  ],
+  "AG": [
+   "business-ag"
+  ],
+  "KN": [
+   "business-kn"
+  ],
+  "DM": [
+   "business-dm"
+  ],
+  "BZ": [
+   "business-bz"
+  ],
+  "GY": [
+   "business-gy"
+  ],
+  "HT": [
+   "business-ht"
+  ],
+  "NI": [
+   "business-ni"
+  ],
+  "SV": [
+   "business-sv"
+  ],
+  "SR": [
+   "business-sr"
+  ],
+  "PS": [
+   "business-ps"
+  ],
+  "SY": [
+   "business-sy"
+  ],
+  "YE": [
+   "business-ye"
+  ],
+  "ML": [
+   "business-ml"
+  ],
+  "NE": [
+   "business-ne"
+  ],
+  "TD": [
+   "business-td"
+  ],
+  "BJ": [
+   "business-bj"
+  ],
+  "TG": [
+   "business-tg"
+  ],
+  "BF": [
+   "business-bf"
+  ],
+  "GN": [
+   "business-gn"
+  ],
+  "SL": [
+   "business-sl"
+  ],
+  "LR": [
+   "business-lr"
+  ],
+  "GM": [
+   "business-gm"
+  ],
+  "MR": [
+   "business-mr"
+  ],
+  "GQ": [
+   "business-gq"
+  ],
+  "CV": [
+   "business-cv"
+  ],
+  "ST": [
+   "business-st"
+  ],
+  "GW": [
+   "business-gw"
+  ],
+  "GA": [
+   "business-ga"
+  ],
+  "CG": [
+   "business-cg"
+  ],
+  "CD": [
+   "business-cd"
+  ],
+  "AO": [
+   "business-ao"
+  ],
+  "SD": [
+   "business-sd"
+  ],
+  "SO": [
+   "business-so"
+  ],
+  "ER": [
+   "business-er"
+  ],
+  "DJ": [
+   "business-dj"
+  ],
+  "CF": [
+   "business-cf"
+  ],
+  "SS": [
+   "business-ss"
+  ],
+  "BI": [
+   "business-bi"
+  ],
+  "NA": [
+   "business-na"
+  ],
+  "MW": [
+   "business-mw"
+  ],
+  "LS": [
+   "business-ls"
+  ],
+  "SZ": [
+   "business-sz"
+  ],
+  "MG": [
+   "business-mg"
+  ],
+  "MU": [
+   "business-mu"
+  ],
+  "SC": [
+   "business-sc"
+  ],
+  "KM": [
+   "business-km"
+  ],
+  "FJ": [
+   "business-fj"
+  ],
+  "PG": [
+   "business-pg"
+  ],
+  "SB": [
+   "business-sb"
+  ],
+  "VU": [
+   "business-vu"
+  ],
+  "WS": [
+   "business-ws"
+  ],
+  "TO": [
+   "business-to"
+  ],
+  "KI": [
+   "business-ki"
+  ],
+  "FM": [
+   "business-fm"
+  ],
+  "MH": [
+   "business-mh"
+  ],
+  "PW": [
+   "business-pw"
+  ],
+  "NR": [
+   "business-nr"
+  ],
+  "TV": [
+   "business-tv"
+  ],
+  "BN": [
+   "business-bn"
+  ],
+  "TL": [
+   "business-tl"
+  ],
+  "BT": [
+   "business-bt"
+  ],
+  "MV": [
+   "business-mv"
+  ],
+  "KP": [
+   "business-kp"
+  ],
+  "TM": [
+   "business-tm"
+  ],
+  "KG": [
+   "business-kg"
+  ],
+  "TJ": [
+   "business-tj"
+  ],
+  "AL": [
+   "business-al"
+  ],
+  "MK": [
+   "business-mk"
+  ],
+  "BA": [
+   "business-ba"
+  ],
+  "ME": [
+   "business-me"
+  ],
+  "XK": [
+   "business-xk"
+  ],
+  "MD": [
+   "business-md"
+  ],
+  "BY": [
+   "business-by"
+  ],
+  "MC": [
+   "business-mc"
+  ],
+  "AD": [
+   "business-ad"
+  ],
+  "SM": [
+   "business-sm"
+  ],
+  "LI": [
+   "business-li"
+  ],
+  "VA": [
+   "business-va"
+  ]
+ }
+}

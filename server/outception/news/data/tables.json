@@ -1,0 +1,1205 @@
+[
+ {
+  "id": "heatmap-tech",
+  "name": "Tech Stocks",
+  "desc": "Big tech at a glance: tiles sized by market cap, colored by today's move",
+  "color": "teal",
+  "provider": "finnhub",
+  "symbols": [
+   [
+    "AAPL",
+    "Apple"
+   ],
+   [
+    "MSFT",
+    "Microsoft"
+   ],
+   [
+    "NVDA",
+    "Nvidia"
+   ],
+   [
+    "GOOGL",
+    "Alphabet"
+   ],
+   [
+    "AMZN",
+    "Amazon"
+   ],
+   [
+    "META",
+    "Meta"
+   ],
+   [
+    "AVGO",
+    "Broadcom"
+   ],
+   [
+    "TSM",
+    "TSMC"
+   ],
+   [
+    "ORCL",
+    "Oracle"
+   ],
+   [
+    "CRM",
+    "Salesforce"
+   ],
+   [
+    "AMD",
+    "AMD"
+   ],
+   [
+    "ADBE",
+    "Adobe"
+   ],
+   [
+    "NFLX",
+    "Netflix"
+   ],
+   [
+    "INTC",
+    "Intel"
+   ],
+   [
+    "QCOM",
+    "Qualcomm"
+   ],
+   [
+    "TXN",
+    "Texas Instruments"
+   ],
+   [
+    "IBM",
+    "IBM"
+   ],
+   [
+    "NOW",
+    "ServiceNow"
+   ],
+   [
+    "UBER",
+    "Uber"
+   ],
+   [
+    "SHOP",
+    "Shopify"
+   ],
+   [
+    "PLTR",
+    "Palantir"
+   ],
+   [
+    "SNOW",
+    "Snowflake"
+   ],
+   [
+    "SPOT",
+    "Spotify"
+   ],
+   [
+    "ARM",
+    "Arm"
+   ]
+  ],
+  "column": "finance",
+  "code": "",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 0,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-finance",
+  "name": "Finance Stocks",
+  "desc": "Banks, payments and asset managers: sized by market cap, colored by today's move",
+  "color": "green",
+  "provider": "finnhub",
+  "symbols": [
+   [
+    "BRK.B",
+    "Berkshire"
+   ],
+   [
+    "JPM",
+    "JPMorgan"
+   ],
+   [
+    "V",
+    "Visa"
+   ],
+   [
+    "MA",
+    "Mastercard"
+   ],
+   [
+    "BAC",
+    "Bank of America"
+   ],
+   [
+    "WFC",
+    "Wells Fargo"
+   ],
+   [
+    "GS",
+    "Goldman Sachs"
+   ],
+   [
+    "MS",
+    "Morgan Stanley"
+   ],
+   [
+    "AXP",
+    "American Express"
+   ],
+   [
+    "C",
+    "Citigroup"
+   ],
+   [
+    "BLK",
+    "BlackRock"
+   ],
+   [
+    "SCHW",
+    "Charles Schwab"
+   ],
+   [
+    "PYPL",
+    "PayPal"
+   ],
+   [
+    "COIN",
+    "Coinbase"
+   ],
+   [
+    "HOOD",
+    "Robinhood"
+   ],
+   [
+    "SPGI",
+    "S&P Global"
+   ],
+   [
+    "CB",
+    "Chubb"
+   ],
+   [
+    "PGR",
+    "Progressive"
+   ]
+  ],
+  "column": "finance",
+  "code": "",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 0,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-health",
+  "name": "Health Stocks",
+  "desc": "Pharma, biotech and insurers: sized by market cap, colored by today's move",
+  "color": "red",
+  "provider": "finnhub",
+  "symbols": [
+   [
+    "LLY",
+    "Eli Lilly"
+   ],
+   [
+    "UNH",
+    "UnitedHealth"
+   ],
+   [
+    "JNJ",
+    "Johnson & Johnson"
+   ],
+   [
+    "NVO",
+    "Novo Nordisk"
+   ],
+   [
+    "ABBV",
+    "AbbVie"
+   ],
+   [
+    "MRK",
+    "Merck"
+   ],
+   [
+    "TMO",
+    "Thermo Fisher"
+   ],
+   [
+    "ABT",
+    "Abbott"
+   ],
+   [
+    "AZN",
+    "AstraZeneca"
+   ],
+   [
+    "PFE",
+    "Pfizer"
+   ],
+   [
+    "DHR",
+    "Danaher"
+   ],
+   [
+    "AMGN",
+    "Amgen"
+   ],
+   [
+    "ISRG",
+    "Intuitive Surgical"
+   ],
+   [
+    "BMY",
+    "Bristol Myers"
+   ],
+   [
+    "GILD",
+    "Gilead"
+   ],
+   [
+    "CVS",
+    "CVS Health"
+   ],
+   [
+    "MRNA",
+    "Moderna"
+   ]
+  ],
+  "column": "finance",
+  "code": "",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 0,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-energy",
+  "name": "Energy Stocks",
+  "desc": "Oil, gas and power: sized by market cap, colored by today's move",
+  "color": "orange",
+  "provider": "finnhub",
+  "symbols": [
+   [
+    "XOM",
+    "ExxonMobil"
+   ],
+   [
+    "CVX",
+    "Chevron"
+   ],
+   [
+    "SHEL",
+    "Shell"
+   ],
+   [
+    "TTE",
+    "TotalEnergies"
+   ],
+   [
+    "BP",
+    "BP"
+   ],
+   [
+    "COP",
+    "ConocoPhillips"
+   ],
+   [
+    "SLB",
+    "SLB"
+   ],
+   [
+    "EOG",
+    "EOG Resources"
+   ],
+   [
+    "OXY",
+    "Occidental"
+   ],
+   [
+    "NEE",
+    "NextEra"
+   ],
+   [
+    "DUK",
+    "Duke Energy"
+   ],
+   [
+    "SO",
+    "Southern Company"
+   ],
+   [
+    "GEV",
+    "GE Vernova"
+   ],
+   [
+    "FSLR",
+    "First Solar"
+   ],
+   [
+    "VST",
+    "Vistra"
+   ],
+   [
+    "CEG",
+    "Constellation"
+   ]
+  ],
+  "column": "finance",
+  "code": "",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 0,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-ev-battery",
+  "name": "EV & Battery Stocks",
+  "desc": "Electric vehicles and battery makers: sized by market cap, colored by today's move",
+  "color": "cyan",
+  "provider": "finnhub",
+  "symbols": [
+   [
+    "TSLA",
+    "Tesla"
+   ],
+   [
+    "BYDDY",
+    "BYD"
+   ],
+   [
+    "RIVN",
+    "Rivian"
+   ],
+   [
+    "LCID",
+    "Lucid"
+   ],
+   [
+    "NIO",
+    "NIO"
+   ],
+   [
+    "XPEV",
+    "XPeng"
+   ],
+   [
+    "LI",
+    "Li Auto"
+   ],
+   [
+    "GM",
+    "General Motors"
+   ],
+   [
+    "F",
+    "Ford"
+   ],
+   [
+    "TM",
+    "Toyota"
+   ],
+   [
+    "HMC",
+    "Honda"
+   ],
+   [
+    "ALB",
+    "Albemarle"
+   ],
+   [
+    "SQM",
+    "SQM"
+   ],
+   [
+    "PCRFY",
+    "Panasonic"
+   ],
+   [
+    "ENPH",
+    "Enphase"
+   ],
+   [
+    "QS",
+    "QuantumScape"
+   ],
+   [
+    "CHPT",
+    "ChargePoint"
+   ]
+  ],
+  "column": "finance",
+  "code": "",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 0,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-consumer",
+  "name": "Consumer Stocks",
+  "desc": "Retail, food and household names: sized by market cap, colored by today's move",
+  "color": "purple",
+  "provider": "finnhub",
+  "symbols": [
+   [
+    "WMT",
+    "Walmart"
+   ],
+   [
+    "COST",
+    "Costco"
+   ],
+   [
+    "PG",
+    "Procter & Gamble"
+   ],
+   [
+    "KO",
+    "Coca-Cola"
+   ],
+   [
+    "PEP",
+    "PepsiCo"
+   ],
+   [
+    "MCD",
+    "McDonald's"
+   ],
+   [
+    "NKE",
+    "Nike"
+   ],
+   [
+    "SBUX",
+    "Starbucks"
+   ],
+   [
+    "HD",
+    "Home Depot"
+   ],
+   [
+    "LOW",
+    "Lowe's"
+   ],
+   [
+    "TGT",
+    "Target"
+   ],
+   [
+    "DIS",
+    "Disney"
+   ],
+   [
+    "ABNB",
+    "Airbnb"
+   ],
+   [
+    "BKNG",
+    "Booking"
+   ],
+   [
+    "CMG",
+    "Chipotle"
+   ],
+   [
+    "LULU",
+    "Lululemon"
+   ]
+  ],
+  "column": "finance",
+  "code": "",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 0,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-crypto",
+  "name": "Crypto Market",
+  "desc": "Top coins by market cap, colored by 24h move",
+  "color": "yellow",
+  "provider": "coingecko",
+  "symbols": [],
+  "column": "finance",
+  "code": "",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 0,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-fx",
+  "name": "FX",
+  "desc": "Major currencies vs the US dollar: sized by trading volume, colored by the latest move",
+  "color": "blue",
+  "provider": "frankfurter",
+  "symbols": [],
+  "column": "finance",
+  "code": "",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 0,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-steam",
+  "name": "Steam",
+  "desc": "Most-played games right now: sized by players in game, colored by change since yesterday",
+  "color": "indigo",
+  "provider": "steam",
+  "symbols": [],
+  "column": "finance",
+  "code": "",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 0,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-ucl",
+  "name": "Champions League Table",
+  "desc": "Every club sized by points, colored by recent form",
+  "color": "mediumslateblue",
+  "provider": "espn",
+  "symbols": [],
+  "column": "sports",
+  "code": "soccer/uefa.champions",
+  "interval_ms": 300000,
+  "table": true,
+  "zone_green": 8,
+  "zone_soft": 16,
+  "zone_red": 12,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-premier-league",
+  "name": "Premier League Table",
+  "desc": "The table as a heat grid: size by points, color by form",
+  "color": "mediumpurple",
+  "provider": "espn",
+  "symbols": [],
+  "column": "sports",
+  "code": "soccer/eng.1",
+  "interval_ms": 300000,
+  "table": true,
+  "zone_green": 4,
+  "zone_soft": 2,
+  "zone_red": 3,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-la-liga",
+  "name": "La Liga Table",
+  "desc": "The table as a heat grid: size by points, color by form",
+  "color": "crimson",
+  "provider": "espn",
+  "symbols": [],
+  "column": "sports",
+  "code": "soccer/esp.1",
+  "interval_ms": 300000,
+  "table": true,
+  "zone_green": 4,
+  "zone_soft": 2,
+  "zone_red": 3,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-bundesliga",
+  "name": "Bundesliga Table",
+  "desc": "The table as a heat grid: size by points, color by form",
+  "color": "firebrick",
+  "provider": "espn",
+  "symbols": [],
+  "column": "sports",
+  "code": "soccer/ger.1",
+  "interval_ms": 300000,
+  "table": true,
+  "zone_green": 4,
+  "zone_soft": 2,
+  "zone_red": 2,
+  "zone_red_soft": 1,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-serie-a",
+  "name": "Serie A Table",
+  "desc": "The table as a heat grid: size by points, color by form",
+  "color": "seagreen",
+  "provider": "espn",
+  "symbols": [],
+  "column": "sports",
+  "code": "soccer/ita.1",
+  "interval_ms": 300000,
+  "table": true,
+  "zone_green": 4,
+  "zone_soft": 2,
+  "zone_red": 3,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-ligue-1",
+  "name": "Ligue 1 Table",
+  "desc": "The table as a heat grid: size by points, color by form",
+  "color": "goldenrod",
+  "provider": "espn",
+  "symbols": [],
+  "column": "sports",
+  "code": "soccer/fra.1",
+  "interval_ms": 300000,
+  "table": true,
+  "zone_green": 3,
+  "zone_soft": 1,
+  "zone_red": 2,
+  "zone_red_soft": 1,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-championship",
+  "name": "Championship Table",
+  "desc": "The table as a heat grid: size by points, color by form",
+  "color": "steelblue",
+  "provider": "espn",
+  "symbols": [],
+  "column": "sports",
+  "code": "soccer/eng.2",
+  "interval_ms": 300000,
+  "table": true,
+  "zone_green": 2,
+  "zone_soft": 4,
+  "zone_red": 3,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-eredivisie",
+  "name": "Eredivisie Table",
+  "desc": "The table as a heat grid: size by points, color by form",
+  "color": "darkorange",
+  "provider": "espn",
+  "symbols": [],
+  "column": "sports",
+  "code": "soccer/ned.1",
+  "interval_ms": 300000,
+  "table": true,
+  "zone_green": 2,
+  "zone_soft": 2,
+  "zone_red": 2,
+  "zone_red_soft": 1,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-primeira-liga",
+  "name": "Primeira Liga Table",
+  "desc": "The table as a heat grid: size by points, color by form",
+  "color": "seagreen",
+  "provider": "espn",
+  "symbols": [],
+  "column": "sports",
+  "code": "soccer/por.1",
+  "interval_ms": 300000,
+  "table": true,
+  "zone_green": 2,
+  "zone_soft": 2,
+  "zone_red": 2,
+  "zone_red_soft": 1,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-brasileirao",
+  "name": "Brasileirão Table",
+  "desc": "The table as a heat grid: size by points, color by form",
+  "color": "forestgreen",
+  "provider": "espn",
+  "symbols": [],
+  "column": "sports",
+  "code": "soccer/bra.1",
+  "interval_ms": 300000,
+  "table": true,
+  "zone_green": 4,
+  "zone_soft": 2,
+  "zone_red": 4,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-nfl",
+  "name": "NFL Table",
+  "desc": "Every team sized by wins, colored by streak",
+  "color": "darkolivegreen",
+  "provider": "espn",
+  "symbols": [],
+  "column": "sports",
+  "code": "football/nfl",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 7,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-nba",
+  "name": "NBA Table",
+  "desc": "Every team sized by wins, colored by streak",
+  "color": "darkorange",
+  "provider": "espn",
+  "symbols": [],
+  "column": "sports",
+  "code": "basketball/nba",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 6,
+  "zone_soft": 4,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-mlb",
+  "name": "MLB Table",
+  "desc": "Every team sized by wins, colored by streak",
+  "color": "steelblue",
+  "provider": "espn",
+  "symbols": [],
+  "column": "sports",
+  "code": "baseball/mlb",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 6,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-nhl",
+  "name": "NHL Table",
+  "desc": "Every team sized by wins, colored by streak",
+  "color": "slategray",
+  "provider": "espn",
+  "symbols": [],
+  "column": "sports",
+  "code": "hockey/nhl",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 8,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-wnba",
+  "name": "WNBA Table",
+  "desc": "Every team sized by wins, colored by streak",
+  "color": "darkmagenta",
+  "provider": "espn",
+  "symbols": [],
+  "column": "sports",
+  "code": "basketball/wnba",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 4,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-mls",
+  "name": "MLS Table",
+  "desc": "The table as a heat grid: size by points, color by places moved",
+  "color": "dodgerblue",
+  "provider": "espn",
+  "symbols": [],
+  "column": "sports",
+  "code": "soccer/usa.1",
+  "interval_ms": 300000,
+  "table": true,
+  "zone_green": 7,
+  "zone_soft": 2,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-liga-mx",
+  "name": "Liga MX Table",
+  "desc": "The table as a heat grid: size by points, color by places moved",
+  "color": "forestgreen",
+  "provider": "espn",
+  "symbols": [],
+  "column": "sports",
+  "code": "soccer/mex.1",
+  "interval_ms": 300000,
+  "table": true,
+  "zone_green": 6,
+  "zone_soft": 4,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-premiership-rugby",
+  "name": "Premiership Rugby Table",
+  "desc": "The table as a heat grid: size by points, color by places moved",
+  "color": "rebeccapurple",
+  "provider": "espn",
+  "symbols": [],
+  "column": "sports",
+  "code": "rugby/267979",
+  "interval_ms": 300000,
+  "table": true,
+  "zone_green": 4,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-urc",
+  "name": "URC Table",
+  "desc": "The table as a heat grid: size by points, color by places moved",
+  "color": "darkgreen",
+  "provider": "espn",
+  "symbols": [],
+  "column": "sports",
+  "code": "rugby/270557",
+  "interval_ms": 300000,
+  "table": true,
+  "zone_green": 8,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-top14",
+  "name": "Top 14 Table",
+  "desc": "The table as a heat grid: size by points, color by places moved",
+  "color": "navy",
+  "provider": "espn",
+  "symbols": [],
+  "column": "sports",
+  "code": "rugby/270559",
+  "interval_ms": 300000,
+  "table": true,
+  "zone_green": 2,
+  "zone_soft": 4,
+  "zone_red": 1,
+  "zone_red_soft": 1,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-college-football",
+  "name": "College Football Top 25 Table",
+  "desc": "The Top 25 as a heat grid: size by poll points, color by places moved",
+  "color": "saddlebrown",
+  "provider": "espn-rankings",
+  "symbols": [],
+  "column": "sports",
+  "code": "football/college-football",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 0,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-atp",
+  "name": "ATP Tennis Table",
+  "desc": "The top 25 as a heat grid: size by ranking points, color by places moved",
+  "color": "olivedrab",
+  "provider": "espn-rankings",
+  "symbols": [],
+  "column": "sports",
+  "code": "tennis/atp",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 0,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-wta",
+  "name": "WTA Tennis Table",
+  "desc": "The top 25 as a heat grid: size by ranking points, color by places moved",
+  "color": "palevioletred",
+  "provider": "espn-rankings",
+  "symbols": [],
+  "column": "sports",
+  "code": "tennis/wta",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 0,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-ufc",
+  "name": "UFC",
+  "desc": "The next fight card at a glance: results as they land",
+  "color": "maroon",
+  "provider": "espn-mma",
+  "symbols": [],
+  "column": "sports",
+  "code": "mma/ufc",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 0,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-youtube-buzz",
+  "name": "YouTube Buzz",
+  "desc": "Which channels are posting right now: fresher videos glow",
+  "color": "indianred",
+  "provider": "buzz",
+  "symbols": [],
+  "column": "entertainment",
+  "code": "youtube-",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 0,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-cities-buzz",
+  "name": "Cities Buzz",
+  "desc": "Which cities are making news right now: fresher stories glow",
+  "color": "lightseagreen",
+  "provider": "buzz",
+  "symbols": [],
+  "column": "cities",
+  "code": "city-",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 0,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-world-buzz",
+  "name": "World Buzz",
+  "desc": "Which countries are making news right now: fresher stories glow",
+  "color": "royalblue",
+  "provider": "buzz",
+  "symbols": [],
+  "column": "world",
+  "code": "gnews-",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 0,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-property-buzz",
+  "name": "Property Buzz",
+  "desc": "Where property is making news right now: fresher stories glow",
+  "color": "burlywood",
+  "provider": "buzz",
+  "symbols": [],
+  "column": "property",
+  "code": "property-",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 0,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": "Property "
+ },
+ {
+  "id": "heatmap-business-buzz",
+  "name": "Business Buzz",
+  "desc": "Where business is making news right now: fresher stories glow",
+  "color": "darkseagreen",
+  "provider": "buzz",
+  "symbols": [],
+  "column": "finance",
+  "code": "business-",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 0,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": "Business "
+ },
+ {
+  "id": "heatmap-events-buzz",
+  "name": "Events Buzz",
+  "desc": "Where events are making news: fresher stories glow",
+  "color": "plum",
+  "provider": "buzz",
+  "symbols": [],
+  "column": "entertainment",
+  "code": "events-",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 0,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": "Events "
+ },
+ {
+  "id": "heatmap-weather-buzz",
+  "name": "Weather Alerts Buzz",
+  "desc": "Where severe weather is making news: fresher stories glow",
+  "color": "skyblue",
+  "provider": "buzz",
+  "symbols": [],
+  "column": "news",
+  "code": "wxwarn-",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 0,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": "Weather "
+ },
+ {
+  "id": "heatmap-health-buzz",
+  "name": "Health Buzz",
+  "desc": "Where health is making news: fresher stories glow",
+  "color": "palegreen",
+  "provider": "buzz",
+  "symbols": [],
+  "column": "science",
+  "code": "health-",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 0,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": "Health "
+ },
+ {
+  "id": "heatmap-deals-buzz",
+  "name": "Deals Buzz",
+  "desc": "Where the best deals are surfacing: fresher finds glow",
+  "color": "orange",
+  "provider": "buzz",
+  "symbols": [],
+  "column": "deals",
+  "code": "deals-",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 0,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": "Deals "
+ },
+ {
+  "id": "heatmap-lifestyle-buzz",
+  "name": "Lifestyle Buzz",
+  "desc": "Which lifestyle topics are making news: fresher stories glow",
+  "color": "thistle",
+  "provider": "buzz",
+  "symbols": [],
+  "column": "lifestyle",
+  "code": "life-",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 0,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-cricket",
+  "name": "Cricket",
+  "desc": "Live and recent matches at a glance: live games glow",
+  "color": "mediumseagreen",
+  "provider": "cricket",
+  "symbols": [],
+  "column": "sports",
+  "code": "",
+  "interval_ms": 900000,
+  "table": false,
+  "zone_green": 0,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ },
+ {
+  "id": "heatmap-f1",
+  "name": "F1 Table",
+  "desc": "The championship as a heat grid: size by points, color by the last race",
+  "color": "orangered",
+  "provider": "f1",
+  "symbols": [],
+  "column": "sports",
+  "code": "",
+  "interval_ms": 300000,
+  "table": false,
+  "zone_green": 0,
+  "zone_soft": 0,
+  "zone_red": 0,
+  "zone_red_soft": 0,
+  "strip": ""
+ }
+]

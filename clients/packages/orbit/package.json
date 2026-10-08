@@ -1,0 +1,69 @@
+{
+  "name": "@outception-com/orbit",
+  "version": "0.1.0",
+  "description": "Orbit, the Outception design system",
+  "author": "Outception",
+  "license": "Apache-2.0",
+  "type": "module",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/outception/outception.git",
+    "directory": "clients/packages/orbit"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./src/index.ts"
+    },
+    "./theme": {
+      "types": "./dist/tokens/tokens.stylex.d.ts",
+      "default": "./src/tokens/tokens.stylex.ts"
+    },
+    "./*": {
+      "types": "./dist/components/*.d.ts",
+      "default": "./src/components/*.tsx"
+    }
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsup",
+    "format": "oxfmt",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@radix-ui/react-checkbox": "catalog:",
+    "@radix-ui/react-select": "catalog:",
+    "@radix-ui/react-slot": "catalog:",
+    "@radix-ui/react-switch": "catalog:",
+    "@radix-ui/react-tabs": "catalog:",
+    "@radix-ui/react-tooltip": "catalog:",
+    "@stylexjs/stylex": "catalog:",
+    "@tanstack/react-table": "catalog:",
+    "class-variance-authority": "catalog:",
+    "lucide-react": "catalog:",
+    "motion": "catalog:",
+    "react-focus-lock": "catalog:",
+    "tailwind-merge": "catalog:"
+  },
+  "devDependencies": {
+    "@outception-com/typescript-config": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@typescript/native": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "^18 || ^19",
+    "react-dom": "^18 || ^19"
+  }
+}

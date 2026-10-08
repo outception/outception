@@ -1,0 +1,599 @@
+{
+ "table": "events",
+ "entries": {
+  "US": [
+   "events-us"
+  ],
+  "GB": [
+   "events-gb"
+  ],
+  "CA": [
+   "events-ca"
+  ],
+  "AU": [
+   "events-au"
+  ],
+  "NZ": [
+   "events-nz"
+  ],
+  "IE": [
+   "events-ie"
+  ],
+  "DE": [
+   "events-de"
+  ],
+  "FR": [
+   "events-fr"
+  ],
+  "ES": [
+   "events-es"
+  ],
+  "IT": [
+   "events-it"
+  ],
+  "NL": [
+   "events-nl"
+  ],
+  "BE": [
+   "events-be"
+  ],
+  "AT": [
+   "events-at"
+  ],
+  "CH": [
+   "events-ch"
+  ],
+  "SE": [
+   "events-se"
+  ],
+  "NO": [
+   "events-no"
+  ],
+  "DK": [
+   "events-dk"
+  ],
+  "FI": [
+   "events-fi"
+  ],
+  "PL": [
+   "events-pl"
+  ],
+  "PT": [
+   "events-pt"
+  ],
+  "GR": [
+   "events-gr"
+  ],
+  "CZ": [
+   "events-cz"
+  ],
+  "RO": [
+   "events-ro"
+  ],
+  "HU": [
+   "events-hu"
+  ],
+  "SK": [
+   "events-sk"
+  ],
+  "BG": [
+   "events-bg"
+  ],
+  "HR": [
+   "events-hr"
+  ],
+  "SI": [
+   "events-si"
+  ],
+  "LT": [
+   "events-lt"
+  ],
+  "LV": [
+   "events-lv"
+  ],
+  "EE": [
+   "events-ee"
+  ],
+  "LU": [
+   "events-lu"
+  ],
+  "MT": [
+   "events-mt"
+  ],
+  "CY": [
+   "events-cy"
+  ],
+  "UA": [
+   "events-ua"
+  ],
+  "RS": [
+   "events-rs"
+  ],
+  "GE": [
+   "events-ge"
+  ],
+  "AZ": [
+   "events-az"
+  ],
+  "AM": [
+   "events-am"
+  ],
+  "RU": [
+   "events-ru"
+  ],
+  "TR": [
+   "events-tr"
+  ],
+  "JP": [
+   "events-jp"
+  ],
+  "KR": [
+   "events-kr"
+  ],
+  "CN": [
+   "events-cn"
+  ],
+  "TW": [
+   "events-tw"
+  ],
+  "HK": [
+   "events-hk"
+  ],
+  "MN": [
+   "events-mn"
+  ],
+  "SG": [
+   "events-sg"
+  ],
+  "MY": [
+   "events-my"
+  ],
+  "ID": [
+   "events-id"
+  ],
+  "TH": [
+   "events-th"
+  ],
+  "VN": [
+   "events-vn"
+  ],
+  "PH": [
+   "events-ph"
+  ],
+  "MM": [
+   "events-mm"
+  ],
+  "KH": [
+   "events-kh"
+  ],
+  "LA": [
+   "events-la"
+  ],
+  "IN": [
+   "events-in"
+  ],
+  "BD": [
+   "events-bd"
+  ],
+  "PK": [
+   "events-pk"
+  ],
+  "LK": [
+   "events-lk"
+  ],
+  "NP": [
+   "events-np"
+  ],
+  "SA": [
+   "events-sa"
+  ],
+  "AE": [
+   "events-ae"
+  ],
+  "IL": [
+   "events-il"
+  ],
+  "JO": [
+   "events-jo"
+  ],
+  "LB": [
+   "events-lb"
+  ],
+  "KW": [
+   "events-kw"
+  ],
+  "QA": [
+   "events-qa"
+  ],
+  "OM": [
+   "events-om"
+  ],
+  "BH": [
+   "events-bh"
+  ],
+  "IQ": [
+   "events-iq"
+  ],
+  "IR": [
+   "events-ir"
+  ],
+  "KZ": [
+   "events-kz"
+  ],
+  "UZ": [
+   "events-uz"
+  ],
+  "EG": [
+   "events-eg"
+  ],
+  "MA": [
+   "events-ma"
+  ],
+  "DZ": [
+   "events-dz"
+  ],
+  "TN": [
+   "events-tn"
+  ],
+  "LY": [
+   "events-ly"
+  ],
+  "NG": [
+   "events-ng"
+  ],
+  "GH": [
+   "events-gh"
+  ],
+  "SN": [
+   "events-sn"
+  ],
+  "CI": [
+   "events-ci"
+  ],
+  "CM": [
+   "events-cm"
+  ],
+  "KE": [
+   "events-ke"
+  ],
+  "TZ": [
+   "events-tz"
+  ],
+  "UG": [
+   "events-ug"
+  ],
+  "ET": [
+   "events-et"
+  ],
+  "RW": [
+   "events-rw"
+  ],
+  "ZA": [
+   "events-za"
+  ],
+  "AF": [
+   "events-af"
+  ],
+  "IS": [
+   "events-is"
+  ],
+  "MZ": [
+   "events-mz"
+  ],
+  "ZW": [
+   "events-zw"
+  ],
+  "ZM": [
+   "events-zm"
+  ],
+  "BW": [
+   "events-bw"
+  ],
+  "BR": [
+   "events-br"
+  ],
+  "MX": [
+   "events-mx"
+  ],
+  "AR": [
+   "events-ar"
+  ],
+  "CL": [
+   "events-cl"
+  ],
+  "CO": [
+   "events-co"
+  ],
+  "PE": [
+   "events-pe"
+  ],
+  "VE": [
+   "events-ve"
+  ],
+  "EC": [
+   "events-ec"
+  ],
+  "UY": [
+   "events-uy"
+  ],
+  "BO": [
+   "events-bo"
+  ],
+  "PY": [
+   "events-py"
+  ],
+  "CR": [
+   "events-cr"
+  ],
+  "GT": [
+   "events-gt"
+  ],
+  "CU": [
+   "events-cu"
+  ],
+  "DO": [
+   "events-do"
+  ],
+  "PA": [
+   "events-pa"
+  ],
+  "HN": [
+   "events-hn"
+  ],
+  "JM": [
+   "events-jm"
+  ],
+  "TT": [
+   "events-tt"
+  ],
+  "BB": [
+   "events-bb"
+  ],
+  "BS": [
+   "events-bs"
+  ],
+  "GD": [
+   "events-gd"
+  ],
+  "LC": [
+   "events-lc"
+  ],
+  "VC": [
+   "events-vc"
+  ],
+  "AG": [
+   "events-ag"
+  ],
+  "KN": [
+   "events-kn"
+  ],
+  "DM": [
+   "events-dm"
+  ],
+  "BZ": [
+   "events-bz"
+  ],
+  "GY": [
+   "events-gy"
+  ],
+  "HT": [
+   "events-ht"
+  ],
+  "NI": [
+   "events-ni"
+  ],
+  "SV": [
+   "events-sv"
+  ],
+  "SR": [
+   "events-sr"
+  ],
+  "PS": [
+   "events-ps"
+  ],
+  "SY": [
+   "events-sy"
+  ],
+  "YE": [
+   "events-ye"
+  ],
+  "ML": [
+   "events-ml"
+  ],
+  "NE": [
+   "events-ne"
+  ],
+  "TD": [
+   "events-td"
+  ],
+  "BJ": [
+   "events-bj"
+  ],
+  "TG": [
+   "events-tg"
+  ],
+  "BF": [
+   "events-bf"
+  ],
+  "GN": [
+   "events-gn"
+  ],
+  "SL": [
+   "events-sl"
+  ],
+  "LR": [
+   "events-lr"
+  ],
+  "GM": [
+   "events-gm"
+  ],
+  "MR": [
+   "events-mr"
+  ],
+  "GQ": [
+   "events-gq"
+  ],
+  "CV": [
+   "events-cv"
+  ],
+  "ST": [
+   "events-st"
+  ],
+  "GW": [
+   "events-gw"
+  ],
+  "GA": [
+   "events-ga"
+  ],
+  "CG": [
+   "events-cg"
+  ],
+  "CD": [
+   "events-cd"
+  ],
+  "AO": [
+   "events-ao"
+  ],
+  "SD": [
+   "events-sd"
+  ],
+  "SO": [
+   "events-so"
+  ],
+  "ER": [
+   "events-er"
+  ],
+  "DJ": [
+   "events-dj"
+  ],
+  "CF": [
+   "events-cf"
+  ],
+  "SS": [
+   "events-ss"
+  ],
+  "BI": [
+   "events-bi"
+  ],
+  "NA": [
+   "events-na"
+  ],
+  "MW": [
+   "events-mw"
+  ],
+  "LS": [
+   "events-ls"
+  ],
+  "SZ": [
+   "events-sz"
+  ],
+  "MG": [
+   "events-mg"
+  ],
+  "MU": [
+   "events-mu"
+  ],
+  "SC": [
+   "events-sc"
+  ],
+  "KM": [
+   "events-km"
+  ],
+  "FJ": [
+   "events-fj"
+  ],
+  "PG": [
+   "events-pg"
+  ],
+  "SB": [
+   "events-sb"
+  ],
+  "VU": [
+   "events-vu"
+  ],
+  "WS": [
+   "events-ws"
+  ],
+  "TO": [
+   "events-to"
+  ],
+  "KI": [
+   "events-ki"
+  ],
+  "FM": [
+   "events-fm"
+  ],
+  "MH": [
+   "events-mh"
+  ],
+  "PW": [
+   "events-pw"
+  ],
+  "NR": [
+   "events-nr"
+  ],
+  "TV": [
+   "events-tv"
+  ],
+  "BN": [
+   "events-bn"
+  ],
+  "TL": [
+   "events-tl"
+  ],
+  "BT": [
+   "events-bt"
+  ],
+  "MV": [
+   "events-mv"
+  ],
+  "KP": [
+   "events-kp"
+  ],
+  "TM": [
+   "events-tm"
+  ],
+  "KG": [
+   "events-kg"
+  ],
+  "TJ": [
+   "events-tj"
+  ],
+  "AL": [
+   "events-al"
+  ],
+  "MK": [
+   "events-mk"
+  ],
+  "BA": [
+   "events-ba"
+  ],
+  "ME": [
+   "events-me"
+  ],
+  "XK": [
+   "events-xk"
+  ],
+  "MD": [
+   "events-md"
+  ],
+  "BY": [
+   "events-by"
+  ],
+  "MC": [
+   "events-mc"
+  ],
+  "AD": [
+   "events-ad"
+  ],
+  "SM": [
+   "events-sm"
+  ],
+  "LI": [
+   "events-li"
+  ],
+  "VA": [
+   "events-va"
+  ]
+ }
+}

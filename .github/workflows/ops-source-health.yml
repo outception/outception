@@ -1,0 +1,58 @@
+# One-off operational task: print the source health report from the host,
+# so the sources that fail from production can be seen without a shell on
+# the box. Run from the Actions tab or with:
+#   gh workflow run ops-source-health.yml -f days=1
+# Uses the same SSH secrets as the deploy workflow.
+name: Ops (source health)
+
+on:
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "How many days a source must have failed to be listed"
+        required: true
+        default: "6"
+      json:
+        description: "Print rows for disabled.json instead of the table"
+        required: false
+        default: "false"
+
+permissions: {}
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      # Fail closed: without a pinned fingerprint the SSH client would trust
+      # whoever answers, and ship every secret below to it.
+      - name: Host key is pinned
+        env:
+          FINGERPRINT: ${{ vars.SSH_HOST_FINGERPRINT }}
+        run: |
+          [ -n "$FINGERPRINT" ] || { echo "::error::SSH_HOST_FINGERPRINT is unset"; exit 1; }
+      - name: Run the report over SSH
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        env:
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+          DAYS: ${{ inputs.days }}
+          AS_JSON: ${{ inputs.json }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          # The host's key fingerprint (repository variable; the ECDSA key, which the
+          # client negotiates first). The step above refuses to run without it.
+          fingerprint: ${{ vars.SSH_HOST_FINGERPRINT }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: DEPLOY_PATH,DAYS,AS_JSON
+          script: |
+            set -euo pipefail
+            cd "$DEPLOY_PATH"
+            case "$DAYS" in ''|*[!0-9.]*) echo "::error::days must be a number"; exit 1;; esac
+            compose() { docker compose --env-file .env.prod -f docker-compose.prod.yml "$@"; }
+            echo "=== source health, runs of $DAYS days or more ==="
+            if [ "$AS_JSON" = "true" ]; then
+              compose exec -T api uv run python -m scripts.source_health --days "$DAYS" --json
+            else
+              compose exec -T api uv run python -m scripts.source_health --days "$DAYS"
+            fi

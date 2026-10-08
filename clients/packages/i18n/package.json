@@ -1,0 +1,56 @@
+{
+  "name": "@outception-com/i18n",
+  "version": "0.1.0",
+  "description": "Outception UI strings",
+  "author": "Outception",
+  "license": "Apache-2.0",
+  "type": "module",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/outception/outception.git",
+    "directory": "clients/packages/i18n"
+  },
+  "scripts": {
+    "check-keys": "tsx scripts/check-keys.ts",
+    "typecheck": "tsc --noEmit",
+    "build": "rm -rf dist && tsup",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./formatters/date": {
+      "types": "./dist/formatters/date.d.ts",
+      "default": "./dist/formatters/date.js"
+    },
+    "./formatters/ordinal": {
+      "types": "./dist/formatters/ordinal.d.ts",
+      "default": "./dist/formatters/ordinal.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "devDependencies": {
+    "@outception-com/typescript-config": "workspace:*",
+    "@types/react": "^19.3.0",
+    "@typescript/native": "catalog:",
+    "tsup": "catalog:",
+    "tsx": "^4.23.15",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "^19.2.4"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  }
+}

@@ -1,0 +1,599 @@
+{
+ "table": "health",
+ "entries": {
+  "US": [
+   "health-us"
+  ],
+  "GB": [
+   "health-gb"
+  ],
+  "CA": [
+   "health-ca"
+  ],
+  "AU": [
+   "health-au"
+  ],
+  "NZ": [
+   "health-nz"
+  ],
+  "IE": [
+   "health-ie"
+  ],
+  "DE": [
+   "health-de"
+  ],
+  "FR": [
+   "health-fr"
+  ],
+  "ES": [
+   "health-es"
+  ],
+  "IT": [
+   "health-it"
+  ],
+  "NL": [
+   "health-nl"
+  ],
+  "BE": [
+   "health-be"
+  ],
+  "AT": [
+   "health-at"
+  ],
+  "CH": [
+   "health-ch"
+  ],
+  "SE": [
+   "health-se"
+  ],
+  "NO": [
+   "health-no"
+  ],
+  "DK": [
+   "health-dk"
+  ],
+  "FI": [
+   "health-fi"
+  ],
+  "PL": [
+   "health-pl"
+  ],
+  "PT": [
+   "health-pt"
+  ],
+  "GR": [
+   "health-gr"
+  ],
+  "CZ": [
+   "health-cz"
+  ],
+  "RO": [
+   "health-ro"
+  ],
+  "HU": [
+   "health-hu"
+  ],
+  "SK": [
+   "health-sk"
+  ],
+  "BG": [
+   "health-bg"
+  ],
+  "HR": [
+   "health-hr"
+  ],
+  "SI": [
+   "health-si"
+  ],
+  "LT": [
+   "health-lt"
+  ],
+  "LV": [
+   "health-lv"
+  ],
+  "EE": [
+   "health-ee"
+  ],
+  "LU": [
+   "health-lu"
+  ],
+  "MT": [
+   "health-mt"
+  ],
+  "CY": [
+   "health-cy"
+  ],
+  "UA": [
+   "health-ua"
+  ],
+  "RS": [
+   "health-rs"
+  ],
+  "GE": [
+   "health-ge"
+  ],
+  "AZ": [
+   "health-az"
+  ],
+  "AM": [
+   "health-am"
+  ],
+  "RU": [
+   "health-ru"
+  ],
+  "TR": [
+   "health-tr"
+  ],
+  "JP": [
+   "health-jp"
+  ],
+  "KR": [
+   "health-kr"
+  ],
+  "CN": [
+   "health-cn"
+  ],
+  "TW": [
+   "health-tw"
+  ],
+  "HK": [
+   "health-hk"
+  ],
+  "MN": [
+   "health-mn"
+  ],
+  "SG": [
+   "health-sg"
+  ],
+  "MY": [
+   "health-my"
+  ],
+  "ID": [
+   "health-id"
+  ],
+  "TH": [
+   "health-th"
+  ],
+  "VN": [
+   "health-vn"
+  ],
+  "PH": [
+   "health-ph"
+  ],
+  "MM": [
+   "health-mm"
+  ],
+  "KH": [
+   "health-kh"
+  ],
+  "LA": [
+   "health-la"
+  ],
+  "IN": [
+   "health-in"
+  ],
+  "BD": [
+   "health-bd"
+  ],
+  "PK": [
+   "health-pk"
+  ],
+  "LK": [
+   "health-lk"
+  ],
+  "NP": [
+   "health-np"
+  ],
+  "SA": [
+   "health-sa"
+  ],
+  "AE": [
+   "health-ae"
+  ],
+  "IL": [
+   "health-il"
+  ],
+  "JO": [
+   "health-jo"
+  ],
+  "LB": [
+   "health-lb"
+  ],
+  "KW": [
+   "health-kw"
+  ],
+  "QA": [
+   "health-qa"
+  ],
+  "OM": [
+   "health-om"
+  ],
+  "BH": [
+   "health-bh"
+  ],
+  "IQ": [
+   "health-iq"
+  ],
+  "IR": [
+   "health-ir"
+  ],
+  "KZ": [
+   "health-kz"
+  ],
+  "UZ": [
+   "health-uz"
+  ],
+  "EG": [
+   "health-eg"
+  ],
+  "MA": [
+   "health-ma"
+  ],
+  "DZ": [
+   "health-dz"
+  ],
+  "TN": [
+   "health-tn"
+  ],
+  "LY": [
+   "health-ly"
+  ],
+  "NG": [
+   "health-ng"
+  ],
+  "GH": [
+   "health-gh"
+  ],
+  "SN": [
+   "health-sn"
+  ],
+  "CI": [
+   "health-ci"
+  ],
+  "CM": [
+   "health-cm"
+  ],
+  "KE": [
+   "health-ke"
+  ],
+  "TZ": [
+   "health-tz"
+  ],
+  "UG": [
+   "health-ug"
+  ],
+  "ET": [
+   "health-et"
+  ],
+  "RW": [
+   "health-rw"
+  ],
+  "ZA": [
+   "health-za"
+  ],
+  "AF": [
+   "health-af"
+  ],
+  "IS": [
+   "health-is"
+  ],
+  "MZ": [
+   "health-mz"
+  ],
+  "ZW": [
+   "health-zw"
+  ],
+  "ZM": [
+   "health-zm"
+  ],
+  "BW": [
+   "health-bw"
+  ],
+  "BR": [
+   "health-br"
+  ],
+  "MX": [
+   "health-mx"
+  ],
+  "AR": [
+   "health-ar"
+  ],
+  "CL": [
+   "health-cl"
+  ],
+  "CO": [
+   "health-co"
+  ],
+  "PE": [
+   "health-pe"
+  ],
+  "VE": [
+   "health-ve"
+  ],
+  "EC": [
+   "health-ec"
+  ],
+  "UY": [
+   "health-uy"
+  ],
+  "BO": [
+   "health-bo"
+  ],
+  "PY": [
+   "health-py"
+  ],
+  "CR": [
+   "health-cr"
+  ],
+  "GT": [
+   "health-gt"
+  ],
+  "CU": [
+   "health-cu"
+  ],
+  "DO": [
+   "health-do"
+  ],
+  "PA": [
+   "health-pa"
+  ],
+  "HN": [
+   "health-hn"
+  ],
+  "JM": [
+   "health-jm"
+  ],
+  "TT": [
+   "health-tt"
+  ],
+  "BB": [
+   "health-bb"
+  ],
+  "BS": [
+   "health-bs"
+  ],
+  "GD": [
+   "health-gd"
+  ],
+  "LC": [
+   "health-lc"
+  ],
+  "VC": [
+   "health-vc"
+  ],
+  "AG": [
+   "health-ag"
+  ],
+  "KN": [
+   "health-kn"
+  ],
+  "DM": [
+   "health-dm"
+  ],
+  "BZ": [
+   "health-bz"
+  ],
+  "GY": [
+   "health-gy"
+  ],
+  "HT": [
+   "health-ht"
+  ],
+  "NI": [
+   "health-ni"
+  ],
+  "SV": [
+   "health-sv"
+  ],
+  "SR": [
+   "health-sr"
+  ],
+  "PS": [
+   "health-ps"
+  ],
+  "SY": [
+   "health-sy"
+  ],
+  "YE": [
+   "health-ye"
+  ],
+  "ML": [
+   "health-ml"
+  ],
+  "NE": [
+   "health-ne"
+  ],
+  "TD": [
+   "health-td"
+  ],
+  "BJ": [
+   "health-bj"
+  ],
+  "TG": [
+   "health-tg"
+  ],
+  "BF": [
+   "health-bf"
+  ],
+  "GN": [
+   "health-gn"
+  ],
+  "SL": [
+   "health-sl"
+  ],
+  "LR": [
+   "health-lr"
+  ],
+  "GM": [
+   "health-gm"
+  ],
+  "MR": [
+   "health-mr"
+  ],
+  "GQ": [
+   "health-gq"
+  ],
+  "CV": [
+   "health-cv"
+  ],
+  "ST": [
+   "health-st"
+  ],
+  "GW": [
+   "health-gw"
+  ],
+  "GA": [
+   "health-ga"
+  ],
+  "CG": [
+   "health-cg"
+  ],
+  "CD": [
+   "health-cd"
+  ],
+  "AO": [
+   "health-ao"
+  ],
+  "SD": [
+   "health-sd"
+  ],
+  "SO": [
+   "health-so"
+  ],
+  "ER": [
+   "health-er"
+  ],
+  "DJ": [
+   "health-dj"
+  ],
+  "CF": [
+   "health-cf"
+  ],
+  "SS": [
+   "health-ss"
+  ],
+  "BI": [
+   "health-bi"
+  ],
+  "NA": [
+   "health-na"
+  ],
+  "MW": [
+   "health-mw"
+  ],
+  "LS": [
+   "health-ls"
+  ],
+  "SZ": [
+   "health-sz"
+  ],
+  "MG": [
+   "health-mg"
+  ],
+  "MU": [
+   "health-mu"
+  ],
+  "SC": [
+   "health-sc"
+  ],
+  "KM": [
+   "health-km"
+  ],
+  "FJ": [
+   "health-fj"
+  ],
+  "PG": [
+   "health-pg"
+  ],
+  "SB": [
+   "health-sb"
+  ],
+  "VU": [
+   "health-vu"
+  ],
+  "WS": [
+   "health-ws"
+  ],
+  "TO": [
+   "health-to"
+  ],
+  "KI": [
+   "health-ki"
+  ],
+  "FM": [
+   "health-fm"
+  ],
+  "MH": [
+   "health-mh"
+  ],
+  "PW": [
+   "health-pw"
+  ],
+  "NR": [
+   "health-nr"
+  ],
+  "TV": [
+   "health-tv"
+  ],
+  "BN": [
+   "health-bn"
+  ],
+  "TL": [
+   "health-tl"
+  ],
+  "BT": [
+   "health-bt"
+  ],
+  "MV": [
+   "health-mv"
+  ],
+  "KP": [
+   "health-kp"
+  ],
+  "TM": [
+   "health-tm"
+  ],
+  "KG": [
+   "health-kg"
+  ],
+  "TJ": [
+   "health-tj"
+  ],
+  "AL": [
+   "health-al"
+  ],
+  "MK": [
+   "health-mk"
+  ],
+  "BA": [
+   "health-ba"
+  ],
+  "ME": [
+   "health-me"
+  ],
+  "XK": [
+   "health-xk"
+  ],
+  "MD": [
+   "health-md"
+  ],
+  "BY": [
+   "health-by"
+  ],
+  "MC": [
+   "health-mc"
+  ],
+  "AD": [
+   "health-ad"
+  ],
+  "SM": [
+   "health-sm"
+  ],
+  "LI": [
+   "health-li"
+  ],
+  "VA": [
+   "health-va"
+  ]
+ }
+}

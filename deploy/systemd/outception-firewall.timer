@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh the edge-only firewall after boot and weekly
+
+[Timer]
+# The service itself runs at boot, before Docker, from the saved list; this
+# run a minute later fetches the current list once the network is up.
+OnBootSec=1min
+OnCalendar=weekly
+Persistent=true
+
+[Install]
+WantedBy=timers.target

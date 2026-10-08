@@ -1,0 +1,53 @@
+# Shared dev infrastructure: one postgres and one redis per machine,
+# regardless of how many app instances run on top. Auto-started by
+# `dev docker up` when not already running.
+#
+# Per-instance app stacks (api, worker, web) live in docker-compose.dev.yml
+# and attach to the external `outception-shared` network created here, so
+# they reach the infrastructure by container name (db, redis). No host
+# ports: use `dev docker exec <service>` to run psql or redis-cli.
+
+services:
+  db:
+    image: postgres:15.1-bullseye
+    command: ["postgres", "-c", "max_locks_per_transaction=256"]
+    environment:
+      POSTGRES_USER: outception
+      POSTGRES_PASSWORD: outception
+      POSTGRES_DB: outception
+      OUTCEPTION_READ_USER: outception_read
+      OUTCEPTION_READ_PASSWORD: outception
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+      - ../../server/init-readonly-user.sql:/docker-entrypoint-initdb.d/init-readonly-user.sql:ro
+    expose:
+      - "5432"
+    networks:
+      - outception-shared
+    healthcheck:
+      test: ["CMD", "pg_isready", "-q", "-d", "outception", "-U", "outception"]
+      timeout: 40s
+      interval: 2s
+      retries: 20
+
+  redis:
+    image: redis:alpine
+    # 100 DBs > the 1..99 range produced by _detect_instance in dev/cli/commands/docker.py,
+    # so each per-instance app stack gets its own DB index without collisions.
+    command: ["redis-server", "--databases", "100"]
+    expose:
+      - "6379"
+    networks:
+      - outception-shared
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 10s
+      retries: 10
+
+networks:
+  outception-shared:
+    external: true
+
+volumes:
+  postgres_data:

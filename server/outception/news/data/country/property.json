@@ -1,0 +1,599 @@
+{
+ "table": "property",
+ "entries": {
+  "IE": [
+   "property-ie"
+  ],
+  "GB": [
+   "propertyindustryeye"
+  ],
+  "US": [
+   "realtornews"
+  ],
+  "DE": [
+   "property-de"
+  ],
+  "FR": [
+   "frenchentree"
+  ],
+  "ES": [
+   "spanishpropertyinsight"
+  ],
+  "IT": [
+   "idealistait"
+  ],
+  "PT": [
+   "idealistapt"
+  ],
+  "NL": [
+   "property-nl"
+  ],
+  "BE": [
+   "property-be"
+  ],
+  "PL": [
+   "property-pl"
+  ],
+  "SE": [
+   "property-se"
+  ],
+  "NO": [
+   "property-no"
+  ],
+  "DK": [
+   "property-dk"
+  ],
+  "FI": [
+   "kiinteistolehti"
+  ],
+  "AT": [
+   "property-at"
+  ],
+  "CH": [
+   "property-ch"
+  ],
+  "CZ": [
+   "hypoindex"
+  ],
+  "HU": [
+   "portfolioingatlan"
+  ],
+  "RO": [
+   "property-ro"
+  ],
+  "GR": [
+   "property-gr"
+  ],
+  "TR": [
+   "emlaknews"
+  ],
+  "CA": [
+   "storeys"
+  ],
+  "MX": [
+   "property-mx"
+  ],
+  "BR": [
+   "loftblog"
+  ],
+  "AR": [
+   "property-ar"
+  ],
+  "CL": [
+   "property-cl"
+  ],
+  "CO": [
+   "property-co"
+  ],
+  "AU": [
+   "realestateau"
+  ],
+  "NZ": [
+   "interestnz"
+  ],
+  "JP": [
+   "realestatejapan"
+  ],
+  "KR": [
+   "property-kr"
+  ],
+  "IN": [
+   "squareyards"
+  ],
+  "SG": [
+   "stackedhomes"
+  ],
+  "MY": [
+   "edgeprop"
+  ],
+  "PH": [
+   "lamudiph"
+  ],
+  "ID": [
+   "property-id"
+  ],
+  "TH": [
+   "property-th"
+  ],
+  "VN": [
+   "vnexpressbds"
+  ],
+  "AE": [
+   "property-ae"
+  ],
+  "IL": [
+   "globesnadlan"
+  ],
+  "ZA": [
+   "property-za"
+  ],
+  "NG": [
+   "property-ng"
+  ],
+  "KE": [
+   "buyrentkenya"
+  ],
+  "EG": [
+   "property-eg"
+  ],
+  "SA": [
+   "property-sa"
+  ],
+  "SK": [
+   "property-sk"
+  ],
+  "BG": [
+   "property-bg"
+  ],
+  "HR": [
+   "property-hr"
+  ],
+  "SI": [
+   "property-si"
+  ],
+  "LT": [
+   "property-lt"
+  ],
+  "LV": [
+   "property-lv"
+  ],
+  "EE": [
+   "property-ee"
+  ],
+  "LU": [
+   "property-lu"
+  ],
+  "MT": [
+   "property-mt"
+  ],
+  "CY": [
+   "property-cy"
+  ],
+  "UA": [
+   "property-ua"
+  ],
+  "RS": [
+   "property-rs"
+  ],
+  "GE": [
+   "property-ge"
+  ],
+  "AZ": [
+   "property-az"
+  ],
+  "AM": [
+   "property-am"
+  ],
+  "RU": [
+   "property-ru"
+  ],
+  "CN": [
+   "property-cn"
+  ],
+  "TW": [
+   "property-tw"
+  ],
+  "HK": [
+   "property-hk"
+  ],
+  "MN": [
+   "property-mn"
+  ],
+  "MM": [
+   "property-mm"
+  ],
+  "KH": [
+   "property-kh"
+  ],
+  "LA": [
+   "property-la"
+  ],
+  "BD": [
+   "property-bd"
+  ],
+  "PK": [
+   "property-pk"
+  ],
+  "LK": [
+   "property-lk"
+  ],
+  "NP": [
+   "property-np"
+  ],
+  "JO": [
+   "property-jo"
+  ],
+  "LB": [
+   "property-lb"
+  ],
+  "KW": [
+   "property-kw"
+  ],
+  "QA": [
+   "property-qa"
+  ],
+  "OM": [
+   "property-om"
+  ],
+  "BH": [
+   "property-bh"
+  ],
+  "IQ": [
+   "property-iq"
+  ],
+  "IR": [
+   "property-ir"
+  ],
+  "KZ": [
+   "property-kz"
+  ],
+  "UZ": [
+   "property-uz"
+  ],
+  "MA": [
+   "property-ma"
+  ],
+  "DZ": [
+   "property-dz"
+  ],
+  "TN": [
+   "property-tn"
+  ],
+  "LY": [
+   "property-ly"
+  ],
+  "GH": [
+   "property-gh"
+  ],
+  "SN": [
+   "property-sn"
+  ],
+  "CI": [
+   "property-ci"
+  ],
+  "CM": [
+   "property-cm"
+  ],
+  "TZ": [
+   "property-tz"
+  ],
+  "UG": [
+   "property-ug"
+  ],
+  "ET": [
+   "property-et"
+  ],
+  "RW": [
+   "property-rw"
+  ],
+  "AF": [
+   "property-af"
+  ],
+  "IS": [
+   "property-is"
+  ],
+  "MZ": [
+   "property-mz"
+  ],
+  "ZW": [
+   "property-zw"
+  ],
+  "ZM": [
+   "property-zm"
+  ],
+  "BW": [
+   "property-bw"
+  ],
+  "PE": [
+   "property-pe"
+  ],
+  "VE": [
+   "property-ve"
+  ],
+  "EC": [
+   "property-ec"
+  ],
+  "UY": [
+   "property-uy"
+  ],
+  "BO": [
+   "property-bo"
+  ],
+  "PY": [
+   "property-py"
+  ],
+  "CR": [
+   "property-cr"
+  ],
+  "GT": [
+   "property-gt"
+  ],
+  "CU": [
+   "property-cu"
+  ],
+  "DO": [
+   "property-do"
+  ],
+  "PA": [
+   "property-pa"
+  ],
+  "HN": [
+   "property-hn"
+  ],
+  "JM": [
+   "property-jm"
+  ],
+  "TT": [
+   "property-tt"
+  ],
+  "BB": [
+   "property-bb"
+  ],
+  "BS": [
+   "property-bs"
+  ],
+  "GD": [
+   "property-gd"
+  ],
+  "LC": [
+   "property-lc"
+  ],
+  "VC": [
+   "property-vc"
+  ],
+  "AG": [
+   "property-ag"
+  ],
+  "KN": [
+   "property-kn"
+  ],
+  "DM": [
+   "property-dm"
+  ],
+  "BZ": [
+   "property-bz"
+  ],
+  "GY": [
+   "property-gy"
+  ],
+  "HT": [
+   "property-ht"
+  ],
+  "NI": [
+   "property-ni"
+  ],
+  "SV": [
+   "property-sv"
+  ],
+  "SR": [
+   "property-sr"
+  ],
+  "PS": [
+   "property-ps"
+  ],
+  "SY": [
+   "property-sy"
+  ],
+  "YE": [
+   "property-ye"
+  ],
+  "ML": [
+   "property-ml"
+  ],
+  "NE": [
+   "property-ne"
+  ],
+  "TD": [
+   "property-td"
+  ],
+  "BJ": [
+   "property-bj"
+  ],
+  "TG": [
+   "property-tg"
+  ],
+  "BF": [
+   "property-bf"
+  ],
+  "GN": [
+   "property-gn"
+  ],
+  "SL": [
+   "property-sl"
+  ],
+  "LR": [
+   "property-lr"
+  ],
+  "GM": [
+   "property-gm"
+  ],
+  "MR": [
+   "property-mr"
+  ],
+  "GQ": [
+   "property-gq"
+  ],
+  "CV": [
+   "property-cv"
+  ],
+  "ST": [
+   "property-st"
+  ],
+  "GW": [
+   "property-gw"
+  ],
+  "GA": [
+   "property-ga"
+  ],
+  "CG": [
+   "property-cg"
+  ],
+  "CD": [
+   "property-cd"
+  ],
+  "AO": [
+   "property-ao"
+  ],
+  "SD": [
+   "property-sd"
+  ],
+  "SO": [
+   "property-so"
+  ],
+  "ER": [
+   "property-er"
+  ],
+  "DJ": [
+   "property-dj"
+  ],
+  "CF": [
+   "property-cf"
+  ],
+  "SS": [
+   "property-ss"
+  ],
+  "BI": [
+   "property-bi"
+  ],
+  "NA": [
+   "property-na"
+  ],
+  "MW": [
+   "property-mw"
+  ],
+  "LS": [
+   "property-ls"
+  ],
+  "SZ": [
+   "property-sz"
+  ],
+  "MG": [
+   "property-mg"
+  ],
+  "MU": [
+   "property-mu"
+  ],
+  "SC": [
+   "property-sc"
+  ],
+  "KM": [
+   "property-km"
+  ],
+  "FJ": [
+   "property-fj"
+  ],
+  "PG": [
+   "property-pg"
+  ],
+  "SB": [
+   "property-sb"
+  ],
+  "VU": [
+   "property-vu"
+  ],
+  "WS": [
+   "property-ws"
+  ],
+  "TO": [
+   "property-to"
+  ],
+  "KI": [
+   "property-ki"
+  ],
+  "FM": [
+   "property-fm"
+  ],
+  "MH": [
+   "property-mh"
+  ],
+  "PW": [
+   "property-pw"
+  ],
+  "NR": [
+   "property-nr"
+  ],
+  "TV": [
+   "property-tv"
+  ],
+  "BN": [
+   "property-bn"
+  ],
+  "TL": [
+   "property-tl"
+  ],
+  "BT": [
+   "property-bt"
+  ],
+  "MV": [
+   "property-mv"
+  ],
+  "KP": [
+   "property-kp"
+  ],
+  "TM": [
+   "property-tm"
+  ],
+  "KG": [
+   "property-kg"
+  ],
+  "TJ": [
+   "property-tj"
+  ],
+  "AL": [
+   "property-al"
+  ],
+  "MK": [
+   "property-mk"
+  ],
+  "BA": [
+   "property-ba"
+  ],
+  "ME": [
+   "property-me"
+  ],
+  "XK": [
+   "property-xk"
+  ],
+  "MD": [
+   "property-md"
+  ],
+  "BY": [
+   "property-by"
+  ],
+  "MC": [
+   "property-mc"
+  ],
+  "AD": [
+   "property-ad"
+  ],
+  "SM": [
+   "property-sm"
+  ],
+  "LI": [
+   "property-li"
+  ],
+  "VA": [
+   "property-va"
+  ]
+ }
+}

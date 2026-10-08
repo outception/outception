@@ -1,0 +1,532 @@
+[
+ {
+  "id": "dlnews",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-09-02"
+ },
+ {
+  "id": "imore",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-09-02"
+ },
+ {
+  "id": "joelonsoftware",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-09-02"
+ },
+ {
+  "id": "legaldive",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-09-02"
+ },
+ {
+  "id": "logrocket",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-09-02"
+ },
+ {
+  "id": "modernfarmer",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-09-02"
+ },
+ {
+  "id": "selfmag",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-09-02"
+ },
+ {
+  "id": "themarkup",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-09-02"
+ },
+ {
+  "id": "threatpost",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-09-02"
+ },
+ {
+  "id": "toucharcade",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-09-02"
+ },
+ {
+  "id": "v8blog",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-09-02"
+ },
+ {
+  "id": "waitbutwhy",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-09-02"
+ },
+ {
+  "id": "almasryalyoum",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "artnet",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "arxiv_cs",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "asharqalawsat",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "benzinga",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "birminghammail",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "bruegel",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "businessoffashion",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "citizen_za",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "colombiaone",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "dailypost_ng",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "dnevnik_bg",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "elpais_uy",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "ethiopianreporter",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "fiercebiotech",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "fiercepharma",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "flightglobal",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "heraldscotland",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "holidaypirates",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "hotelmanagement",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "ilgiornale",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "legit_ng",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "liverpoolecho",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "marketingweek",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "marktechpost",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "michaelwest",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "moneyweb",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "newzimbabwe",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "nola",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "philstar",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "phys_arxiv",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "quartz",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "reliefweb",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "rp_pl",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "santiagotimes",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "scontomaggio",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "tennisworldusa",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "the19th",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "theafricareport",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "thehindu",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "themanchester",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "thenational_scot",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "thetruthaboutcars",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "torontostar",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "travelpirates",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "tuko",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "walesonline",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-16"
+ },
+ {
+  "id": "autojosh",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-08-31"
+ },
+ {
+  "id": "9news_au",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "9to5linux",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "actucameroun",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "arabnews",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "bangkokpost",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "bostonglobe",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "cbssports",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "cnbc",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "destructoid",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "dotesports",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "fin24",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "fxstreet",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "gothamist",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "greekreporter",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "guardianng",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "herald_zw",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "houstonchronicle",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "hypebeast",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "jamaicaobserver",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "japantoday",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "jeuneafrique",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "kotaku",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "mailguardian",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "mg_africa",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "news24_za2",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "peruviantimes",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "politico",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "rte_ie",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "seattletimes",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "seattletimes2",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "siliconera",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "sportskeeda",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "stuttgarter",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "terra_br",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "theatlantic",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "thedefiant",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "theinformation",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "timesofisrael",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "tmz",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "tvn24",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "udn",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "ukroads",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "youtube-lalalifegames",
+  "reason": "pre-audit disable",
+  "since": "2026-08-01"
+ },
+ {
+  "id": "unnews",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-10-07"
+ },
+ {
+  "id": "un_news",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-10-07"
+ },
+ {
+  "id": "research-cg",
+  "reason": "dead or blocked from the production host",
+  "since": "2026-10-07"
+ }
+]

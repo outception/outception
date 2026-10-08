@@ -1,0 +1,117 @@
+{
+  "name": "@outception-com/app",
+  "main": "expo-router/entry",
+  "version": "1.8.0",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web",
+    "test": "pnpm test:oxlint-plugins && jest",
+    "test:oxlint-plugins": "for file in oxlint-plugins/*.rule-test.cjs; do node \"$file\"; done",
+    "test:watch": "pnpm test:oxlint-plugins && jest --watchAll",
+    "ota": "node tooling/ota-preflight",
+    "build:production": "pnpm dlx eas-cli build --platform all --profile production",
+    "build:development": "pnpm dlx eas-cli build --platform all --profile development",
+    "build:simulator": "pnpm dlx eas-cli build --platform all --profile simulator",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "typecheck": "tsc --noEmit",
+    "push:test": "node tooling/push-notifications/send-push.js",
+    "postinstall": "pnpm --filter @outception-com/client build && patch-package",
+    "eas-build-pre-install": "test -f ../../pnpm-workspace.yaml || printf 'packages:\\n  - apps/*\\n  - packages/*\\n  - examples/*\\n' > ../../pnpm-workspace.yaml"
+  },
+  "jest": {
+    "preset": "jest-expo"
+  },
+  "dependencies": {
+    "@dev-plugins/react-query": "^0.4.0",
+    "@expo-google-fonts/geist": "^0.4.2",
+    "@expo-google-fonts/hanken-grotesk": "^0.4.3",
+    "@expo/metro-runtime": "~57.0.16",
+    "@expo/vector-icons": "^15.0.3",
+    "@formatjs/intl-getcanonicallocales": "^3.2.11",
+    "@formatjs/intl-locale": "^5.3.10",
+    "@formatjs/intl-pluralrules": "^6.3.13",
+    "@formatjs/intl-relativetimeformat": "^12.3.13",
+    "@outception-com/client": "workspace:*",
+    "@outception-com/i18n": "workspace:*",
+    "@outception-com/news-core": "workspace:*",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-community/cli": "latest",
+    "@react-native-community/netinfo": "^12.0.1",
+    "@react-native-masked-view/masked-view": "0.3.2",
+    "@react-navigation/native": "^7.4.1",
+    "@sentry/react-native": "~7.11.0",
+    "@shopify/flash-list": "2.0.2",
+    "@shopify/restyle": "^2.4.5",
+    "@tanstack/query-async-storage-persister": "^5.101.4",
+    "@tanstack/react-query": "^5.103.2",
+    "@tanstack/react-query-persist-client": "^5.101.4",
+    "expo": "~57.0.26",
+    "expo-asset": "~57.0.18",
+    "expo-auth-session": "~57.0.13",
+    "expo-blur": "~57.0.3",
+    "expo-build-properties": "~57.0.22",
+    "expo-constants": "~57.0.20",
+    "expo-dev-client": "~57.0.19",
+    "expo-font": "~57.0.4",
+    "expo-haptics": "~57.0.3",
+    "expo-image": "~57.0.5",
+    "expo-insights": "~57.0.20",
+    "expo-linear-gradient": "~57.0.2",
+    "expo-linking": "~57.0.11",
+    "expo-localization": "~57.0.2",
+    "expo-quick-actions": "^6.0.2",
+    "expo-router": "~57.0.24",
+    "expo-secure-store": "~57.0.4",
+    "expo-speech": "~57.0.3",
+    "expo-splash-screen": "~57.0.9",
+    "expo-store-review": "^57.0.3",
+    "expo-system-ui": "~57.0.4",
+    "expo-updates": "~57.0.24",
+    "expo-web-browser": "~57.0.3",
+    "patch-package": "^8.0.1",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-error-boundary": "^6.1.6",
+    "react-native": "0.86.3",
+    "react-native-gesture-handler": "~2.32.0",
+    "react-native-reanimated": "4.5.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.2",
+    "react-native-svg": "15.15.4",
+    "react-native-web": "~0.21.2",
+    "react-native-webview": "13.16.1",
+    "react-native-worklets": "0.10.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.29.7",
+    "@sentry/cli": "^2.58.6",
+    "@types/jest": "^29.5.14",
+    "@types/react": "19.2.3",
+    "@types/react-test-renderer": "^19.3.0",
+    "@typescript/native": "catalog:",
+    "jest": "^29.7.0",
+    "jest-expo": "~57.0.5",
+    "react-test-renderer": "19.2.3",
+    "typescript": "catalog:"
+  },
+  "private": true,
+  "expo": {
+    "install": {
+      "exclude": [
+        "typescript",
+        "@types/react"
+      ]
+    },
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "listUnknownPackages": false,
+        "exclude": [
+          "@dev-plugins/react-navigation"
+        ]
+      }
+    }
+  }
+}

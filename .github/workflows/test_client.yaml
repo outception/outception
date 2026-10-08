@@ -1,0 +1,111 @@
+name: Client
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    types: [opened, synchronize, edited]
+  merge_group:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: ./clients
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    name: "Detect changes"
+    runs-on: ubuntu-latest
+    outputs:
+      clients: ${{ steps.filter.outputs.clients }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        with:
+          filters: |
+            clients:
+              - 'clients/**'
+              - '.github/workflows/test_client.yaml'
+
+  build:
+    name: "Client: Tests "
+    needs: changes
+    if: needs.changes.outputs.clients == 'true'
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+
+    env:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      NEXT_PUBLIC_ENVIRONMENT: "testing"
+      # No API in CI: an address that refuses at once, so build-time fetches
+      # (the sitemap's crawler slugs) fall back instead of waiting.
+      NEXT_PUBLIC_API_URL: "http://127.0.0.1:9"
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: clients/package.json
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: "pnpm"
+          cache-dependency-path: "clients/pnpm-lock.yaml"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Format check
+        run: pnpm run format:check
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Check i18n keys
+        run: pnpm --filter @outception-com/i18n check-keys
+
+      - name: Check names
+        run: pnpm exec tsx scripts/check-names.ts --strict
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: "Test: App"
+        run: pnpm --filter @outception-com/app test
+
+      - name: "Test: Web"
+        run: pnpm --filter web test
+
+      - name: "Test: @outception-com/orbit"
+        run: pnpm --filter @outception-com/orbit test
+
+      - name: "Test: @outception-com/news-core"
+        run: pnpm --filter @outception-com/news-core test
+
+      - name: "Test: @outception-com/mcp"
+        run: pnpm --filter @outception-com/mcp test
+
+      - name: "Test: @outception-com/cli"
+        run: pnpm --filter @outception-com/cli test
+
+      - name: Docs are fresh
+        working-directory: .
+        run: node scripts/check-doc-freshness.mts --check
+
+      - name: Build
+        run: pnpm build
+
+      - name: Performance budget
+        run: pnpm exec tsx scripts/check-budget.ts

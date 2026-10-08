@@ -1,0 +1,53 @@
+# One-off operational task: hard-delete a user by email from the production
+# database (cascades remove their sessions, OAuth links, follows, etc.). Run
+# manually from the Actions tab or with:
+#   gh workflow run ops-delete-user.yml -f email=someone@example.com
+# Uses the same SSH secrets as the deploy workflow.
+name: Ops (delete user)
+
+on:
+  workflow_dispatch:
+    inputs:
+      email:
+        description: "Email of the user to hard-delete"
+        required: true
+
+permissions: {}
+
+jobs:
+  delete-user:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      # Fail closed: without a pinned fingerprint the SSH client would trust
+      # whoever answers, and ship every secret below to it.
+      - name: Host key is pinned
+        env:
+          FINGERPRINT: ${{ vars.SSH_HOST_FINGERPRINT }}
+        run: |
+          [ -n "$FINGERPRINT" ] || { echo "::error::SSH_HOST_FINGERPRINT is unset"; exit 1; }
+      - name: Delete user over SSH
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        env:
+          EMAIL: ${{ inputs.email }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          # The host's key fingerprint (repository variable; the ECDSA key, which the
+          # client negotiates first). The step above refuses to run without it.
+          fingerprint: ${{ vars.SSH_HOST_FINGERPRINT }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: EMAIL,DEPLOY_PATH
+          script: |
+            set -euo pipefail
+            cd "$DEPLOY_PATH"
+            # :'email' safely quotes the value inside SQL (no injection). Local
+            # socket auth in the db container needs no password.
+            # The db container carries the database name and user from
+            # .env.prod; every row that belongs to the reader cascades, and a
+            # client they registered stays, unowned.
+            app_db="$(sed -n 's/^OUTCEPTION_POSTGRES_DATABASE=//p' .env.prod | tail -1 | tr -d "\"'")"
+            docker compose --env-file .env.prod -f docker-compose.prod.yml exec -T db \
+              sh -c 'psql -U "$POSTGRES_USER" -d "$1" -v email="$0" \
+                -c "DELETE FROM users WHERE email = :'"'"'email'"'"';"' "$EMAIL" "$app_db"

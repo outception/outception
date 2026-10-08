@@ -1,0 +1,92 @@
+#!/usr/bin/env -S uv run -s
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "python-dotenv",
+# ]
+# ///
+"""Write the development env files from the committed examples.
+
+    ./dev/setup-environment [--database-name NAME] [--root DIR]
+
+`server/.env.example` becomes `server/.env` and
+`clients/apps/web/.env.example` becomes `clients/apps/web/.env.local`.
+Values already in a generated file survive a re-run; the shared secrets
+file (one per machine, see dev/cli/secrets_io.py) fills in what the
+examples leave blank. Nothing here reaches the network.
+"""
+
+import argparse
+import pathlib
+import sys
+
+from dotenv import dotenv_values
+
+ROOT_PATH = pathlib.Path(__file__).parent.parent
+
+# One implementation of the secrets file rules, shared with the dev CLI.
+sys.path.insert(0, str(ROOT_PATH / "dev" / "cli"))
+import secrets_io
+
+PLACEHOLDER = "*** REPLACE ***"
+
+
+def _write_env_file(
+    example: pathlib.Path,
+    target: pathlib.Path,
+    replacements: dict[str, str],
+) -> None:
+    existing = dotenv_values(target) if target.exists() else {}
+    with open(target, "w") as out:
+        for key, value in dotenv_values(example).items():
+            if key in replacements:
+                chosen = replacements[key]
+            elif key in existing and existing[key] != PLACEHOLDER:
+                chosen = existing[key]
+            else:
+                chosen = value
+            chosen = "" if chosen is None else str(chosen)
+            delimiter = "'" if '"' in chosen else '"'
+            out.write(f"{key}={delimiter}{chosen}{delimiter}\n")
+
+
+def _load_central_secrets() -> dict[str, str]:
+    try:
+        return {k: v for k, v in secrets_io.read_secrets().items() if v}
+    except Exception:
+        return {}
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument(
+        "--database-name",
+        help="database to use (sets OUTCEPTION_POSTGRES_DATABASE and the read copy)",
+    )
+    parser.add_argument(
+        "--root",
+        type=pathlib.Path,
+        default=ROOT_PATH,
+        help="the tree to write into (tests use a scratch copy)",
+    )
+    args = parser.parse_args()
+    root = args.root.resolve()
+    secrets = _load_central_secrets()
+    server_replacements = dict(secrets)
+    if args.database_name:
+        server_replacements["OUTCEPTION_POSTGRES_DATABASE"] = args.database_name
+        server_replacements["OUTCEPTION_POSTGRES_READ_DATABASE"] = args.database_name
+    _write_env_file(
+        root / "server" / ".env.example", root / "server" / ".env", server_replacements
+    )
+    _write_env_file(
+        root / "clients" / "apps" / "web" / ".env.example",
+        root / "clients" / "apps" / "web" / ".env.local",
+        secrets,
+    )
+    print("Environment files written: server/.env, clients/apps/web/.env.local")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

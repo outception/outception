@@ -1,0 +1,45 @@
+{
+  "$schema": "https://v2-9-4.turborepo.dev/schema.json",
+  "globalDependencies": ["**/.env.*local"],
+  "globalEnv": [
+    "NEXT_IMAGE_UNOPTIMIZED",
+    "OUTCEPTION_API_URL",
+    "EXPO_PUBLIC_OUTCEPTION_SERVER_URL",
+    "NODE_ENV",
+    "NEXT_PHASE",
+    "NEXT_RUNTIME",
+    "NEXT_PUBLIC_ENVIRONMENT",
+    "NEXT_PUBLIC_API_URL",
+    "NEXT_PUBLIC_FRONTEND_BASE_URL",
+    "NEXT_PUBLIC_BUILD_SHA",
+    "NEXT_PUBLIC_SENTRY_DSN",
+    "NEXT_PUBLIC_APPLE_DOMAIN_ASSOCIATION",
+    "SENTRY_AUTH_TOKEN",
+    "SENTRY_PROJECT",
+    "SENTRY_ORG",
+    "OUTCEPTION_AUTH_COOKIE_KEY",
+    "CI",
+    "TZ"
+  ],
+  "tasks": {
+    "test": {
+      "dependsOn": ["^build"]
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "//#lint": {},
+    "//#lint:fix": {
+      "cache": false
+    },
+    "typecheck": {
+      "dependsOn": ["^build"]
+    },
+    "dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    }
+  }
+}

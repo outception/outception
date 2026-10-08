@@ -1,0 +1,212 @@
+{
+ "table": "top_city",
+ "entries": {
+  "US": [
+   "city-unitedstates-newyork"
+  ],
+  "GB": [
+   "city-unitedkingdom-london"
+  ],
+  "IE": [
+   "city-ireland-dublin"
+  ],
+  "CA": [
+   "city-canada-toronto"
+  ],
+  "AU": [
+   "city-australia-sydney"
+  ],
+  "NZ": [
+   "city-newzealand-auckland"
+  ],
+  "IN": [
+   "city-india-mumbai"
+  ],
+  "CN": [
+   "city-china-shanghai"
+  ],
+  "JP": [
+   "city-japan-tokyo"
+  ],
+  "KR": [
+   "city-southkorea-seoul"
+  ],
+  "DE": [
+   "city-germany-berlin"
+  ],
+  "FR": [
+   "city-france-paris"
+  ],
+  "IT": [
+   "city-italy-rome"
+  ],
+  "ES": [
+   "city-spain-madrid"
+  ],
+  "PT": [
+   "city-portugal-lisbon"
+  ],
+  "NL": [
+   "city-netherlands-amsterdam"
+  ],
+  "BE": [
+   "city-belgium-brussels"
+  ],
+  "CH": [
+   "city-switzerland-zurich"
+  ],
+  "AT": [
+   "city-austria-vienna"
+  ],
+  "SE": [
+   "city-sweden-stockholm"
+  ],
+  "NO": [
+   "city-norway-oslo"
+  ],
+  "DK": [
+   "city-denmark-copenhagen"
+  ],
+  "FI": [
+   "city-finland-helsinki"
+  ],
+  "PL": [
+   "city-poland-warsaw"
+  ],
+  "CZ": [
+   "city-czechrepublic-prague"
+  ],
+  "HU": [
+   "city-hungary-budapest"
+  ],
+  "RO": [
+   "city-romania-bucharest"
+  ],
+  "GR": [
+   "city-greece-athens"
+  ],
+  "TR": [
+   "city-turkey-istanbul"
+  ],
+  "RU": [
+   "city-russia-moscow"
+  ],
+  "UA": [
+   "city-ukraine-kyiv"
+  ],
+  "HR": [
+   "city-croatia-zagreb"
+  ],
+  "RS": [
+   "city-serbia-belgrade"
+  ],
+  "BG": [
+   "city-bulgaria-sofia"
+  ],
+  "BR": [
+   "city-brazil-saopaulo"
+  ],
+  "MX": [
+   "city-mexico-mexicocity"
+  ],
+  "AR": [
+   "city-argentina-buenosaires"
+  ],
+  "CO": [
+   "city-colombia-bogota"
+  ],
+  "CL": [
+   "city-chile-santiago"
+  ],
+  "PE": [
+   "city-peru-lima"
+  ],
+  "VE": [
+   "city-venezuela-caracas"
+  ],
+  "EC": [
+   "city-ecuador-quito"
+  ],
+  "EG": [
+   "city-egypt-cairo"
+  ],
+  "NG": [
+   "city-nigeria-lagos"
+  ],
+  "ZA": [
+   "city-southafrica-johannesburg"
+  ],
+  "KE": [
+   "city-kenya-nairobi"
+  ],
+  "MA": [
+   "city-morocco-casablanca"
+  ],
+  "DZ": [
+   "city-algeria-algiers"
+  ],
+  "TN": [
+   "city-tunisia-tunis"
+  ],
+  "GH": [
+   "city-ghana-accra"
+  ],
+  "ET": [
+   "city-ethiopia-addisababa"
+  ],
+  "TZ": [
+   "city-tanzania-daressalaam"
+  ],
+  "SA": [
+   "city-saudiarabia-riyadh"
+  ],
+  "AE": [
+   "city-unitedarabemirates-dubai"
+  ],
+  "QA": [
+   "city-qatar-doha"
+  ],
+  "IL": [
+   "city-israel-jerusalem"
+  ],
+  "IR": [
+   "city-iran-tehran"
+  ],
+  "IQ": [
+   "city-iraq-baghdad"
+  ],
+  "PK": [
+   "city-pakistan-karachi"
+  ],
+  "BD": [
+   "city-bangladesh-dhaka"
+  ],
+  "LK": [
+   "city-srilanka-colombo"
+  ],
+  "ID": [
+   "city-indonesia-jakarta"
+  ],
+  "MY": [
+   "city-malaysia-kualalumpur"
+  ],
+  "SG": [
+   "city-singapore-singaporecity"
+  ],
+  "TH": [
+   "city-thailand-bangkok"
+  ],
+  "VN": [
+   "city-vietnam-hochiminhcity"
+  ],
+  "PH": [
+   "city-philippines-manila"
+  ],
+  "TW": [
+   "city-taiwan-taipei"
+  ],
+  "HK": [
+   "city-hongkong-hongkongcity"
+  ]
+ }
+}

@@ -1,0 +1,167 @@
+# Per-instance Outception app stack (api, worker, web).
+# Infrastructure (postgres, redis) lives in a separate, machine-wide stack
+# defined in docker-compose.shared.yml.
+#
+# Usage: dev docker up                # auto-starts shared infra if needed
+#        dev docker -i 2 up           # second isolated app stack
+#
+# Each instance gets its own DB name and Redis DB index so multiple
+# instances can safely coexist on one shared stack.
+
+# Load environment variables from server/.env
+x-common-env-file: &common-env-file
+  - ../../server/.env
+
+x-common-backend-env: &common-backend-env
+  OUTCEPTION_ENV: development
+  OUTCEPTION_LOG_LEVEL: DEBUG
+  OUTCEPTION_TESTING: "0"
+  OUTCEPTION_SQLALCHEMY_DEBUG: "0"
+  # Database — connect to shared postgres on the outception-shared network.
+  # Each instance uses a separate logical DB (auto-created by startup.sh).
+  OUTCEPTION_POSTGRES_USER: ${OUTCEPTION_POSTGRES_USER:-outception}
+  OUTCEPTION_POSTGRES_PWD: ${OUTCEPTION_POSTGRES_PWD:-outception}
+  OUTCEPTION_POSTGRES_HOST: db
+  OUTCEPTION_POSTGRES_PORT: "5432"
+  OUTCEPTION_POSTGRES_DATABASE: outception_dev_${OUTCEPTION_DOCKER_INSTANCE:-1}
+  OUTCEPTION_POSTGRES_READ_USER: ${OUTCEPTION_POSTGRES_READ_USER:-outception_read}
+  OUTCEPTION_POSTGRES_READ_PWD: ${OUTCEPTION_POSTGRES_READ_PWD:-outception}
+  OUTCEPTION_POSTGRES_READ_HOST: db
+  OUTCEPTION_POSTGRES_READ_PORT: "5432"
+  OUTCEPTION_POSTGRES_READ_DATABASE: outception_dev_${OUTCEPTION_DOCKER_INSTANCE:-1}
+  # Redis — shared instance; each app instance picks its own DB index.
+  OUTCEPTION_REDIS_HOST: redis
+  OUTCEPTION_REDIS_PORT: "6379"
+  OUTCEPTION_REDIS_DB: ${OUTCEPTION_REDIS_DB:-0}
+  # CORS and allowed hosts — configured for Docker networking
+  OUTCEPTION_CORS_ORIGINS: '["http://localhost:${WEB_PORT:-3000}", "http://127.0.0.1:${WEB_PORT:-3000}", "http://web:3000"]'
+  OUTCEPTION_ALLOWED_HOSTS: '["localhost:${WEB_PORT:-3000}", "127.0.0.1:${WEB_PORT:-3000}"]'
+  OUTCEPTION_BASE_URL: http://localhost:${API_PORT:-8000}
+  OUTCEPTION_FRONTEND_BASE_URL: http://localhost:${WEB_PORT:-3000}
+  OUTCEPTION_USER_SESSION_COOKIE_DOMAIN: localhost
+  OUTCEPTION_AUTHENTICATION_SESSION_COOKIE_DOMAIN: localhost
+  # OAuth insecure transport for development
+  AUTHLIB_INSECURE_TRANSPORT: "true"
+  # The bot check's always-pass test secret. A public test credential, not a
+  # real secret; set here so stale server/.env files still allow email login.
+  OUTCEPTION_TURNSTILE_SECRET: "1x0000000000000000000000000000000AA"
+  # Secrets (social login client ids and secrets, model keys) are loaded from
+  # env_file (server/.env) and not set here: ${VAR:-default} here would read
+  # the host shell, not the env file.
+
+x-api-volumes: &api-volumes
+  - ../../server:/app/server:cached
+  - ../../dev:/app/dev:cached
+  - server_uv_cache:/root/.cache/uv
+  - api_venv:/app/server/.venv
+  - pnpm_store:/root/.local/share/pnpm/store
+
+x-worker-volumes: &worker-volumes
+  - ../../server:/app/server:cached
+  - ../../dev:/app/dev:cached
+  - server_uv_cache:/root/.cache/uv
+  - worker_venv:/app/server/.venv
+  - pnpm_store:/root/.local/share/pnpm/store
+
+services:
+  api:
+    build:
+      context: ../..
+      dockerfile: dev/docker/Dockerfile.api.dev
+    env_file: *common-env-file
+    environment:
+      <<: *common-backend-env
+    volumes: *api-volumes
+    ports:
+      - "${API_PORT:-8000}:8000"
+    networks:
+      # `default` is a per-project bridge so web→api stays scoped to this
+      # instance (the `api` service name would otherwise collide with other
+      # instances' api containers also on outception-shared).
+      - default
+      - outception-shared
+    # `start_period` is long because a cold first boot binds uvicorn only after
+    # a serial chain: uv sync, the email-template build (pnpm install + tsup +
+    # pkg), DB bootstrap and migrations, routinely several minutes. Checks that fail during it don't count against `retries`,
+    # so `dev docker up --wait` won't give up before /healthz answers. Plain
+    # `up -d` (no --wait) is unaffected either way.
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 600s
+    command: ["api"]
+
+  worker:
+    build:
+      context: ../..
+      dockerfile: dev/docker/Dockerfile.api.dev
+    env_file: *common-env-file
+    environment:
+      <<: *common-backend-env
+    volumes: *worker-volumes
+    networks:
+      - default
+      - outception-shared
+    depends_on:
+      api:
+        condition: service_started
+    command: ["worker"]
+
+  web:
+    build:
+      context: ../..
+      dockerfile: dev/docker/Dockerfile.web.dev
+    env_file: *common-env-file
+    environment:
+      # Node memory limit to prevent OOM (keep well below container limit to leave room for native memory)
+      NODE_OPTIONS: "--max-old-space-size=2560"
+      # NEXT_PUBLIC_* are for browser requests (via host machine)
+      NEXT_PUBLIC_API_URL: http://localhost:${API_PORT:-8000}
+      NEXT_PUBLIC_FRONTEND_BASE_URL: http://localhost:${WEB_PORT:-3000}
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: "1x00000000000000000000AA"
+      # OUTCEPTION_API_URL is for server-side requests (container-to-container)
+      OUTCEPTION_API_URL: http://api:8000
+    volumes:
+      - ../../clients:/app/clients:cached
+      - ../../dev:/app/dev:cached
+      - web_node_modules:/app/clients/node_modules
+      - web_next_cache:/app/clients/apps/web/.next
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    networks:
+      # web only needs to reach the same-project api (SSR proxy); browser
+      # talks to all infra via host ports. Keeping it off outception-shared means
+      # `http://api:8000` resolves unambiguously to THIS instance's api.
+      - default
+    depends_on:
+      # Wait for the api to be serving, not just started — the SSR layer proxies
+      # to it, so starting web before api is healthy yields 500s on first load.
+      api:
+        condition: service_healthy
+    # node:24-slim ships no curl/wget, so probe with Node's built-in fetch.
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 600s
+    deploy:
+      resources:
+        limits:
+          memory: 6G
+
+networks:
+  default:
+    name: outception-app-${OUTCEPTION_DOCKER_INSTANCE:-1}-default
+  outception-shared:
+    external: true
+
+volumes:
+  server_uv_cache:
+  api_venv:
+  worker_venv:
+  pnpm_store:
+  web_node_modules:
+  web_next_cache:
