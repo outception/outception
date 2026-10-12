@@ -86,15 +86,15 @@
     "react-native-worklets": "0.10.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.29.7",
-    "@sentry/cli": "^2.58.6",
-    "@types/jest": "^29.5.14",
+    "@babel/core": "^8.0.6",
+    "@sentry/cli": "^3.8.0",
+    "@types/jest": "^30.0.0",
     "@types/react": "19.2.3",
     "@types/react-test-renderer": "^19.3.0",
     "@typescript/native": "catalog:",
-    "jest": "^29.7.0",
+    "jest": "^30.5.2",
     "jest-expo": "~57.0.5",
-    "react-test-renderer": "19.2.3",
+    "react-test-renderer": "19.3.0",
     "typescript": "catalog:"
   },
   "private": true,
