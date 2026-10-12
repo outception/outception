@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@outception-com/typescript-config": "workspace:*",
-    "@types/node": "^24.3.0",
+    "@types/node": "^24.19.1",
     "@typescript/native": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:",

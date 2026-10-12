@@ -47,7 +47,7 @@
     "date-fns": "catalog:",
     "input-otp": "^1.5.0",
     "lucide-react": "catalog:",
-    "react-day-picker": "^9.14.0",
+    "react-day-picker": "^10.0.2",
     "react-hook-form": "catalog:",
     "react-timeago": "catalog:",
     "tailwind-merge": "catalog:"
