@@ -17,14 +17,14 @@
     "prepare": "turbo run build --filter='./packages/*'"
   },
   "devDependencies": {
-    "knip": "^5.88.1",
-    "lefthook": "^2.1.16",
+    "knip": "^6.41.0",
+    "lefthook": "^2.2.1",
     "only-allow": "1.2.2",
-    "oxfmt": "^0.41.0",
-    "oxlint": "^1.85.0",
-    "oxlint-tsgolint": "^7.0.2002",
+    "oxfmt": "^0.72.0",
+    "oxlint": "^1.87.0",
+    "oxlint-tsgolint": "^7.0.2004",
     "tsx": "^4.23.15",
-    "turbo": "^2.11.2",
+    "turbo": "^2.11.7",
     "typescript": "catalog:"
   },
   "packageManager": "pnpm@12.8.0"
